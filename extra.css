@@ -1,0 +1,41 @@
+h1 {
+  font-size: 32px;
+  font-weight: bold;
+}
+h2 {
+  font-size: 28px;
+  font-weight: bold;
+  color: #008CBA;
+}
+h3 {
+  font-style: italic;
+}
+.admonition-title {
+	font-style: italic;
+}
+
+code {
+    color: #0A681C;
+	background: #D1F3BA;
+}
+
+p {
+  font-size: 16px;
+}
+
+table {
+	border: 2px solid #008CBA;
+	margin-bottom: 20px
+}
+table th,
+table td {
+	padding: 8px;
+	line-height: 1.5rem;
+	vertical-align: top;
+	border: 1px solid #DDDDDD;
+}
+table th {
+	background-color: #f0f7fd;
+	color: black;
+}
+
