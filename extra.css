@@ -1,41 +1,157 @@
+/* Personal css defintions */
+
+
+/****************************************************/
+/* headers */
+
 h1 {
-  font-size: 32px;
-  font-weight: bold;
+	padding-bottom: .3em;
+	font-size: 2.25em;
+	line-height: 1.2;
+	color: #2C3E50;
+/*	text-align: center;*/
+	font-weight: bold;
+	border-bottom: 1px solid #ccc;
+
 }
 h2 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
   color: #008CBA;
 }
 h3 {
+  font-weight: bold;
+  font-size: 18px;
   font-style: italic;
 }
 .admonition-title {
 	font-style: italic;
 }
 
+/****************************************************/
+/*Single line code block*/
 code {
-    color: #0A681C;
-	background: #D1F3BA;
+    color: brown;
+	background:  #FAFAFA;
 }
 
+/****************************************************/
+/* General Text */
 p {
   font-size: 16px;
+  color: #222;
+  margin: 10px;
 }
 
+/****************************************************/
+/* Table */
 table {
-	border: 2px solid #008CBA;
+	border: 2px solid #272727;
 	margin-bottom: 20px
 }
 table th,
 table td {
 	padding: 8px;
-	line-height: 1.5rem;
+	/*line-height: 1.5rem;*/
 	vertical-align: top;
 	border: 1px solid #DDDDDD;
 }
 table th {
-	background-color: #f0f7fd;
+	background-color: #CCC;
 	color: black;
 }
 
+/****************************************************/
+/* Customize sidebar 
+More examples:
+https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc990788815f552fcc5256431f
+*/
+
+/* First level of nav */
+/* Text color */
+.bs-sidebar .nav > li > a {
+    color: #272727;
+	font-size: 90%;
+}
+/* Background */
+.bs-sidebar {
+/*    padding-bottom: 0px;
+    border-radius: 0px;*/
+    /*background-color: #ecf4f3;*/
+/*	background:  linear-gradient(to bottom, #0092B3, #6BC04A);*/
+}
+
+/* Selected line */
+.bs-sidebar .nav > .active > a,
+.bs-sidebar .nav > .active:hover > a,
+.bs-sidebar .nav > .active:focus > a {
+/*    background-color: #0092B3; */
+    background: #6BC04A;
+/*	background:  linear-gradient(to right, #0092B3, #6BC04A);*/
+    border-right: 1px solid #272727;
+	border-left: 1px solid #272727;
+	color: white;
+	font-weight: normal;
+
+}
+
+/* Hover */
+.bs-sidebar .nav > li > a:hover,
+.bs-sidebar .nav > li > a:focus {
+	background-color: #AAA;
+	border-right: none;
+}
+
+/****************************************************/
+/* Navigation bar on top */
+
+.navbar-default {
+	background-color: #0092B3;
+	font-size: 16px;
+}
+
+/* link */
+/*.navbar-default .navbar-nav > li > a {
+    color: red;
+}*/
+.navbar-default .navbar-nav > li > a:hover {
+    /*color: blue;*/
+	background-color: #272727;
+}
+.navbar-default .navbar-nav > .active > a, 
+.navbar-default .navbar-nav > .active > a:hover, 
+.navbar-default .navbar-nav > .active > a:focus {
+  /*  color: #272727; */
+  /*  font-weight: bold; */
+    background-color: #6BC04A;  // Changes color of main button that is currently active.
+}
+/*
+.navbar-default .navbar-nav > .open > a, 
+.navbar-default .navbar-nav > .open > a:hover, 
+.navbar-default .navbar-nav > .open > a:focus {
+    color: grey; 
+    background-color: violet;  //  Changes color of main menu button once clicked.
+}
+*/
+/* display submenu relative to parent*/
+.navbar-nav .open .dropdown-menu {
+    background-color:#0092B3;
+
+}
+/****************************************************/
+/****************************************************/
+/* admonition */
+
+.admonition > .admonition-title {
+    padding: 3px 3px;
+    font-size: 16px;
+}
+
+.admonition.note, .admonition.note > .admonition-title {
+    border-color: #0092B3;
+}
+.admonition.note > .admonition-title {
+    color: #fff;
+    background-color: #0092B3;
+   /* background: linear-gradient(to right, #0092B3, white);*/
+}
