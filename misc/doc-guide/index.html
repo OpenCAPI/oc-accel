@@ -12,7 +12,7 @@
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/googlecode.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/monokai.min.css">
         <link href="../../extra.css" rel="stylesheet">
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -48,7 +48,7 @@
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
                             <li >
-                                <a href="../..">Home</a>
+                                <a href="../..">About</a>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
@@ -160,6 +160,9 @@
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
+                            <li>
+                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                            </li>
                     </ul>
                 </div>
             </div>
@@ -168,18 +171,109 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#how-to-generate-this-document-website">How to generate this document website</a></li>
+        <li class="main active"><a href="#how-to-generate-this-website">How to generate this website</a></li>
             <li><a href="#installation">Installation</a></li>
+            <li><a href="#website-structure">Website Structure</a></li>
+            <li><a href="#write-markdown-pages">Write Markdown pages</a></li>
+            <li><a href="#play-with-pictures">Play with pictures</a></li>
+            <li><a href="#deploy-to-github-pages">Deploy to Github Pages</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="how-to-generate-this-document-website">How to generate this document website</h1>
-<p>This document website is created by MkDocs. </p>
+<h1 id="how-to-generate-this-website">How to generate this website</h1>
+<p>This static documentation website is created by <a href="https://www.mkdocs.org">MkDocs</a> and has picked a theme from <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a>.</p>
+<p>It uses "github pages" and this site is hosted by Github. The documentation source files are written in Markdown format. </p>
+<p>With MkDocs tool, the generated site files (html files) are automatically pushed into a specific branch <code>gh-pages</code> of the git repository. </p>
 <h2 id="installation">Installation</h2>
-<h3 id="install-phython-and-pip">Install phython and pip</h3>
-<p>https://realpython.com/installing-python/</p>
-<h3 id="install-mkdocs">Install MkDocs</h3></div>
+<h3 id="1-install-python-and-pip">1. Install python and pip</h3>
+<p><a href="https://realpython.com/installing-python/">python and pip</a></p>
+<h3 id="2-install-mkdocs-bootswatch">2. Install mkdocs-bootswatch</h3>
+<pre><code>pip install mkdocs-bootswatch
+</code></pre>
+
+<p>Please refer to <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a> for more information. </p>
+<h3 id="3-install-a-markdown-editor">3. Install a markdown editor</h3>
+<p>You can simply edit the markdown (.md) files by any text editor, but it's better to user a professional markdown editor. For example, <a href="https://typora.io/">typora</a>. It supports all of the platforms (Windows/MacOS/Linux).</p>
+<p>With a Markdown editor, you can insert pictures more easily and can watch the markdown effects when you write. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please configure typora to <code>strict</code> Markdown mode. That ensures you get the same output effects on both <strong>typora</strong> and <strong>mkdocs</strong>.</p>
+</div>
+<h3 id="4-install-inkscape">4. Install Inkscape</h3>
+<p>This step is optional. <a href="https://inkscape.org/">Inkscape</a> is a free drawing tool and can help you draw and convert vector graphics. They have smaller file sizes and can be scaled without image quality loss..</p>
+<h2 id="website-structure">Website Structure</h2>
+<p>First, you need to git clone the oc-snap repository and go to <code>web-doc</code> directory.</p>
+<pre><code class="bash">git clone git@github.ibm.com:OC-Enablement/oc-snap.git
+cd oc-snap/web-doc
+</code></pre>
+
+<p>The <code>docs</code> folder is where to put the markdown files, and the <code>mkdocs.yml</code> lists the website structure and global definitons. For example, this site has a structure like: </p>
+<pre><code class="text">nav:
+  - Home: 'index.md'
+  - User Guide:
+    - 'Prepare Environment': 'user-guide/prepare-env.md'
+    - 'Run an example': 'user-guide/run-example.md'
+    - 'Create a new action': 'user-guide/new-action.md'
+    - 'Co-Simulation': 'user-guide/co-simulation.md'
+    - 'FPGA Image build': 'user-guide/make-image.md'
+    - 'Optimize HLS action': 'user-guide/optimize-hls.md'
+    - 'Deploy on Power Server': 'user-guide/deploy.md'
+    - 'Debug an issue': 'user-guide/debug-issue.md'
+    - 'Command Reference': 'user-guide/command-reference.md'
+  - Examples:
+    - 'hdl_example': 'actions-doc/hdl-example.md'
+    - 'hdl_helloworld': 'actions-doc/hdl-helloworld.md'
+    - 'hls_helloworld': 'actions-doc/hls-helloworld.md'
+    - 'hls_memcopy': 'actions-doc/hls-memcopy.md'
+  - Deep Dive:
+    - 'SNAP Software API': 'deep-dive/libosnap.md'
+    - 'SNAP Registers': 'deep-dive/registers.md'
+    - 'SNAP Logic Design': 'deep-dive/snap_core.md'
+    - 'New Board Support': 'deep-dive/board-package.md'
+  - Misc: 
+    - 'Document Guide': 'misc/doc-guide.md'
+</code></pre>
+
+<p>You can edit them as needed.</p>
+<h2 id="write-markdown-pages">Write Markdown pages</h2>
+<p>On your local desktop, edit markdown files under <code>web-doc/docs</code> folder. If you want to add/delete/rename the files, you also need to edit <code>mkdocs.yml</code></p>
+<p>Now it's time to work with an editor (i.e, typora) to write the documents. You also may need to learn some markdown syntax. Don't worry, that's easy.</p>
+<p>In your <code>teminal</code> (MacOS or Linux), or <code>cmd</code> (Windows), start a serve process:</p>
+<pre><code>mkdocs serve
+</code></pre>
+
+<p>Then open a web browser, input <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a>. So whenever you save any markdown files, you can check the generated website immediately..</p>
+<h2 id="play-with-pictures">Play with pictures</h2>
+<h3 id="the-first-rule">The first rule</h3>
+<p>Reduce the usage of pictures. Avoid unnecessary screenshots.</p>
+<h3 id="its-quite-easy">It's quite easy</h3>
+<p>You can insert jpg, png, svg files. You can also just <code>Ctrl-C</code> and <code>Ctrl-V</code> pictures. Typora will automatically copy the files into a directory <code>&lt;filename&gt;.assets</code>, and here <code>&lt;filename&gt;</code> is the name of markdown file. The inserted or copied pictures will be saved in this directory and relative links pointed to them will be created. The generated html webpage will use those relative links to show the pictures.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please enable "Automatically copy images into <filename.assets> folder" in <code>Preferences</code> of typora.</p>
+</div>
+<h3 id="use-diagrams-from-ppt">Use diagrams from PPT</h3>
+<p>For the diagrams from Microsoft PowerPoint, here is a good way to have the smallest file size and best quality:</p>
+<ul>
+<li>In PowerPoint, select the region of diagram, right-click mouse -&gt; "Save as Picture ..." and save it as "PDF" format. </li>
+<li>Open the PDF file with <a href="https://inkscape.org/">Inkscape</a>. (Right-click the file -&gt; "Open with ...", choose Inkscape in the poped up list). Unclick "Embed images" and then "OK".</li>
+<li>In Inkscape, save it as <code>SVG</code> file.</li>
+</ul>
+<p>You can select the region of a diagram in PPT, <code>Ctrl-C</code> and <code>Ctrl-V</code>in Typora directly. Thus it will save a PNG file. In my experiment, this PNG is of 188KB. And with the above flow to save it as SVG file, its size is 62KB. And SVG can be zoomed in with very clear shape and font.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Please use normal fonts in PPT, for example "Arial". Otherwise you may get a SVG file with a replaced font and that may look different.</p>
+</div>
+<h2 id="deploy-to-github-pages">Deploy to Github Pages</h2>
+<p>When most of the edition work is done, and it's time to commit your documents to oc-snap github. </p>
+<p>First you should commit and push your changes in <code>web-doc</code>, which is the folder of source files, to git repository.  Commit <code>web-doc</code> source files in a branch other than master, ask someone to review them, merge them into master branch after getting approvements.</p>
+<p>Then you can simply publish website with just one step:</p>
+<pre><code>cd &lt;PATH&gt;/oc-snap/web-doc
+mkdocs gh-deploy
+</code></pre>
+
+<p>The entire website will be pushed to <code>gh-pages</code> branch of oc-snap repository. See them at <a href="https://pages.github.ibm.com/oc-enablement/oc-snap">https://pages.github.ibm.com/oc-enablement/oc-snap</a>!</p></div>
         </div>
 
         <footer class="col-md-12">

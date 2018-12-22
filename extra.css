@@ -24,15 +24,13 @@ h3 {
   font-size: 18px;
   font-style: italic;
 }
-.admonition-title {
-	font-style: italic;
-}
 
 /****************************************************/
 /*Single line code block*/
 code {
-    color: brown;
-	background:  #FAFAFA;
+//    color: #333;
+	background:  #EEE;
+	border: 0px;
 }
 
 /****************************************************/
@@ -142,16 +140,76 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 /****************************************************/
 /* admonition */
 
-.admonition > .admonition-title {
-    padding: 3px 3px;
-    font-size: 16px;
+.admonition {
+    margin-bottom: 10px;
+	border: 0px solid transparent;
+	border-left: 3px solid;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+	border-radius: 0.5rem;
 }
 
-.admonition.note, .admonition.note > .admonition-title {
-    border-color: #0092B3;
+.admonition > .admonition-title {
+    padding: 2px 2px;
+    font-size: 16px;
+	font-family: monospace;
+    text-indent: 10px;
+	border: 0px;
 }
+
+.admonition > .admonition-title + * {
+    margin-top: 1px;
+}
+
+.admonition.warning > .admonition-title {
+    background: linear-gradient(to right, #ffb30c, #fcf8e3);
+    //background-color: #ffb30c;
+}
+.admonition.warning {
+    background-color: #fcf8e3;
+    border-color: #ffa40c;
+}
+
 .admonition.note > .admonition-title {
-    color: #fff;
-    background-color: #0092B3;
-   /* background: linear-gradient(to right, #0092B3, white);*/
+	background: linear-gradient(to right, #6Bc04A, #DDFDDA);
+    //background-color: #6BC04A;
 }
+.admonition.note {
+    background-color: #DDFDDA;
+    border-color: #6BA64A;
+}
+
+.admonition.danger > .admonition-title {
+	background: linear-gradient(to right, #f04124, #fde6e3);
+    //background-color: #6BC04A;
+}
+
+.admonition.danger {
+    background-color: #FDE6E3;
+}
+
+
+/* icons */
+
+.admonition-title::before {
+	font-family: FontAwesome;
+	color: #fff;
+	margin-right: 10px;
+}
+.admonition.note > .admonition-title::before {
+	content: "\f044";
+}
+.admonition.warning > .admonition-title::before {
+	content: "\f06a";
+}
+.admonition.danger > .admonition-title::before {
+	content: "\f00d";
+}
+
+
+/* for fenced code blocks */
+
+pre {
+	padding: 0px;
+}
+
+

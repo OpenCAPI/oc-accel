@@ -12,7 +12,7 @@
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/googlecode.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/monokai.min.css">
         <link href="../../extra.css" rel="stylesheet">
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -48,7 +48,7 @@
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
                             <li >
-                                <a href="../..">Home</a>
+                                <a href="../..">About</a>
                             </li>
                             <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
@@ -160,6 +160,9 @@
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
+                            <li>
+                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                            </li>
                     </ul>
                 </div>
             </div>
@@ -168,13 +171,33 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#get-started">Get started</a></li>
+        <li class="main active"><a href="#prepare-environment">Prepare Environment</a></li>
+            <li><a href="#check-tools">Check Tools</a></li>
+            <li><a href="#clone-repositories">Clone Repositories</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="get-started">Get started</h1>
-<p>This is my start. I want it.</p></div>
+<h1 id="prepare-environment">Prepare Environment</h1>
+<p>Firstly, you need to have an x86 machine for developement. </p>
+<h2 id="check-tools">Check Tools</h2>
+<h3 id="vivado">Vivado</h3>
+<h3 id="xterm">xterm</h3>
+<h3 id="simulators">Simulators</h3>
+<h3 id="gcc">gcc</h3>
+<h2 id="clone-repositories">Clone Repositories</h2>
+<pre><code>git clone git@github.ibm.com:OC-Enablement/oc-snap.git
+cd oc-snap
+git submodule init
+git submodule update
+</code></pre>
+
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Please be aware of hardware/oc-bip. If you made changes in that submodule, please do remove the "build" directory manually. (<code>hardware/oc-bip/$CARD/oc-bsp/build</code>) Otherwise it will not be re-built automatically from the snap build scripts.</p>
+</div>
+<pre><code>git clone ocse!!!
+</code></pre></div>
         </div>
 
         <footer class="col-md-12">

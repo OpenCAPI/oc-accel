@@ -12,7 +12,7 @@
         <link href="css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="css/font-awesome.min.css" rel="stylesheet">
         <link href="css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/googlecode.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/monokai.min.css">
         <link href="extra.css" rel="stylesheet">
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -48,7 +48,7 @@
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
                             <li class="active">
-                                <a href=".">Home</a>
+                                <a href=".">About</a>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
@@ -160,6 +160,9 @@
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
+                            <li>
+                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                            </li>
                     </ul>
                 </div>
             </div>
@@ -176,8 +179,7 @@
         <li class="main "><a href="#dependencies">Dependencies</a></li>
             <li><a href="#machine-and-tools-for-development">Machine and Tools for Development</a></li>
             <li><a href="#server-and-fpga-cards-for-deployment">Server and FPGA cards for Deployment</a></li>
-        <li class="main "><a href="#compliant-with-capi1020">Compliant with CAPI1.0/2.0</a></li>
-        <li class="main "><a href="#contributing-to-this-repository">Contributing to this Repository</a></li>
+        <li class="main "><a href="#compliance-with-capi1020">Compliance with CAPI1.0/2.0</a></li>
         <li class="main "><a href="#read-more">Read more</a></li>
     </ul>
 </div></div>
@@ -230,21 +232,8 @@ You can use the build-in simulation <code>xsim</code> from Xilinx Vivado, or you
 <h3 id="b-fpga-card-selection">(b) FPGA Card selection</h3>
 <p>As of now, the following FPGA cards can be used with OC-SNAP:</p>
 <p>Alphadata 9V3</p>
-<h1 id="compliant-with-capi1020">Compliant with CAPI1.0/2.0</h1>
+<h1 id="compliance-with-capi1020">Compliance with CAPI1.0/2.0</h1>
 <p>Currently the SNAP Framework supports CAPI1.0 on POWER8 based hosts and CAPI2.0 on POWER9 based hosts. A similar OpenCAPI SNAP framework is going to be added in a new repository. Users working on SNAP today can easily transfer their CAPI1.0 work to CAPI2.0 or OpenCAPI as the interface for "<strong>Software Program</strong>" and "<strong>Hardware Action</strong>" (shown in the yellow areas of the above figure) will stay the same. </p>
-<h1 id="contributing-to-this-repository">Contributing to this Repository</h1>
-<p>This is an open-source project. We greatly appreciate your contributions and collaboration. 
-Before contributing to this project, please read and agree to the rules in
-* <a href="CONTRIBUTING.md">CONTRIBUTING.md</a></p>
-<p>To simplify the sign-off, you may want to create a ".gitconfig" file in you home by executing:</p>
-<pre><code>$ git config --global user.name &quot;John Doe&quot;
-$ git config --global user.email johndoe@example.com
-</code></pre>
-
-<p>Then, for every commit, use <code>git commit -s</code> to add the "Signed-off by ..." message.</p>
-<p>By default the git repository is read-only. Users can fork the snap repository, make the changes there and issue a pull request.
-Even members with write access to this repository can't commit directly into the protected master branch. To contribute changes, please create a branch, make the changes there and issue a pull request.</p>
-<p>Pull requests to merge into the master branch must be reviewed before they will be merged.</p>
 <h1 id="read-more">Read more</h1>
 <p>This project is an initiative of the OpenPOWER Foundation Accelerator Workgroup.
 Please see here for more details:</p>
@@ -336,5 +325,5 @@ Please see here for more details:</p>
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2018-12-19 14:00:54
+Build Date UTC : 2018-12-22 15:44:57
 -->
