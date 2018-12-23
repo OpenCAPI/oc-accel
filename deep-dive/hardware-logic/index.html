@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>SNAP Hardware Logic - OC-SNAP Doc</title>
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/railscasts.min.css">
+        <link href="../../extra.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="../..">OC-SNAP Doc</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="../..">About</a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../user-guide/prepare-env/">Prepare Environment</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/run-example/">Run an example</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/new-action/">Create a new action</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/co-simulation/">Co-Simulation</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/make-image/">FPGA Image build</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/optimize-hls/">Optimize HLS action</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/deploy/">Deploy on Power Server</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/debug-issue/">Debug an issue</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/command-reference/">Command Reference</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../actions-doc/hdl-example/">hdl_example</a>
+</li>
+                                    
+<li >
+    <a href="../../actions-doc/hdl-helloworld/">hdl_helloworld</a>
+</li>
+                                    
+<li >
+    <a href="../../actions-doc/hls-helloworld/">hls_helloworld</a>
+</li>
+                                    
+<li >
+    <a href="../../actions-doc/hls-memcopy/">hls_memcopy</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Deep Dive <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../software-api/">SNAP Software API</a>
+</li>
+                                    
+<li >
+    <a href="../registers/">SNAP Registers</a>
+</li>
+                                    
+<li class="active">
+    <a href="./">SNAP Hardware Logic</a>
+</li>
+                                    
+<li >
+    <a href="../board-package/">New Board Support</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Misc <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../misc/doc-guide/">Document Guide</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../registers/">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="../board-package/">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#snap-hardware-logic-design">SNAP Hardware: logic design</a></li>
+        <li class="main "><a href="#snap-setup">SNAP setup</a></li>
+            <li><a href="#snap-configuration">SNAP configuration</a></li>
+            <li><a href="#snap-environment-variables">SNAP environment variables</a></li>
+        <li class="main "><a href="#image-and-model-build">Image and model build</a></li>
+            <li><a href="#specifying-the-action">Specifying the action</a></li>
+            <li><a href="#capi-board-support-and-psl-for-image-build">CAPI board support and PSL for image build</a></li>
+            <li><a href="#the-make-process">The make process</a></li>
+            <li><a href="#fpga-bitstream-image-update">FPGA bitstream image update</a></li>
+        <li class="main "><a href="#action-wrapper">Action wrapper</a></li>
+            <li><a href="#hdl-action">HDL Action</a></li>
+            <li><a href="#hls-actions">HLS Actions</a></li>
+        <li class="main "><a href="#sdram-card-memory">SDRAM Card Memory</a></li>
+        <li class="main "><a href="#nvme-support">NVMe support</a></li>
+        <li class="main "><a href="#hardware-debug-with-ila-cores">Hardware debug with ILA cores</a></li>
+        <li class="main "><a href="#cloud-support">Cloud support</a></li>
+        <li class="main "><a href="#simulation">Simulation</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="snap-hardware-logic-design">SNAP Hardware: logic design</h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is an initial version copied from SNAP1/2. Most of the content should be moved to <code>User-guide</code>.</p>
+</div>
+<h1 id="snap-setup">SNAP setup</h1>
+<p>Please check <a href="../README.md">../README.md</a> for <a href="../README.md#dependencies">dependencies</a>.</p>
+<p>Executing the following commands is pre-requisite for the usage of the SNAP framework:</p>
+<pre><code class="bash">source &lt;xilinx_root&gt;/Vivado/&lt;version&gt;/settings64.sh
+export XILINXD_LICENSE_FILE=&lt;pointer to Xilinx license&gt;
+</code></pre>
+
+<p>In order to handle paths and other environment settings, the SNAP <code>make</code> process is always sourcing the script <code>${SNAP_ROOT}/snap_env.sh</code>. You may modify that script (or create it if it doesn't already exist) and add your environment settings to that script (see also <a href="#snap-environment-variables">SNAP environment variables</a>).</p>
+<p><strong><em>Note:</em></strong> The SNAP <code>make</code> process is internally defining a variable <code>${SNAP_ROOT}</code> which is pointing to SNAP's <a href="https://github.com/open-power/snap">root directory</a>.
+Therefore, this variable may be used in the specification of paths for the <code>make</code> process, and we are using this variable in this document in the notation of file names.</p>
+<h2 id="snap-configuration">SNAP configuration</h2>
+<p>In order to configure the SNAP framework and to prepare the environment
+for the SNAP build process, you may call</p>
+<pre><code class="bash">make snap_config
+</code></pre>
+
+<p>from the SNAP root directory. Making use of <a href="https://github.com/guillon/kconfig">a standalone application configuration tool based on kernel kconfig</a> the features for a specific SNAP framework configuration can be selected.
+Among the features that get configured via <code>make snap_config</code> are
+<em> the card type
+</em> the action type (see also <a href="#specifying-the-action">Specifying the action</a>)
+<em> enablement of the on-card SDRAM
+</em> enablement of the Xilinx Integrated Logic Analyzer
+* the simulator</p>
+<p>If additional path settings are required, the step <code>make snap_config</code> will tell you which variable definitions to add to the script <code>${SNAP_ROOT}/snap_env.sh</code> (see also <a href="#snap-environment-variables">SNAP environment variables</a>).</p>
+<p>By calling <code>make snap_config</code> again, a previously defined configuration may be modified.</p>
+<p>If you want to clean your repository (i.e. remove the generated files) you may do so by calling</p>
+<pre><code class="bash">make clean
+</code></pre>
+
+<p>But, that call will keep the configuration settings. If you want to also reset the configuration settings you may call</p>
+<pre><code class="bash">make clean_config
+</code></pre>
+
+<p>It is recommended to call <code>make clean_config</code> each time you want to start over with a new configuration.</p>
+<h2 id="snap-environment-variables">SNAP environment variables</h2>
+<p>A side effect of calling <code>make snap_config</code> is the modification (or creation in case of first time execution) of the file <code>${SNAP_ROOT}/snap_env.sh</code>.
+The main purpose of this file is the definition of paths that are required during the SNAP build and simulation process. The file gets sourced during SNAP's <code>make</code> process.
+As a result of the execution of <code>make snap_config</code> a version of <code>${SNAP_ROOT}/snap_env.sh</code> containing at least five (maybe commented and incomplete) lines will exist:</p>
+<pre><code class="bash">export TIMING_LABLIMIT=&lt;lower slack limit for timing considered acceptable for bitstream build&gt;
+export ACTION_ROOT=&lt;pointer to the directory containing the action sources&gt;
+export PSLVER='8: PSL version for POWER8 | 9: PSL version for POWER9'
+export PSL_DCP=[pointer to the Vivado CAPI PSL design checkpoint file (b_route_design.dcp)]
+export PSLSE_ROOT=&lt;pointer to the path containing the PSLSE github clone&gt;
+</code></pre>
+
+<p>If a file <code>${SNAP_ROOT}/snap_env.sh</code> is already existing when calling <code>make snap_config</code> that file will be taken, and the definition of
+<code>ACTION_ROOT</code> will be adapted according to the selection of the action type.</p>
+<p>In case of a setup for cloud builds (see <a href="#cloud-support">Cloud Support</a>) the following setup will be modified
+as well:</p>
+<pre><code>DCP_ROOT=&lt;pointer to the directory for design checkpoints required in the Partial Reconfiguration flow&gt;
+</code></pre>
+
+<p>As already indicated above, the notation <code>${SNAP_ROOT}</code> may be used when pointing to directories or files below the SNAP root directory. For instance, if during the <code>make snap_config</code> step you select <code>hdl_example</code> as action the file <code>${SNAP_ROOT}/snap_env.sh</code> will contain the line</p>
+<pre><code class="bash">export ACTION_ROOT=${SNAP_ROOT}/actions/hdl_example
+</code></pre>
+
+<p><strong><em>Note:</em></strong> When calling <code>make snap_config</code> for the first time without a given <code>${SNAP_ROOT}/snap_env.sh</code>, you need to edit the generated
+file <code>${SNAP_ROOT}/snap_env.sh</code> in order to set the correct path names.</p>
+<h1 id="image-and-model-build">Image and model build</h1>
+<h2 id="specifying-the-action">Specifying the action</h2>
+<p>Which action is getting integrated into the SNAP framework is specified in <code>${SNAP_ROOT}/snap_env.sh</code>
+via the path <code>ACTION_ROOT</code>.
+When selecting "HDL Action" or "HLS Action" (for example when creating your own new action), the variable <code>ACTION_ROOT</code> is either set to an empty string or to the value that was selected in the previous run of <code>make snap_config</code>. You may simply modify the file <code>${SNAP_ROOT}/snap_env.sh</code> manually to let <code>ACTION_ROOT</code> point to the directory containing the action.</p>
+<p>As part of the Vivado project configuration step, the make process will call the target <code>hw</code> that is expected to exist in a <code>Makefile</code>
+contained in the directory that <code>ACTION_ROOT</code> is pointing to (see section <a href="#action-wrapper">Action wrapper</a>).
+Specific configurations/preparations for the action may be added via this make process step.</p>
+<h2 id="capi-board-support-and-psl-for-image-build">CAPI board support and PSL for image build</h2>
+<p>In order to benefit from the advantage of CAPI (low latency high bandwith access to host memory as well as memory coherency) a specific  implementation of the FPGA is required to use the PCIe link and CAPP (<strong>C</strong>oherent <strong>A</strong>ccelerator <strong>P</strong>rocessor <strong>P</strong>roxy which is located in the POWER processor) properly. The PSL (<strong>P</strong>OWER <strong>S</strong>ervice <strong>L</strong>ayer) is providing the necessary infrastructure.
+The PSL differs whether we have a POWER8 with CAPI 1.0 or a POWER9 with CAPI 2.0.</p>
+<p>In any case, to get the latest CAPI board support and PSL download, visit <strong>IBM Portal for OpenPOWER</strong> at</p>
+<p>https://www.ibm.com/systems/power/openpower</p>
+<p>From the menu, select "CAPI"-&gt;"Coherent Accelerator Processor Interface (CAPI)" or directly click the "CAPI" icon to go to the CAPI section.
+Then download the appropriate files depending on your target system being POWER8 (CAPI 1.0) or POWER9 (CAPI 2.0).</p>
+<h4 id="power8">POWER8</h4>
+<p>CAPI board support and PSL are provided combined in a Vivado DCP (<strong>D</strong>esign <strong>C</strong>heck<strong>P</strong>oint).
+Please go to the IBM Portal for OpenPOWER and download the required files under "<strong>PSL Checkpoint Files for the POWER8 CAPI SNAP Design Kit</strong>" according to the selected FPGA card.<br />
+For the image build process you need to make sure that in <code>snap_env.sh</code> the environment variable <code>PSL_DCP</code> is defined such that it is pointing to the downloaded Vivado DCP.</p>
+<h4 id="power9">POWER9</h4>
+<p>CAPI BSP (<strong>B</strong>oard <strong>S</strong>upport <strong>P</strong>ackage) and PSL got separated. For the CAPI 2.0 BSP, the open source git repository https://github.com/open-power/capi2-bsp is integrated into the SNAP framework as git submodule under <a href="https://github.com/open-power/capi2-bsp">hardware/capi2-bsp</a>.</p>
+<p>The PSL is integrated into the CAPI BSP as an IP core with encrypted sources.
+Please go to the IBM Portal for OpenPOWER and download the required files under "<strong>PSL IP Source Files for POWER9 CAPI</strong>".</p>
+<p>Alternatively, the following link will provide direct access:</p>
+<p>https://www-355.ibm.com/systems/power/openpower/posting.xhtml?postingId=1BED44BCA884D845852582B70076A89A</p>
+<p>If the environment variable <code>PSL9_IP_CORE</code> is defined (e.g. via <code>snap_env.sh</code>), the build process uses it as a pointer to the archived PSL9 IP core.
+Otherwise, the build process is assuming the archived PSL9 IP core is located in the directory <code>snap/hardware/capi2-bsp/psl</code>.</p>
+<h2 id="the-make-process">The make process</h2>
+<p>If you call <code>make</code> without any targets, then a help message will be printed explaining the different targets supported by the make process.</p>
+<p>A simulation model (for the simulator defined in the <code>snap_config</code> step) may be created
+via the target <code>model</code>:</p>
+<pre><code class="bash">make model
+</code></pre>
+
+<p>This will also build the software tools and the PSLSE which are required to run the simulation.</p>
+<p>If you want to build an image (a bitstream), you may call <code>make</code> with target <code>image</code>:</p>
+<pre><code class="bash">make image
+</code></pre>
+
+<p><strong><em>Note:</em></strong> You must still build the software tools on the POWER target system.</p>
+<h2 id="fpga-bitstream-image-update">FPGA bitstream image update</h2>
+<p>Please see <a href="./doc/Bitstream_flashing.md">snap/hardware/doc/Bitstream_flashing.md</a> for instructions on how to update the FPGA bitstream image, build factory images and program cards from scratch.</p>
+<h1 id="action-wrapper">Action wrapper</h1>
+<p>The definition of <code>ACTION_ROOT</code> in <code>${SNAP_ROOT}/snap_env.sh</code> specifies the path to the set of actions that shall be included.
+<strong>It has to point to a directory within</strong> <a href="../actions">snap/actions</a>.<br />
+The SNAP hardware build process is expecting each action example's root directory to contain a Makefile
+providing at least the targets <code>clean</code> and <code>hw</code> (see also <a href="../actions/README.md">snap/actions/README.md</a>).</p>
+<p>At this point SNAP supports the integration of one action. Multi-action support will follow.</p>
+<p>Corresponding to the ports that the SNAP framework provides, each action has to provide ports for the following AXI interfaces:
+<em> an AXI slave port for MMIO based control
+</em> an AXI master port for host DMA traffic
+<em> an optional AXI master port for on-card SDRAM traffic
+</em> an optional AXI master port for communication with an NVMe host controller
+  Furthermore, HDL actions have to implement the interrupt ports as shown in the <a href="../actions/hdl_example/hw/action_wrapper.vhd_source">HDL example action wrapper</a>.<br />
+  For HLS actions, the HLS compiler will automatically generate the necessary interrupt logic.</p>
+<p><strong><em>Note</em></strong> that the ID widths of the AXI interfaces to host memory and to the on-card SDRAM have to be
+large enough to support the number of actions that shall be instantiated.
+For the build process this is controlled via the option <code>NUM_OF_ACTIONS</code> which is configurable in the <code>make snap_config</code> step.<br />
+<strong>Note</strong>* The SNAP framework currently does not support more than one action.</p>
+<p>The support for actions created with HLS as opposed to HDL actions written directly in VHDL or Verilog differs slightly.</p>
+<h3 id="hdl-action">HDL Action</h3>
+<p>In order to integrate an HDL action into the SNAP framework the directory that <code>ACTION_ROOT</code> is pointing to, needs to contain an entity named <code>action_wrapper</code> which is serving as interface between the action and the SNAP framework.</p>
+<p>An example for such an action together with a corresponding wrapper may be found in <a href="../actions/hdl_example/hw">snap/actions/hdl_example/hw</a>.
+It can be used for various verification scenarios like copying memory content.</p>
+<h3 id="hls-actions">HLS Actions</h3>
+<p>The top level entity for an HLS action needs to be named <code>hls_action</code>.</p>
+<p>You'll also find examples for HLS actions in <a href="../actions">snap/actions</a>. For each example, the HLS action to be integrated into the SNAP framework is contained in a file <code>hls_&lt;action&gt;.cpp</code>. Before initiating the SNAP framework's make process, you need to create the necessary RTL files (VHDL or Verilog) out of the <code>hls_&lt;action&gt;.cpp</code> file. Each example contains a <code>Makefile</code> that takes care of this. In order to make sure that the resulting top level entity fits into the SNAP framework, the HLS actions top level function needs to be named <code>hls_action</code>.</p>
+<p>The variable <code>ACTION_ROOT</code> needs to point to a subdirectory of <a href="../actions">snap/actions</a>. That directory should  contain a <code>Makefile</code> for generating the RTL code from the HLS <code>.cpp</code> sources. As shown in the examples, the <code>Makefile</code> should include the file <a href="../actions/hls.mk">snap/actions/hls.mk</a>. That way the RTL code for the HLS action will be placed into a subdirectory <code>hw</code> contained in the directory that <code>$ACTION_ROOT</code> points to, and the SNAP framework's make process is able to include it.</p>
+<p>Example: By setting up <code>${SNAP_ROOT}/snap_env.sh</code> such that <code>ACTION_ROOT</code> points to <code>${SNAP_ROOT}/actions/hls_memcopy</code> the HLS memcopy example contained in <a href="../actions/hls_memcopy">snap/actions/hls_memcopy</a> will get integrated into the SNAP framework.</p>
+<p><strong><em>Note:</em></strong> For the integration of HLS actions into the SNAP framework, <code>ACTION_ROOT</code> needs to point to (a subdirectory of) a directory starting with <code>hls</code> (case doesn't matter), or the environment variable <code>$HLS_SUPPORT</code> needs to be defined and to be set to <code>TRUE</code> (this is an option that is handled during the environment setup via <code>make snap_config</code>).</p>
+<h1 id="sdram-card-memory">SDRAM Card Memory</h1>
+<p>The SNAP framework supports the usage of the on-card SDRAM. It is accessible for the actions via the action wrapper
+through an AXI master interface. In the SNAP configuration step the existence of that interface is controlled via the option 'Enable SDRAM'.</p>
+<h1 id="nvme-support">NVMe support</h1>
+<p>For FPGA cards with NVMe flash attached, the SNAP framework supports the integration of up to two Flash drives. Via the SNAP configuration option 'Enable NVMe' the instantiation of the NVMe host controller together with the corresponding PCIe root complexes and the required AXI interfaces can be configured.</p>
+<p>The actions directory contains HDL and HLS based examples on how to use NVMe:
+- <a href="../actions/hdl_example">snap/actions/hdl_example</a> provides automated data checking (read and write of arbitrary data)
+- <a href="../actions/hdl_nvme_example">snap/actions/hdl_nvme_example</a> shows file transfers using fixed 4k block reads and writes
+- <a href="../actions/hls_nvme_memcopy">snap/actions/hls_nvme_memcopy</a> implements a generic HLS memcopy function</p>
+<p>Note the data itself doesn't flow through the NVMe host controller, but transits through the on-card SDRAM. Please see the <a href="../hardware/doc/NVMe.md">NVMe main documentation page</a> for more details.</p>
+<h1 id="hardware-debug-with-ila-cores">Hardware debug with ILA cores</h1>
+<p>In order to create an image that allows debugging the design using the
+Vivado Integrated Logic Analyzer (ILA) you may prepare a <code>.xdc</code> file for
+adding ILA cores to the design
+(an example for such a file is located here: <a href="./doc/ila_debug.xdc">./doc/ila_debug.xdc</a>). </p>
+<p>Enabling <code>ILA_DEBUG</code> in the SNAP configuration and defining the environment variable</p>
+<pre><code>ILA_SETUP_FILE
+</code></pre>
+
+<p>in <code>${SNAP_ROOT}/snap_env.sh</code> such that it points to a <code>.xdc</code> file with ILA core definitions,
+will configure the preparation of the ILA cores during the image build process.
+Additionally to the image files itself, the build process will create
+the required <code>.ltx</code> debug probes file which will be located in the results
+directory <code>${SNAP_ROOT}/hardware/build/Images</code>.</p>
+<h1 id="cloud-support">Cloud support</h1>
+<p>TBD...</p>
+<h1 id="simulation">Simulation</h1>
+<p>see <a href="./sim/README.md">./sim/README.md</a> for further instructions about Simulation</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../extra.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

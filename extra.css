@@ -209,7 +209,8 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 /* for fenced code blocks */
 
 pre {
-	padding: 0px;
+	padding: 1px;
+	font-size: 13px;
 }
 
 

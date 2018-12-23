@@ -12,7 +12,7 @@
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/monokai.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/railscasts.min.css">
         <link href="../../extra.css" rel="stylesheet">
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -117,7 +117,7 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../deep-dive/libosnap/">SNAP Software API</a>
+    <a href="../../deep-dive/software-api/">SNAP Software API</a>
 </li>
                                     
 <li >
@@ -125,7 +125,7 @@
 </li>
                                     
 <li >
-    <a href="../../deep-dive/snap_core/">SNAP Logic Design</a>
+    <a href="../../deep-dive/hardware-logic/">SNAP Hardware Logic</a>
 </li>
                                     
 <li >
@@ -182,14 +182,14 @@
                 <div class="col-md-9" role="main">
 
 <h1 id="how-to-generate-this-website">How to generate this website</h1>
-<p>This static documentation website is created by <a href="https://www.mkdocs.org">MkDocs</a> and has picked a theme from <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a>.</p>
+<p>This static documentation website is created by <a href="https://www.mkdocs.org">MkDocs</a> and is using a theme from <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a>.</p>
 <p>It uses "github pages" and this site is hosted by Github. The documentation source files are written in Markdown format. </p>
 <p>With MkDocs tool, the generated site files (html files) are automatically pushed into a specific branch <code>gh-pages</code> of the git repository. </p>
 <h2 id="installation">Installation</h2>
 <h3 id="1-install-python-and-pip">1. Install python and pip</h3>
 <p><a href="https://realpython.com/installing-python/">python and pip</a></p>
 <h3 id="2-install-mkdocs-bootswatch">2. Install mkdocs-bootswatch</h3>
-<pre><code>pip install mkdocs-bootswatch
+<pre><code class="bash">pip install mkdocs-bootswatch
 </code></pre>
 
 <p>Please refer to <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a> for more information. </p>
@@ -201,15 +201,16 @@
 <p>Please configure typora to <code>strict</code> Markdown mode. That ensures you get the same output effects on both <strong>typora</strong> and <strong>mkdocs</strong>.</p>
 </div>
 <h3 id="4-install-inkscape">4. Install Inkscape</h3>
-<p>This step is optional. <a href="https://inkscape.org/">Inkscape</a> is a free drawing tool and can help you draw and convert vector graphics. They have smaller file sizes and can be scaled without image quality loss..</p>
+<p>This step is optional. <a href="https://inkscape.org/">Inkscape</a> is a free drawing tool and can help you draw and convert vector graphics. They have smaller file sizes and can be scaled without image quality loss.</p>
 <h2 id="website-structure">Website Structure</h2>
-<p>First, you need to git clone the oc-snap repository and go to <code>web-doc</code> directory.</p>
+<p>First, you need to git clone the oc-snap repository and go to <code>web-doc</code> directory. Make sure you are working on a branch other than master.</p>
 <pre><code class="bash">git clone git@github.ibm.com:OC-Enablement/oc-snap.git
+git checkout &lt;A branch other than master&gt;
 cd oc-snap/web-doc
 </code></pre>
 
 <p>The <code>docs</code> folder is where to put the markdown files, and the <code>mkdocs.yml</code> lists the website structure and global definitons. For example, this site has a structure like: </p>
-<pre><code class="text">nav:
+<pre><code>nav:
   - Home: 'index.md'
   - User Guide:
     - 'Prepare Environment': 'user-guide/prepare-env.md'
@@ -240,7 +241,7 @@ cd oc-snap/web-doc
 <p>On your local desktop, edit markdown files under <code>web-doc/docs</code> folder. If you want to add/delete/rename the files, you also need to edit <code>mkdocs.yml</code></p>
 <p>Now it's time to work with an editor (i.e, typora) to write the documents. You also may need to learn some markdown syntax. Don't worry, that's easy.</p>
 <p>In your <code>teminal</code> (MacOS or Linux), or <code>cmd</code> (Windows), start a serve process:</p>
-<pre><code>mkdocs serve
+<pre><code class="bash">mkdocs serve
 </code></pre>
 
 <p>Then open a web browser, input <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a>. So whenever you save any markdown files, you can check the generated website immediately..</p>
@@ -248,10 +249,10 @@ cd oc-snap/web-doc
 <h3 id="the-first-rule">The first rule</h3>
 <p>Reduce the usage of pictures. Avoid unnecessary screenshots.</p>
 <h3 id="its-quite-easy">It's quite easy</h3>
-<p>You can insert jpg, png, svg files. You can also just <code>Ctrl-C</code> and <code>Ctrl-V</code> pictures. Typora will automatically copy the files into a directory <code>&lt;filename&gt;.assets</code>, and here <code>&lt;filename&gt;</code> is the name of markdown file. The inserted or copied pictures will be saved in this directory and relative links pointed to them will be created. The generated html webpage will use those relative links to show the pictures.</p>
+<p>You can insert jpg, png, svg files. You can also just <code>Ctrl-C</code> and <code>Ctrl-V</code> pictures. Typora will automatically copy the files into a directory <code>./${filename}.assets</code>, and here <code>${filename}</code> is the name of markdown file. The inserted or copied pictures will be saved in this directory and relative links pointed to them will be created. The generated html webpage will use those relative links to show the pictures.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Please enable "Automatically copy images into <filename.assets> folder" in <code>Preferences</code> of typora.</p>
+<p>Please enable "Copy images into ./${filename}.assets folder" in <code>Preferences</code> of typora.</p>
 </div>
 <h3 id="use-diagrams-from-ppt">Use diagrams from PPT</h3>
 <p>For the diagrams from Microsoft PowerPoint, here is a good way to have the smallest file size and best quality:</p>
@@ -260,20 +261,20 @@ cd oc-snap/web-doc
 <li>Open the PDF file with <a href="https://inkscape.org/">Inkscape</a>. (Right-click the file -&gt; "Open with ...", choose Inkscape in the poped up list). Unclick "Embed images" and then "OK".</li>
 <li>In Inkscape, save it as <code>SVG</code> file.</li>
 </ul>
-<p>You can select the region of a diagram in PPT, <code>Ctrl-C</code> and <code>Ctrl-V</code>in Typora directly. Thus it will save a PNG file. In my experiment, this PNG is of 188KB. And with the above flow to save it as SVG file, its size is 62KB. And SVG can be zoomed in with very clear shape and font.</p>
+<p>You can select the region of a diagram in PPT, <code>Ctrl-C</code> and <code>Ctrl-V</code>in Typora directly. Thus it will save it as a PNG file. In my experiment, this PNG is of 188KB. But with the above flow to save it as SVG file, its size is 62KB. As a vectored diagram, it doesn't have any quality loss when people zoom in.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Please use normal fonts in PPT, for example "Arial". Otherwise you may get a SVG file with a replaced font and that may look different.</p>
 </div>
 <h2 id="deploy-to-github-pages">Deploy to Github Pages</h2>
 <p>When most of the edition work is done, and it's time to commit your documents to oc-snap github. </p>
-<p>First you should commit and push your changes in <code>web-doc</code>, which is the folder of source files, to git repository.  Commit <code>web-doc</code> source files in a branch other than master, ask someone to review them, merge them into master branch after getting approvements.</p>
+<p>First, you should commit and push your changes of source files (in <code>web-doc</code>) to git repository. Create pull request, ask someone to review the documents, merge them into master branch after getting approvements.</p>
 <p>Then you can simply publish website with just one step:</p>
-<pre><code>cd &lt;PATH&gt;/oc-snap/web-doc
+<pre><code class="bash">cd &lt;PATH&gt;/oc-snap/web-doc
 mkdocs gh-deploy
 </code></pre>
 
-<p>The entire website will be pushed to <code>gh-pages</code> branch of oc-snap repository. See them at <a href="https://pages.github.ibm.com/oc-enablement/oc-snap">https://pages.github.ibm.com/oc-enablement/oc-snap</a>!</p></div>
+<p>The entire website will be pushed to <code>gh-pages</code> branch of oc-snap repository. The documentation website will be available at <a href="https://pages.github.ibm.com/oc-enablement/oc-snap">https://pages.github.ibm.com/oc-enablement/oc-snap</a>!</p></div>
         </div>
 
         <footer class="col-md-12">
@@ -285,6 +286,7 @@ mkdocs gh-deploy
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
+        <script src="../../extra.js" defer></script>
         <script src="../../search/main.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
