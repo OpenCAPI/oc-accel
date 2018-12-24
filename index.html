@@ -87,6 +87,10 @@
 </li>
                                     
 <li >
+    <a href="user-guide/migrate-from-old/">Migrate from SNAP1/2</a>
+</li>
+                                    
+<li >
     <a href="user-guide/command-reference/">Command Reference</a>
 </li>
                                 </ul>
@@ -179,7 +183,7 @@
         <li class="main "><a href="#dependencies">Dependencies</a></li>
             <li><a href="#machine-and-tools-for-development">Machine and Tools for Development</a></li>
             <li><a href="#server-and-fpga-cards-for-deployment">Server and FPGA cards for Deployment</a></li>
-        <li class="main "><a href="#compliance-with-capi1020">Compliance with CAPI1.0/2.0</a></li>
+        <li class="main "><a href="#compliance-with-snap1020">Compliance with SNAP1.0/2.0</a></li>
         <li class="main "><a href="#read-more">Read more</a></li>
     </ul>
 </div></div>
@@ -187,7 +191,7 @@
 
 <h1 id="opencapi-snap-overview">OpenCAPI-SNAP Overview</h1>
 <h2 id="what-is-opencapi">What is OpenCAPI</h2>
-<p>OpenCAPI (Open Coherent Accelerator Processor Interface) is an open coherent high performance bus interface based on a new bus standard. Driven by the emerging accelerated heterogenerous computing and advanced memory/storage solutions, It provides an Open Interface Architecture that allows any microprocessor to attach to </p>
+<p>OpenCAPI (Open Coherent Accelerator Processor Interface) is an open coherent high performance bus interface based on a new bus standard. Driven by the emerging accelerated heterogeneous computing and advanced memory/storage solutions, It provides an Open Interface Architecture that allows any microprocessor to attach to </p>
 <ul>
 <li>Coherent user-level accelerators and I/O devices</li>
 <li>Advanced memories accessible via read/write or user-level DMA semantics</li>
@@ -232,8 +236,9 @@ You can use the build-in simulation <code>xsim</code> from Xilinx Vivado, or you
 <h3 id="b-fpga-card-selection">(b) FPGA Card selection</h3>
 <p>As of now, the following FPGA cards can be used with OC-SNAP:</p>
 <p>Alphadata 9V3</p>
-<h1 id="compliance-with-capi1020">Compliance with CAPI1.0/2.0</h1>
-<p>Currently the SNAP Framework supports CAPI1.0 on POWER8 based hosts and CAPI2.0 on POWER9 based hosts. A similar OpenCAPI SNAP framework is going to be added in a new repository. Users working on SNAP today can easily transfer their CAPI1.0 work to CAPI2.0 or OpenCAPI as the interface for "<strong>Software Program</strong>" and "<strong>Hardware Action</strong>" (shown in the yellow areas of the above figure) will stay the same. </p>
+<h1 id="compliance-with-snap1020">Compliance with SNAP1.0/2.0</h1>
+<p><a href="https://github.com/open-power/snap">https://github.com/open-power/snap</a> has the SNAP framework for CAPI1.0 and CAPI2.0. Correspondingly, we call it SNAP1.0/2.0. </p>
+<p>This OpenCAPI-SNAP framework has the similar structure and the interface to "<strong>Software Program</strong>" and "<strong>Hardware Action</strong>" stay the same. So your action running on SNAP1.0/2.0 can be moved to OC-SNAP directly without any changes to the source codes. Check <a href="user-guide/migrate-from-old/">Migrate Guide</a> for more information.</p>
 <h1 id="read-more">Read more</h1>
 <p>This project is an initiative of the OpenPOWER Foundation Accelerator Workgroup.
 Please see here for more details:</p>
@@ -326,5 +331,5 @@ Please see here for more details:</p>
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2018-12-24 06:42:25
+Build Date UTC : 2018-12-24 07:51:51
 -->
