@@ -176,6 +176,7 @@
             <li><a href="#website-structure">Website Structure</a></li>
             <li><a href="#write-markdown-pages">Write Markdown pages</a></li>
             <li><a href="#play-with-pictures">Play with pictures</a></li>
+            <li><a href="#code-blocks-and-admonitions">Code blocks and Admonitions</a></li>
             <li><a href="#deploy-to-github-pages">Deploy to Github Pages</a></li>
     </ul>
 </div></div>
@@ -249,22 +250,53 @@ cd oc-snap/web-doc
 <h3 id="the-first-rule">The first rule</h3>
 <p>Reduce the usage of pictures. Avoid unnecessary screenshots.</p>
 <h3 id="its-quite-easy">It's quite easy</h3>
-<p>You can insert jpg, png, svg files. You can also just <code>Ctrl-C</code> and <code>Ctrl-V</code> pictures. Typora will automatically copy the files into a directory <code>./${filename}.assets</code>, and here <code>${filename}</code> is the name of markdown file. The inserted or copied pictures will be saved in this directory and relative links pointed to them will be created. The generated html webpage will use those relative links to show the pictures.</p>
+<p>You can insert jpg, png, svg files. You can also simply copy paste pictures from clipboard and paste them. Typora will automatically copy the files into a directory <code>./${filename}.assets</code>, and here <code>${filename}</code> is the name of markdown file. The inserted or copied pictures will be saved in this directory and relative links pointed to them are created.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Please enable "Copy images into ./${filename}.assets folder" in <code>Preferences</code> of typora.</p>
 </div>
 <h3 id="use-diagrams-from-ppt">Use diagrams from PPT</h3>
-<p>For the diagrams from Microsoft PowerPoint, here is a good way to have the smallest file size and best quality:</p>
+<p>For the diagrams from Microsoft PowerPoint, you can select the region of a diagram in PPT, <code>Ctrl-C</code> to copy it, and <code>Ctrl-V</code> to paste it in Typora directly. In this case, the diagram is saved as an PNG file.</p>
+<p>But there is a better way to get the smallest file size and best quality:</p>
 <ul>
 <li>In PowerPoint, select the region of diagram, right-click mouse -&gt; "Save as Picture ..." and save it as "PDF" format. </li>
 <li>Open the PDF file with <a href="https://inkscape.org/">Inkscape</a>. (Right-click the file -&gt; "Open with ...", choose Inkscape in the poped up list). Unclick "Embed images" and then "OK".</li>
-<li>In Inkscape, save it as <code>SVG</code> file.</li>
+<li>In Inkscape, save it as SVG file.</li>
+<li>Insert the SVG file into Typora.</li>
 </ul>
-<p>You can select the region of a diagram in PPT, <code>Ctrl-C</code> and <code>Ctrl-V</code>in Typora directly. Thus it will save it as a PNG file. In my experiment, this PNG is of 188KB. But with the above flow to save it as SVG file, its size is 62KB. As a vectored diagram, it doesn't have any quality loss when people zoom in.</p>
+<p>In my experiment, the PNG file is 188KB. But with the above flow to save it as SVG file, its size is 62KB. As a vectored diagram, it doesn't have any quality loss when zooming in.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Please use normal fonts in PPT, for example "Arial". Otherwise you may get a SVG file with a replaced font and that may look different.</p>
+</div>
+<h2 id="code-blocks-and-admonitions">Code blocks and Admonitions</h2>
+<h3 id="code-blocks">Code blocks</h3>
+<p>Please assign the code language so it can be correctly rendered. For example <code>``` C</code> for C language.</p>
+<pre><code class="C">// A function to implement bubble sort 
+void bubbleSort(int arr[], int n) 
+{ 
+   int i, j; 
+   for (i = 0; i &lt; n-1; i++)       
+
+       // Last i elements are already in place    
+       for (j = 0; j &lt; n-i-1; j++)  
+           if (arr[j] &gt; arr[j+1]) 
+              swap(&amp;arr[j], &amp;arr[j+1]); 
+} 
+</code></pre>
+
+<h3 id="admonitions">Admonitions</h3>
+<p>You can use <code>!!! Note</code> or <code>!!! Warning</code> or <code>!!! Danger</code> to start a paragraph of admonitions. Then use 4 spaces to start the admonition text. </p>
+<p>For example</p>
+<pre><code>!!! Danger &quot;Error Message&quot;
+
+    This is a dangerous error.
+</code></pre>
+
+<p>It will be shown as:</p>
+<div class="admonition danger">
+<p class="admonition-title">Error Message</p>
+<p>This is a dangerous error.</p>
 </div>
 <h2 id="deploy-to-github-pages">Deploy to Github Pages</h2>
 <p>When most of the edition work is done, and it's time to commit your documents to oc-snap github. </p>
