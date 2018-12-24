@@ -143,9 +143,9 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 .admonition {
     margin-bottom: 10px;
 	border: 0px solid transparent;
-	border-left: 3px solid;
-	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-	border-radius: 0.5rem;
+	border-left: 2px solid;
+//	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+//	border-radius: 0.5rem;
 }
 
 .admonition > .admonition-title {
@@ -161,8 +161,8 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 }
 
 .admonition.warning > .admonition-title {
-    background: linear-gradient(to right, #ffb30c, #fcf8e3);
-    //background-color: #ffb30c;
+    //background: linear-gradient(to right, #ffb30c, #fcf8e3);
+    background-color: #ffa40c;
 }
 .admonition.warning {
     background-color: #fcf8e3;
@@ -170,17 +170,17 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 }
 
 .admonition.note > .admonition-title {
-	background: linear-gradient(to right, #6Bc04A, #DDFDDA);
-    //background-color: #6BC04A;
+//	background: linear-gradient(to right, #6Bc04A, #DDFDDA);
+    background-color: #6BC04A;
 }
 .admonition.note {
     background-color: #DDFDDA;
-    border-color: #6BA64A;
+    border-color: #6bc04A;
 }
 
 .admonition.danger > .admonition-title {
-	background: linear-gradient(to right, #f04124, #fde6e3);
-    //background-color: #6BC04A;
+	//background: linear-gradient(to right, #f04124, #fde6e3);
+    background-color: #6BC04A;
 }
 
 .admonition.danger {
