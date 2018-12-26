@@ -226,6 +226,7 @@
 <thead>
 <tr>
 <th>Bits</th>
+<th></th>
 <th>Attributes</th>
 <th>Description</th>
 </tr>
@@ -233,31 +234,37 @@
 <tbody>
 <tr>
 <td>63..40</td>
+<td></td>
 <td>RO</td>
 <td>SNAP Release</td>
 </tr>
 <tr>
+<td></td>
 <td>63..56</td>
 <td>RO</td>
 <td>Major release number</td>
 </tr>
 <tr>
+<td></td>
 <td>55..48</td>
 <td>RO</td>
 <td>Intermediate release number</td>
 </tr>
 <tr>
+<td></td>
 <td>47..40</td>
 <td>RO</td>
 <td>Minor release number</td>
 </tr>
 <tr>
 <td>39..32</td>
+<td></td>
 <td>RO</td>
 <td>Distance of commit to SNAP release</td>
 </tr>
 <tr>
-<td>31.. 0</td>
+<td>31..0</td>
+<td></td>
 <td>RO</td>
 <td>First eight digits of SHA ID for commit</td>
 </tr>
@@ -360,12 +367,12 @@
 <td>Argument</td>
 </tr>
 <tr>
-<td>47.. 8</td>
+<td>47..8</td>
 <td>RO</td>
 <td>Reserved</td>
 </tr>
 <tr>
-<td>7..  0</td>
+<td>7..0</td>
 <td>RW</td>
 <td>Command. Legal commands are:</td>
 </tr>
@@ -756,6 +763,7 @@
 <thead>
 <tr>
 <th>Bits</th>
+<th></th>
 <th>Attributes</th>
 <th>Description</th>
 </tr>
@@ -763,21 +771,25 @@
 <tbody>
 <tr>
 <td>63</td>
+<td></td>
 <td>RW</td>
 <td>Set to '1' for master register 0 for slave</td>
 </tr>
 <tr>
-<td>62.. 0</td>
+<td>62..0</td>
+<td></td>
 <td>RO</td>
 <td>Reserved (no context ID for master bit 63  = 1)</td>
 </tr>
 <tr>
-<td>62.. 9</td>
+<td></td>
+<td>62..9</td>
 <td>RO</td>
 <td>Reserved (if bit 63  = 0)</td>
 </tr>
 <tr>
-<td>8.. 0</td>
+<td></td>
+<td>8..0</td>
 <td>RO</td>
 <td>My context id (if bit 63  = 0). (9 bits corresponding to context IDs in the range 0..511)</td>
 </tr>

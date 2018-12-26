@@ -45,18 +45,17 @@ p {
 /****************************************************/
 /* Table */
 table {
-	border: 2px solid #272727;
-	margin-bottom: 20px
+	border-top: 1px solid #272727;
 }
-table th,
 table td {
-	padding: 8px;
-	/*line-height: 1.5rem;*/
 	vertical-align: top;
-	border: 1px solid #DDDDDD;
+	border: 1px solid #CCC;
+//	font-family: monospace;
+	font-size: 14px;
 }
 table th {
-	background-color: #CCC;
+	border: 1px solid #CCC;
+	background-color: #CDEBFB;
 	color: black;
 }
 
