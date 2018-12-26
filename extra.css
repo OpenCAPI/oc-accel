@@ -44,19 +44,24 @@ p {
 
 /****************************************************/
 /* Table */
+
 table {
-	border-top: 1px solid #272727;
+	border: 1px solid #888;
 }
-table td {
-	vertical-align: top;
-	border: 1px solid #CCC;
-//	font-family: monospace;
+
+.table > thead > tr > th, 
+.table > tbody > tr > th, 
+.table > tfoot > tr > th, 
+.table > thead > tr > td, 
+.table > tbody > tr > td, 
+.table > tfoot > tr > td {
+
+    padding: 3px;
+    border: 1px solid #888;
 	font-size: 14px;
 }
 table th {
-	border: 1px solid #CCC;
-	background-color: #CDEBFB;
-	color: black;
+	background-color: #ccc;
 }
 
 /****************************************************/
