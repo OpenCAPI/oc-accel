@@ -72,17 +72,24 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 
 /* First level of nav */
 /* Text color */
+.main {
+	text-indent: -10px;
+}
+
+
 .bs-sidebar .nav > li > a {
     color: #272727;
 	font-size: 90%;
 }
 /* Background */
+/*
 .bs-sidebar {
-/*    padding-bottom: 0px;
-    border-radius: 0px;*/
-    /*background-color: #ecf4f3;*/
-/*	background:  linear-gradient(to bottom, #0092B3, #6BC04A);*/
+    padding-bottom: 0px;
+    border-radius: 0px;
+    background-color: #ecf4f3;
+	background:  linear-gradient(to bottom, #0092B3, #6BC04A);
 }
+*/
 
 /* Selected line */
 .bs-sidebar .nav > .active > a,
@@ -97,6 +104,7 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 	font-weight: normal;
 
 }
+
 
 /* Hover */
 .bs-sidebar .nav > li > a:hover,
@@ -213,9 +221,9 @@ https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc9907888
 	font-weight: normal;
 }
 .admonition.note > .admonition-title::before {
-	color: #0092B3ssh xyangbj@192.168.11.31;
+	color: #0092B3;
 	content: "\f044";
-} #d97f02;
+}
 .admonition.warning > .admonition-title::before {
 	color: #D97F02;
 	content: "\f06a";

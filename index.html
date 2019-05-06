@@ -4,11 +4,11 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="None">
+        
         
         
         <link rel="shortcut icon" href="img/favicon.ico">
-        <title>OC-SNAP Doc</title>
+        <title>Overview - OC-Accel Doc</title>
         <link href="css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="css/font-awesome.min.css" rel="stylesheet">
         <link href="css/base.css" rel="stylesheet">
@@ -26,7 +26,7 @@
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
-    <body class="homepage">
+    <body>
 
         <div class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container">
@@ -40,15 +40,25 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href=".">OC-SNAP Doc</a>
+                    <a class="navbar-brand" href=".">OC-Accel Doc</a>
                 </div>
 
                 <!-- Expanded navigation -->
                 <div class="navbar-collapse collapse">
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
-                            <li class="active">
-                                <a href=".">About</a>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li class="active">
+    <a href=".">Overview</a>
+</li>
+                                    
+<li >
+    <a href="repository/">About the repository</a>
+</li>
+                                </ul>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
@@ -121,15 +131,15 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="deep-dive/software-api/">SNAP Software API</a>
+    <a href="deep-dive/software-api/">Software API</a>
 </li>
                                     
 <li >
-    <a href="deep-dive/registers/">SNAP Registers</a>
+    <a href="deep-dive/registers/">Registers</a>
 </li>
                                     
 <li >
-    <a href="deep-dive/hardware-logic/">SNAP Hardware Logic</a>
+    <a href="deep-dive/hardware-logic/">Hardware Logic</a>
 </li>
                                     
 <li >
@@ -160,7 +170,7 @@
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="user-guide/prepare-env/">
+                                <a rel="prev" href="repository/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -175,11 +185,10 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#opencapi-snap-overview">OpenCAPI-SNAP Overview</a></li>
+        <li class="main active"><a href="#oc-accel-overview">OC-Accel Overview</a></li>
             <li><a href="#what-is-opencapi">What is OpenCAPI</a></li>
-            <li><a href="#what-is-snap">What is SNAP</a></li>
             <li><a href="#what-can-i-do-with-it">What can I do with it</a></li>
-            <li><a href="#snap-framework">SNAP Framework</a></li>
+            <li><a href="#oc-accel-framework">OC-Accel Framework</a></li>
         <li class="main "><a href="#dependencies">Dependencies</a></li>
             <li><a href="#machine-and-tools-for-development">Machine and Tools for Development</a></li>
             <li><a href="#server-and-fpga-cards-for-deployment">Server and FPGA cards for Deployment</a></li>
@@ -189,7 +198,8 @@
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="opencapi-snap-overview">OpenCAPI-SNAP Overview</h1>
+<h1 id="oc-accel-overview">OC-Accel Overview</h1>
+<p><strong>OpenCAPI Acceleration Framework</strong>, abbreviated as <strong>OC-Accel</strong>, is a platform to enable programmers and computer engineers to quickly create FPGA-based accelerations. The acceleration action's software part and hardware part share the server host memory data through OpenCAPI interface. This framework was named <a href="https://github.com/open-power/snap">SNAP framework</a> for CAPI1.0 and CAPI2.0 and may be also referred as OC-SNAP.</p>
 <h2 id="what-is-opencapi">What is OpenCAPI</h2>
 <p>OpenCAPI (Open Coherent Accelerator Processor Interface) is an open coherent high performance bus interface based on a new bus standard. Driven by the emerging accelerated heterogeneous computing and advanced memory/storage solutions, It provides an Open Interface Architecture that allows any microprocessor to attach to </p>
 <ul>
@@ -197,11 +207,8 @@
 <li>Advanced memories accessible via read/write or user-level DMA semantics</li>
 </ul>
 <p>Its specifications and ecosystem are managed by an open forum <a href="https://opencapi.org">OpenCAPI Consortium</a>.</p>
-<h2 id="what-is-snap">What is SNAP</h2>
-<p>The SNAP Framework enables programmers and computer engineers to quickly create FPGA-based acceleration actions that work on server host data, as well as data from storage, flash, Ethernet, or other connected resources.  SNAP, therefore, is an acronym for “<strong>S</strong>torage, <strong>N</strong>etwork, and <strong>A</strong>nalytics <strong>P</strong>rogramming”.</p>
-<p>The OC-SNAP framework makes it easy to create accelerated actions utilizing OpenCAPI.</p>
 <h2 id="what-can-i-do-with-it">What can I do with it</h2>
-<p>SNAP helps you create an accelerator on a certain FPGA card. Refer to "User Guide" tab for a more detailed step-to-step guide.</p>
+<p>OC-Accel helps you create an accelerator on a certain FPGA card. Refer to "User Guide" tab for a more detailed step-to-step guide.</p>
 <h3 id="preparation">Preparation</h3>
 <p>Find out the "hot-spot" function to be moved to FPGA. This function, usually computation intensive, is also named as "action" in the following description. </p>
 <h3 id="step1-work-on-software-part">Step1: Work on software part</h3>
@@ -210,9 +217,9 @@
 <p>Write the "hardware action" in a supported programming language, such as Vivado HLS or Verilog/VHDL. Together with the software part done in above step, run a co-simulation to verify the correctness. After the co-simulation is done, generate the FPGA bitstream. </p>
 <h3 id="step3-deploy-to-power9">Step3: Deploy to Power9!</h3>
 <p>Program the bitstream to a real FPGA card plugged into a supported Power9 machine. Copy, compile and execute the source code of software part, and see the acceleration!</p>
-<h2 id="snap-framework">SNAP Framework</h2>
+<h2 id="oc-accel-framework">OC-Accel Framework</h2>
 <p><img alt="oc-snap-framework" src="index.assets/oc-snap-framework.svg" /></p>
-<p>The framework hardware consists of a AXI-to-CAPI bridge unit, memory-mapped register I/O, host DMA, and a job management unit. It interfaces with a user-written action (a.k.a. kernel) through an AXI-lite control interface, and gives coherent access to host memory through AXI. Optionally, it also provides access to the on-card DRAM via AXI. A NVMe host controller-AXI bridge complements the framework for storage or database applications as an independent unit. Software gets access to the action through the libsnap library, allowing applications to call a "function" instead of programming an accelerator. The framework supports multi-process applications and can be extended to support multiple instantiated hardware actions in parallel. </p>
+<p>The framework hardware consists of a AXI-to-CAPI bridge unit, memory-mapped register I/O, host DMA, and a job management unit. It interfaces with a user-written action (a.k.a. kernel) through an AXI-lite control interface, and gives coherent access to host memory through AXI. Optionally, it also provides access to the on-card DRAM via AXI. A NVMe host controller-AXI bridge complements the framework for storage or database applications as an independent unit. Software gets access to the action through the libosnap library, allowing applications to call a "function" instead of programming an accelerator. The framework supports multi-process applications and can be extended to support multiple instantiated hardware actions in parallel. </p>
 <p>For more information, please refer to "Deep Dive" tab.</p>
 <h1 id="dependencies">Dependencies</h1>
 <h2 id="machine-and-tools-for-development">Machine and Tools for Development</h2>
@@ -220,25 +227,25 @@
 See examples of <a href="./doc#p8-development-environments-">supported development configurations</a>.
 The required tools and packages are listed below. Web access to github is recommended to follow the build instructions. <strong>A real FPGA card is not required for the plain hardware development.</strong></p>
 <h3 id="a-xilinx-vivado">(a) Xilinx Vivado</h3>
-<p>SNAP currently supports Xilinx FPGA devices, exclusively. For synthesis, simulation model and image build, the Xilinx Vivado 2018.2 tool suite is recommended.
+<p>OC-Accel currently supports Xilinx FPGA devices, exclusively. For synthesis, simulation model and image build, the Xilinx Vivado 2018.2 tool suite is recommended.
 https://www.xilinx.com/products/design-tools/hardware-zone.html</p>
 <h3 id="b-opencapi-tlxdlx-package">(b) OpenCAPI TlxDLx package</h3>
 <h3 id="c-build-process">(c) Build process</h3>
 <p>Building the code and running the make environment requires the usual development tools <code>gcc, make, sed, awk</code>. If not installed already, the installer package <code>build-essential</code> will set up the most important tools.</p>
-<p>Configuring the SNAP framework will call a standalone tool that is based on the Linux kernel <a href="https://github.com/guillon/kconfig">kconfig</a> tool. The <code>ncurses</code> library must be installed to use the menu-driven user interface for <code>kconfig</code>.</p>
+<p>Configuring the OC-Accel framework will call a standalone tool that is based on the Linux kernel <a href="https://github.com/guillon/kconfig">kconfig</a> tool. The <code>ncurses</code> library must be installed to use the menu-driven user interface for <code>kconfig</code>.</p>
 <h3 id="d-run-simulation">(d) Run Simulation</h3>
-<p>For simulation, SNAP relies on the <code>xterm</code> program.
+<p>For simulation, OC-Accel relies on the <code>xterm</code> program.
 You can use the build-in simulation <code>xsim</code> from Xilinx Vivado, or you can also use other simulations. Check <a href="user-guide/co-simulation/">Co-simulation</a> for more information.</p>
 <h2 id="server-and-fpga-cards-for-deployment">Server and FPGA cards for Deployment</h2>
 <h3 id="a-supported-power9-servers">(a) Supported Power9 servers</h3>
 <p>Lagrange Chip based</p>
 <p>Monza Chip based</p>
 <h3 id="b-fpga-card-selection">(b) FPGA Card selection</h3>
-<p>As of now, the following FPGA cards can be used with OC-SNAP:</p>
+<p>As of now, the following FPGA cards can be used with OC-Accel</p>
 <p>Alphadata 9V3</p>
 <h1 id="compliance-with-snap1020">Compliance with SNAP1.0/2.0</h1>
-<p><a href="https://github.com/open-power/snap">https://github.com/open-power/snap</a> has the SNAP framework for CAPI1.0 and CAPI2.0. Correspondingly, we call that repository SNAP1.0/2.0. </p>
-<p>This OC-SNAP framework has the similar structure, and the interfaces on "<strong>Software Program</strong>" and "<strong>Hardware Action</strong>" stay the same. Generally, your actions running on SNAP1.0/2.0 can be moved to OC-SNAP directly without changing source-code. Check <a href="user-guide/migrate-from-old/">Migration Guide</a> for more information.</p>
+<p><a href="https://github.com/open-power/snap">https://github.com/open-power/snap</a> has the acceleration framework for CAPI1.0 and CAPI2.0. Correspondingly, we call that repository SNAP1.0/2.0. </p>
+<p>This OC-Accel framework has the similar structure, and the interfaces on "<strong>Software Program</strong>" and "<strong>Hardware Action</strong>" stay the same. Generally, your actions running on SNAP1.0/2.0 can be moved to OC-Accel directly without changing source-code. Check <a href="user-guide/migrate-from-old/">Migration Guide</a> for more information.</p>
 <h1 id="read-more">Read more</h1>
 <p>This project is an initiative of the OpenPOWER Foundation Accelerator Workgroup.
 Please see here for more details:</p>
@@ -328,8 +335,3 @@ Please see here for more details:</p>
 
     </body>
 </html>
-
-<!--
-MkDocs version : 1.0.4
-Build Date UTC : 2018-12-26 07:33:35
--->
