@@ -188,14 +188,18 @@
         <li class="main active"><a href="#repository-structure">Repository Structure</a></li>
             <li><a href="#sub-directories-in-oc-accel">Sub directories in oc-accel</a></li>
             <li><a href="#sub-directories-in-oc-bip">Sub directories in oc-bip</a></li>
-            <li><a href="#fpga_top-hierarchy">FPGA_TOP: Hierarchy</a></li>
+        <li class="main "><a href="#filesets-for-development-and-deployment">Filesets for Development and Deployment</a></li>
+            <li><a href="#files-used-in-simulation-step">Files used in Simulation Step</a></li>
+            <li><a href="#files-used-in-implementation-step">Files used in Implementation Step</a></li>
+            <li><a href="#files-used-in-deployment">Files used in Deployment</a></li>
+        <li class="main "><a href="#fpga_top-hierarchy">FPGA_TOP Hierarchy</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
 <h1 id="repository-structure">Repository Structure</h1>
-<p>The diagram below shows the entire diretory structure of OC-Accel git repository. It has a submodule <code>oc-bip</code> which contains the card specific packages and modules to support OpenCAPI protocol. The OpenCAPI transportation layer and data link layer modules <code>TLx</code> and <code>DLx</code> are two zip packages that can be downloaded from https://opencapi.org website (not included in this git repository.)</p>
-<p><img alt="oc-accel_git" src="../repository.assets/oc-accel_git-7132780.svg" /></p>
+<p>The diagram below shows the entire diretory structure of OC-Accel GIT repository. It has a <em>submodule</em> <code>oc-bip</code> which contains the card specific packages and modules to support OpenCAPI protocol. The OpenCAPI transportation layer and data link layer modules <code>TLx</code> and <code>DLx</code> are two zip packages that can be downloaded from <a href="https://opencapi.org">https://opencapi.org</a> website (not included in this git repository.)</p>
+<p><img alt="image-20190506234417511" src="../repository.assets/image-20190506234417511.png" /></p>
 <h2 id="sub-directories-in-oc-accel">Sub directories in oc-accel</h2>
 <p>The framework has some facilitating components:</p>
 <ul>
@@ -206,41 +210,47 @@
 </ul>
 <p>It has the modules to bridge OpenCAPI protocol:</p>
 <ul>
-<li>
-<p><strong>Software</strong>: provides user library to operate OpenCAPI cards like open_device(), attach_action(), etc. It includes header files and some tools.</p>
-</li>
-<li>
-<p><strong>Hardware</strong>: It has a TLx-to-AXI bridge Verilog design in <code>hdl</code>, the scripts to build a Vivado project and run the process in <code>setup</code>, the simluation scripts in <code>sim</code>, and the link to submodule <code>oc-bip</code>.</p>
-</li>
+<li><strong>Software</strong>: provides user library to operate OpenCAPI cards like open_device(), attach_action(), etc. It includes header files and some tools.</li>
+<li><strong>Hardware</strong>: It has a TLx-to-AXI bridge Verilog design in <code>hdl</code>, the scripts to build a Vivado project and run the process in <code>setup</code>, the simluation scripts in <code>sim</code>, and the link to submodule <code>oc-bip</code>.</li>
 </ul>
 <p>Then it is the User Application <code>actions</code> directory.</p>
 <ul>
-<li>
-<p>OC-Accel has already provided several examples in <strong>actions</strong> directory, including Verilog/VHDL examples and HLS (High Level Synthesis) examples. When a user wants to create a new Acceleration Application, he or she creates a new directory here.</p>
-</li>
-<li>
-<p>Under <code>actions/&lt;NAME&gt;</code>, use application also have software part <code>sw</code>, hardware part <code>hw</code> and test scripts <code>test</code>.</p>
-</li>
+<li>OC-Accel has already provided several examples in <strong>actions</strong> directory, including Verilog/VHDL examples and HLS (High Level Synthesis) examples. When a user wants to create a new Acceleration Application, he or she creates a new directory here.</li>
+<li>Under <code>actions/&lt;NAME&gt;</code>, use application also have software part <code>sw</code>, hardware part <code>hw</code> and test scripts <code>test</code>.</li>
 </ul>
 <h2 id="sub-directories-in-oc-bip">Sub directories in oc-bip</h2>
 <p><img alt="oc-bip" src="../repository.assets/oc-bip.svg" /></p>
-<p>Any card vendor can add their card package support in <code>oc-bip</code>. The concept is similar to DSA(Device Support Archieve) or BSP(Board Support Package). </p>
+<p>Any card vendor can add their card package support in <code>oc-bip</code>. The concept is similar to <strong>DSA</strong> (Device Support Archieve) or <strong>BSP</strong> (Board Support Package). </p>
 <ul>
-<li><strong>Board_support_packages</strong>: Card vendor need to create a separate folder for a new device. It includes (1) Constraint files (xdc) to describe the Card pins, flash interface, configurations and so on. (2) Tcl files to create Xilinx IPs to use. (3) <em>Enprypted</em> Verilog files to use Xilinx high speed serdes. (4) Verilog files for settings and FPGA top. </li>
-<li><strong>config_subsystem</strong>: Common logic for OpenCAPI config. </li>
-<li><strong>scripts</strong>: to pack the entire <code>oc-bip</code> to an Vivado IP (oc_bsp_wrap.xci).</li>
+<li><strong>Board_support_packages</strong>: Card vendor need to create a separate folder for a new device. It includes:<ol>
+<li>Constraint files (xdc) to describe the Card pins, flash interface, configurations and so on. </li>
+<li>Tcl files to create necessary Vivado IPs. </li>
+<li><em>Enprypted</em> Verilog files to use Xilinx high speed serdes IOs. </li>
+<li>Verilog files for parameters and FPGA top. </li>
+</ol>
+</li>
+<li><strong>config_subsystem</strong>: Shared common logic for OpenCAPI Config. </li>
+<li><strong>scripts</strong>: to pack the entire <code>oc-bip</code> to a Vivado IP (oc_bsp_wrap.xci).</li>
 <li><strong>sim</strong>: Top Verilog file for simulation.</li>
-<li><strong>Tlx</strong>: Download the encrypted TLx Zip package  <code>ibm.com_OpenCAPI_OC3_TLX_&lt;VERSION&gt;.zip</code> and put here.</li>
-<li><strong>Dlx</strong>: Download the encrypted DLx Zip package  <code>ibm.com_OpenCAPI_OC3_DLX_&lt;VERSION&gt;.zip</code> and put here.</li>
+<li><strong>Tlx</strong>: Download the encrypted Zip package  <code>ibm.com_OpenCAPI_OC3_TLX_&lt;VERSION&gt;.zip</code> and put here.</li>
+<li><strong>Dlx</strong>: Download the encrypted Zip package  <code>ibm.com_OpenCAPI_OC3_DLX_&lt;VERSION&gt;.zip</code> and put here.</li>
 </ul>
-<h2 id="fpga_top-hierarchy">FPGA_TOP: Hierarchy</h2>
+<h1 id="filesets-for-development-and-deployment">Filesets for Development and Deployment</h1>
+<h2 id="files-used-in-simulation-step">Files used in Simulation Step</h2>
+<p><img alt="image-20190514210455520" src="../repository.assets/image-20190514210455520.png" /></p>
+<h2 id="files-used-in-implementation-step">Files used in Implementation Step</h2>
+<p><img alt="image-20190514210854771" src="../repository.assets/image-20190514210854771.png" /></p>
+<h2 id="files-used-in-deployment">Files used in Deployment</h2>
+<p><img alt="image-20190514210351915" src="../repository.assets/image-20190514210351915.png" /></p>
+<h1 id="fpga_top-hierarchy">FPGA_TOP Hierarchy</h1>
+<p>To generate a FPGA bitstream (binary image), the top design file is <code>oc_fpga_top.v</code>. </p>
 <ul>
-<li>oc_fpga_top is in <code>hardware/oc-bip/board_support_packeages/&lt;CARD&gt;/Verilog/framework_top</code></li>
-<li>oc_bsp_wrap is assembled by the scripts in <strong>oc-bip</strong>.</li>
-<li>oc_snap_core is in <code>hardware/hdl</code></li>
+<li><strong>oc_fpga_top</strong> is located in <code>hardware/oc-bip/board_support_packeages/&lt;CARD&gt;/Verilog/framework_top</code></li>
+<li><strong>oc_bsp_wrap</strong> includes TLx, Dlx, PHY, Flash subsystem, Config subsystem, and Card information (VPD). A script <code>create_oc_bsp.tcl</code> will assemble these components to a Vivado IP. In simulation, oc_bsp_wrap is NOT required because it is replaced by OpenCAPI Simulation Engine (OCSE). </li>
+<li><strong>oc_snap_core</strong> is in <code>hardware/hdl</code></li>
 <li>User logic <strong>action_wrapper</strong> will be implemented in <code>actions/&lt;NAME&gt;/hw</code></li>
 </ul>
-<p><img alt="hier" src="../repository.assets/hier-7136992.png" /></p></div>
+<p><img alt="image-20190514211620084" src="../repository.assets/image-20190514211620084.png" /></p></div>
         </div>
 
         <footer class="col-md-12">

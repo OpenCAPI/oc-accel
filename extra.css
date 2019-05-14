@@ -64,6 +64,11 @@ table th {
 	background-color: #ccc;
 }
 
+li {
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
 /****************************************************/
 /* Customize sidebar 
 More examples:
