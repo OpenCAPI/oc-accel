@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Prepare Environment - OC-Accel Doc</title>
+        <title>Prepare environment - OC-Accel Doc</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -65,11 +65,11 @@
                                 <ul class="dropdown-menu">
                                     
 <li class="active">
-    <a href="./">Prepare Environment</a>
+    <a href="./">Prepare environment</a>
 </li>
                                     
 <li >
-    <a href="../run-example/">Run an example</a>
+    <a href="../run-helloworld/">Run helloworld</a>
 </li>
                                     
 <li >
@@ -170,7 +170,7 @@
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../run-example/">
+                                <a rel="prev" href="../run-helloworld/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -186,32 +186,111 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#prepare-environment">Prepare Environment</a></li>
-            <li><a href="#check-tools">Check Tools</a></li>
-            <li><a href="#clone-repositories">Clone Repositories</a></li>
+            <li><a href="#basic-tools">Basic Tools</a></li>
+            <li><a href="#clone-github-repositories">Clone Github Repositories</a></li>
+            <li><a href="#option1-all-in-one-python-workflow-script">Option1: All-in-one python workflow script</a></li>
+            <li><a href="#option2-traditional-make-steps">Option2: Traditional "make" steps</a></li>
+        <li class="main "><a href="#lets-go">Let's go!</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
+<p>This page will introduce the basic evironmental requests, tools, and general commands to run OC-Accel flow.</p>
 <h1 id="prepare-environment">Prepare Environment</h1>
-<p>Firstly, you need to have an x86 machine for developement. </p>
-<h2 id="check-tools">Check Tools</h2>
-<h3 id="vivado">Vivado</h3>
-<h3 id="xterm">xterm</h3>
-<h3 id="simulators">Simulators</h3>
-<h3 id="gcc">gcc</h3>
-<h2 id="clone-repositories">Clone Repositories</h2>
+<h2 id="basic-tools">Basic Tools</h2>
+<p>Firstly, you need to have an x86 machine for developement with Vivado tool and the license. </p>
+<pre><code>source &lt;xilinx_root&gt;/Vivado/&lt;version&gt;/settings64.sh
+export XILINXD_LICENSE_FILE=&lt;pointer to Xilinx license&gt;
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>OC-Accel works on Vivado 2018.2 and 2018.3</p>
+</div>
+<p>Make sure you have <code>gcc</code>, <code>make</code>, <code>sed</code>, <code>awk</code> and <code>xterm</code>.</p>
+<p><code>python</code> is optional, but it's better to install it.</p>
+<p>You may install other simulators to accelerate the speed of simulation. See in <a href="../co-simulation/index.html">co-simulation</a> for more information.</p>
+<h2 id="clone-github-repositories">Clone Github Repositories</h2>
 <pre><code>git clone git@github.ibm.com:OC-Enablement/oc-snap.git
 cd oc-snap
 git submodule init
 git submodule update
+
+cd ..
+git clone git@github.ibm.com:lancet/ocse.git
 </code></pre>
 
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Please be aware of hardware/oc-bip. If you made changes in that submodule, please do remove the "build" directory manually. (<code>hardware/oc-bip/$CARD/oc-bsp/build</code>) Otherwise it will not be re-built automatically from the snap build scripts.</p>
+<p>It's better to have <code>ocse</code> stay in the same directory as <code>oc-snap</code>. That is the default path of <code>$OCSE_ROOT</code>. Or you need to assign the path of <code>ocse</code> in following steps.</p>
+<h2 id="option1-all-in-one-python-workflow-script">Option1: All-in-one python workflow script</h2>
+<p>OC-Accel developed a "one-step" Python script to control the workflow.</p>
+<pre><code>cd oc-snap
+./snap_workflow.py
+</code></pre>
+
+<p>This script will </p>
+<ul>
+<li>Check environmental variables</li>
+<li>make snap_config</li>
+<li>build model</li>
+<li>start simulation</li>
+</ul>
+<p>There are many options provided by <code>snap_workflow.py</code>. Check the help messages by</p>
+<pre><code>./snap_workflow.py --help
+</code></pre>
+
+<p>It helps you to do all kinds of operations in one command line.</p>
+<h2 id="option2-traditional-make-steps">Option2: Traditional "make" steps</h2>
+<p>Just typing "make" doesn't work. Please give the explicit target.</p>
+<pre><code>cd oc-snap
+make help
+</code></pre>
+
+<pre><code>Main targets for the SNAP Framework make process:
+=================================================
+* snap_config    Configure SNAP framework
+* model          Build simulation model for simulator specified via target snap_config
+* sim            Start a simulation
+* hw_project     Create Vivado project with oc-bip
+* image          Build a complete FPGA bitstream after make hw_project (will take more than one hour)
+* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image'
+* software       Build software libraries and tools for SNAP
+* apps           Build the applications for all actions
+* clean          Remove all files generated in make process
+* clean_config   As target 'clean' plus reset of the configuration
+* help           Print this message
+
+The hardware related targets 'model', 'image', 'hardware', 'hw_project' and 'sim'
+do only exist on an x86 platform
+</code></pre>
+
+<p>If you have used SNAP for CAPI1.0 and CAPI2.0, you can continue to use these steps:</p>
+<h3 id="for-simulation">For simulation</h3>
+<ul>
+<li><code>make snap_config</code></li>
+<li><code>make model</code></li>
+<li><code>make sim</code></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>make_sim</code> can be replaced by call <code>hardware/sim/run_sim</code>script. </p>
 </div>
-<pre><code>git clone ocse!!!
-</code></pre></div>
+<h3 id="for-image-build">For Image build</h3>
+<ul>
+<li><code>make snap_config</code> If it has already been executed, no need to run it again. </li>
+<li><code>make hw_project</code></li>
+<li><code>make image</code></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>After <code>make hw_project</code>, you can go to <code>hardware/viv_project</code> and use vivado to open <code>framework.xpr</code>, then you can click <code>run Synthesis</code>, <code>run Implemention</code> and <code>generate Bitstream</code> buttons on Vivado GUI. </p>
+</div>
+<h3 id="output-files">Output files</h3>
+<p>The log files during these processes are placed in <code>hardware/logs</code>. </p>
+<p>Simulation output files are placed in <code>hardware/sim/[SIMULATOR]/latest</code>.</p>
+<p>If you are using <code>make image</code> to generate bitstreams, the outputs are in <code>hardware/build</code>, including <code>Images</code>, <code>Reports</code> and <code>Checkpoints</code>.</p>
+<p>If you are using Vivado Gui mode to generate bitstream, the outputs are in <code>hardware/viv_project/framework.runs</code>, including <code>synth_1</code> and <code>impl_1</code>, etc.</p>
+<h1 id="lets-go">Let's go!</h1>
+<p>Now, let's take an example <code>hls_helloworld</code>, and have a look at how it runs step by step. Please continue to read page <a href="../run-hellowold/index.html">Run helloworld</a>.</p></div>
         </div>
 
         <footer class="col-md-12">

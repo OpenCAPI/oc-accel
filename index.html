@@ -65,11 +65,11 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="user-guide/prepare-env/">Prepare Environment</a>
+    <a href="user-guide/prepare-env/">Prepare environment</a>
 </li>
                                     
 <li >
-    <a href="user-guide/run-example/">Run an example</a>
+    <a href="user-guide/run-helloworld/">Run helloworld</a>
 </li>
                                     
 <li >
@@ -190,10 +190,11 @@
             <li><a href="#what-can-i-do-with-it">What can I do with it</a></li>
             <li><a href="#oc-accel-framework">OC-Accel Framework</a></li>
         <li class="main "><a href="#dependencies">Dependencies</a></li>
-            <li><a href="#machine-and-tools-for-development">Machine and Tools for Development</a></li>
-            <li><a href="#server-and-fpga-cards-for-deployment">Server and FPGA cards for Deployment</a></li>
+            <li><a href="#required-tools-for-development">Required tools for development</a></li>
+            <li><a href="#supported-fpga-cards">Supported FPGA cards</a></li>
+            <li><a href="#supported-servers-for-deployment">Supported Servers for deployment</a></li>
         <li class="main "><a href="#compliance-with-snap1020">Compliance with SNAP1.0/2.0</a></li>
-        <li class="main "><a href="#read-more-todo-obsolete">Read more (TODO: obsolete)</a></li>
+        <li class="main "><a href="#read-more-todo">Read more (TODO)</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -208,47 +209,70 @@
 </ul>
 <p>Its specifications and ecosystem are managed by an open forum <a href="https://opencapi.org">OpenCAPI Consortium</a>.</p>
 <h2 id="what-can-i-do-with-it">What can I do with it</h2>
-<p>OC-Accel helps you create an accelerator on a certain FPGA card. Refer to "User Guide" tab for a more detailed step-to-step guide.</p>
-<h3 id="preparation">Preparation</h3>
-<p>Find out the "hot-spot" function to be moved to FPGA. This function, usually computation intensive, is also named as "action" in the following description. </p>
-<h3 id="step1-work-on-software-part">Step1: Work on software part</h3>
-<p>Put the action code into a function in the main software code, and determine the function parameters required. Add the few libosnap API functions that required to set up CAPI to the main software. </p>
-<h3 id="step2-work-on-hardware-part">Step2: Work on hardware part</h3>
-<p>Write the "hardware action" in a supported programming language, such as Vivado HLS or Verilog/VHDL. Together with the software part done in above step, run a co-simulation to verify the correctness. After the co-simulation is done, generate the FPGA bitstream. </p>
-<h3 id="step3-deploy-to-power9">Step3: Deploy to Power9!</h3>
-<p>Program the bitstream to a real FPGA card plugged into a supported Power9 machine. Copy, compile and execute the source code of software part, and see the acceleration!</p>
+<p>OC-Accel helps you create an accelerator on a certain FPGA card with OpenCAPI interface. Refer to "User Guide" tab for a more detailed step-to-step guide.</p>
+<p>Generally, creating an accelerator includes the steps as below:</p>
+<h3 id="develop-your-accelerator">Develop your accelerator</h3>
+<ul>
+<li>Find out the "hot-spot" function to be moved to FPGA. This function, usually computation intensive, is also mentioned as "<strong>action</strong>" in the following description. Use some <a href="https://en.wikipedia.org/wiki/Profiling_(computer_programming)">profiling</a> tools to analyze the bottleneck or the heavy workload in your algorithm. </li>
+<li><strong>Software/hardware partition</strong>: After isolating the functions to run on FPGA side, the parameters need to be nailed down. It can be described as a <code>job</code> data structure. Then design a <code>job queue</code> to process the jobs. Learning the examples (See in "Examples" tab) as an start. A few <a href="./deep-dive/software-api/index.html">libosnap API functions</a> help you manipulate the FPGA card and the software/hardware interface. </li>
+<li><strong>Work on the hardware action:</strong> Write the "hardware action" in a supported programming language, such as Vivado HLS or Verilog/VHDL. Together with the software part which invokes this hardware action, OC-Accel supports running co-simulation to verify the correctness. After the co-simulation is done, generate the FPGA bitstream. </li>
+<li>The development is executed on an X86 Linux machine, with at least <a href="https://www.xilinx.com/support/download.html">Xilinx Vivado</a> installed. You can also use other supported simulators to get better simulation speed.  </li>
+<li>A real FPGA card is <strong>NOT</strong> required for the plain development.</li>
+</ul>
+<h3 id="deploy-it-and-run">Deploy it and run</h3>
+<ul>
+<li><strong>Deploy to Power9 server</strong>: Program the bitstream to a real FPGA card. Compile the software code and run! </li>
+</ul>
 <h2 id="oc-accel-framework">OC-Accel Framework</h2>
+<p>Now let's have a glance at the diagram of OC-Accel framework. For more details about the directories, files and design hierarchy, see in <a href="./repository/index.html">reporsitory structure</a> page.</p>
 <p><img alt="oc-snap-framework" src="index.assets/oc-snap-framework.svg" /></p>
-<p>The framework hardware consists of a AXI-to-CAPI bridge unit, memory-mapped register I/O, host DMA, and a job management unit. It interfaces with a user-written action (a.k.a. kernel) through an AXI-lite control interface, and gives coherent access to host memory through AXI. Optionally, it also provides access to the on-card DRAM via AXI. A NVMe host controller-AXI bridge complements the framework for storage or database applications as an independent unit. Software gets access to the action through the libosnap library, allowing applications to call a "function" instead of programming an accelerator. The framework supports multi-process applications and can be extended to support multiple instantiated hardware actions in parallel. </p>
+<p>The framework hardware consists of an <strong>AXI-to-OpenCAPI bridge</strong> unit, which has memory-mapped register I/O, host DMA, and a job management unit. It interfaces with a user-written action (a.k.a. kernel) through an AXI-lite control interface, and gives coherent access to host memory through an AXI-MM interface. Optionally, it also provides access to the on-card DRAM via AXI. User can take this open-source framework to add other interfaces (for example, NVMe, Ethernet, HBM, etc) depending on the capabilities of the FPGA card . </p>
+<p>Software gets access to the action through the libosnap library, allowing applications to call a "function" instead of programming an accelerator. </p>
 <p>For more information, please refer to "Deep Dive" tab.</p>
 <h1 id="dependencies">Dependencies</h1>
-<h2 id="machine-and-tools-for-development">Machine and Tools for Development</h2>
-<p>Development is usually done on a <strong>Linux (x86) computer</strong>. 
-See examples of <a href="./doc#p8-development-environments-">supported development configurations</a>.
-The required tools and packages are listed below. Web access to github is recommended to follow the build instructions. <strong>A real FPGA card is not required for the plain hardware development.</strong></p>
-<h3 id="a-xilinx-vivado">(a) Xilinx Vivado</h3>
-<p>OC-Accel currently supports Xilinx FPGA devices, exclusively. For synthesis, simulation model and image build, the Xilinx Vivado 2018.2 tool suite is recommended.
-https://www.xilinx.com/products/design-tools/hardware-zone.html</p>
-<h3 id="b-opencapi-tlxdlx-package">(b) OpenCAPI TlxDLx package</h3>
-<h3 id="c-build-process">(c) Build process</h3>
-<p>Building the code and running the make environment requires the usual development tools <code>gcc, make, sed, awk</code>. If not installed already, the installer package <code>build-essential</code> will set up the most important tools.</p>
-<p>Configuring the OC-Accel framework will call a standalone tool that is based on the Linux kernel <a href="https://github.com/guillon/kconfig">kconfig</a> tool. The <code>ncurses</code> library must be installed to use the menu-driven user interface for <code>kconfig</code>.</p>
-<h3 id="d-run-simulation">(d) Run Simulation</h3>
-<p>For simulation, OC-Accel relies on the <code>xterm</code> program.
-You can use the build-in simulation <code>xsim</code> from Xilinx Vivado, or you can also use other simulations. Check <a href="user-guide/co-simulation/">Co-simulation</a> for more information.</p>
-<h2 id="server-and-fpga-cards-for-deployment">Server and FPGA cards for Deployment</h2>
-<h3 id="a-supported-power9-servers">(a) Supported Power9 servers</h3>
-<p>Lagrange Chip based</p>
-<p>Monza Chip based</p>
-<h3 id="b-fpga-card-selection">(b) FPGA Card selection</h3>
-<p>As of now, the following FPGA cards can be used with OC-Accel</p>
-<p>Alphadata 9V3</p>
+<h2 id="required-tools-for-development">Required tools for development</h2>
+<p>Development is usually done on a <strong>Linux (x86) computer</strong>. </p>
+<ul>
+<li><a href="https://www.xilinx.com/support/download.html">Xilinx Vivado</a>: OC-Accel currently supports Xilinx FPGA devices exclusively. For synthesis, simulation model and image build, the Xilinx Vivado 2018.2 or 2018.3 tool suite are recommended.</li>
+<li>OpenCAPI TlxDLx package. Download them from "link TODO"</li>
+<li>Build process: Building the code and running the make environment requires the usual development tools <code>gcc, make, sed, awk</code>. If not installed already, the installer package <code>build-essential</code> will set up the most important tools.</li>
+<li>Configuring the OC-Accel framework will call a standalone tool that is based on the Linux kernel <a href="https://github.com/guillon/kconfig">kconfig</a> tool. The <code>ncurses</code> library must be installed to use the menu-driven user interface for <code>kconfig</code>.</li>
+<li>Simulators: You can use the build-in simulation <code>xsim</code> from Xilinx Vivado, or you can also use other simulators like Cadence <code>irun</code> or <code>xcelium</code>. </li>
+<li>For simulation, OC-Accel also relies on the <code>xterm</code> program.</li>
+</ul>
+<h2 id="supported-fpga-cards">Supported FPGA cards</h2>
+<p>OC-Accel framework needs a FPGA card with OpenCAPI interface, and <u>a Slim-SAS cable</u> to connect to a Power9 server. Today it supports:</p>
+<ul>
+<li><a href="https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9v3">Alphadata 9V3</a></li>
+</ul>
+<p>For FPGA vendors, it's easy to enable a new FPGA card with OpenCAPI interface to run OC-Accel, go to <a href="./deep-dive/board-package/index.html">New board support</a> page to learn how to.</p>
+<h2 id="supported-servers-for-deployment">Supported Servers for deployment</h2>
+<p>OpenCAPI interface needs the support on processor side. You can run OpenCAPI acceleration on Power9 servers with LaGrange or Monza processors installed. Today you can choose:</p>
+<p>LaGrange processor based systems:  (link TODO)</p>
+<ul>
+<li>IPS FP5290</li>
+<li>Wisrton Mihawk</li>
+</ul>
+<p>Monza processor based systems:</p>
+<ul>
+<li>IBM AC922 (an Acorn card is also required)</li>
+</ul>
 <h1 id="compliance-with-snap1020">Compliance with SNAP1.0/2.0</h1>
-<p><a href="https://github.com/open-power/snap">https://github.com/open-power/snap</a> has the acceleration framework for CAPI1.0 and CAPI2.0. Correspondingly, we call that repository SNAP1.0/2.0. </p>
-<p>This OC-Accel framework has the similar structure, and the interfaces on "<strong>Software Program</strong>" and "<strong>Hardware Action</strong>" stay the same. Generally, your actions running on SNAP1.0/2.0 can be moved to OC-Accel directly without changing source-code. Check <a href="user-guide/migrate-from-old/">Migration Guide</a> for more information.</p>
-<h1 id="read-more-todo-obsolete">Read more (TODO: obsolete)</h1>
-<p>This project is an initiative of the OpenPOWER Foundation Accelerator Workgroup.
-Please see here for more details:</p>
+<p>OpenCAPI is actually the third generation of <a href="https://developer.ibm.com/linuxonpower/capi/">CAPI technology</a>. That's why its version starts from OpenCAPI3.0. The same acceleration framework for CAPI1.0 and CAPI2.0 is also an open-source git repository at <a href="https://github.com/open-power/snap">https://github.com/open-power/snap</a>.</p>
+<p>Correspondingly, we call that SNAP1.0/2.0. The supported cards can be found <a href="https://github.com/open-power/snap/#31-fpga-card-selection">here</a>.</p>
+<ul>
+<li>
+<p>SNAP1.0 runs on Power8 servers, with PCIe Gen3x8 cards. </p>
+</li>
+<li>
+<p>SNAP2.0 runs on Power9 servers, with PCIe Gen3x16 or PCIe Gen4x8 cards.</p>
+</li>
+<li>
+<p>OC-Accel runs on Power9 servers, using OpenCAPI x8 interface. </p>
+</li>
+</ul>
+<p>Generally, your actions running on SNAP1.0/2.0 can be moved to OC-Accel directly without changing source-code. Check <a href="user-guide/migrate-from-old/">Migration Guide</a> for more information.</p>
+<h1 id="read-more-todo">Read more (TODO)</h1>
 <ul>
 <li><a href="https://members.openpowerfoundation.org/wg/ACLWG/dashboard">OpenPower Foundation Acceleration Group</a></li>
 <li><a href="http://openpowerfoundation.org/blogs/capi-drives-business-performance/">CAPI drives business performance</a></li>
