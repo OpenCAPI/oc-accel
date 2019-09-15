@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Software API - OC-Accel Doc</title>
+        <title>(3) Create a new action - OC-Accel Doc</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -60,52 +60,52 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../user-guide/0-steps/">(0) Steps in a glance</a>
+    <a href="../0-steps/">(0) Steps in a glance</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/1-prepare-env/">(1) Prepare environment</a>
+    <a href="../1-prepare-env/">(1) Prepare environment</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/2-run-helloworld/">(2) Run helloworld</a>
+    <a href="../2-run-helloworld/">(2) Run helloworld</a>
+</li>
+                                    
+<li class="active">
+    <a href="./">(3) Create a new action</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/3-new-action/">(3) Create a new action</a>
+    <a href="../4-hdl-design/">(4) Verilog/VHDL design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/4-hdl-design/">(4) Verilog/VHDL design</a>
+    <a href="../5-hls-design/">(5) HLS C++ design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/5-hls-design/">(5) HLS C++ design</a>
+    <a href="../6-co-simulation/">(6) Co-Simulation</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/6-co-simulation/">(6) Co-Simulation</a>
+    <a href="../7-build-image/">(7) Build image</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/7-build-image/">(7) Build image</a>
+    <a href="../8-deploy/">(8) Deploy on Power Server</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/8-deploy/">(8) Deploy on Power Server</a>
+    <a href="../9-migrate/">(9) Migrate from SNAP1/2</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/9-migrate/">(9) Migrate from SNAP1/2</a>
-</li>
-                                    
-<li >
-    <a href="../../user-guide/10-tips/">(10) Tips</a>
+    <a href="../10-tips/">(10) Tips</a>
 </li>
                                 </ul>
                             </li>
@@ -130,24 +130,24 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Deep Dive <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li class="active">
-    <a href="./">Software API</a>
+<li >
+    <a href="../../deep-dive/software-api/">Software API</a>
 </li>
                                     
 <li >
-    <a href="../registers/">Registers</a>
+    <a href="../../deep-dive/registers/">Registers</a>
 </li>
                                     
 <li >
-    <a href="../hardware-logic/">Hardware Logic</a>
+    <a href="../../deep-dive/hardware-logic/">Hardware Logic</a>
 </li>
                                     
 <li >
-    <a href="../board-package/">New Board Support</a>
+    <a href="../../deep-dive/board-package/">New Board Support</a>
 </li>
                                 </ul>
                             </li>
@@ -169,12 +169,12 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../../actions-doc/hls_memcopy_1024/">
+                                <a rel="next" href="../2-run-helloworld/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../registers/">
+                                <a rel="prev" href="../4-hdl-design/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -189,47 +189,145 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#snap-software">SNAP Software</a></li>
-            <li><a href="#environment-variables">Environment Variables</a></li>
-            <li><a href="#directory-structure">Directory Structure</a></li>
+        <li class="main active"><a href="#a-new-git-fork">A new git fork</a></li>
+        <li class="main "><a href="#a-new-action">A new action</a></li>
+            <li><a href="#give-it-a-name-and-type">Give it a name and type</a></li>
+            <li><a href="#understand-the-workflow">Understand the workflow</a></li>
+            <li><a href="#start-simulation">Start simulation</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="snap-software">SNAP Software</h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This is an initial version copied from SNAP1/2.</p>
+<h1 id="a-new-git-fork">A new git fork</h1>
+<p>The first step before creating a new action is to create a git "fork".</p>
+<p><img alt="fork" src="../pictures/3-fork.png" /></p>
+<p>Now play on the forked git repository:</p>
+<pre><code>git clone https://github.com/&lt;MY_NAME&gt;/oc-accel
+git submodule init
+git submodule update
+</code></pre>
+
+<p>Delete the unnecessary branches, only keep "master", and create your own branches. </p>
+<p>When you want to sync with the original repository, do following steps: </p>
+<pre><code>git remote add upstream https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git
+</code></pre>
+
+<p>Check status:</p>
+<pre><code>git remote -v
+# origin    https://github.com/MY_NAME/MY_FORK.git (fetch)
+# origin    https://github.com/MY_NAME/MY_FORK.git (push)
+# upstream  https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git (fetch)
+# upstream  https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git (push)
+</code></pre>
+
+<p>Do the sync:</p>
+<pre><code>git fetch upstream
+git merge upstream/master
+</code></pre>
+
+<p>When you have some fixes and added some new features, create a pull request from your fork to the original repository. It will be reviewed and then the contribution will be merged. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>OC-Accel encourages people to create their own actions and the links will be recommended on <code>README.md</code>. But to keep the repository relatively small and neat, it will not copy every user action design into its original <code>actions</code> folder. </p>
+<p>Submit an <strong>issue</strong> or <strong>pull</strong> request to start the discussion.</p>
 </div>
-<p>Set of tools and library to drive the CAPI streaming framework hardware. The tools are intended to support bringup and debugging of the solution.</p>
-<p>Libsnap is intended to provide helper functions for own applications.</p>
-<p>Libsnap is planed to provide 3 different modes of operation:</p>
-<ol>
-<li>
-<p>Job-queue mode: In this mode jobs can be send to the hardware which are put onto a queue. After completion the caller is notified. The framework offers the possiblity to generate a queue per AFU context, respectively per process using it. Within a process the queue can be exploited by multiple threads at the same time. The hardware job-manager is responsible to connect the job-request to a free FPGA-action. This is done dynamically in round-robin fashion. There is a request and a completion queue. The jobs can finish asyncronously depending on how long they take.</p>
+<h1 id="a-new-action">A new action</h1>
+<p>We have several examples as references. Current action example list is:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../actions-doc/hdl_example/index.html">hdl_example</a></td>
+<td>VHDL</td>
+<td>512b hdl_example inherited from SNAP1/2. Optional FPGA DDR.</td>
+</tr>
+<tr>
+<td><a href="../../actions-doc/hdl_single_engine/index.html">hdl_single_engine</a></td>
+<td>Verilog</td>
+<td>1024b example to send AXI read/write commands. Used to measure bandwidth and latency. No FPGA DDR.</td>
+</tr>
+<tr>
+<td><a href="../../actions-doc/hls_helloworld/index.html">hls_helloworld</a></td>
+<td>C/C++(HLS)</td>
+<td>512b example to read data from host, convert to CAPITAL case and write back. No FPGA DDR.</td>
+</tr>
+<tr>
+<td><a href="../../actions-doc/hls_memcopy_1024/index.html">hls_memcopy_1024</a></td>
+<td>C/C++(HLS)</td>
+<td>1024b example to do memcopy. Enabled FPGA DDR.</td>
+</tr>
+</tbody>
+</table>
+<p>According to the action category, copy the folder of a proper example from <code>actions</code> and name it. </p>
+<h2 id="give-it-a-name-and-type">Give it a name and type</h2>
+<p><strong>Step1:</strong> </p>
+<pre><code>make snap_config
+</code></pre>
+
+<p>Select <code>HLS Action - manually set ...</code> or <code>HDL Action - manually set ...</code> in the blue kconfig window.</p>
+<p><img alt="kconfig-name" src="../pictures/3-kconfig-name.png" /></p>
+<p><strong>Step2:</strong></p>
+<p>Edit <code>snap_env.sh</code>, point $ACTION_ROOT to the new action.</p>
+<pre><code>export ACTION_ROOT=&lt;...path...&gt;/oc-snap/actions/my_new_action
+export TIMING_LABLIMIT=&quot;-200&quot;
+export OCSE_ROOT=&lt;...path...&gt;/ocse
+</code></pre>
+
+<p><strong>Step3:</strong></p>
+<p>Edit <code>software/tools/snap_actions.h</code>, add a row of the new action, with the company/person name, action type ID, and a short description. </p>
+<pre><code>static const struct actions_tab snap_actions[] = {
+    { &quot;IBM&quot;, 0x10140000, &quot;hdl_example in VHDL  (512b)&quot;                           },
+    { &quot;IBM&quot;, 0x10140002, &quot;hdl_single_engine in Verilog (1024b)&quot;                  },
+    { &quot;IBM&quot;, 0x10140004, &quot;UVM test for unit verification (no OCSE and software)&quot; },
+
+    { &quot;IBM&quot;, 0x10141001, &quot;HLS Sponge           (512b)&quot;                           },
+    { &quot;IBM&quot;, 0x10141008, &quot;HLS Hello World      (512b)&quot;                           },
+    { &quot;IBM&quot;, 0x1014100B, &quot;HLS Memcopy 1024     (1024b)&quot;                          },
+};
+</code></pre>
+
+<p><strong>Step4:</strong></p>
+<p>The Action Type (for example, 0x10140000) should match with following places:</p>
+<ul>
+<li><code>actions/&lt;my_new_action&gt;/hw/</code></li>
+<li><code>actions/&lt;my_new_action&gt;/sw/</code></li>
+</ul>
+<p>Do a <code>grep</code> search and replace them.</p>
+<h2 id="understand-the-workflow">Understand the workflow</h2>
+<p>Modify the example code (sw, hw and tests) to cook a new action. </p>
+<p>Understanding the workflow can help quickly identifying what's wrong. These steps are organized in </p>
+<ul>
+<li><code>Makefile</code></li>
+<li><code>hardware/Makefile</code></li>
+<li><code>software/Makefile</code></li>
+<li>Actions --&gt; <ul>
+<li><code>$ACTION_ROOT/hw/Makefile</code></li>
+<li><code>$ACTION_ROOT/sw/Makefile</code></li>
+</ul>
 </li>
-<li>
-<p><em>FIXME Not fully in plan yet</em> Action-assignment mode: A process requests the connection between an AFU-context to an FPGA-action. This connection is managed by the job-manager and supports as many assignments as FPGA-actions are available. Once connected the process can use FPGA-action MMIOs to do further work e.g. implement door-bells, or data-send/receive queues. Interrupts can be used for error or completion notification.</p>
-</li>
-<li>
-<p>Direct access cards AFU-master/slave contexts. This mode is for debugging and global configuration tasks.</p>
-</li>
-</ol>
-<h2 id="environment-variables">Environment Variables</h2>
-<p>To debug libsnap functionality or associated actions, there are currently some environment variables available:
-- <strong><em>SNAP_CONFIG</em></strong>: 0x1 Enable software action emulation for those actions which we use for trying out. Instead of 0x0 or 0x1 one can also use FPGA or CPU.
-- <strong><em>SNAP_TRACE</em></strong>: 0x1 General libsnap trace, 0x2 Enable register read/write trace, 0x4 Enable simulation specific trace, 0x8 Enable action traces. Applications might use more bits above those defined here.</p>
-<h2 id="directory-structure">Directory Structure</h2>
-<pre><code class="text">.
-|-- include        libsnap.h and auxiliary C-headers
-|                  snap_types.h contains shared data types and definitions between the host-code
-|                  and SNAP actions
-|-- lib            libsnap.so/.a
-|-- scripts        Testcases
-`-- tools          Generic tools for SNAP users. E.g.:
-                   snap_maint setup tool which needs to be called before using the card.
-                                         It sets up the SNAP action assignment hardware.
-                   snap_peek/poke debug tools to read/write SNAP MMIO registers.
+</ul>
+<p>When adding a new action, before calling the "All-in-one" ocaccel_workflow.py, make sure the make process under $ACTION_ROOT works. </p>
+<pre><code>cd $ACTION_ROOT/sw
+make
+cd $ACTION_ROOT/hw
+make
+</code></pre>
+
+<p><img alt="workflow" src="../pictures/3-workflow.svg" /></p>
+<p>Above figure shows the steps to make a simulation model. The Action related steps are marked in light orange color. There are also two important tricks:</p>
+<ul>
+<li><strong>PREPROCESS</strong>: it will deal with the files with "_source" suffix. That means, "FILE_source" will be "pre-processed" and converted to "FILE". "FILE" is a generated one and should not be modified manually, and should not be committed to github either.</li>
+<li>Build Date/Time, Git Version and Card info will be hardcoded into snap_core logic by "<strong>patch_version.sh</strong>"</li>
+</ul>
+<h2 id="start-simulation">Start simulation</h2>
+<p>After clean up compiling errors in action sw and action hw, kick off a co-simulation by </p>
+<pre><code>./ocaccel_workflow.py
 </code></pre></div>
         </div>
 

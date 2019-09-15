@@ -65,43 +65,47 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../user-guide/prepare-env/">Prepare environment</a>
+    <a href="../../user-guide/0-steps/">(0) Steps in a glance</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/run-helloworld/">Run helloworld</a>
+    <a href="../../user-guide/1-prepare-env/">(1) Prepare environment</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/new-action/">Create a new action</a>
+    <a href="../../user-guide/2-run-helloworld/">(2) Run helloworld</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/co-simulation/">Co-Simulation</a>
+    <a href="../../user-guide/3-new-action/">(3) Create a new action</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/make-image/">FPGA Image build</a>
+    <a href="../../user-guide/4-hdl-design/">(4) Verilog/VHDL design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/optimize-hls/">Optimize HLS action</a>
+    <a href="../../user-guide/5-hls-design/">(5) HLS C++ design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/deploy/">Deploy on Power Server</a>
+    <a href="../../user-guide/6-co-simulation/">(6) Co-Simulation</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/debug-issue/">Debug an issue</a>
+    <a href="../../user-guide/7-build-image/">(7) Build image</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/migrate-from-old/">Migrate from SNAP1/2</a>
+    <a href="../../user-guide/8-deploy/">(8) Deploy on Power Server</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/command-reference/">Command Reference</a>
+    <a href="../../user-guide/9-migrate/">(9) Migrate from SNAP1/2</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/10-tips/">(10) Tips</a>
 </li>
                                 </ul>
                             </li>
@@ -110,19 +114,19 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../actions-doc/hdl-example/">hdl_example</a>
+    <a href="../../actions-doc/hdl_example/">hdl_example</a>
 </li>
                                     
 <li >
-    <a href="../../actions-doc/hdl-helloworld/">hdl_helloworld</a>
+    <a href="../../actions-doc/hdl_single_engine/">hdl_single_engine</a>
 </li>
                                     
 <li >
-    <a href="../../actions-doc/hls-helloworld/">hls_helloworld</a>
+    <a href="../../actions-doc/hls_helloworld/">hls_helloworld</a>
 </li>
                                     
 <li >
-    <a href="../../actions-doc/hls-memcopy/">hls_memcopy</a>
+    <a href="../../actions-doc/hls_memcopy_1024/">hls_memcopy_1024</a>
 </li>
                                 </ul>
                             </li>
@@ -187,24 +191,10 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#snap-registers">SNAP Registers</a></li>
             <li><a href="#overview">Overview</a></li>
+            <li><a href="#address-map">Address Map</a></li>
         <li class="main "><a href="#register-definition">Register Definition</a></li>
-            <li><a href="#impl-version-register-ivr">Impl. Version Register (IVR)</a></li>
-            <li><a href="#build-date-register-bdr">Build Date Register (BDR)</a></li>
-            <li><a href="#snap-command-register-scr">SNAP Command Register (SCR)</a></li>
-            <li><a href="#snap-status-register-ssr">SNAP Status Register (SSR)</a></li>
-            <li><a href="#snap-lock-register-slr">SNAP Lock Register (SLR)</a></li>
-            <li><a href="#snap-capability-register-scr">SNAP Capability Register (SCR)</a></li>
-            <li><a href="#freerunning-timer-frt">Freerunning Timer (FRT)</a></li>
-            <li><a href="#job-timeout-register-jtr">Job Timeout Register (JTR)</a></li>
-            <li><a href="#action-active-counter-aac">Action Active Counter (AAC)</a></li>
-            <li><a href="#job-execution-counter-jec">Job Execution Counter (JEC)</a></li>
-            <li><a href="#context-id-register-cir">Context ID Register (CIR)</a></li>
-            <li><a href="#action-type-register-i-atri">Action Type Register i (ATRi)</a></li>
-            <li><a href="#context-attach-status-vector-casv">Context Attach Status Vector (CASV)</a></li>
-            <li><a href="#job-work-timer-jwt">Job Work Timer (JWT)</a></li>
-            <li><a href="#context-configuration-register-ccr">Context Configuration Register (CCR)</a></li>
-            <li><a href="#context-status-register">Context Status Register</a></li>
-            <li><a href="#job-command-register-jcr">Job Command Register (JCR)</a></li>
+            <li><a href="#snap-basic-registers">SNAP Basic Registers</a></li>
+            <li><a href="#snap-debug-registers-0x0">SNAP Debug Registers 0x0</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -212,9 +202,19 @@
 <h1 id="snap-registers">SNAP Registers</h1>
 <h2 id="overview">Overview</h2>
 <p>SNAP registers are defined in the MMIO General space for each AFU. Action specific registers (registers related to AFU's function) are defined in the per PASID MMIO space. All of those address mapping parameters (BAR, MMIO general, MMIO PASID, and also memory space) are specified with respect to OpenCAPI configuration space specification. SNAP core hardware is responsible for handling the configuration read/write from host and maintaining the configuration space and SNAP registers.</p>
-<p><img alt="drawing" src="../registers.assets/SNAP-registers.svg" /></p>
+<p><img alt="drawing" src="registers.assets/SNAP-registers.svg" /></p>
+<h2 id="address-map">Address Map</h2>
+<p>Only lower 32bits are used for MMIO addresses. There are two regions: SNAP registers and Action registers. 
+* SNAP registers are 64b registers, use <code>snap_mmio_read64/write64()</code> to access them, and the address should be aligned to 8. SNAP registers are in global MMIO space. It has three categories:
+  * SNAP Basic Registers: addr[20:8] = 0x0000;
+  * SNAP Debug Registers: addr[20:8] = 0x0001;
+  * SNAP FIR Registers:   addr[20:8] = 0x0002;</p>
+<ul>
+<li>Action registers are 32b registers, use <code>snap_action_read32/write32()</code> to access them, and the address should be aligned to 4. Action registers are in per PASID MMIO space. They are completely user defined. User can freely use 2MB space, that means, using addr[20:0].</li>
+</ul>
 <h1 id="register-definition">Register Definition</h1>
-<h2 id="impl-version-register-ivr">Impl. Version Register (IVR)</h2>
+<h2 id="snap-basic-registers">SNAP Basic Registers</h2>
+<h3 id="impl-version-register-ivr">Impl. Version Register (IVR)</h3>
 <table>
 <thead>
 <tr>
@@ -226,7 +226,7 @@
 <tbody>
 <tr>
 <td>Implementation Version Register</td>
-<td>0x0000</td>
+<td>0x00</td>
 <td>POR value depends on source for the build. Example for build based on commit with SHA ID eb43f4d80334d6a127af150345fed12dc5f45b7c and with distance 13 to SNAP Release v1.25.4: 0x0119040D_EB43F4D8</td>
 </tr>
 </tbody>
@@ -280,7 +280,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="build-date-register-bdr">Build Date Register (BDR)</h2>
+<h3 id="build-date-register-bdr">Build Date Register (BDR)</h3>
 <table>
 <thead>
 <tr>
@@ -292,7 +292,7 @@
 <tbody>
 <tr>
 <td>Build Date Register</td>
-<td>0x0008</td>
+<td>0x08</td>
 <td>POR value depends on build date and time. Example for build on January 12th, 2017 at 15:27: 0x00002017_01121527</td>
 </tr>
 </tbody>
@@ -344,7 +344,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="snap-command-register-scr">SNAP Command Register (SCR)</h2>
+<h3 id="snap-command-register-scr">SNAP Command Register (SCR)</h3>
 <table>
 <thead>
 <tr>
@@ -356,7 +356,7 @@
 <tbody>
 <tr>
 <td>SNAP Command Register</td>
-<td>0x0010</td>
+<td>0x10</td>
 <td>Send SNAP commands via this register</td>
 </tr>
 </tbody>
@@ -413,7 +413,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="snap-status-register-ssr">SNAP Status Register (SSR)</h2>
+<h3 id="snap-status-register-ssr">SNAP Status Register (SSR)</h3>
 <table>
 <thead>
 <tr>
@@ -425,7 +425,7 @@
 <tbody>
 <tr>
 <td>SNAP Status Register</td>
-<td>0x0018</td>
+<td>0x18</td>
 <td>POR value: 0x0000000000000000</td>
 </tr>
 </tbody>
@@ -462,46 +462,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="snap-lock-register-slr">SNAP Lock Register (SLR)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SNAP Lock Register</td>
-<td>0x0020</td>
-<td>POR value: 0x0000000000000000</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..1</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>0</td>
-<td>RW</td>
-<td>Lock (Set on Read)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="snap-capability-register-scr">SNAP Capability Register (SCR)</h2>
+<h3 id="snap-capability-register-cap">SNAP Capability Register (CAP)</h3>
 <table>
 <thead>
 <tr>
@@ -513,7 +474,7 @@
 <tbody>
 <tr>
 <td>SNAP Capability Register</td>
-<td>0x0030</td>
+<td>0x20</td>
 <td>Define the capability of the card</td>
 </tr>
 </tbody>
@@ -565,47 +526,76 @@
 </tr>
 <tr>
 <td></td>
-<td>0x13 : S241</td>
+<td>0x31 : AD9V3</td>
 <td></td>
 </tr>
 <tr>
 <td></td>
-<td>0x12 : FX609</td>
+<td>0x32 : AD9H7</td>
 <td></td>
 </tr>
 <tr>
 <td></td>
-<td>0x11 : RCXVUP</td>
+<td>0x33 : N250SoC</td>
 <td></td>
 </tr>
 <tr>
 <td></td>
-<td>0x10 : N250SP</td>
+<td>0x34 : Innova2</td>
 <td></td>
 </tr>
 <tr>
 <td></td>
-<td>0x03 : AD8K5</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x02 : S121B</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x01 : N250S</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x00 : ADKU3</td>
+<td>0x35 : AD9H3</td>
 <td></td>
 </tr>
 </tbody>
 </table>
-<h2 id="freerunning-timer-frt">Freerunning Timer (FRT)</h2>
+<h3 id="action-type-register-atr">Action Type Register (ATR)</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Offset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Action Type Register</td>
+<td>0x28</td>
+<td>POR value: 0x00000000_00000000. LIBSNAP needs to specify the values based on the result of an exploration phase</td>
+</tr>
+</tbody>
+</table>
+<p>Bitwise definition</p>
+<table>
+<thead>
+<tr>
+<th>Bits</th>
+<th>Attributes</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>63..36</td>
+<td>RO</td>
+<td>Reserved</td>
+</tr>
+<tr>
+<td>35..32</td>
+<td>RW</td>
+<td>Internal Short Action Type</td>
+</tr>
+<tr>
+<td>31.. 0</td>
+<td>RW</td>
+<td>Action type for action i (all zero if no Action i is implemented)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="freerunning-timer-frt">Freerunning Timer (FRT)</h3>
 <table>
 <thead>
 <tr>
@@ -639,7 +629,8 @@
 </tr>
 </tbody>
 </table>
-<h2 id="job-timeout-register-jtr">Job Timeout Register (JTR)</h2>
+<h2 id="snap-debug-registers-0x0">SNAP Debug Registers 0x0</h2>
+<h3 id="debug-clear-register-dbg_clr">Debug Clear Register (DBG_CLR)</h3>
 <table>
 <thead>
 <tr>
@@ -650,53 +641,9 @@
 </thead>
 <tbody>
 <tr>
-<td>Job Timeout Register</td>
-<td>0x0088</td>
-<td>POR value: 0x80000000_0ABA9500 timeout enabled with 1s</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63</td>
-<td>RW</td>
-<td>Enable Job Timeout checking (1=enabled)</td>
-</tr>
-<tr>
-<td>62..32</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>31..0</td>
-<td>RW</td>
-<td>Job Timeout value (this value decrements with the 250MHz PSL clock)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="action-active-counter-aac">Action Active Counter (AAC)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Action Active Counter</td>
-<td>0x0090</td>
-<td>Counter counting the number of clock cycles with an active action</td>
+<td>Debug Clear Register</td>
+<td>0x0080</td>
+<td>Counting the number of clock cycles since reset</td>
 </tr>
 </tbody>
 </table>
@@ -713,379 +660,7 @@
 <tr>
 <td>63..0</td>
 <td>RO</td>
-<td>Counter counting the number of clock cycles with an active action. (TBD: when is an action considered active?). This counter increments with the 250MHz PSL clock.</td>
-</tr>
-</tbody>
-</table>
-<h2 id="job-execution-counter-jec">Job Execution Counter (JEC)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Job Execution Counter</td>
-<td>0x0098</td>
-<td>Counter counting the number of clock cycles while a job gets executed</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..0</td>
-<td>RO</td>
-<td>Counter counting the number of clock cycles while a job gets executed (TBD: when is a job considered as being executed?). This counter increments with the 250MHz PSL clock.</td>
-</tr>
-</tbody>
-</table>
-<h2 id="context-id-register-cir">Context ID Register (CIR)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Context ID Register</td>
-<td>0x00A0</td>
-<td>Context ID in this register</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th></th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63</td>
-<td></td>
-<td>RW</td>
-<td>Set to '1' for master register 0 for slave</td>
-</tr>
-<tr>
-<td>62..0</td>
-<td></td>
-<td>RO</td>
-<td>Reserved (no context ID for master bit 63  = 1)</td>
-</tr>
-<tr>
-<td></td>
-<td>62..9</td>
-<td>RO</td>
-<td>Reserved (if bit 63  = 0)</td>
-</tr>
-<tr>
-<td></td>
-<td>8..0</td>
-<td>RO</td>
-<td>My context id (if bit 63  = 0). (9 bits corresponding to context IDs in the range 0..511)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="action-type-register-i-atri">Action Type Register i (ATRi)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Action Type Register i (0 &lt;= i &lt; 16)</td>
-<td>0x0100 + i * 0x008</td>
-<td>POR value: 0x00000000_00000000. LIBSNAP needs to specify the values based on the result of an exploration phase</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..36</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>35..32</td>
-<td>RW</td>
-<td>Internal Short Action Type</td>
-</tr>
-<tr>
-<td>31.. 0</td>
-<td>RW</td>
-<td>Action type for action i (all zero if no Action i is implemented)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="context-attach-status-vector-casv">Context Attach Status Vector (CASV)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Context Attach Status Vector m (0 &lt;= m &lt; 16)</td>
-<td>0xC000 + i * 0x008</td>
-<td>Status of each context</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..32</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>31..0</td>
-<td>RO</td>
-<td>Context m*32+k is attached if (and only if) bit k is set (for each k = 0,..,31).</td>
-</tr>
-</tbody>
-</table>
-<h2 id="job-work-timer-jwt">Job Work Timer (JWT)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Job Work Timer</td>
-<td>0x00001080 + (s+n) * 0x0010000</td>
-<td>Timer for each job</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..0</td>
-<td>RO</td>
-<td>Counter counting the number of clock cycles during job execution for this context. (Counter gets reset with every valid Job Queue Configuration Register (QCfgR) write access; the value is persistent during reset). This counter increments with the 250MHz PSL clock.</td>
-</tr>
-</tbody>
-</table>
-<h2 id="context-configuration-register-ccr">Context Configuration Register (CCR)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Context Configuration Register</td>
-<td>0x1000</td>
-<td>Configuration of each context</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..8</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>7..0</td>
-<td>RW</td>
-<td>Context configuration:</td>
-</tr>
-<tr>
-<td></td>
-<td>0x01: Direct Mode</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x02: Rise IRQ when Action goes to IDLE</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x04: Rise IRQ when Action is attached</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<h2 id="context-status-register">Context Status Register</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Context Status Register</td>
-<td>0x1008</td>
-<td>Status of each context</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..8</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>7..0</td>
-<td>RO</td>
-<td>Context status:</td>
-</tr>
-<tr>
-<td></td>
-<td>0x80: Short Action Type for this context is assigned</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x40: This context is attached to an action</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x01: Currently executing job</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x00: Context Active</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<h2 id="job-command-register-jcr">Job Command Register (JCR)</h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Job Command Register</td>
-<td>0x1010</td>
-<td>Send command to a job</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..16</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>15..0</td>
-<td>RO</td>
-<td>Job command:</td>
-</tr>
-<tr>
-<td></td>
-<td>0x0004: Reset Action, than Detach action from context</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x0002: Detach action from context</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x0001: Attach action to context</td>
-<td></td>
+<td>Counter counting the number of clock cycles since reset (afu open). This counter increments with the 250MHz PSL clock</td>
 </tr>
 </tbody>
 </table></div>

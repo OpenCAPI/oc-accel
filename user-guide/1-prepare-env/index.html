@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Software API - OC-Accel Doc</title>
+        <title>(1) Prepare environment - OC-Accel Doc</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -60,52 +60,52 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../user-guide/0-steps/">(0) Steps in a glance</a>
+    <a href="../0-steps/">(0) Steps in a glance</a>
+</li>
+                                    
+<li class="active">
+    <a href="./">(1) Prepare environment</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/1-prepare-env/">(1) Prepare environment</a>
+    <a href="../2-run-helloworld/">(2) Run helloworld</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/2-run-helloworld/">(2) Run helloworld</a>
+    <a href="../3-new-action/">(3) Create a new action</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/3-new-action/">(3) Create a new action</a>
+    <a href="../4-hdl-design/">(4) Verilog/VHDL design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/4-hdl-design/">(4) Verilog/VHDL design</a>
+    <a href="../5-hls-design/">(5) HLS C++ design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/5-hls-design/">(5) HLS C++ design</a>
+    <a href="../6-co-simulation/">(6) Co-Simulation</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/6-co-simulation/">(6) Co-Simulation</a>
+    <a href="../7-build-image/">(7) Build image</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/7-build-image/">(7) Build image</a>
+    <a href="../8-deploy/">(8) Deploy on Power Server</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/8-deploy/">(8) Deploy on Power Server</a>
+    <a href="../9-migrate/">(9) Migrate from SNAP1/2</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/9-migrate/">(9) Migrate from SNAP1/2</a>
-</li>
-                                    
-<li >
-    <a href="../../user-guide/10-tips/">(10) Tips</a>
+    <a href="../10-tips/">(10) Tips</a>
 </li>
                                 </ul>
                             </li>
@@ -130,24 +130,24 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Deep Dive <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li class="active">
-    <a href="./">Software API</a>
+<li >
+    <a href="../../deep-dive/software-api/">Software API</a>
 </li>
                                     
 <li >
-    <a href="../registers/">Registers</a>
+    <a href="../../deep-dive/registers/">Registers</a>
 </li>
                                     
 <li >
-    <a href="../hardware-logic/">Hardware Logic</a>
+    <a href="../../deep-dive/hardware-logic/">Hardware Logic</a>
 </li>
                                     
 <li >
-    <a href="../board-package/">New Board Support</a>
+    <a href="../../deep-dive/board-package/">New Board Support</a>
 </li>
                                 </ul>
                             </li>
@@ -169,12 +169,12 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../../actions-doc/hls_memcopy_1024/">
+                                <a rel="next" href="../0-steps/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../registers/">
+                                <a rel="prev" href="../2-run-helloworld/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -189,48 +189,133 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#snap-software">SNAP Software</a></li>
-            <li><a href="#environment-variables">Environment Variables</a></li>
-            <li><a href="#directory-structure">Directory Structure</a></li>
+        <li class="main active"><a href="#prepare-environment">Prepare Environment</a></li>
+            <li><a href="#basic-tools">Basic Tools</a></li>
+            <li><a href="#clone-github-repositories">Clone Github Repositories</a></li>
+        <li class="main "><a href="#basic-terms">Basic terms</a></li>
+            <li><a href="#option1-all-in-one-python-script">Option1: All-in-one python script</a></li>
+            <li><a href="#option2-traditional-make-steps">Option2: Traditional "make" steps</a></li>
+            <li><a href="#output-files">Output files</a></li>
+        <li class="main "><a href="#lets-go">Let's go!</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="snap-software">SNAP Software</h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This is an initial version copied from SNAP1/2.</p>
+<p>This page will introduce the basic environmental requests, tools, and general commands to run OC-Accel flow.</p>
+<h1 id="prepare-environment">Prepare Environment</h1>
+<h2 id="basic-tools">Basic Tools</h2>
+<p>Firstly, you need to have an x86 machine for development with <a href="https://www.xilinx.com/support/download.html">Vivado Tool</a> and the license. </p>
+<pre><code>export XILINX_VIVADO=&lt;...path...&gt;/Xilinx/Vivado/&lt;VERSION&gt;
+export XILINXD_LICENSE_FILE=&lt;pointer to Xilinx license&gt;
+export PATH=$PATH:${XILINX_VIVADO}/bin
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>OC-Accel works on Vivado 2018.2, 2018.3 and 2019.1</p>
+<p>For AD9H3 and AD9H7 cards with HBM, Vivado version is at least 2018.3</p>
 </div>
-<p>Set of tools and library to drive the CAPI streaming framework hardware. The tools are intended to support bringup and debugging of the solution.</p>
-<p>Libsnap is intended to provide helper functions for own applications.</p>
-<p>Libsnap is planed to provide 3 different modes of operation:</p>
-<ol>
+<p>There is a file <code>setup_tools.ksh</code> in the root directory for reference. But for the beginning, only Vivado is required.</p>
+<p>Make sure you have <code>gcc</code>, <code>make</code>, <code>sed</code>, <code>awk</code>, <code>xterm</code> and <code>python</code> installed.
+<code>setup_tools.ksh</code> </p>
+<p>You may install other simulators to accelerate the speed of simulation. For example, <a href="https://www.cadence.com/content/cadence-www/global/en_US/home/tools/system-design-and-verification/simulation-and-testbench-verification/xcelium-parallel-simulator.html">Cadence xcelium</a>. See in <a href="../6-co-simulation/index.html">co-simulation</a> for more information.</p>
+<h2 id="clone-github-repositories">Clone Github Repositories</h2>
+<p>TODO: Link to update</p>
+<pre><code>git clone git@github.ibm.com:OC-Enablement/oc-snap.git
+cd oc-snap
+git submodule init
+git submodule update
+
+cd ..
+git clone git@github.ibm.com:lancet/ocse.git
+</code></pre>
+
+<p>It's better to have <code>ocse</code> stay in the same directory parallel to <code>oc-snap</code>. That is the default path of <code>$OCSE_ROOT</code>. Or you need to assign <code>$OCSE_ROOT</code> explicitly in <code>snap_env.sh</code>.</p>
+<h1 id="basic-terms">Basic terms</h1>
+<h2 id="option1-all-in-one-python-script">Option1: All-in-one python script</h2>
+<p>OC-Accel developed a "all-in-one" Python script to control the workflow. It's convenient to do batch work, or enable your regression verification or continuous integration.</p>
+<pre><code>cd oc-snap
+./ocaccel_workflow.py
+</code></pre>
+
+<p>This script will </p>
+<ul>
+<li>Check environmental variables</li>
+<li>make snap_config</li>
+<li>build model</li>
+<li>start simulation</li>
+</ul>
+<p>There are many options provided by <code>ocaccel_workflow.py</code>. Check the help messages by</p>
+<pre><code>./ocaccel_workflow.py --help
+</code></pre>
+
+<p>It helps you to do all kinds of operations in one command line.</p>
+<h2 id="option2-traditional-make-steps">Option2: Traditional "make" steps</h2>
+<p>If you have used SNAP for CAPI1.0 and CAPI2.0, you can continue to use these "traditional" make steps. Just typing "make" doesn't work. An explicit target is needed. You can find them in <code>Makefile</code> file.</p>
+<pre><code>cd oc-snap
+make help
+</code></pre>
+
+<pre><code>Main targets for the SNAP Framework make process:
+=================================================
+* snap_config    Configure SNAP framework
+* model          Build simulation model for simulator specified via target snap_config
+* sim            Start a simulation
+* sim_tmux       Start a simulation in tmux (no xterm window popped up)
+* hw_project     Create Vivado project with oc-bip
+* image          Build a complete FPGA bitstream after hw_project (takes more than one hour)
+* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')
+* software       Build software libraries and tools for SNAP
+* apps           Build the applications for all actions
+* clean          Remove all files generated in make process
+* clean_config   As target 'clean' plus reset of the configuration
+* help           Print this message
+
+
+
+The hardware related targets 'model', 'image', 'hardware', 'hw_project' and 'sim'
+do only exist on an x86 platform
+</code></pre>
+
+<h3 id="for-simulation">For simulation</h3>
+<ul>
+<li><code>make snap_config</code></li>
+<li><code>make model</code></li>
+<li><code>make sim</code></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>After <code>make model</code>,  you can continue to run <code>make image</code> to generate bitstreams.</p>
+</div>
+<p>In fact, <code>make model</code> also creates a Vivado project <code>framework.xpr</code> in <code>hardware/viv_project</code>. Then it exports the simulation files and compiles them to a simulation model.</p>
+<h3 id="for-image-build">For Image build</h3>
+<ul>
+<li><code>make snap_config</code> If it has already been executed, no need to run it again. </li>
+<li><code>make hw_project</code></li>
+<li><code>make image</code></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Use Vivado GUI</strong>: </p>
+<p>After <code>make hw_project</code>, you can open project <code>framework.xpr</code> in <code>hardware/viv_project</code>, and do following <strong>"run Synthesis"</strong>, <strong>"run Implementation"</strong> and <strong>"generate Bitstream"</strong> in Vivado GUI. </p>
+</div>
+<h2 id="output-files">Output files</h2>
+<ul>
 <li>
-<p>Job-queue mode: In this mode jobs can be send to the hardware which are put onto a queue. After completion the caller is notified. The framework offers the possiblity to generate a queue per AFU context, respectively per process using it. Within a process the queue can be exploited by multiple threads at the same time. The hardware job-manager is responsible to connect the job-request to a free FPGA-action. This is done dynamically in round-robin fashion. There is a request and a completion queue. The jobs can finish asyncronously depending on how long they take.</p>
+<p>The log files during these steps are placed in <code>hardware/logs</code>. </p>
 </li>
 <li>
-<p><em>FIXME Not fully in plan yet</em> Action-assignment mode: A process requests the connection between an AFU-context to an FPGA-action. This connection is managed by the job-manager and supports as many assignments as FPGA-actions are available. Once connected the process can use FPGA-action MMIOs to do further work e.g. implement door-bells, or data-send/receive queues. Interrupts can be used for error or completion notification.</p>
+<p>Simulation output files are placed in <code>hardware/sim/&lt;SIMULATOR&gt;/latest</code>.</p>
 </li>
 <li>
-<p>Direct access cards AFU-master/slave contexts. This mode is for debugging and global configuration tasks.</p>
+<p>If you are using <code>make image</code> to generate bitstreams, the outputs are in <code>hardware/build</code>, including <code>Images</code>, <code>Reports</code> and <code>Checkpoints</code>.</p>
 </li>
-</ol>
-<h2 id="environment-variables">Environment Variables</h2>
-<p>To debug libsnap functionality or associated actions, there are currently some environment variables available:
-- <strong><em>SNAP_CONFIG</em></strong>: 0x1 Enable software action emulation for those actions which we use for trying out. Instead of 0x0 or 0x1 one can also use FPGA or CPU.
-- <strong><em>SNAP_TRACE</em></strong>: 0x1 General libsnap trace, 0x2 Enable register read/write trace, 0x4 Enable simulation specific trace, 0x8 Enable action traces. Applications might use more bits above those defined here.</p>
-<h2 id="directory-structure">Directory Structure</h2>
-<pre><code class="text">.
-|-- include        libsnap.h and auxiliary C-headers
-|                  snap_types.h contains shared data types and definitions between the host-code
-|                  and SNAP actions
-|-- lib            libsnap.so/.a
-|-- scripts        Testcases
-`-- tools          Generic tools for SNAP users. E.g.:
-                   snap_maint setup tool which needs to be called before using the card.
-                                         It sets up the SNAP action assignment hardware.
-                   snap_peek/poke debug tools to read/write SNAP MMIO registers.
-</code></pre></div>
+<li>
+<p>If you are using Vivado Gui mode to generate bitstream, the outputs are in <code>hardware/viv_project/framework.runs</code>, including <code>synth_1</code> and <code>impl_1</code>, etc.</p>
+</li>
+</ul>
+<h1 id="lets-go">Let's go!</h1>
+<p>Now, let's take an example <code>hls_helloworld</code>, and have a look at how it runs step by step. Please continue to read page <a href="../2-run-helloworld/index.html">Run helloworld</a>.</p></div>
         </div>
 
         <footer class="col-md-12">

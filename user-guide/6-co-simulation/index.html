@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Software API - OC-Accel Doc</title>
+        <title>(6) Co-Simulation - OC-Accel Doc</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -60,52 +60,52 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../user-guide/0-steps/">(0) Steps in a glance</a>
+    <a href="../0-steps/">(0) Steps in a glance</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/1-prepare-env/">(1) Prepare environment</a>
+    <a href="../1-prepare-env/">(1) Prepare environment</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/2-run-helloworld/">(2) Run helloworld</a>
+    <a href="../2-run-helloworld/">(2) Run helloworld</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/3-new-action/">(3) Create a new action</a>
+    <a href="../3-new-action/">(3) Create a new action</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/4-hdl-design/">(4) Verilog/VHDL design</a>
+    <a href="../4-hdl-design/">(4) Verilog/VHDL design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/5-hls-design/">(5) HLS C++ design</a>
+    <a href="../5-hls-design/">(5) HLS C++ design</a>
+</li>
+                                    
+<li class="active">
+    <a href="./">(6) Co-Simulation</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/6-co-simulation/">(6) Co-Simulation</a>
+    <a href="../7-build-image/">(7) Build image</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/7-build-image/">(7) Build image</a>
+    <a href="../8-deploy/">(8) Deploy on Power Server</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/8-deploy/">(8) Deploy on Power Server</a>
+    <a href="../9-migrate/">(9) Migrate from SNAP1/2</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/9-migrate/">(9) Migrate from SNAP1/2</a>
-</li>
-                                    
-<li >
-    <a href="../../user-guide/10-tips/">(10) Tips</a>
+    <a href="../10-tips/">(10) Tips</a>
 </li>
                                 </ul>
                             </li>
@@ -130,24 +130,24 @@
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Deep Dive <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li class="active">
-    <a href="./">Software API</a>
+<li >
+    <a href="../../deep-dive/software-api/">Software API</a>
 </li>
                                     
 <li >
-    <a href="../registers/">Registers</a>
+    <a href="../../deep-dive/registers/">Registers</a>
 </li>
                                     
 <li >
-    <a href="../hardware-logic/">Hardware Logic</a>
+    <a href="../../deep-dive/hardware-logic/">Hardware Logic</a>
 </li>
                                     
 <li >
-    <a href="../board-package/">New Board Support</a>
+    <a href="../../deep-dive/board-package/">New Board Support</a>
 </li>
                                 </ul>
                             </li>
@@ -169,12 +169,12 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../../actions-doc/hls_memcopy_1024/">
+                                <a rel="next" href="../5-hls-design/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../registers/">
+                                <a rel="prev" href="../7-build-image/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -189,48 +189,47 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#snap-software">SNAP Software</a></li>
-            <li><a href="#environment-variables">Environment Variables</a></li>
-            <li><a href="#directory-structure">Directory Structure</a></li>
+        <li class="main active"><a href="#how-to-optimize-a-hls-action-in-oc-accel-environment">How to optimize a HLS action in OC-Accel environment</a></li>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#the-helloworld-example">The helloworld example</a></li>
+            <li><a href="#key-data-in-hls">Key data in HLS</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="snap-software">SNAP Software</h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This is an initial version copied from SNAP1/2.</p>
-</div>
-<p>Set of tools and library to drive the CAPI streaming framework hardware. The tools are intended to support bringup and debugging of the solution.</p>
-<p>Libsnap is intended to provide helper functions for own applications.</p>
-<p>Libsnap is planed to provide 3 different modes of operation:</p>
-<ol>
-<li>
-<p>Job-queue mode: In this mode jobs can be send to the hardware which are put onto a queue. After completion the caller is notified. The framework offers the possiblity to generate a queue per AFU context, respectively per process using it. Within a process the queue can be exploited by multiple threads at the same time. The hardware job-manager is responsible to connect the job-request to a free FPGA-action. This is done dynamically in round-robin fashion. There is a request and a completion queue. The jobs can finish asyncronously depending on how long they take.</p>
-</li>
-<li>
-<p><em>FIXME Not fully in plan yet</em> Action-assignment mode: A process requests the connection between an AFU-context to an FPGA-action. This connection is managed by the job-manager and supports as many assignments as FPGA-actions are available. Once connected the process can use FPGA-action MMIOs to do further work e.g. implement door-bells, or data-send/receive queues. Interrupts can be used for error or completion notification.</p>
-</li>
-<li>
-<p>Direct access cards AFU-master/slave contexts. This mode is for debugging and global configuration tasks.</p>
-</li>
-</ol>
-<h2 id="environment-variables">Environment Variables</h2>
-<p>To debug libsnap functionality or associated actions, there are currently some environment variables available:
-- <strong><em>SNAP_CONFIG</em></strong>: 0x1 Enable software action emulation for those actions which we use for trying out. Instead of 0x0 or 0x1 one can also use FPGA or CPU.
-- <strong><em>SNAP_TRACE</em></strong>: 0x1 General libsnap trace, 0x2 Enable register read/write trace, 0x4 Enable simulation specific trace, 0x8 Enable action traces. Applications might use more bits above those defined here.</p>
-<h2 id="directory-structure">Directory Structure</h2>
-<pre><code class="text">.
-|-- include        libsnap.h and auxiliary C-headers
-|                  snap_types.h contains shared data types and definitions between the host-code
-|                  and SNAP actions
-|-- lib            libsnap.so/.a
-|-- scripts        Testcases
-`-- tools          Generic tools for SNAP users. E.g.:
-                   snap_maint setup tool which needs to be called before using the card.
-                                         It sets up the SNAP action assignment hardware.
-                   snap_peek/poke debug tools to read/write SNAP MMIO registers.
-</code></pre></div>
+<h1 id="how-to-optimize-a-hls-action-in-oc-accel-environment">How to optimize a HLS action in OC-Accel environment</h1>
+<p>The Guide describes how to measure and optimize the code of a function in SNAP environment. In a first step, you have ported your code to a FPGA. In a second step, you need to see how to optimize it. The final performance depends on the way you will write your code. Xilinx HLS guide <a href="https://www.xilinx.com/support/documentation/sw_manuals/xilinx2019_1/ug902-vivado-high-level-synthesis.pdf">ug902</a> is an important document for your to reference. </p>
+<h2 id="overview">Overview</h2>
+<p>Let’s use the very simple example hls_helloworld to learn how we can measure the time spent by the function, also called “hardware action”, and how to optimize it. This example is so basic that you will not get much from it, but you will hopefully understand the concept. </p>
+<p>Notice that we use HLS (High Level Synthesis) tool in this example, because it provides a fast way to generate your own hardware implementation from a C/C+ code. Amongst others, the Xilinx Vivado HLS tool was selected since it is one that better enables those users who have less hardware knowledge. You can easily use the other HLS tools provided by other providers (Cadence, Mentor, ...) if the tool can generate HDL (Verilog, VHDL, ...) code.</p>
+<h2 id="the-helloworld-example">The helloworld example</h2>
+<p>Before starting to dive into details, let us quickly explain what the example we are using is doing.
+The SNAP hls_helloworld sample application consists of a software part running on the host as well as a SNAP action which is executed with on the FPGA. The code running on the host-system opens a file, places the data into an input memory buffer, opens a context and triggers the action on the card to perform the data processing.</p>
+<p>Once the hardware action receives the order to start the job, it will transfer the data from the input memory buffer into the FPGA, does the requested processing, e.g. <strong>converting characters to upper case</strong>, and transfer the results back into the provided output memory on the host.</p>
+<p>The host application waits for the hardware action to complete, e.g. by using an interrupt or polling a special register. Once the hardware action signals completion, the action has processed the data and already written it into the provided output memory buffer. From there it is written into a new file. It can now be further processed.</p>
+<p>In the following sections it is explained how the data processing is done inside the FPGA and which steps can be used to analyze the performance as well as methods to improve it.</p>
+<h2 id="key-data-in-hls">Key data in HLS</h2>
+<h3 id="open-vivado-hls">Open Vivado HLS</h3>
+<p>The optimization of the code is essentially done on the hardware action. Go into hls_helloworld/hw directory, compile the hardware action and open vivado_hls tool. The compilation is necessary since this will set all parameters needed for the tool.</p>
+<pre><code>cd $SNAP_ROOT/actions/hls_helloworld/hw
+make
+vivado_hls &amp;
+</code></pre>
+
+<p><img alt="vivado_hls" src="../pictures/6-vivado_hls.png" /></p>
+<p>Select Open Project
+<img alt="open_project" src="../pictures/6-open_project.png" />
+Select hw directory, hlsUpperCasexxxx directory and then Select OK</p>
+<h3 id="understanding-parameters-preset-by-oc-accel-scripts">Understanding parameters preset by OC-Accel scripts</h3>
+<p>Several parameters have been set by SNAP scripts when compiling the hardware action. Let’s see where they are so that you can better understand why they are set to these values.</p>
+<p>In the menu, you have 2 important settings: one for the project and one for the solution. A project is related to the source code you are working on, while the solution is related to the FPGA you are working with.
+Go to <strong>Project &gt; Project Settings</strong>, in <strong>Simulation tab</strong>, you will find the paths to all the header files used by your C/C++ hardware action code.</p>
+<p>You will notice that the last parameter of the CFLAGS line is <code>-DNO_SYNTH</code>. This allows the user to add at the end of the hardware action code an area delimited by <code>“#ifdef NO_SYNTH / #endif”</code> which contains a unit test for the hardware action. This area will not be “synthesized” meaning that the code in this area will not be implemented into the FPGA.</p>
+<p>In <strong>Synthesis tab</strong>, you will find the same line but without the <code>-DNO_SYNTH</code>.</p>
+<p>You will notice that at the top of this window, you can select a <strong>Top function</strong>. Push the <strong>Browse</strong> button and you will discover all the different functions contained in your hardware action. By default, the <strong>hls_action</strong> is selected since it is the top one. This feature gives you the ability to work with just part of your design instead of taking the whole function at once. This can be very useful when porting a function step by step.</p>
+<p>Now let’s have a look at the other part of the settings. Go to <strong>Solution &gt; Solution Settings</strong>.
+In the <strong>General tab</strong>, you can see a setting done on the <strong>config_interface</strong>. This is to declare that all address busses used in SNAP are declared to be 64 bits wide (default is 32 bits).</p>
+<p>In the Synthesis tab, you can select the clock period (250MHz = 4ns) and the FPGA exact type used by the card you are working with (XCKU060).</p></div>
         </div>
 
         <footer class="col-md-12">

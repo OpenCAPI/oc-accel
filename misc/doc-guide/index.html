@@ -65,43 +65,47 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../user-guide/prepare-env/">Prepare environment</a>
+    <a href="../../user-guide/0-steps/">(0) Steps in a glance</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/run-helloworld/">Run helloworld</a>
+    <a href="../../user-guide/1-prepare-env/">(1) Prepare environment</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/new-action/">Create a new action</a>
+    <a href="../../user-guide/2-run-helloworld/">(2) Run helloworld</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/co-simulation/">Co-Simulation</a>
+    <a href="../../user-guide/3-new-action/">(3) Create a new action</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/make-image/">FPGA Image build</a>
+    <a href="../../user-guide/4-hdl-design/">(4) Verilog/VHDL design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/optimize-hls/">Optimize HLS action</a>
+    <a href="../../user-guide/5-hls-design/">(5) HLS C++ design</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/deploy/">Deploy on Power Server</a>
+    <a href="../../user-guide/6-co-simulation/">(6) Co-Simulation</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/debug-issue/">Debug an issue</a>
+    <a href="../../user-guide/7-build-image/">(7) Build image</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/migrate-from-old/">Migrate from SNAP1/2</a>
+    <a href="../../user-guide/8-deploy/">(8) Deploy on Power Server</a>
 </li>
                                     
 <li >
-    <a href="../../user-guide/command-reference/">Command Reference</a>
+    <a href="../../user-guide/9-migrate/">(9) Migrate from SNAP1/2</a>
+</li>
+                                    
+<li >
+    <a href="../../user-guide/10-tips/">(10) Tips</a>
 </li>
                                 </ul>
                             </li>
@@ -110,19 +114,19 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../actions-doc/hdl-example/">hdl_example</a>
+    <a href="../../actions-doc/hdl_example/">hdl_example</a>
 </li>
                                     
 <li >
-    <a href="../../actions-doc/hdl-helloworld/">hdl_helloworld</a>
+    <a href="../../actions-doc/hdl_single_engine/">hdl_single_engine</a>
 </li>
                                     
 <li >
-    <a href="../../actions-doc/hls-helloworld/">hls_helloworld</a>
+    <a href="../../actions-doc/hls_helloworld/">hls_helloworld</a>
 </li>
                                     
 <li >
-    <a href="../../actions-doc/hls-memcopy/">hls_memcopy</a>
+    <a href="../../actions-doc/hls_memcopy_1024/">hls_memcopy_1024</a>
 </li>
                                 </ul>
                             </li>
@@ -209,14 +213,20 @@
 
 <p>Please refer to <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a> for more information. </p>
 <h3 id="3-install-a-markdown-editor">3. Install a markdown editor</h3>
-<p>You can simply edit the markdown (.md) files by any text editor, but it's better to user a professional markdown editor. For example, <a href="https://typora.io/">typora</a>. It supports all of the platforms (Windows/MacOS/Linux).</p>
-<p>With a Markdown editor, you can insert pictures more easily and can watch the markdown effects when you write. </p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Please configure typora to <code>strict</code> Markdown mode. That ensures you get the same output effects on both <strong>typora</strong> and <strong>mkdocs</strong>.</p>
-</div>
-<h3 id="4-install-inkscape">4. Install Inkscape</h3>
-<p>This step is optional. <a href="https://inkscape.org/">Inkscape</a> is a free drawing tool and can help you draw and convert vector graphics. They have smaller file sizes and can be scaled without image quality loss.</p>
+<p>You can simply edit the markdown (.md) files by any text editor, but it's better to user a professional markdown editor. </p>
+<ul>
+<li>
+<p><a href="https://typora.io/">typora</a>. It supports all of the platforms (Windows/MacOS/Linux). Please configure typora to <code>strict</code> Markdown mode. That ensures you get the same output effects on both <strong>typora</strong> and <strong>mkdocs</strong>.</p>
+</li>
+<li>
+<p><a href="https://code.visualstudio.com/">vscode</a>. It's also a good editor and has abundant functions and extensions. You can install extensions of Markdown, Preview and Spell checker. </p>
+</li>
+</ul>
+<h3 id="4-install-other-optional-tools">4. Install other optional tools</h3>
+<ul>
+<li>pdf2svg: This tool can convert a pdf lossless picture to svg format. For Mac OS, it can be easily installed by <a href="https://brew.sh/">Homebrew</a>, simply by <code>brew install pdf2svg</code>.</li>
+<li>Alternative choice is <a href="https://inkscape.org/">Inkscape</a> which is a free drawing tool and can help you draw and convert vector graphics.</li>
+</ul>
 <h2 id="website-structure">Website Structure</h2>
 <p>First, you need to git clone the oc-snap repository and go to <code>web-doc</code> directory. Make sure you are working on a branch other than master.</p>
 <pre><code class="bash">git clone git@github.ibm.com:OC-Enablement/oc-snap.git
@@ -264,12 +274,13 @@ cd oc-snap/web-doc
 <h3 id="the-first-rule">The first rule</h3>
 <p>Reduce the usage of pictures. Avoid unnecessary screenshots.</p>
 <h3 id="its-quite-easy">It's quite easy</h3>
-<p>You can insert jpg, png, svg files. You can also simply copy paste pictures from clipboard and paste them. Typora will automatically copy the files into a directory <code>./${filename}.assets</code>, and here <code>${filename}</code> is the name of markdown file. The inserted or copied pictures will be saved in this directory and relative links pointed to them are created.</p>
+<p>You can insert jpg, png, svg files. You can also simply copy paste pictures from clipboard and paste them. Copy the files into a directory <code>./${filename}.assets</code>, and here <code>${filename}</code> is the name of markdown file. Use relative links in the document.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Please enable "Copy images into ./${filename}.assets folder" in <code>Preferences</code> of typora.</p>
+<p>If you are using Typora, please enable "Copy images into ./${filename}.assets folder" in <code>Preferences</code> of typora.</p>
 </div>
-<h3 id="use-diagrams-from-ppt">Use diagrams from PPT</h3>
+<h3 id="tools-to-draw-diagrams">Tools to draw diagrams</h3>
+<p>You can take any drawing tools to create diagrams. You can save them as PNG format, but the better way is to save to SVG format. </p>
 <p>For the diagrams from Microsoft PowerPoint, you can select the region of a diagram in PPT, <code>Ctrl-C</code> to copy it, and <code>Ctrl-V</code> to paste it in Typora directly. In this case, the diagram is saved as an PNG file.</p>
 <p>But there is a better way to get the smallest file size and best quality:</p>
 <ul>
