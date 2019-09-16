@@ -189,32 +189,270 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#snap-registers">SNAP Registers</a></li>
-            <li><a href="#overview">Overview</a></li>
-            <li><a href="#address-map">Address Map</a></li>
-        <li class="main "><a href="#register-definition">Register Definition</a></li>
-            <li><a href="#snap-basic-registers">SNAP Basic Registers</a></li>
-            <li><a href="#snap-debug-registers-0x0">SNAP Debug Registers 0x0</a></li>
+        <li class="main active"><a href="#oc-accel-registers">OC-Accel Registers</a></li>
+            <li><a href="#memory-map">Memory map</a></li>
+        <li class="main "><a href="#address-layout">Address Layout</a></li>
+            <li><a href="#global-register-summary">Global Register Summary</a></li>
+            <li><a href="#action-register-summary">Action Register Summary</a></li>
+        <li class="main "><a href="#definition-for-global-registers">Definition for Global Registers</a></li>
+            <li><a href="#basic-ivr">Basic: IVR</a></li>
+            <li><a href="#snap-debug-registers">SNAP Debug Registers</a></li>
+            <li><a href="#snap-fir-registers">SNAP FIR Registers</a></li>
+        <li class="main "><a href="#action-register-definition">Action Register Definition</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="snap-registers">SNAP Registers</h1>
-<h2 id="overview">Overview</h2>
-<p>SNAP registers are defined in the MMIO General space for each AFU. Action specific registers (registers related to AFU's function) are defined in the per PASID MMIO space. All of those address mapping parameters (BAR, MMIO general, MMIO PASID, and also memory space) are specified with respect to OpenCAPI configuration space specification. SNAP core hardware is responsible for handling the configuration read/write from host and maintaining the configuration space and SNAP registers.</p>
-<p><img alt="drawing" src="registers.assets/SNAP-registers.svg" /></p>
-<h2 id="address-map">Address Map</h2>
-<p>Only lower 32bits are used for MMIO addresses. There are two regions: SNAP registers and Action registers. 
-* SNAP registers are 64b registers, use <code>snap_mmio_read64/write64()</code> to access them, and the address should be aligned to 8. SNAP registers are in global MMIO space. It has three categories:
-  * SNAP Basic Registers: addr[20:8] = 0x0000;
-  * SNAP Debug Registers: addr[20:8] = 0x0001;
-  * SNAP FIR Registers:   addr[20:8] = 0x0002;</p>
+<h1 id="oc-accel-registers">OC-Accel Registers</h1>
+<p>Registers bind the software and hardware together.</p>
+<h2 id="memory-map">Memory map</h2>
+<p>The OpenCAPI3.0 device memory map concepts (BAR, MMIO Global, MMIO Per PASID, and also memory space) are specified with respect to <strong>OpenCAPI configuration space specification</strong>. Here is a conceptual memory map:</p>
+<p><img alt="general-map" src="../pictures/reg-general-map.svg" /></p>
+<p>For OC-Accel: </p>
 <ul>
-<li>Action registers are 32b registers, use <code>snap_action_read32/write32()</code> to access them, and the address should be aligned to 4. Action registers are in per PASID MMIO space. They are completely user defined. User can freely use 2MB space, that means, using addr[20:0].</li>
+<li>It only supports 1 AFU</li>
+<li>It only supports OpenCAPI3.0 C1 mode. MEM_SIZE = 0</li>
+<li>It supports 512 PASIDs (User Process ID associated with a request)</li>
+<li>It only uses BAR0</li>
+<li>Global MMIO Offset = 0, Size = 2GB</li>
+<li>Per PASID MMIO Offset = 2GB, Stride Size = 4MB</li>
 </ul>
-<h1 id="register-definition">Register Definition</h1>
-<h2 id="snap-basic-registers">SNAP Basic Registers</h2>
-<h3 id="impl-version-register-ivr">Impl. Version Register (IVR)</h3>
+<p>So the above memory map is specified to:</p>
+<p><img alt="oc-mmio" src="../pictures/reg-oc-mmio.svg" /></p>
+<p>The settings can be found in:</p>
+<pre><code>hardware/oc-bip/config_subsystem/cfg_descriptor.v
+hardware/hdl/core/oc_function_defines.vhd
+</code></pre>
+
+<p>So OC-Accel registers have two categories: </p>
+<ul>
+<li><strong>SNAP Core registers</strong>, 8B, defined in Global MMIO space. Use <code>snap_global_read/write64()</code> to access them.</li>
+<li><strong>Action Specific registers</strong>, 4B, defined in Per PASID MMIO space. Use <code>snap_action_read/write32()</code> to access them. </li>
+</ul>
+<h1 id="address-layout">Address Layout</h1>
+<p>The higher 32bits of tlx_afu_cmd_pa (Physical Address) should be matched with BAR0. </p>
+<p>The lower 32bits, also called mmio_address, is processed in OC-Accel. </p>
+<p><img alt="mmio-address" src="../pictures/reg-mmio-address.svg" /></p>
+<h2 id="global-register-summary">Global Register Summary</h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Registers with (?) need to be revised. </p>
+</div>
+<table>
+<thead>
+<tr>
+<th>mmio_address[30:8]</th>
+<th>mmio_address [7:0]</th>
+<th>Abbr.</th>
+<th>Register Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x0</td>
+<td>0x00</td>
+<td>IVR</td>
+<td>Implementation Version Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x08</td>
+<td>BDR</td>
+<td>Build Date Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x10   (?)</td>
+<td>SCR</td>
+<td>SNAP Command Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x18   (?)</td>
+<td>SSR</td>
+<td>SNAP Status Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x20</td>
+<td>CAP</td>
+<td>Capacity Register</td>
+</tr>
+<tr>
+<td>0x1A0</td>
+<td>0x00</td>
+<td></td>
+<td>Debug Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x08</td>
+<td></td>
+<td>Debug Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x10</td>
+<td></td>
+<td>Debug Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x18</td>
+<td></td>
+<td>Debug Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x20</td>
+<td></td>
+<td>Debug Register</td>
+</tr>
+<tr>
+<td>0x1C0</td>
+<td>0x00</td>
+<td></td>
+<td>FIR Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x08</td>
+<td></td>
+<td>FIR Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x10</td>
+<td></td>
+<td>FIR Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x18</td>
+<td></td>
+<td>FIR Register</td>
+</tr>
+<tr>
+<td></td>
+<td>0x20</td>
+<td></td>
+<td>FIR Register</td>
+</tr>
+</tbody>
+</table>
+<h2 id="action-register-summary">Action Register Summary</h2>
+<p>mmio_address[30:22] means PASID. That means, the first process opens the OC Device, it will attach PASID=0 when it calls <code>mmio_action_read/write32()</code>. Meanwhile, the second process, the third process may attach PASID=1 and PASID=2 when they access the OC Device. Each process has its own "process context", and when OC Device wants to visit the host memory, it has to know which "process context" it belongs to, that means, the OC device needs to send the PASID with its commands. This PASID takes AWUSER or ARUSER as the vehicle to transfer from Action wrapper to snap_core. </p>
+<h3 id="hdl-design">HDL design</h3>
+<table>
+<thead>
+<tr>
+<th>mmio_address [21:0]</th>
+<th>Abbr.</th>
+<th>Register Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00</td>
+<td>ACR</td>
+<td>Action Control Register</td>
+</tr>
+<tr>
+<td>0x04 (?)</td>
+<td>IER</td>
+<td>Interrupt Enable Register</td>
+</tr>
+<tr>
+<td>0x10</td>
+<td>ATR</td>
+<td>Action Type Register</td>
+</tr>
+<tr>
+<td>0x14</td>
+<td>AVR</td>
+<td>Action Version Register</td>
+</tr>
+<tr>
+<td>0x20 (?)</td>
+<td>CIR</td>
+<td>Context ID Register</td>
+</tr>
+<tr>
+<td>0x30 -&gt; end</td>
+<td></td>
+<td>User Defined</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hls-design">HLS design</h3>
+<table>
+<thead>
+<tr>
+<th>mmio_address [21:0]</th>
+<th>Abbr.</th>
+<th>Register Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00</td>
+<td>ACR</td>
+<td>Action Control Register</td>
+</tr>
+<tr>
+<td>0x04 (?)</td>
+<td>ICR</td>
+<td>IRQ Control Register</td>
+</tr>
+<tr>
+<td>0x08 (?)</td>
+<td>IER</td>
+<td>IP Interrupt Enable Register</td>
+</tr>
+<tr>
+<td>0x0C (?)</td>
+<td>ISR</td>
+<td>IP Interrupt Status Register</td>
+</tr>
+<tr>
+<td>0x10</td>
+<td>ATR</td>
+<td>Action Type Register</td>
+</tr>
+<tr>
+<td>0x14</td>
+<td>AVR</td>
+<td>Action Release Register</td>
+</tr>
+<tr>
+<td>0x100 (?)</td>
+<td>CONTROL</td>
+<td>sat + flags + seq</td>
+</tr>
+<tr>
+<td>0x104</td>
+<td>RET</td>
+<td>Return Code</td>
+</tr>
+<tr>
+<td>0x108</td>
+<td>Reserved</td>
+<td></td>
+</tr>
+<tr>
+<td>0x10C</td>
+<td>Reserved</td>
+<td></td>
+</tr>
+<tr>
+<td>0x110 - 0x17F</td>
+<td></td>
+<td>User Defined Job Data Registers (108 bytes)</td>
+</tr>
+</tbody>
+</table>
+<h1 id="definition-for-global-registers">Definition for Global Registers</h1>
+<h2 id="basic-ivr">Basic: IVR</h2>
 <table>
 <thead>
 <tr>
@@ -414,22 +652,10 @@
 </tbody>
 </table>
 <h3 id="snap-status-register-ssr">SNAP Status Register (SSR)</h3>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SNAP Status Register</td>
-<td>0x18</td>
-<td>POR value: 0x0000000000000000</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li>Offset: 0x18 </li>
+<li>POR value: 0x0000000000000000</li>
+</ul>
 <p>Bitwise definition</p>
 <table>
 <thead>
@@ -463,22 +689,10 @@
 </tbody>
 </table>
 <h3 id="snap-capability-register-cap">SNAP Capability Register (CAP)</h3>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SNAP Capability Register</td>
-<td>0x20</td>
-<td>Define the capability of the card</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li>Offset: 0x20</li>
+<li>Define the capability of the card</li>
+</ul>
 <p>Bitwise definition</p>
 <table>
 <thead>
@@ -534,102 +748,9 @@
 <td>0x32 : AD9H7</td>
 <td></td>
 </tr>
-<tr>
-<td></td>
-<td>0x33 : N250SoC</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x34 : Innova2</td>
-<td></td>
-</tr>
-<tr>
-<td></td>
-<td>0x35 : AD9H3</td>
-<td></td>
-</tr>
 </tbody>
 </table>
-<h3 id="action-type-register-atr">Action Type Register (ATR)</h3>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Action Type Register</td>
-<td>0x28</td>
-<td>POR value: 0x00000000_00000000. LIBSNAP needs to specify the values based on the result of an exploration phase</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..36</td>
-<td>RO</td>
-<td>Reserved</td>
-</tr>
-<tr>
-<td>35..32</td>
-<td>RW</td>
-<td>Internal Short Action Type</td>
-</tr>
-<tr>
-<td>31.. 0</td>
-<td>RW</td>
-<td>Action type for action i (all zero if no Action i is implemented)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="freerunning-timer-frt">Freerunning Timer (FRT)</h3>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Offset</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Freerunning Timer</td>
-<td>0x0080</td>
-<td>Counting the number of clock cycles since reset</td>
-</tr>
-</tbody>
-</table>
-<p>Bitwise definition</p>
-<table>
-<thead>
-<tr>
-<th>Bits</th>
-<th>Attributes</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>63..0</td>
-<td>RO</td>
-<td>Counter counting the number of clock cycles since reset (afu open). This counter increments with the 250MHz PSL clock</td>
-</tr>
-</tbody>
-</table>
-<h2 id="snap-debug-registers-0x0">SNAP Debug Registers 0x0</h2>
+<h2 id="snap-debug-registers">SNAP Debug Registers</h2>
 <h3 id="debug-clear-register-dbg_clr">Debug Clear Register (DBG_CLR)</h3>
 <table>
 <thead>
@@ -663,7 +784,11 @@
 <td>Counter counting the number of clock cycles since reset (afu open). This counter increments with the 250MHz PSL clock</td>
 </tr>
 </tbody>
-</table></div>
+</table>
+<p>...</p>
+<h2 id="snap-fir-registers">SNAP FIR Registers</h2>
+<h1 id="action-register-definition">Action Register Definition</h1>
+<p>TODO</p></div>
         </div>
 
         <footer class="col-md-12">

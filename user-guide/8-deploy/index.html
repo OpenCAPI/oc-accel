@@ -189,13 +189,113 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#get-started">Get started</a></li>
+        <li class="main active"><a href="#deploy-to-power-server">Deploy to Power Server</a></li>
+            <li><a href="#program-fpga">Program FPGA</a></li>
+            <li><a href="#install-libocxl">Install libocxl</a></li>
+            <li><a href="#compile-oc-accel-software-and-actions">Compile OC-Accel software and actions</a></li>
+        <li class="main "><a href="#run-application">Run Application</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="get-started">Get started</h1>
-<p>This is my start.</p></div>
+<h1 id="deploy-to-power-server">Deploy to Power Server</h1>
+<h2 id="program-fpga">Program FPGA</h2>
+<p>There are two ways to program FPGA: 
+<em> Program Flash
+</em> Program FPGA chip</p>
+<h3 id="program-flash">Program Flash</h3>
+<p>This is the default way to program FPGA. </p>
+<ul>
+<li>Log on to Power9 server,  <strong>TODO</strong>: link to update</li>
+</ul>
+<pre><code>$ git clone https://github.ibm.com/OC-Enablement/oc-utils/
+$ make
+$ sudo make install
+</code></pre>
+
+<ul>
+<li>Copy the generated <code>hardware/build/Images/*.bin</code> from the development machine to Power9 server, and execute: </li>
+</ul>
+<pre><code>sudo oc-flash-script &lt;file.bin&gt;
+</code></pre>
+
+<p>or for SPIx8 flash interface:</p>
+<pre><code>$ sudo oc-flash-script &lt;file_primary.bin&gt; &lt;file_secondary.bin&gt;
+</code></pre>
+
+<ul>
+<li>If the previous flashing is not done correctly, you may need to delete the lock file manually.</li>
+</ul>
+<pre><code>$ rm -rf &quot;/var/cxl/capi-flash-script.lock&quot;
+</code></pre>
+
+<ul>
+<li>Reboot system. Check if the device is valid by </li>
+</ul>
+<pre><code>$ ls /dev/ocxl
+IBM,oc-snap.0007:00:00.1.0
+</code></pre>
+
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>oc-reset hasn't been verified. </p>
+</div>
+<h3 id="program-fpga-chip">Program FPGA chip</h3>
+<p>Not like "programming flash" which permanently stores FPGA image into the flash on the FPGA board, programming FPGA chip is a temporal method and mainly used for debugging purpose. It uses <strong>*.bit</strong> file and the programmed image will be lost if the server is powered off. </p>
+<p>Prepare a laptop/desktop machine and install <strong>Vivado Lab</strong>. Use USB cable to connect it to the FPGA board's USB-JTAG debugging port. Then in Vivado Lab, right click the FPGA device name and select "program device..."</p>
+<ul>
+<li>For ZZ systems:</li>
+</ul>
+<pre><code>$ sudo su
+$ echo 1 &gt; /sys/class/ocxl/IBM\,oc-snap.0007\:00\:00.1.0/reset_adapter
+</code></pre>
+
+<ul>
+<li>For Mihawk/AC922 systems:</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>TODO</strong></p>
+</div>
+<h2 id="install-libocxl">Install libocxl</h2>
+<p>See <a href="https://github.com/OpenCAPI/libocxl/">https://github.com/OpenCAPI/libocxl/</a></p>
+<h2 id="compile-oc-accel-software-and-actions">Compile OC-Accel software and actions</h2>
+<pre><code>$ git clone https://github.com/&lt;MY_NAME&gt;/oc-accel
+$ make apps
+</code></pre>
+
+<p>You can check the FPGA image version, name and build date/time by </p>
+<pre><code>$ cd software/tools
+$ sudo ./snap_maint -vvv
+</code></pre>
+
+<pre><code>[main] Enter
+[snap_open] Enter: IBM,oc-snap
+[snap_open] Exit 0x141730670
+[snap_version] Enter
+SNAP Card Id: 0x31 Name: AD9V3. NVME disabled, 0 MB DRAM available. (Align: 1 Min_DMA: 1)
+SNAP FPGA Release: v0.2.0 Distance: 255 GIT: 0x12fb0b24
+SNAP FPGA Build (Y/M/D): 2019/09/13 Time (H:M): 11:24
+[snap_version] Exit
+[snap_action_info] Enter
+   Short |  Action Type |   Level   | Action Name
+   ------+--------------+-----------+------------
+     0     0x10140002     0x00000002  IBM hdl_single_engine in Verilog (1024b)
+[snap_action_info] Exit rc: 0
+[main] Exit rc: 0
+[snap_close] Enter
+[snap_close] Exit 0
+</code></pre>
+
+<h1 id="run-application">Run Application</h1>
+<pre><code>$ cd actions/&lt;my_new_action&gt;/sw
+$ sudo ./&lt;app_name&gt;
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Whenever calling the FPGA card, <code>sudo</code> is needed.</p>
+</div></div>
         </div>
 
         <footer class="col-md-12">

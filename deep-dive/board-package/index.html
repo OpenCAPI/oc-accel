@@ -189,13 +189,18 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#get-started">Get started</a></li>
+        <li class="main active"><a href="#enable-a-new-fpga-card-to-oc-accel">Enable a new FPGA card to OC-Accel</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="get-started">Get started</h1>
-<p>This is my start. I want it.</p></div>
+<h1 id="enable-a-new-fpga-card-to-oc-accel">Enable a new FPGA card to OC-Accel</h1>
+<p>Create a folder in <code>hardware/oc-bip/board_support_packages/&lt;NEW_CARD&gt;</code></p>
+<p>Call the <code>make</code> process under <code>hardware/oc-bip/&lt;NEW_CARD&gt;</code></p>
+<p>Add the CARD_TYPE, and other specific IPs in OC-Accel <code>hardware/setup</code></p>
+<p>Modify the related CARD_TYPE related information in <code>software</code></p>
+<p>Add the card choice in Kconfig Menu <code>scripts/Kconfig</code></p>
+<p>TODO: More details to be put down.</p></div>
         </div>
 
         <footer class="col-md-12">

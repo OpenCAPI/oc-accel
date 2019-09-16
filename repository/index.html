@@ -272,7 +272,7 @@
 <p><img alt="oc-fpga-top" src="../pictures/oc-fpga-top.svg" /></p>
 <h2 id="files-used-in-deployment">Files used in Deployment</h2>
 <p><img alt="deploy-and-run" src="../pictures/deploy-and-run.svg" /></p>
-<p>When FPGA bitstream is generated, use the tool <code>oc-flash-script</code> in <a href="https://github.ibm.com/OC-Enablement/oc-utils/">oc-utils</a> (TODO: update link) to download it from Power9 host server to the FPGA flash. After reboot, the bitstream takes effect and you can ask application to call FPGA acceleration, with the help of <code>libosnap</code> and <code>libocxl</code>.</p>
+<p>When FPGA bit image is generated, use the tool <code>oc-flash-script</code> in <a href="https://github.ibm.com/OC-Enablement/oc-utils/">oc-utils</a> (TODO: update link) to download it from Power9 host server to the FPGA flash. After reboot, the bit image takes effect and you can ask application to call FPGA acceleration, with the help of <code>libosnap</code> and <code>libocxl</code>.</p>
 <p><a href="https://github.com/OpenCAPI/libocxl">libocxl</a> need to be installed. Please follow the README file on its homepage. </p>
 <p>Application software and libosnap need to be compiled on Power9 host server also. For more information, please refer to <a href="../user-guide/8-deploy/index.html">User-guide: deploy</a>.</p></div>
         </div>

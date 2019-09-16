@@ -274,14 +274,14 @@ git merge upstream/master
 <p><img alt="kconfig-name" src="../pictures/3-kconfig-name.png" /></p>
 <p><strong>Step2:</strong></p>
 <p>Edit <code>snap_env.sh</code>, point $ACTION_ROOT to the new action.</p>
-<pre><code>export ACTION_ROOT=&lt;...path...&gt;/oc-snap/actions/my_new_action
+<pre><code class="bash">export ACTION_ROOT=&lt;...path...&gt;/oc-snap/actions/my_new_action
 export TIMING_LABLIMIT=&quot;-200&quot;
 export OCSE_ROOT=&lt;...path...&gt;/ocse
 </code></pre>
 
 <p><strong>Step3:</strong></p>
 <p>Edit <code>software/tools/snap_actions.h</code>, add a row of the new action, with the company/person name, action type ID, and a short description. </p>
-<pre><code>static const struct actions_tab snap_actions[] = {
+<pre><code class="C">static const struct actions_tab snap_actions[] = {
     { &quot;IBM&quot;, 0x10140000, &quot;hdl_example in VHDL  (512b)&quot;                           },
     { &quot;IBM&quot;, 0x10140002, &quot;hdl_single_engine in Verilog (1024b)&quot;                  },
     { &quot;IBM&quot;, 0x10140004, &quot;UVM test for unit verification (no OCSE and software)&quot; },

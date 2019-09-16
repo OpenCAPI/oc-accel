@@ -189,18 +189,139 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#get-started">Get started</a></li>
+        <li class="main active"><a href="#vhdlverilog-action-hw-design">VHDL/Verilog Action HW Design</a></li>
+            <li><a href="#axi_lite_slave-action-registers">axi_lite_slave (Action Registers)</a></li>
+            <li><a href="#axi_master-data-path">axi_master (Data Path)</a></li>
+            <li><a href="#action-clock">Action Clock</a></li>
+            <li><a href="#action-ips">Action IPs</a></li>
+            <li><a href="#action-tcls">Action Tcls</a></li>
+            <li><a href="#unit-verification">Unit Verification</a></li>
+        <li class="main "><a href="#vhdlverilog-action-sw-design">VHDL/Verilog Action SW Design</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="get-started">Get started</h1>
-<p>This is my start. I want it.</p>
+<h1 id="vhdlverilog-action-hw-design">VHDL/Verilog Action HW Design</h1>
+<p>Take hdl_single_engine as an example, the top design is <strong>action_wrapper.v</strong>, you need to implement at least</p>
+<ul>
+<li>axi_lite_slave</li>
+<li>axi_master</li>
+</ul>
+<h2 id="axi_lite_slave-action-registers">axi_lite_slave (Action Registers)</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Width</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADDR</td>
+<td>32bits</td>
+</tr>
+<tr>
+<td>DATA</td>
+<td>32bits</td>
+</tr>
+</tbody>
+</table>
+<p>The Action registers can be defined freely. For a single engine inside an action, the lower 22bits of ADDR are available. That means, you can define one million 4B registers inside 4MB range. </p>
+<p>The address definition should match with Action SW header file. For example, </p>
+<pre><code>#define REG_SNAP_CONTROL        0x00
+#define REG_SNAP_INT_ENABLE     0x04
+#define REG_SNAP_ACTION_TYPE    0x10
+#define REG_SNAP_ACTION_VERSION 0x14
+
+// User defined below
+#define REG_USER_STATUS         0x30
+#define REG_USER_CONTROL        0x34
+#define REG_USER_MODE           0x38
+.....
+</code></pre>
+
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The simulation runs thousands of times slower than the real hardware. </p>
-<p>In hls_helloworld example, these is only one test script <code>hw_test.sh</code>, but usually it's suggested to have at least two scripts like <code>sim_test.sh</code> and <code>hw_test.sh</code>. Run some small sized tests in simulation and run big/performance tests on real FPGA hardware.</p>
-</div></div>
+<p>The User defined Action registers are suggested to start from <strong>0x30</strong>.</p>
+<p>OC-Accel has some pre-defined Action registers in the range of 0x00-0x2F to cooperate with libosnap and software tools. See <a href="../../deep-dive/registers/index.html#action-register-definition">Deep Dive: Registers</a> for more information.</p>
+</div>
+<h2 id="axi_master-data-path">axi_master (Data Path)</h2>
+<p>Here lists the supported AXI feature list from <strong>the viewpoint of an Action</strong>. When DATA width is chosen to be 512b, a Xilinx IP "axi_dwidth_converter" (data width converter) will be inserted automatically (<a href="../9-migrate/index.html#data-width-change">diagram</a>), and this converter may not support all of the AXI features. (It also costs FPGA resources!)</p>
+<p>So we recommend to design a 1024b-wide axi_master and you can use unaligned address and write strobe freely to transfer small sized data. </p>
+<p>Read more in <a href="../../deep-dive/hardware-logic/index.html#axi4-feature-list">AXI4 feature list</a> of snap_core. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Choose less AXI IDs can save the area of snap_core. The AXI ID ports have at least 1 bit. Drive zero if the Action hardware design doesn't use it. </p>
+<p>Please drive zero to AXI signals <code>cache</code>, <code>lock</code>, <code>qos</code>, <code>region</code>.</p>
+</div>
+<p>Another reason for 1024b-wide axi_master is to make full use of OpenCAPI bandwidth. When an Action runs at 200MHz, 1024b continuous data transferring can get: </p>
+<pre><code>1024b * 200MHz = 200Gb/s = 25GB/s
+</code></pre>
+
+<p>And for 512b-wide action with the same clock frequency only half of the possible bandwidth is utilized. And increasing clock frequency may bring difficulties to get timing closure. </p>
+<h2 id="action-clock">Action Clock</h2>
+<p>The default clock ap_clk (<strong>clock_act</strong>) frequency is 200MHz, same as the clock feeding snap_core (<strong>clock_afu</strong>). </p>
+<p>If a different Action Clock is required, please modify <code>hardware/hdl/oc_functions.vhd_source</code> to add a clock generator. The script for this clock generator should be added into <code>hardware/setup/create_snap_ip.tcl</code>.</p>
+<p>For more information, please read <a href="../../deep-dive/hardware-logic/index.html#diagram-and-clock-domain">Clock Domain</a>. </p>
+<h2 id="action-ips">Action IPs</h2>
+<p>Take hdl_single_engine as an example, <code>actions/hdl_single_engine/hw/Makefile</code> calls a script <code>action_config.sh</code>. </p>
+<p>Many additional steps can be added in this way to construct the Action hw design, for example, create some IPs:</p>
+<pre><code>echo &quot;                        Call create_action_ip.tcl to generate IPs&quot;
+vivado -mode batch -source $ACTION_ROOT/ip/create_action_ip.tcl -notrace -nojournal -tclargs $ACTION_ROOT $FPGACHIP
+</code></pre>
+
+<p>Add action specific IPs into <code>$ACTION_ROOT/ip/create_action_ip.tcl</code>. </p>
+<p>After they are generated in the Action HW "make" process, they will be imported into the project by <code>hardware/setup/create_framework.tcl</code>:</p>
+<pre><code># HDL Action IP
+foreach ip_xci [glob -nocomplain -dir $action_ip_dir */*.xci] {
+  set ip_name [exec basename $ip_xci .xci]
+  puts &quot;                        adding HDL Action IP $ip_name&quot;
+  add_files -norecurse $ip_xci -force &gt;&gt; $log_file
+  export_ip_user_files -of_objects  [get_files &quot;$ip_xci&quot;] -no_script -sync -force &gt;&gt; $log_file
+}
+
+</code></pre>
+
+<p>OC-Accel has enabled one channel of DDR memory controller for AD9V3 card. Take hdl_example (VHDL) and enable "DDR" in the KConfig menu. It will ask <code>hardware/setup/create_snap_ip.tcl</code> to generate the required memory controller and simulation model and <code>create_framework.tcl</code> will integrate it. </p>
+<p>Any other peripheral IPs can be generated similarly. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Whether to enable a peripheral IP depends on the user case and also depends on the FPGA card. Putting the IP creation script in <code>create_snap_ip.tcl</code> or <code>create_action_ip.tcl</code> are both fine.</p>
+</div>
+<h2 id="action-tcls">Action Tcls</h2>
+<p><code>hardware/setup/create_framework.tcl</code> will also parse <code>$ACTION_ROOT/hw/tcl</code> folder to execute Action tcl scripts.</p>
+<pre><code># Action Specific tcl
+if { [file exists $action_tcl] == 1 } {
+  set tcl_exists [exec find $action_tcl -name *.tcl]
+  if { $tcl_exists != &quot;&quot; } {
+    foreach tcl_file [glob -nocomplain -dir $action_tcl *.tcl] {
+      set tcl_file_name [exec basename $tcl_file]
+      puts &quot;                        sourcing $tcl_file_name&quot;
+      source $tcl_file
+    }
+  }
+}
+
+</code></pre>
+
+<h2 id="unit-verification">Unit Verification</h2>
+<p>Unit verification is optional and depends on the developers. Co-simulation with OCSE is a good way to verify the correctness, but developers can also build their own unit verification environment to enable more advanced verification tools and methodologies like UVM. Developers and apply more stress random tests and coverage harvest to assure the design quality. </p>
+<h1 id="vhdlverilog-action-sw-design">VHDL/Verilog Action SW Design</h1>
+<p>The steps include:</p>
+<ul>
+<li>snap_card_alloc_dev()</li>
+<li>snap_attach_action()</li>
+<li>Main body: ACTION registers interaction with hardware</li>
+<li>snap_detach_action()</li>
+<li>snap_card_free()</li>
+</ul>
+<p>About "main body" there are a lot of area to explore here. Two APIs are used to read and write Action registers: </p>
+<ul>
+<li>snap_action_read32()</li>
+<li>snap_action_write32()</li>
+</ul>
+<p>Interrupt is supported (<strong>TODO</strong>: not fully done yet.)</p>
+<p>Multiple-process access is also supported. (<strong>TODO</strong>: read Examples: hdl_multple_engine)</p></div>
         </div>
 
         <footer class="col-md-12">

@@ -192,7 +192,7 @@
         <li class="main active"><a href="#run-hls_helloworld">Run hls_helloworld</a></li>
             <li><a href="#snap_config">snap_config</a></li>
             <li><a href="#simulation">Simulation</a></li>
-            <li><a href="#make-fpga-bitstream">Make FPGA bitstream</a></li>
+            <li><a href="#make-fpga-bit-image">Make FPGA bit image</a></li>
             <li><a href="#summary">Summary</a></li>
     </ul>
 </div></div>
@@ -215,7 +215,7 @@
 <p>This Kconfig menu is editable. If you want to add new features or enrich your own menu, please edit <code>scripts/Kconfig</code> file.</p>
 </div>
 <p>Then it starts to execute many steps to build a simulation model. It needs several minutes. While waiting for it, open another terminal tab and try to get familiar with some environmental variables. Open <code>snap_env.sh</code> and check the very basic ones: </p>
-<pre><code>export ACTION_ROOT=&lt;path_of_oc-snap&gt;/actions/hls_helloworld
+<pre><code class="bash">export ACTION_ROOT=&lt;path_of_oc-snap&gt;/actions/hls_helloworld
 export TIMING_LABLIMIT=&quot;-200&quot;
 export OCSE_ROOT=&lt;path_to_ocse&gt;/ocse
 </code></pre>
@@ -278,7 +278,7 @@ ocse.parms  sim.log          terminal.log         tout     xsaet.tcl    xsim.log
 
 <p><img alt="waveform" src="../pictures/2-waveform.png" /></p>
 <p>On the project scope (hierarchy) panel, the user logic is <code>action_w</code>. </p>
-<h2 id="make-fpga-bitstream">Make FPGA bitstream</h2>
+<h2 id="make-fpga-bit-image">Make FPGA bit image</h2>
 <p>In above steps, you actually have finished steps of:</p>
 <ul>
 <li>make snap_config</li>
@@ -286,7 +286,7 @@ ocse.parms  sim.log          terminal.log         tout     xsaet.tcl    xsim.log
 <li>make sim</li>
 </ul>
 <p>(These targets are introduced in <a href="../1-prepare-env/index.html#option2-traditional-make-steps">Traditional "make" steps</a>)</p>
-<p>Now you can generate FPGA bitstream by</p>
+<p>Now you can generate FPGA image by</p>
 <pre><code>./ocaccel_workflow.py --no_configure --no_make_model --no_run_sim --make_image
 </code></pre>
 
@@ -318,7 +318,7 @@ After termination it can be restarted later.
 </code></pre>
 
 <p>So you can have an estimation of the progress.</p>
-<p>After it's completed, you can find the FPGA bitstream/image files in <code>hardware/build/Images</code>. The file names have the information of build date/time, action name, card type and timing slack (-11ps here). </p>
+<p>After it's completed, you can find the FPGA bit image files in <code>hardware/build/Images</code>. The file names have the information of build date/time, action name, card type and timing slack (-11ps here). </p>
 <pre><code>$ cd hardware/build/Images
 $ ls
 oc_2019_0914_1657_25G_hls_helloworld_noSDRAM_AD9V3_-11.bit
