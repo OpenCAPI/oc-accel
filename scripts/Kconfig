@@ -1,0 +1,557 @@
+###############################################################################
+#
+# SNAP Configuration Assistant
+#   Please select card and appropriate options
+#
+###############################################################################
+
+choice
+	bool "Card Type  "
+	default AD9V3
+	help
+	  Card Type
+	  There are multiple cards the framework supports. Please select
+	  one of them.
+
+	config AD9V3
+		bool "OpenCAPI3.0: AlphaData 9V3 (VU3P with DDR)"
+		select OPENCAPI30
+		select DISABLE_NVME
+		help
+		  AlphaData 9V3 has ethernet and 16GB DDR4 SDRAM. Uses Xilinx FPGA VU3P.
+	
+	config AD9H3
+		bool "OpenCAPI3.0: AlphaData 9H3 (VU33P with HBM)"
+		select OPENCAPI30
+		select DISABLE_NVME
+		help
+		  AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU33P.
+
+	config AD9H7
+		bool "OpenCAPI3.0: AlphaData 9H7 (VU37P with HBM)"
+		select OPENCAPI30
+		select DISABLE_NVME
+		help
+		  AlphaData 9H7 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU37P.
+endchoice
+
+
+config FPGACARD
+	string
+	default "AD9V3"  if AD9V3
+	default "AD9H3"  if AD9H3
+	default "AD9H7"  if AD9H7
+
+config FLASH_INTERFACE
+	string
+	default "SPIx8"  if  AD9V3 || AD9H3 || AD9H7
+
+#FLASH_SIZE: in MB
+config FLASH_SIZE
+	string
+	default 128 if AD9H7
+	default 64 if AD9V3 || AD9H3
+
+#FLASH_FACTORYADDR: For all cards, factory address is 0x0
+config FLASH_FACTORYADDR
+        string
+        default 0x00000000
+
+#FLASH_USERADDR: For SPI, it is byte address.
+config FLASH_USERADDR
+	string
+	default 0x08000000 if AD9V3 || AD9H3 || AD9H7
+
+config OPENCAPI30
+	bool
+	default y
+
+config CAPI_VER
+	string
+	default "opencapi30" if OPENCAPI30
+
+config FPGACHIP
+	string
+	default "xcvu3p-ffvc1517-2-e" if AD9V3
+	default "xcvu33p-fsvh2104-2-e" if AD9H3
+	default "xcvu37p-fsvh2892-2-e" if AD9H7
+
+config NUM_OF_ACTIONS
+	int
+	default 1
+# as long as only one action is supported we do not need to prompt the number of actions
+# prompt should be enabled as soon as multiple action support is implemented
+#        prompt "Number Of Actions"
+	range 1 1
+	help
+	  SNAP currently supports one action.
+
+choice
+	bool "Action Type"
+	help
+	  Action Type
+	  Select an Action type example:
+	  - HDL for VHDL or Verilog coded examples
+	  - HLS for C coded examples compiled with HLS
+
+	default HDL_EXAMPLE
+
+	config HLS_ACTION
+		bool "HLS Action - manually set ACTION_ROOT in snap_env.sh!"
+		select ENABLE_HLS_SUPPORT
+		help
+		  This option is a placeholder for an action written by the user in HLS.
+		  Please remember to set the environment variable "ACTION_ROOT"
+		  in snap_env.sh to the directory of the action source code.
+		  Also need to select the AXI data width to host is 512b or 1024b.
+
+	config HDL_ACTION
+		bool "HDL Action - manually set ACTION_ROOT in snap_env.sh!"
+		help
+		  This option is a placeholder for an action written by the user in a
+		  hardware description language such as VHDL or Verilog.
+		  Please remember to set the environment variable "ACTION_ROOT"
+		  in snap_env.sh to the directory of the action source code.
+		  Also need to select the AXI data width to host is 512b or 1024b.
+
+	config HDL_EXAMPLE
+		bool "HDL Example"
+		select ACTION_HALF_WIDTH
+	
+	config HDL_SINGLE_ENGINE
+		bool "HDL Single Engine"
+		help
+		  This is a very simple example written in Verilog for
+		  - Action Register example (axi_lite_slave)
+		  - Read data from server memory and check whether its right data
+		  - Write data to server memory
+		select DISABLE_SDRAM_AND_BRAM
+
+	config HDL_MULTI_PROCESS
+		bool "HDL Multi-Process"
+		help
+		  This is a very simple example written in Verilog for
+		  - Multi-process testing
+		select DISABLE_SDRAM_AND_BRAM
+
+	config HDL_UNIT_SIM
+		bool "HDL UNIT SIM"
+		help
+		  This is a random/configrable test for bridge mode
+		  - This action include an AXI-master vip 
+		  - Generate random AXI read/write commands
+		  - Data check rely on verification code
+		  - No OCSE and software will be invoked for this action
+                  - Only UVM based testbench
+		select DISABLE_SDRAM_AND_BRAM
+
+	config HLS_HELLOWORLD
+		bool "HLS HelloWorld"
+		help
+		  This is the simplest example to start with:
+		  - Reading text from the server memory
+		  - Processing changing case of the text
+		  - Writing back the text to the server memory
+		  This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select DISABLE_SDRAM_AND_BRAM
+		select DISABLE_NVME
+		select ACTION_HALF_WIDTH
+
+	config HLS_MEMCOPY_1024
+		bool "HLS Memcopy 1024b"
+		help
+		  This is a basic example to start accessing data:
+		  - Read data from the server memory or from the card DDR
+		  - Write data to the server memory or to the card DDR
+		  - A temporary buffer is used in the FPGA (configurable size)
+		  All combination can be done.
+		  This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select FORCE_SDRAM_OR_BRAM
+		select DISABLE_NVME
+
+#	config HLS_SPONGE
+#		bool "HLS Sponge"
+#		help
+#		  This is an example of a C code ported and optimized:
+#		  It is a benchmark to measure the SHA3 key generation performance
+#		  - Data are generated in the algorithm - No data move
+#		  - 3 functions : SPEED, SHA3, SHAKE (and SHA3_SHAKE)
+#		  - only the SPEED test was optimized
+#		  This example is written in C and compiled with HLS
+#		select ENABLE_HLS_SUPPORT
+#		select DISABLE_SDRAM_AND_BRAM
+#		select DISABLE_NVME
+#		select ACTION_HALF_WIDTH
+endchoice
+
+config ACTION_HALF_WIDTH
+	bool
+	default n
+	prompt "Action's AXI interface to host is 512b-wide ('y', checked) or 1024b ('n', unchecked)"
+	depends on OPENCAPI30 && (HDL_ACTION || HLS_ACTION)
+	help
+	  Input 'Y' if your action's AXI interface to host is 512b.
+	  Leave it unchecked if it is 1024b, which is a new choice in OC-Accel.
+
+# HALF_WIDTH is "string": TRUE or FALSE
+# ACTION_HALF_WIDTH is "bool": defined or not
+config HALF_WIDTH
+	string
+	default "TRUE"  if ACTION_HALF_WIDTH
+	default "FALSE" if !ACTION_HALF_WIDTH
+
+config ENABLE_HLS_SUPPORT
+	bool
+	default n
+
+config HLS_SUPPORT
+	string
+	default "TRUE"  if ENABLE_HLS_SUPPORT
+	default "FALSE" if ! ENABLE_HLS_SUPPORT
+
+config DISABLE_SDRAM_AND_BRAM
+	bool
+	default n
+
+config FORCE_SDRAM_OR_BRAM
+	bool
+	default n
+
+config FORCE_SDRAM
+	bool
+	default y
+	depends on (FORCE_SDRAM_OR_BRAM && ! ENABLE_BRAM)
+	select ENABLE_DDR
+
+config ENABLE_DDR
+	bool
+	prompt "Enable SDRAM"
+	depends on ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM)
+	help
+	  This option enables the on-card SDRAM.
+	  SNAP supports FIXME GB DDR4
+	#FIXME
+
+config SDRAM_USED
+	string
+	default "TRUE"  if ENABLE_DDR
+	default "FALSE" if ! ENABLE_DDR
+
+config ENABLE_BRAM
+	bool
+	prompt "Enable BRAM to replace SDRAM for experimental use"
+	depends on ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
+	help
+	  This is a development option. The AXI attached on-card SDRAM will be replaced by 512KB BRAM.
+
+config BRAM_USED
+	string
+	default "TRUE"  if ENABLE_BRAM
+	default "FALSE" if ! ENABLE_BRAM
+
+#FIXME We don't have DDR3 anymore.
+config ENABLE_DDR3
+	bool
+	default y
+	depends on (ENABLE_DDR && ADKU3)
+
+config DDR3_USED
+	string
+	default "TRUE"  if ENABLE_DDR3
+	default "FALSE" if ! ENABLE_DDR3
+
+config ENABLE_DDR4
+	bool
+	default y
+	depends on (ENABLE_DDR && (N250S || S121B || N250SP || AD8K5 || RCXVUP || FX609 || S241 || AD9V3))
+
+config DDR4_USED
+	string
+	default "TRUE"  if ENABLE_DDR4
+	default "FALSE" if ! ENABLE_DDR4
+
+config ENABLE_DDRI
+	bool
+	default y
+	depends on (ENABLE_DDR || ENABLE_BRAM)
+
+config DDRI_USED
+	string
+	default "TRUE"  if ENABLE_DDRI
+	default "FALSE" if ! ENABLE_DDRI
+
+
+config DISABLE_NVME
+	bool
+	default n
+
+config FORCE_NVME
+	bool
+	default n
+	select ENABLE_NVME
+
+config ENABLE_NVME
+	bool "Enable NVMe"
+	depends on ! DISABLE_NVME
+	select FORCE_SDRAM_OR_BRAM
+	help
+	  This option controls the instantiation of an NVMe host controller
+	  together with the AXI interfaces for MMIO control and action access.
+
+config NVME_USED
+	string
+	default "TRUE"  if ENABLE_NVME
+	default "FALSE" if ! ENABLE_NVME
+
+config USER_CLOCK
+	string
+	default "TRUE"  if ACTION_USER_CLOCK
+	default "FALSE" if ! ACTION_USER_CLOCK
+
+
+config ACTION_USER_CLOCK
+	bool
+	default n
+
+
+choice
+	bool "Simulator"
+	default SIM_XSIM
+	help
+	  Supported simulators are Xilinx' xsim and Cadence's irun.
+	  If NVMe support is enabled it is only possible to use irun
+	  or to set the simulator to "nosim" to disable model build
+	  and simulation.
+
+	config SIM_XSIM
+		bool "xsim"
+		help
+		  Default Xilinx simulator
+
+	config SIM_IRUN
+		bool "irun"
+		help
+		  Cadence irun simulator (requires a specific license)
+		  depends on ! ENABLE_PRFLOW
+
+	config SIM_XCELIUM
+		bool "xcelium"
+		help
+		  Cadence xcelium simulator (requires a specific license)
+		  depends on ! ENABLE_PRFLOW
+
+	config SIM_MODELSIM
+		bool "modelsim"
+		help
+		  Mentor Modelsim AE/SE/DE simulator (requires a specific license)
+		  depends on ! (ENABLE_PRFLOW || ENABLE_NVME)
+
+	config SIM_QUESTA
+		bool "questa"
+		help
+		  Mentor Questa simulator (requires a specific license)
+		  depends on ! (ENABLE_PRFLOW || ENABLE_NVME)
+
+	config NO_SIM
+		bool "nosim"
+
+endchoice
+
+config NUM_OF_MULTI_PROCESS_ENGINES
+        depends on HDL_MULTI_PROCESS
+	prompt "Number of multi-process engines"
+	int
+	default 8
+	range 1 16
+	help
+	  Number of engines in multi-process example.
+
+config SIMULATOR
+	string
+	default "xsim"     if SIM_XSIM
+	default "irun"     if SIM_IRUN
+	default "xcelium"  if SIM_XCELIUM
+	default "modelsim" if SIM_MODELSIM
+	default "questa"   if SIM_QUESTA
+	default "nosim"    if NO_SIM
+
+config ENABLE_DENALI
+	bool "Use Denali for NVMe simulation"
+	depends on (ENABLE_NVME && (SIM_IRUN || SIM_XCELIUM))
+	help
+	  In order to use the Denali NVMe behavioral the corresponding Cadence licenses are required.
+
+config DENALI_USED
+	string
+	default "TRUE"  if ENABLE_DENALI
+	default "FALSE" if ! ENABLE_DENALI
+
+config OCSE_PATH
+	string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
+	default "../ocse"
+
+comment "================= Advanced Options: ================="
+
+choice
+	bool "PHY Speed"
+	default SPEED_25G 
+	help
+	  PHY Speed of Transceive IP
+          There are two choices of phy speed the framework supports. Please select
+          one of them.
+
+	config SPEED_25G
+		bool "25G: Transceive IP at 25.78125 Gbps"
+		help
+		  Generate Transceive IP with 25.78125 Gbps. Uses Xilinx IP.
+	
+	config SPEED_20G
+		bool "20G: Transceive IP at 20.0 Gbps"
+		help
+		  Generate Transceive IP with 20.0 Gbps. Uses Xilinx IP.
+endchoice
+
+config PHY_SPEED 
+	string
+	default "25.78125" if SPEED_25G
+	default "20.0" if SPEED_20G
+
+choice
+	bool "AXI ID width"
+	default AXI_IDW_1 
+	help
+	  ID width on AXI interface
+          There are five choices of axi id width the framework supports. Please select
+          one of them. Using less IDs can reduce the resource usage of snap_core.
+
+	config AXI_IDW_1
+		bool "1b: axi id width is 1b (2 IDs)"
+		help
+		  axi id width is 1b, snap interface supports up to 2 IDs.
+
+	config AXI_IDW_2
+		bool "2b: axi id width is 2b (4 IDs)"
+		help
+		  axi id width is 2b, snap interface supports up to 4 IDs.
+
+	config AXI_IDW_3
+		bool "3b: axi id width is 3b (8 IDs)"
+		help
+		  axi id width is 3b, snap interface supports up to 8 IDs.
+
+	config AXI_IDW_4
+		bool "4b: axi id width is 4b (16 IDs)"
+		help
+		  axi id width is 4b, snap interface supports up to 16 IDs.
+
+	config AXI_IDW_5
+		bool "5b: axi id width is 5b (32 IDs)"
+		help
+		  axi id width is 5b, snap interface supports up to 32 IDs.
+	
+endchoice
+
+#config ENABLE_PRFLOW
+#	bool "Cloud build (enabling Partial Reconfiguration)"
+#	help
+#	  Used for Cloud environment using specific PSL images
+#
+#config USE_PRFLOW
+#	string
+#	default "TRUE" if ENABLE_PRFLOW
+#	default "FALSE" if ! ENABLE_PRFLOW
+
+config ENABLE_ILA
+	bool "Enable ILA Debug"
+	depends on ! ENABLE_PRFLOW
+	help
+	  Used for debugging the design by inserting probes into the FPGA
+	  Enable the usage of Vivado's integrated logic analyzer. There are
+	  two ways: 
+	  (1) Use xdc file. Please make sure that $ILA_SETUP_FILE in snap_env.sh
+	  points to the .xdc file (See example in hardware/setup/ila_example.xdc).
+	  (2) Create an ILA ip core and instantiate it in your design. Put the "create_ip"
+	  commands in your tcl file, and include the ila core in your Verilog design
+	  (enclosed with `define ILA_DEBUG .... `endif)
+	  For both ways, a 'probe.ltx' file will be generated in hardware/build/Images. 
+	  This file is needed for ILA debugging with JTAG and Vivado Lab HW manager tool.
+
+config ILA_DEBUG
+	string
+	default "TRUE"  if ENABLE_ILA
+	default "FALSE" if ! ENABLE_ILA
+
+#config ENABLE_FACTORY
+#	bool "Also create a factory image"
+#	help
+#	  Used to generate a specific image to be located into the factory area
+#	  Default image is in the user area.
+#	  This specific factory area is used to recover from a bad user image
+#	depends on ! ENABLE_PRFLOW
+#
+#config FACTORY_IMAGE
+#	string
+#	default "TRUE"  if ENABLE_FACTORY
+#	default "FALSE" if ! ENABLE_FACTORY
+
+#FIXME Cloud flow will be revised
+config ENABLE_CLOUD_USER_FLOW
+	bool "Cloud user flow"
+	default y
+	depends on ENABLE_PRFLOW
+
+config CLOUD_USER_FLOW
+	string
+	default "TRUE" if ENABLE_CLOUD_USER_FLOW
+	default "FALSE" if ! ENABLE_CLOUD_USER_FLOW
+
+config ENABLE_CLOUD_BUILD_BITFILE
+	bool "Build bitstream file"
+	help
+	  Enables the generation of the image for the FPGA
+	default y
+	depends on ENABLE_PRFLOW
+
+config CLOUD_BUILD_BITFILE
+	string
+	default "TRUE" if ENABLE_CLOUD_BUILD_BITFILE
+	default "FALSE" if ! ENABLE_CLOUD_BUILD_BITFILE
+
+
+config ENABLE_UNIT_VERIF
+	bool "Enable UVM based unit verification environment."
+	depends on SIM_XCELIUM
+	depends on HDL_UNIT_SIM
+    default n
+	help
+	   OCSE and software excluded, only UVM based testbench and OC-ACCEL AXI-TLX bridge.
+
+config UNIT_SIM_USED
+	string
+	default "TRUE"  if ENABLE_UNIT_VERIF
+	default "FALSE" if ! ENABLE_UNIT_VERIF
+
+config ENABLE_ODMA
+	bool "Enable ODMA (not available)"
+    default n
+	help
+	   Enable ODMA instead of TLX-AXI bridge.
+
+config ODMA_USED
+	string
+	default "TRUE"  if ENABLE_ODMA
+	default "FALSE" if ! ENABLE_ODMA
+
+config ENABLE_FLASH
+	bool "Enable FLASH"
+    default n
+	help
+	   Enable FLASH in oc-bip.
+
+config FLASH_USED
+	string
+	default "TRUE"  if ENABLE_FLASH
+	default "FALSE" if ! ENABLE_FLASH
+

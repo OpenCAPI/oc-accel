@@ -1,0 +1,64 @@
+#!/usr/bin/env perl
+
+##
+## vcp - v-h preprocessor
+##
+use strict;
+use warnings;
+use Getopt::Long;
+use FindBin qw($Bin);
+
+my $file_in;
+my $file_out;
+my $verbose=1;
+my $imacros;
+my @includes;
+my $cpp = "cpp";
+my $outdir="outdir";
+GetOptions (
+             "help|h" => sub {usage(); exit 0},
+             "imacros=s"  => \$imacros,
+             "o=s"  => \$file_out,
+             "i=s"  => \$file_in,
+             "inc=s"  => \@includes,
+             "cpp=s"  => \$cpp,
+             "verbose"  => \$verbose,
+           ) or die "Unrecognized options @ARGV";
+
+print STDERR "Processing $file_in into $file_out\n" if ($verbose) ;
+
+my $opt_inc = " ";
+foreach my $i (@includes) {
+    $opt_inc .= " -I $i";
+}
+
+my $command = "$Bin/pre_vcp -i $file_in | $cpp  -w -undef -nostdinc -P -C -imacros $imacros $opt_inc |";
+
+my $INFILE;
+die "Unable to process pipe $command" if (!open( $INFILE, "$command" )) ;
+
+open my $ofile_fh,">",$file_out or die "Can not open $file_out $!";
+
+while (my $line = <$INFILE>) {
+    $line =~ s/_&qt&_/'/g;
+    $line =~ s/_&pdpd&_/##/g;
+    $line =~ s/_&pd&_/#/g;
+    $line =~ s(_&slsl&_)(//)g;
+    print $ofile_fh $line;
+}
+close $ofile_fh;
+
+print STDERR "$file_out successfully written\n" if ($verbose) ;
+
+##
+## usage - show usage
+##
+
+sub usage()
+{
+    print
+    	"Usage: vcp [-o <file_out>] [-imacros <macros>] <file.v-h>\n",
+    	"-v = verbose\n",
+    	"-imacros <macros> = force #include of <macros> before all else\n",
+    	"default output file is <file>.v\n";
+}

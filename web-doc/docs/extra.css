@@ -1,0 +1,252 @@
+/* Personal css defintions */
+
+
+/****************************************************/
+/* headers */
+
+h1 {
+	padding-bottom: .3em;
+	font-size: 2.25em;
+	line-height: 1.2;
+	color: #2C3E50;
+/*	text-align: center;*/
+	font-weight: bold;
+	border-bottom: 1px solid #ccc;
+
+}
+h2 {
+  font-size: 24px;
+  text-decoration: underline;
+  font-weight: bold;
+  color: #2C3E50;
+}
+h3 {
+  font-weight: bold;
+  font-size: 18px;
+  font-style: italic;
+}
+
+/****************************************************/
+/*Single line code block*/
+code {
+   // color: #99002E;
+	font-family: Monospace;
+	background:  #DDD;
+	border: 0px;
+}
+
+/****************************************************/
+/* General Text */
+p {
+  font-size: 16px;
+  color: #111;
+  margin: 10px;
+}
+
+/****************************************************/
+/* Table */
+
+table {
+	border: 1px solid #888;
+}
+
+.table > thead > tr > th, 
+.table > tbody > tr > th, 
+.table > tfoot > tr > th, 
+.table > thead > tr > td, 
+.table > tbody > tr > td, 
+.table > tfoot > tr > td {
+
+    padding: 3px;
+    border: 1px solid #888;
+	font-size: 14px;
+}
+table th {
+	background-color: #ccc;
+}
+
+li {
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
+/****************************************************/
+/* Customize sidebar 
+More examples:
+https://gitlab.fokus.fraunhofer.de/openbaton/docs/commit/81f3a161d6b3eefc990788815f552fcc5256431f
+*/
+
+/* First level of nav */
+/* Text color */
+.main {
+	text-indent: -10px;
+}
+
+
+.bs-sidebar .nav > li > a {
+    color: #272727;
+	font-size: 90%;
+}
+/* Background */
+/*
+.bs-sidebar {
+    padding-bottom: 0px;
+    border-radius: 0px;
+    background-color: #ecf4f3;
+	background:  linear-gradient(to bottom, #0092B3, #6BC04A);
+}
+*/
+
+/* Selected line */
+.bs-sidebar .nav > .active > a,
+.bs-sidebar .nav > .active:hover > a,
+.bs-sidebar .nav > .active:focus > a {
+/*    background-color: #0092B3; */
+    background: #6BC04A;
+/*	background:  linear-gradient(to right, #0092B3, #6BC04A);*/
+    border-right: 0px;
+	border-left: 0px;
+	color: white;
+	font-weight: normal;
+
+}
+
+
+/* Hover */
+.bs-sidebar .nav > li > a:hover,
+.bs-sidebar .nav > li > a:focus {
+	background-color: #AAA;
+	border-right: none;
+}
+
+/****************************************************/
+/* Navigation bar on top */
+
+.navbar-default {
+	background-color: #0092B3;
+	font-size: 16px;
+}
+
+/* link */
+/*.navbar-default .navbar-nav > li > a {
+    color: red;
+}*/
+.navbar-default .navbar-nav > li > a:hover {
+    /*color: blue;*/
+	background-color: #272727;
+}
+.navbar-default .navbar-nav > .active > a, 
+.navbar-default .navbar-nav > .active > a:hover, 
+.navbar-default .navbar-nav > .active > a:focus {
+  /*  color: #272727; */
+  /*  font-weight: bold; */
+    background-color: #6BC04A;  // Changes color of main button that is currently active.
+}
+/*
+.navbar-default .navbar-nav > .open > a, 
+.navbar-default .navbar-nav > .open > a:hover, 
+.navbar-default .navbar-nav > .open > a:focus {
+    color: grey; 
+    background-color: violet;  //  Changes color of main menu button once clicked.
+}
+*/
+/* display submenu relative to parent*/
+.navbar-nav .open .dropdown-menu {
+    background-color:#0092B3;
+
+}
+/****************************************************/
+/****************************************************/
+/* admonition */
+
+.admonition {
+    margin-bottom: 10px;
+	border: 0px solid transparent;
+	border-left: 4px solid;
+//	border-top: 1px solid;
+//	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+//	border-radius: 0.5rem;
+}
+
+.admonition > .admonition-title {
+    padding: 2px 2px;
+    font-size: 16px;
+	font-family: monospace;
+	font-weight: bold;
+    text-indent: 10px;
+	border: 0px;
+}
+
+.admonition > .admonition-title + * {
+    margin-top: 1px;
+}
+
+.admonition.warning > .admonition-title {
+    //background: linear-gradient(to right, #ffb30c, #fcf8e3);
+    //background-color: #d97f02;
+	background-color: #fcf8e3;
+	color: #D97F02;
+}
+.admonition.warning {
+    background-color: #fcf8e3;
+    //background-color: #fff;
+    border-color: #d97f02;
+}
+
+.admonition.note > .admonition-title {
+    //background: linear-gradient(to right, #6Bc04A, #DDFDDA);
+    //background-color: #6BC04A;
+    //background-color: #DDFDDA;
+    background-color: #CDEBFB;
+	color: #0092B3;
+}
+.admonition.note {
+    background-color: #CDEBFB;
+    //background-color: #fff;
+    border-color: #0092B3;
+}
+
+.admonition.danger > .admonition-title {
+	//background: linear-gradient(to right, #f04124, #fde6e3);
+    //background-color: #EA2f10;
+    background-color: #FDE6E3;
+	color: #EA2F10;
+}
+
+.admonition.danger {
+    background-color: #FDE6E3;
+    //background-color: #fff;
+}
+
+
+/* icons */
+
+.admonition-title::before {
+	font-family: FontAwesome;
+	margin-right: 10px;
+	font-weight: normal;
+}
+.admonition.note > .admonition-title::before {
+	color: #0092B3;
+	content: "\f044";
+}
+.admonition.warning > .admonition-title::before {
+	color: #D97F02;
+	content: "\f06a";
+}
+.admonition.danger > .admonition-title::before {
+	color: #EA2F10;
+	content: "\f00d";
+}
+
+
+/* for fenced code blocks */
+
+pre {
+	padding: 1px;
+//	border: 0px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+

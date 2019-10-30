@@ -1,0 +1,7 @@
+.snap*
+snap_env.sh
+software/*/*.o
+software/*/*.d
+software/*/*.so
+*.jou
+*.log
