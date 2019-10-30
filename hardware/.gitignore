@@ -1,0 +1,14 @@
+*~
+hdl/hls/action_wrapper.vhd
+hdl/nvme/component.xml
+hdl/nvme/xgui
+build/
+logs/*
+viv_project*/
+ip/
+sim/*.log
+sim/20*
+.bitstream_name.txt
+.create_ip_done
+.hw_project_done
+
