@@ -6,7 +6,7 @@ This page introduces the components and files in OC-Accel. For a step-by-step gu
 
 # Repository Structure
 
-The diagram below shows the entire diretory structure of OC-Accel GIT repository. It links to another repository [OpenCAPI3.0_Client_RefDesign] or `oc-bip` which contains the card specific packages and modules to support OpenCAPI protocol. 
+The diagram below shows the entire diretory structure of OC-Accel GIT repository. It links to another repository [OpenCAPI3.0_Client_RefDesign] or `oc-bip` which contains the card specific packages and modules to support OpenCAPI protocol.
 
 ![oc-accel-oc-bip](pictures/oc-accel-oc-bip.svg)
 [ OpenCAPI3.0_Client_RefDesign]: https://github.com/OpenCAPI/OpenCAPI3.0_Client_RefDesign
@@ -35,14 +35,14 @@ Then it is the User Application `actions` directory.
 
 ![oc-bip](pictures/oc-bip.svg)
 
-Any card vendor can add their card package support in `oc-bip`. The concept is similar to **DSA** (Device Support Archive) or **BSP** (Board Support Package). 
+Any card vendor can add their card package support in `oc-bip`. The concept is similar to **DSA** (Device Support Archive) or **BSP** (Board Support Package).
 
 * **Board_support_packages**: Card vendor need to create a separate folder for a new device. It includes:
-    1. Constraint files (xdc) to describe the Card pins, flash interface, configurations and so on. 
-    2. Tcl files to create necessary Vivado IPs. 
-    3. *Enprypted* Verilog files to use Xilinx high speed serdes IOs. 
-    4. Verilog files for parameters and FPGA top. 
-* **config_subsystem**: Shared common logic for OpenCAPI Config. 
+    1. Constraint files (xdc) to describe the Card pins, flash interface, configurations and so on.
+    2. Tcl files to create necessary Vivado IPs.
+    3. *Enprypted* Verilog files to use Xilinx high speed serdes IOs.
+    4. Verilog files for parameters and FPGA top.
+* **config_subsystem**: Shared common logic for OpenCAPI Config.
 * **scripts**: to pack the entire `oc-bip` to a Vivado IP (oc_bsp_wrap.xci).
 * **sim**: Top Verilog file for simulation.
 * **Tlx**: OpenCAPI Device transaction layer reference design.
@@ -65,7 +65,7 @@ In accelerator development, software and hardware co-simulation is a very import
 
 ## Top hierarchy in Simulation Step
 
-* **top.sv** is in `oc-bip/sim` directory. 
+* **top.sv** is in `oc-bip/sim` directory.
 * **oc_cfg** is OpenCAPI Configuration subsystem.
 * **oc_function** is the DUT (Design under Test) in this step.
 * **oc_snap_core** is in `hardware/hdl`
@@ -76,7 +76,7 @@ In accelerator development, software and hardware co-simulation is a very import
 
 
 [ Co-Simulation ]: ../user-guide/6-co-simulation/index.html
-[ OCSE ]: https://github.ibm.com/lancet/ocse
+[ OCSE ]: https://github.com/OpenCAPI/ocse
 
 ## Files used in Implementation Step
 
@@ -89,10 +89,10 @@ After co-simulation passed, it's time to do the **Synthesis** and **Implementati
 ## Top hierarchy in Implementation Step
 
 
-To generate a FPGA bitstream (binary image), the top design file is `oc_fpga_top.v`. 
+To generate a FPGA bitstream (binary image), the top design file is `oc_fpga_top.v`.
 
 * **oc_fpga_top** is located in `hardware/oc-bip/board_support_packeages/<CARD>/Verilog/framework_top`
-* **oc_bsp_wrap** includes TLx, Dlx, PHY, Flash subsystem and Card information (VPD). A script `create_oc_bsp.tcl` will assemble these components to a Vivado IP. 
+* **oc_bsp_wrap** includes TLx, Dlx, PHY, Flash subsystem and Card information (VPD). A script `create_oc_bsp.tcl` will assemble these components to a Vivado IP.
 * **oc_cfg** is OpenCAPI Configuration subsystem.
 * **oc_function** is what we have just simulated and proved that the functions can work correctly.
 * **oc_snap_core** is in `hardware/hdl`
@@ -108,7 +108,7 @@ To generate a FPGA bitstream (binary image), the top design file is `oc_fpga_top
 
 When FPGA bit image is generated, use the tool `oc-flash-script` in [oc-utils] (TODO: update link) to download it from Power9 host server to the FPGA flash. After reboot, the bit image takes effect and you can ask application to call FPGA acceleration, with the help of `libosnap` and `libocxl`.
 
-[libocxl] need to be installed. Please follow the README file on its homepage. 
+[libocxl] need to be installed. Please follow the README file on its homepage.
 
 Application software and libosnap need to be compiled on Power9 host server also. For more information, please refer to [User-guide: deploy].
 

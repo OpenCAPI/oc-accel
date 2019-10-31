@@ -11,9 +11,9 @@ git submodule init
 git submodule update
 ```
 
-Delete the unnecessary branches, only keep "master", and create your own branches. 
+Delete the unnecessary branches, only keep "master", and create your own branches.
 
-When you want to sync with the original repository, do following steps: 
+When you want to sync with the original repository, do following steps:
 
 ```
 git remote add upstream https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git
@@ -34,10 +34,10 @@ git fetch upstream
 git merge upstream/master
 ```
 
-When you have some fixes and added some new features, create a pull request from your fork to the original repository. It will be reviewed and then the contribution will be merged. 
+When you have some fixes and added some new features, create a pull request from your fork to the original repository. It will be reviewed and then the contribution will be merged.
 
 !!!Note
-    OC-Accel encourages people to create their own actions and the links will be recommended on `README.md`. But to keep the repository relatively small and neat, it will not copy every user action design into its original `actions` folder. 
+    OC-Accel encourages people to create their own actions and the links will be recommended on `README.md`. But to keep the repository relatively small and neat, it will not copy every user action design into its original `actions` folder.
 
     Submit an **issue** or **pull** request to start the discussion.
 
@@ -59,11 +59,11 @@ We have several examples as references. Current action example list is:
 [hls_helloworld]: ../../actions-doc/hls_helloworld/index.html
 [hls_memcopy_1024]: ../../actions-doc/hls_memcopy_1024/index.html
 
-According to the action category, copy the folder of a proper example from `actions` and name it. 
+According to the action category, copy the folder of a proper example from `actions` and name it.
 
 ## Give it a name and type
 
-**Step1:** 
+**Step1:**
 
 ```
 make snap_config
@@ -78,14 +78,14 @@ Select `HLS Action - manually set ...` or `HDL Action - manually set ...` in the
 Edit `snap_env.sh`, point $ACTION_ROOT to the new action.
 
 ``` bash
-export ACTION_ROOT=<...path...>/oc-snap/actions/my_new_action
+export ACTION_ROOT=<...path...>/oc-accel/actions/my_new_action
 export TIMING_LABLIMIT="-200"
 export OCSE_ROOT=<...path...>/ocse
 ```
 
 **Step3:**
 
-Edit `software/tools/snap_actions.h`, add a row of the new action, with the company/person name, action type ID, and a short description. 
+Edit `software/tools/snap_actions.h`, add a row of the new action, with the company/person name, action type ID, and a short description.
 
 ``` C
 static const struct actions_tab snap_actions[] = {
@@ -111,18 +111,18 @@ Do a `grep` search and replace them.
 
 ## Understand the workflow
 
-Modify the example code (sw, hw and tests) to cook a new action. 
+Modify the example code (sw, hw and tests) to cook a new action.
 
-Understanding the workflow can help quickly identifying what's wrong. These steps are organized in 
+Understanding the workflow can help quickly identifying what's wrong. These steps are organized in
 
 * `Makefile`
 * `hardware/Makefile`
 * `software/Makefile`
-* Actions --> 
+* Actions -->
     * `$ACTION_ROOT/hw/Makefile`
     * `$ACTION_ROOT/sw/Makefile`
 
-When adding a new action, before calling the "All-in-one" ocaccel_workflow.py, make sure the make process under $ACTION_ROOT works. 
+When adding a new action, before calling the "All-in-one" ocaccel_workflow.py, make sure the make process under $ACTION_ROOT works.
 ```
 cd $ACTION_ROOT/sw
 make
@@ -138,7 +138,7 @@ Above figure shows the steps to make a simulation model. The Action related step
 * Build Date/Time, Git Version and Card info will be hardcoded into snap_core logic by "**patch_version.sh**"
 
 ## Start simulation
-After clean up compiling errors in action sw and action hw, kick off a co-simulation by 
+After clean up compiling errors in action sw and action hw, kick off a co-simulation by
 
 ```
 ./ocaccel_workflow.py

@@ -4,7 +4,7 @@ This page will introduce the basic environmental requests, tools, and general co
 
 ## Basic Tools
 
-Firstly, you need to have an x86 machine for development with [Vivado Tool] and the license. 
+Firstly, you need to have an x86 machine for development with [Vivado Tool] and the license.
 
 ```
 export XILINX_VIVADO=<...path...>/Xilinx/Vivado/<VERSION>
@@ -20,7 +20,7 @@ export PATH=$PATH:${XILINX_VIVADO}/bin
 There is a file `setup_tools.ksh` in the root directory for reference. But for the beginning, only Vivado is required.
 
 Make sure you have `gcc`, `make`, `sed`, `awk`, `xterm` and `python` installed.
-`setup_tools.ksh` 
+`setup_tools.ksh`
 
 You may install other simulators to accelerate the speed of simulation. For example, [Cadence xcelium]. See in [co-simulation] for more information.
 
@@ -37,16 +37,16 @@ You may install other simulators to accelerate the speed of simulation. For exam
 TODO: Link to update
 
 ```
-git clone git@github.ibm.com:OC-Enablement/oc-snap.git
-cd oc-snap
+git clone git@github.com:OpenCAPI/oc-accel.git
+cd oc-accel
 git submodule init
 git submodule update
 
 cd ..
-git clone git@github.ibm.com:lancet/ocse.git
+git clone git@github.com:OpenCAPI/ocse.git
 ```
 
-It's better to have `ocse` stay in the same directory parallel to `oc-snap`. That is the default path of `$OCSE_ROOT`. Or you need to assign `$OCSE_ROOT` explicitly in `snap_env.sh`.
+It's better to have `ocse` stay in the same directory parallel to `oc-accel`. That is the default path of `$OCSE_ROOT`. Or you need to assign `$OCSE_ROOT` explicitly in `snap_env.sh`.
 
 # Basic terms
 ## Option1: All-in-one python script
@@ -55,11 +55,11 @@ OC-Accel developed a "all-in-one" Python script to control the workflow. It's co
 
 
 ```
-cd oc-snap
+cd oc-accel
 ./ocaccel_workflow.py
 ```
 
-This script will 
+This script will
 
 * Check environmental variables
 * make snap_config
@@ -79,7 +79,7 @@ It helps you to do all kinds of operations in one command line.
 If you have used SNAP for CAPI1.0 and CAPI2.0, you can continue to use these "traditional" make steps. Just typing "make" doesn't work. An explicit target is needed. You can find them in `Makefile` file.
 
 ```
-cd oc-snap
+cd oc-accel
 make help
 ```
 
@@ -115,26 +115,26 @@ do only exist on an x86 platform
 
 !!!Note
     After `make model`,  you can continue to run `make image` to generate bitstreams.
-    
+
 
 In fact, `make model` also creates a Vivado project `framework.xpr` in `hardware/viv_project`. Then it exports the simulation files and compiles them to a simulation model.
 
 
 ### For Image build
 
-* `make snap_config` If it has already been executed, no need to run it again. 
+* `make snap_config` If it has already been executed, no need to run it again.
 * `make hw_project`
 * `make image`
 
 !!!Note
-    **Use Vivado GUI**: 
+    **Use Vivado GUI**:
 
-    After `make hw_project`, you can open project `framework.xpr` in `hardware/viv_project`, and do following **"run Synthesis"**, **"run Implementation"** and **"generate Bitstream"** in Vivado GUI. 
+    After `make hw_project`, you can open project `framework.xpr` in `hardware/viv_project`, and do following **"run Synthesis"**, **"run Implementation"** and **"generate Bitstream"** in Vivado GUI.
 
 
 ## Output files
 
-* The log files during these steps are placed in `hardware/logs`. 
+* The log files during these steps are placed in `hardware/logs`.
 
 * Simulation output files are placed in `hardware/sim/<SIMULATOR>/latest`.
 

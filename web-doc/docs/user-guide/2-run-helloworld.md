@@ -16,17 +16,17 @@ Select HLS HelloWorld in "Action Type".
 
 ![select-helloworld](./pictures/2-select-helloworld.png)
 
-There are some other choices listed in the menu. Please input `OCSE_ROOT` path. Select `xsim` (the default simulator). 
+There are some other choices listed in the menu. Please input `OCSE_ROOT` path. Select `xsim` (the default simulator).
 
-To select a TRUE/FALSE feature, press "Y" or "N". After everything done, move cursor to "Exit". 
+To select a TRUE/FALSE feature, press "Y" or "N". After everything done, move cursor to "Exit".
 
 !!!Note
     This Kconfig menu is editable. If you want to add new features or enrich your own menu, please edit `scripts/Kconfig` file.
 
 
-Then it starts to execute many steps to build a simulation model. It needs several minutes. While waiting for it, open another terminal tab and try to get familiar with some environmental variables. Open `snap_env.sh` and check the very basic ones: 
+Then it starts to execute many steps to build a simulation model. It needs several minutes. While waiting for it, open another terminal tab and try to get familiar with some environmental variables. Open `snap_env.sh` and check the very basic ones:
 ``` bash
-export ACTION_ROOT=<path_of_oc-snap>/actions/hls_helloworld
+export ACTION_ROOT=<path_of_oc-accel>/actions/hls_helloworld
 export TIMING_LABLIMIT="-200"
 export OCSE_ROOT=<path_to_ocse>/ocse
 ```
@@ -59,11 +59,11 @@ Runnig ... check ./snap_workflow.make_model.log for details of full progress
 Then a Xterm window will popped up. (If it doesn't, check if you have installed it by typing `xterm` in your terminal.)
 ![xterm-window](./pictures/2-xterm-window.png)
 
-This Xterm window is where you run your application (software part). You can run anything as many times as you want in the xterm window, just like running in the terminal of a real server with FPGA card plugged. 
+This Xterm window is where you run your application (software part). You can run anything as many times as you want in the xterm window, just like running in the terminal of a real server with FPGA card plugged.
 
 !!!Warning
     If you want to save the content running in this xterm window, please use `script` before running any commands. When you exit xterm window, everything is saved to a file -- "typescript" is its default name.
-    
+
 ```
 $ script
 Script started, file is typescript
@@ -73,7 +73,7 @@ exit
 Script done, file is typescript
 ```
 
-Now let's run application **snap_helloworld**. It is located in `$ACTION_ROOT/sw`, where $ACTION_ROOT is `<path_of_oc-snap>/actions/hls_helloworld`. In the above window, it prints the help messages because it requires two arguments: an input text file and an output text file. 
+Now let's run application **snap_helloworld**. It is located in `$ACTION_ROOT/sw`, where $ACTION_ROOT is `<path_of_oc-accel>/actions/hls_helloworld`. In the above window, it prints the help messages because it requires two arguments: an input text file and an output text file.
 
 We have prepared a script in `$ACTION_ROOT/tests/hw_test.sh` and you can run it directly.
 
@@ -81,9 +81,9 @@ This example is asking FPGA to read the input file from host memory, converting 
 
 ![hw-test](./pictures/2-hw-test.png)
 
-Now you have finished the software/hardware co-simulation. 
+Now you have finished the software/hardware co-simulation.
 
-Type 'exit' in xterm window. 
+Type 'exit' in xterm window.
 
 All the output logs, waveforms are in `hardware/sim/<simulator>/latest`.
 ```
@@ -100,9 +100,9 @@ xsim top.wdb -gui &
 ```
 ![waveform](./pictures/2-waveform.png)
 
-On the project scope (hierarchy) panel, the user logic is `action_w`. 
+On the project scope (hierarchy) panel, the user logic is `action_w`.
 
-## Make FPGA bit image 
+## Make FPGA bit image
 
 In above steps, you actually have finished steps of:
 
@@ -143,13 +143,13 @@ After termination it can be restarted later.
     start route_design      with directive: Explore             18:04:55 Sat Sep 14 2019
     start opt_routed_design with directive: Explore             18:39:01 Sat Sep 14 2019
     generating reports                                          18:57:28 Sat Sep 14 2019
-    Timing (WNS)            -11 ps                                                    
-                            WARNING: TIMING FAILED, but may be OK for lab use                      
+    Timing (WNS)            -11 ps
+                            WARNING: TIMING FAILED, but may be OK for lab use
     generating bitstreams   type: user image                    18:58:28 Sat Sep 14 2019
 ```
 So you can have an estimation of the progress.
 
-After it's completed, you can find the FPGA bit image files in `hardware/build/Images`. The file names have the information of build date/time, action name, card type and timing slack (-11ps here). 
+After it's completed, you can find the FPGA bit image files in `hardware/build/Images`. The file names have the information of build date/time, action name, card type and timing slack (-11ps here).
 
 ```
 $ cd hardware/build/Images
