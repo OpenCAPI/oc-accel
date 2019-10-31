@@ -25,7 +25,9 @@ set action_root   $::env(ACTION_ROOT)
 set sdram_used    $::env(SDRAM_USED)
 set nvme_used     $::env(NVME_USED)
 set bram_used     $::env(BRAM_USED)
-set factory_image [string toupper $::env(FACTORY_IMAGE)]
+# factory_image is not supported in OC-Accel yet. 
+set factory_image FALSE
+#set factory_image [string toupper $::env(FACTORY_IMAGE)]
 set fpgacard      $::env(FPGACARD)
 
 set flash_interface $::env(FLASH_INTERFACE)
