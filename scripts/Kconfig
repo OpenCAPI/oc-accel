@@ -420,7 +420,7 @@ config PHY_SPEED
 
 choice
 	bool "AXI ID width"
-	default AXI_IDW_1 
+	default AXI_IDW_3 
 	help
 	  ID width on AXI interface
           There are five choices of axi id width the framework supports. Please select
