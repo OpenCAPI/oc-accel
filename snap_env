@@ -113,6 +113,7 @@ while [ -z "$SETUP_DONE" ]; do
       abs_OCSE_PATH=$(cd $OCSE_PATH && echo $PWD)
       cd $tmp_pwd
       echo "export OCSE_ROOT=$abs_OCSE_PATH" >> $snap_env_sh
+      OCSE_ROOT=$abs_OCSE_PATH
     fi
     if [ -z "$OCSE_ROOT" ]; then
       if [ ! -n "$HDL_UNIT_SIM" ]; then
