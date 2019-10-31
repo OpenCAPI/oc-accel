@@ -1,5 +1,5 @@
 site_name: OC-Accel Doc
-repo_url: https://github.ibm.com/OC-Enablement/oc-snap
+repo_url: https://github.com/OpenCAPI/oc-accel
 repo_name: GitHub
 nav:
   - About:
@@ -27,7 +27,7 @@ nav:
     - 'Registers': 'deep-dive/registers.md'
     - 'Hardware Logic': 'deep-dive/hardware-logic.md'
     - 'New Board Support': 'deep-dive/board-package.md'
-  - Misc: 
+  - Misc:
     - 'Document Guide': 'misc/doc-guide.md'
 theme:
   name: yeti
