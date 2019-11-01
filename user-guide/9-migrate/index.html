@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/user-guide/9-migrate.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -205,10 +205,10 @@
 <p>The AXI data port width of OC-Accel is 1024bit. But the actions developed in SNAP (CAPI1.0/2.0) use 512b. </p>
 <p>Please select 512b in Kconfig Menu. Then a dwidth_converter will be inserted automatically.</p>
 <p><img alt="dwidtch-convertor" src="../pictures/9-dwidth-converter.svg" /></p>
-<p>All of the AXI4 features in SNAP are supported by OC-Accel, and it has added more. Read <a href="../../deep-dive/hardware-logic/index.html">OC-Accel AXI4 feature list</a> for more details. </p>
+<p>All of the AXI4 features in SNAP are supported by OC-Accel, and it has added more. Read <a href="../../deep-dive/hardware-logic/">OC-Accel AXI4 feature list</a> for more details. </p>
 <h2 id="clock-frequency">Clock frequency</h2>
 <p>The default clock frequency in SNAP (CAPI1.0/2.0) was <strong>250MHz</strong>. There was no asynchronous logic between capi2-bsp, snap_core and action_wrapper so the frequency had to be adjusted together. </p>
-<p>The default clock frequency for <strong>action_wrapper</strong> in OC-Accel is <strong>200MHz</strong>. Asynchronous clocks have been designed for oc-bip, snap_core and action_wrapper so the clock frequency can be adjusted more flexibly for each part. See <a href="../../deep-dive/hardware-logic/index.html#diagram-and-clock-domain">Clock domains</a>. </p>
+<p>The default clock frequency for <strong>action_wrapper</strong> in OC-Accel is <strong>200MHz</strong>. Asynchronous clocks have been designed for oc-bip, snap_core and action_wrapper so the clock frequency can be adjusted more flexibly for each part. See <a href="../../deep-dive/hardware-logic/#diagram-and-clock-domain">Clock domains</a>. </p>
 <h2 id="library-name">Library name</h2>
 <table>
 <thead>
@@ -278,7 +278,7 @@
 <p>There is a big change of the Register Map. OC-Accel has simplified and enlarged the Register Layout. </p>
 <ul>
 <li><a href="https://github.com/open-power/snap/blob/master/hardware/doc/SNAP-Registers.md">SNAP1/2 Register map</a> </li>
-<li><a href="../../deep-dive/registers/index.html">OC-Accel Register map</a></li>
+<li><a href="../../deep-dive/registers/">OC-Accel Register map</a></li>
 </ul>
 <h2 id="api-changes">API changes</h2>
 <table>

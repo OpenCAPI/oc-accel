@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/user-guide/5-hls-design.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -280,7 +280,7 @@ OutputIndex = (act_reg-&gt;Data.out.addr) &gt;&gt; ADDR_RIGHT_SHIFT_1024;
 <h2 id="d_ddrmem">d_ddrmem</h2>
 <p>It represents one channel of DDR on FPGA board. In SNAP1/2 and OC-Accel, only one channel (one DDR memory controller) is implemented as an example. </p>
 <p>However, usually the FPGA board provides more than one DDR channel. There are multiple ways to arrange them so it's user-case dependent. </p>
-<p>Some FPGA boards have HBM. The developer can enable it similarly like DDR, which is introduced in <a href="../../deep-dive/board-package/index.html">Deep Dive: New board support</a>.</p>
+<p>Some FPGA boards have HBM. The developer can enable it similarly like DDR, which is introduced in <a href="../../deep-dive/board-package/">Deep Dive: New board support</a>.</p>
 <p>Please be aware of the address range you can use for a single DDR channel. d_ddrmem is shaped as a <strong>64Bytes width</strong>, <strong>(Capacity/64)</strong> depth array. Exceeding the available DDR address range will lead to an unknown error.</p>
 <h2 id="axi-lite-registers">AXI Lite Registers</h2>
 <ul>
@@ -329,7 +329,7 @@ OutputIndex = (act_reg-&gt;Data.out.addr) &gt;&gt; ADDR_RIGHT_SHIFT_1024;
 <p class="admonition-title">Note</p>
 <p>If 108 bytes are not enough, please define a small buffer in Host memory as <strong>WED buffer</strong> (Work Element Descriptor), store all of the parameters in this WED buffer, and just put the address pointers of this WED buffer into <code>xxxx_job_t</code>. Ask HLS Action to read the content of WED buffer first, then do the following jobs.</p>
 </div>
-<p>The above register layout is also drawn in <a href="../../deep-dive/registers/index.html#action-register-definition">Deep Dive: Registers</a> </p>
+<p>The above register layout is also drawn in <a href="../../deep-dive/registers/#action-register-definition">Deep Dive: Registers</a> </p>
 <h2 id="hls-optimization">HLS optimization</h2>
 <p>Xilinx Document <a href="https://www.xilinx.com/support/documentation/sw_manuals/xilinx2019_1/ug902-vivado-high-level-synthesis.pdf">UG902: Vivado High-Level Synthesis</a> is an important guide book to understand how to add "directives" to your HLS C/C++ code.</p>
 <p>You can also refer to SNAP1/2 document <a href="https://github.com/open-power/snap/blob/master/doc/AN_CAPI_SNAP-How_to_optimize_an_HLS_action.pdf">How to Optimize HLS Action</a> to learn how to run standalone testing before OCSE Co-simulation, and how to fully explore UNROLL and PIPELINE directives in HLS. </p>

@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/user-guide/2-run-helloworld.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -204,7 +204,7 @@
 ./ocaccel_workflow.py
 </code></pre>
 
-<p>Then a KConfig window will popped up. If it doesn't, check <a href="../../index.html#required-tools-for-development">Required tools</a> and search 'kconfig' on the homepage.</p>
+<p>Then a KConfig window will popped up. If it doesn't, check <a href="../../#required-tools-for-development">Required tools</a> and search 'kconfig' on the homepage.</p>
 <p><img alt="snap-config-blue" src="../pictures/2-snap-config-blue.png" /></p>
 <p>Select HLS HelloWorld in "Action Type".</p>
 <p><img alt="select-helloworld" src="../pictures/2-select-helloworld.png" /></p>
@@ -285,7 +285,7 @@ ocse.parms  sim.log          terminal.log         tout     xsaet.tcl    xsim.log
 <li>make model</li>
 <li>make sim</li>
 </ul>
-<p>(These targets are introduced in <a href="../1-prepare-env/index.html#option2-traditional-make-steps">Traditional "make" steps</a>)</p>
+<p>(These targets are introduced in <a href="../1-prepare-env/#option2-traditional-make-steps">Traditional "make" steps</a>)</p>
 <p>Now you can generate FPGA image by</p>
 <pre><code>./ocaccel_workflow.py --no_configure --no_make_model --no_run_sim --make_image
 </code></pre>
@@ -331,9 +331,9 @@ oc_2019_0914_1657_25G_hls_helloworld_noSDRAM_AD9V3_-11_secondary.prm
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>A small negative timing slack less than 200ps (set in variable $TIMING_LABLIMIT), is usually acceptable for Lab test, but for product, it's suggested to work out a timing cleaned FPGA image. See <a href="../7-build-image/index.html">Build image</a> for more information.</p>
+<p>A small negative timing slack less than 200ps (set in variable $TIMING_LABLIMIT), is usually acceptable for Lab test, but for product, it's suggested to work out a timing cleaned FPGA image. See <a href="../7-build-image/">Build image</a> for more information.</p>
 </div>
-<p>Then go to <a href="../8-deploy/index.html">Deploy on Power Server</a> to see how to download the bitstream and run.</p>
+<p>Then go to <a href="../8-deploy/">Deploy on Power Server</a> to see how to download the bitstream and run.</p>
 <h2 id="summary">Summary</h2>
 <p>Now you understand how to run an existing example. You can use the same method to run other examples in <code>actions</code> directory.</p></div>
         </div>

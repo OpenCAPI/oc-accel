@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/repository.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -202,7 +202,7 @@
 </div></div>
                 <div class="col-md-9" role="main">
 
-<p>This page introduces the components and files in OC-Accel. For a step-by-step guidance, please start from <strong>User Guide</strong> <a href="../user-guide/0-steps/index.html">Steps in a glance</a>.</p>
+<p>This page introduces the components and files in OC-Accel. For a step-by-step guidance, please start from <strong>User Guide</strong> <a href="../user-guide/0-steps/">Steps in a glance</a>.</p>
 <h1 id="repository-structure">Repository Structure</h1>
 <p>The diagram below shows the entire diretory structure of OC-Accel GIT repository. It links to another repository <a href="https://github.com/OpenCAPI/OpenCAPI3.0_Client_RefDesign">OpenCAPI3.0_Client_RefDesign</a> or <code>oc-bip</code> which contains the card specific packages and modules to support OpenCAPI protocol.</p>
 <p><img alt="oc-accel-oc-bip" src="../pictures/oc-accel-oc-bip.svg" /></p>
@@ -240,11 +240,11 @@
 <li><strong>Tlx</strong>: OpenCAPI Device transaction layer reference design.</li>
 <li><strong>Dlx</strong>: OpenCAPI Device data link layer reference design.</li>
 </ul>
-<p>For more information, please refer to <a href="../deep-dive/board-package/index.html">New Board Support</a>.</p>
+<p>For more information, please refer to <a href="../deep-dive/board-package/">New Board Support</a>.</p>
 <h1 id="filesets-and-hardware-hierarchy">Filesets and Hardware Hierarchy</h1>
 <h2 id="files-used-in-simulation-step">Files used in Simulation Step</h2>
 <p><img alt="co-sim" src="../pictures/co-sim.svg" /></p>
-<p>In accelerator development, software and hardware co-simulation is a very important step. The simulation doesn't contain module tlx and dlx, but replies on OCSE to emulate the behavior of host. For more information, please refer to <a href="../user-guide/6-co-simulation/index.html">Co-Simulation</a>.</p>
+<p>In accelerator development, software and hardware co-simulation is a very important step. The simulation doesn't contain module tlx and dlx, but replies on OCSE to emulate the behavior of host. For more information, please refer to <a href="../user-guide/6-co-simulation/">Co-Simulation</a>.</p>
 <p><a href="https://github.com/OpenCAPI/ocse">OCSE</a> (OpenCAPI Simulation Engine) is also required. (TODO: update link)</p>
 <h2 id="top-hierarchy-in-simulation-step">Top hierarchy in Simulation Step</h2>
 <ul>
@@ -258,7 +258,7 @@
 </ul>
 <h2 id="files-used-in-implementation-step">Files used in Implementation Step</h2>
 <p><img alt="build-bitstream" src="../pictures/build-bitstream.svg" /></p>
-<p>After co-simulation passed, it's time to do the <strong>Synthesis</strong> and <strong>Implementation</strong> in Vivado. For more information, please refer to <a href="../user-guide/7-build-image/index.html">User guide: build image</a>.</p>
+<p>After co-simulation passed, it's time to do the <strong>Synthesis</strong> and <strong>Implementation</strong> in Vivado. For more information, please refer to <a href="../user-guide/7-build-image/">User guide: build image</a>.</p>
 <h2 id="top-hierarchy-in-implementation-step">Top hierarchy in Implementation Step</h2>
 <p>To generate a FPGA bitstream (binary image), the top design file is <code>oc_fpga_top.v</code>.</p>
 <ul>
@@ -274,7 +274,7 @@
 <p><img alt="deploy-and-run" src="../pictures/deploy-and-run.svg" /></p>
 <p>When FPGA bit image is generated, use the tool <code>oc-flash-script</code> in <a href="https://github.ibm.com/OC-Enablement/oc-utils/">oc-utils</a> (TODO: update link) to download it from Power9 host server to the FPGA flash. After reboot, the bit image takes effect and you can ask application to call FPGA acceleration, with the help of <code>libosnap</code> and <code>libocxl</code>.</p>
 <p><a href="https://github.com/OpenCAPI/libocxl">libocxl</a> need to be installed. Please follow the README file on its homepage.</p>
-<p>Application software and libosnap need to be compiled on Power9 host server also. For more information, please refer to <a href="../user-guide/8-deploy/index.html">User-guide: deploy</a>.</p></div>
+<p>Application software and libosnap need to be compiled on Power9 host server also. For more information, please refer to <a href="../user-guide/8-deploy/">User-guide: deploy</a>.</p></div>
         </div>
 
         <footer class="col-md-12">

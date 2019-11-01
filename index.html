@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/index.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -227,7 +227,7 @@ Generally, creating an accelerator includes the steps as below:</p>
 <li>Many applications are developed using only software. However, there are classes of real-time applications in which the software cannot process the required data in a prescribed time period.</li>
 <li>Analysis tools such as statistical performance monitors or profiling tools can help to identify compute-intensive algorithms. These algorithms are sometimes called bottlenecks, hotspots or choke-points. Examples of such choke points are: streaming IO, highly complex math functions, operations using extremely large block processing, etc.</li>
 <li>Adding dedicated and customized hardware to offload these compute-intensive functions greatly improve throughput. These "hot-spot" function are moved to FPGA. This function is also mentioned as "<strong>action</strong>" in the following description. </li>
-<li><strong>Software/hardware partition</strong>: After isolating the functions to run on FPGA side, the parameters need to be nailed down. It can be described as a <code>job</code> data structure. Learning the examples (See in "<strong>Examples</strong>" tab) as an start. A few <a href="./deep-dive/software-api/index.html">libosnap API functions</a> help you manipulate the FPGA card and the software/hardware interface. </li>
+<li><strong>Software/hardware partition</strong>: After isolating the functions to run on FPGA side, the parameters need to be nailed down. It can be described as a <code>job</code> data structure. Learning the examples (See in "<strong>Examples</strong>" tab) as an start. A few <a href="./deep-dive/software-api/">libosnap API functions</a> help you manipulate the FPGA card and the software/hardware interface. </li>
 <li><strong>Work on the hardware action:</strong> Write the "hardware action" in a supported programming language, such as Vivado HLS or Verilog/VHDL. Together with the software part which invokes this hardware action, OC-Accel supports running co-simulation to verify the correctness. After the co-simulation is done, generate the FPGA bit image. </li>
 <li>The development environment for OC-Accel is Linux with Xilinx Vivado installed. You can also install other supported simulators to get better simulation speed.</li>
 <li>The FPGA card (target hardware) is <strong>NOT</strong> required during architecture development.</li>
@@ -237,7 +237,7 @@ Generally, creating an accelerator includes the steps as below:</p>
 <li><strong>Deploy to Power9 server</strong>: Program the bit image to a real FPGA card. Compile the software code on Power9 and run! </li>
 </ul>
 <h2 id="oc-accel-framework">OC-Accel Framework</h2>
-<p>Now let's have a glance at the diagram of OC-Accel framework. For more details about the directories, files and design hierarchy, see in <a href="./repository/index.html">repository structure</a> page.</p>
+<p>Now let's have a glance at the diagram of OC-Accel framework. For more details about the directories, files and design hierarchy, see in <a href="./repository/">repository structure</a> page.</p>
 <p><img alt="oc-accel-bridge" src="pictures/oc-accel-bridge.svg" /></p>
 <p>The framework hardware consists of:</p>
 <ul>

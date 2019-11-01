@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/user-guide/4-hdl-design.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -243,12 +243,12 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The User defined Action registers are suggested to start from <strong>0x30</strong>.</p>
-<p>OC-Accel has some pre-defined Action registers in the range of 0x00-0x2F to cooperate with libosnap and software tools. See <a href="../../deep-dive/registers/index.html#action-register-definition">Deep Dive: Registers</a> for more information.</p>
+<p>OC-Accel has some pre-defined Action registers in the range of 0x00-0x2F to cooperate with libosnap and software tools. See <a href="../../deep-dive/registers/#action-register-definition">Deep Dive: Registers</a> for more information.</p>
 </div>
 <h2 id="axi_master-data-path">axi_master (Data Path)</h2>
-<p>Here lists the supported AXI feature list from <strong>the viewpoint of an Action</strong>. When DATA width is chosen to be 512b, a Xilinx IP "axi_dwidth_converter" (data width converter) will be inserted automatically (<a href="../9-migrate/index.html#data-width-change">diagram</a>), and this converter may not support all of the AXI features. (It also costs FPGA resources!)</p>
+<p>Here lists the supported AXI feature list from <strong>the viewpoint of an Action</strong>. When DATA width is chosen to be 512b, a Xilinx IP "axi_dwidth_converter" (data width converter) will be inserted automatically (<a href="../9-migrate/#data-width-change">diagram</a>), and this converter may not support all of the AXI features. (It also costs FPGA resources!)</p>
 <p>So we recommend to design a 1024b-wide axi_master and you can use unaligned address and write strobe freely to transfer small sized data. </p>
-<p>Read more in <a href="../../deep-dive/hardware-logic/index.html#axi4-feature-list">AXI4 feature list</a> of snap_core. </p>
+<p>Read more in <a href="../../deep-dive/hardware-logic/#axi4-feature-list">AXI4 feature list</a> of snap_core. </p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Choose less AXI IDs can save the area of snap_core. The AXI ID ports have at least 1 bit. Drive zero if the Action hardware design doesn't use it. </p>
@@ -262,7 +262,7 @@
 <h2 id="action-clock">Action Clock</h2>
 <p>The default clock ap_clk (<strong>clock_act</strong>) frequency is 200MHz, same as the clock feeding snap_core (<strong>clock_afu</strong>). </p>
 <p>If a different Action Clock is required, please modify <code>hardware/hdl/oc_functions.vhd_source</code> to add a clock generator. The script for this clock generator should be added into <code>hardware/setup/create_snap_ip.tcl</code>.</p>
-<p>For more information, please read <a href="../../deep-dive/hardware-logic/index.html#diagram-and-clock-domain">Clock Domain</a>. </p>
+<p>For more information, please read <a href="../../deep-dive/hardware-logic/#diagram-and-clock-domain">Clock Domain</a>. </p>
 <h2 id="action-ips">Action IPs</h2>
 <p>Take hdl_single_engine as an example, <code>actions/hdl_single_engine/hw/Makefile</code> calls a script <code>action_config.sh</code>. </p>
 <p>Many additional steps can be added in this way to construct the Action hw design, for example, create some IPs:</p>
