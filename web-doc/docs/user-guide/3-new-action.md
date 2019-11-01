@@ -54,10 +54,10 @@ We have several examples as references. Current action example list is:
 |[hls_memcopy_1024] | C/C++(HLS) | 1024b example to do memcopy. Enabled FPGA DDR. |
 
 
-[hdl_example]: ../../actions-doc/hdl_example/index.html
-[hdl_single_engine]: ../../actions-doc/hdl_single_engine/index.html
-[hls_helloworld]: ../../actions-doc/hls_helloworld/index.html
-[hls_memcopy_1024]: ../../actions-doc/hls_memcopy_1024/index.html
+[hdl_example]: ../../actions-doc/hdl_example/
+[hdl_single_engine]: ../../actions-doc/hdl_single_engine/
+[hls_helloworld]: ../../actions-doc/hls_helloworld/
+[hls_memcopy_1024]: ../../actions-doc/hls_memcopy_1024/
 
 According to the action category, copy the folder of a proper example from `actions` and name it.
 

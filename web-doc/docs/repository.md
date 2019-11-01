@@ -1,6 +1,6 @@
 This page introduces the components and files in OC-Accel. For a step-by-step guidance, please start from **User Guide** [Steps in a glance].
 
-[ Steps in a glance ]: ../user-guide/0-steps/index.html
+[ Steps in a glance ]: ../user-guide/0-steps/
 
 
 
@@ -50,7 +50,7 @@ Any card vendor can add their card package support in `oc-bip`. The concept is s
 
 For more information, please refer to [New Board Support].
 
-[New Board Support]: ../deep-dive/board-package/index.html
+[New Board Support]: ../deep-dive/board-package/
 
 # Filesets and Hardware Hierarchy
 
@@ -75,7 +75,7 @@ In accelerator development, software and hardware co-simulation is a very import
 
 
 
-[ Co-Simulation ]: ../user-guide/6-co-simulation/index.html
+[ Co-Simulation ]: ../user-guide/6-co-simulation/
 [ OCSE ]: https://github.com/OpenCAPI/ocse
 
 ## Files used in Implementation Step
@@ -84,7 +84,7 @@ In accelerator development, software and hardware co-simulation is a very import
 
 After co-simulation passed, it's time to do the **Synthesis** and **Implementation** in Vivado. For more information, please refer to [User guide: build image].
 
-[User guide: build image]: ../user-guide/7-build-image/index.html
+[User guide: build image]: ../user-guide/7-build-image/
 
 ## Top hierarchy in Implementation Step
 
@@ -114,5 +114,5 @@ Application software and libosnap need to be compiled on Power9 host server also
 
 [libocxl]: https://github.com/OpenCAPI/libocxl
 [oc-utils]: https://github.ibm.com/OC-Enablement/oc-utils/
-[User-guide: deploy]: ../user-guide/8-deploy/index.html
+[User-guide: deploy]: ../user-guide/8-deploy/
 
