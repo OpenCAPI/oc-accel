@@ -99,8 +99,10 @@ Development is usually done on a **Linux (x86) computer**.
 OC-Accel framework needs a FPGA card with OpenCAPI interface, and <u>a Slim-SAS cable</u> to connect to a Power9 server. Today it supports:
 
 [Alphadata 9V3]: https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9v3
+[Alphadata 9H3]: https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9h3
+[Alphadata 9H7]: https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9h7
 
-[New board support]: ./deep-dive/board-package/index.html
+[New board support]: ./deep-dive/board-package
 
 * [Alphadata 9V3]
 * [Alphadata 9H3]
@@ -140,7 +142,7 @@ grep KEYWORD * -r
 # Compliance with SNAP1.0/2.0
 
 [CAPI technology]: https://developer.ibm.com/linuxonpower/capi/
-[Migration Guide]: user-guide/migrate-from-old.md
+[Migration Guide]: user-guide/9-migrate
 [here]: https://github.com/open-power/snap/#31-fpga-card-selection
 
 OpenCAPI is actually the third generation of [CAPI technology]. That's why its version starts from OpenCAPI3.0. The same acceleration framework for CAPI1.0 and CAPI2.0 is also an open-source git repository at <https://github.com/open-power/snap>.
