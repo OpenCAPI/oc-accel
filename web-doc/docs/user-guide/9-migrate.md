@@ -9,7 +9,7 @@ Please select 512b in Kconfig Menu. Then a dwidth_converter will be inserted aut
 
 All of the AXI4 features in SNAP are supported by OC-Accel, and it has added more. Read [OC-Accel AXI4 feature list] for more details. 
 
-[OC-Accel AXI4 feature list]: ../../deep-dive/hardware-logic/index.html
+[OC-Accel AXI4 feature list]: ../../deep-dive/hardware-logic/
 
 ## Clock frequency
 
@@ -17,7 +17,7 @@ The default clock frequency in SNAP (CAPI1.0/2.0) was **250MHz**. There was no a
 
 The default clock frequency for **action_wrapper** in OC-Accel is **200MHz**. Asynchronous clocks have been designed for oc-bip, snap_core and action_wrapper so the clock frequency can be adjusted more flexibly for each part. See [Clock domains]. 
 
-[Clock Domains]: ../../deep-dive/hardware-logic/index.html#diagram-and-clock-domain
+[Clock Domains]: ../../deep-dive/hardware-logic/#diagram-and-clock-domain
 
 
 ## Library name
@@ -50,7 +50,7 @@ There is a big change of the Register Map. OC-Accel has simplified and enlarged 
 
 [SNAP1/2 Register map]: https://github.com/open-power/snap/blob/master/hardware/doc/SNAP-Registers.md
 
-[OC-Accel Register map]: ../../deep-dive/registers/index.html
+[OC-Accel Register map]: ../../deep-dive/registers/
 
 ## API changes
 | SNAP (CAPI1.0/2.0) | OC-Accel (OpenCAPI3.0) |

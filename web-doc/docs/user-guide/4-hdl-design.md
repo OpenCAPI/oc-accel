@@ -34,13 +34,13 @@ The address definition should match with Action SW header file. For example,
     OC-Accel has some pre-defined Action registers in the range of 0x00-0x2F to cooperate with libosnap and software tools. See [Deep Dive: Registers] for more information.
 
 
-[Deep Dive: Registers]: ../../deep-dive/registers/index.html#action-register-definition
+[Deep Dive: Registers]: ../../deep-dive/registers/#action-register-definition
 
 ## axi_master (Data Path)
 
 Here lists the supported AXI feature list from **the viewpoint of an Action**. When DATA width is chosen to be 512b, a Xilinx IP "axi_dwidth_converter" (data width converter) will be inserted automatically ([diagram]), and this converter may not support all of the AXI features. (It also costs FPGA resources!)
 
-[diagram]: ../9-migrate/index.html#data-width-change
+[diagram]: ../9-migrate/#data-width-change
 
 So we recommend to design a 1024b-wide axi_master and you can use unaligned address and write strobe freely to transfer small sized data. 
 
@@ -53,7 +53,7 @@ Read more in [AXI4 feature list] of snap_core.
 
     
 
-[AXI4 feature list]: ../../deep-dive/hardware-logic/index.html#axi4-feature-list
+[AXI4 feature list]: ../../deep-dive/hardware-logic/#axi4-feature-list
 
 
 Another reason for 1024b-wide axi_master is to make full use of OpenCAPI bandwidth. When an Action runs at 200MHz, 1024b continuous data transferring can get: 
@@ -73,7 +73,7 @@ If a different Action Clock is required, please modify `hardware/hdl/oc_function
 
 For more information, please read [Clock Domain]. 
 
-[Clock Domain]: ../../deep-dive/hardware-logic/index.html#diagram-and-clock-domain
+[Clock Domain]: ../../deep-dive/hardware-logic/#diagram-and-clock-domain
 
 ## Action IPs
 
