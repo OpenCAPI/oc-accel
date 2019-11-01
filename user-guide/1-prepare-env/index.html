@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/user-guide/1-prepare-env.md"><i class="fa fa-github"></i> Edit on GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -204,7 +204,7 @@
 <p>This page will introduce the basic environmental requests, tools, and general commands to run OC-Accel flow.</p>
 <h1 id="prepare-environment">Prepare Environment</h1>
 <h2 id="basic-tools">Basic Tools</h2>
-<p>Firstly, you need to have an x86 machine for development with <a href="https://www.xilinx.com/support/download.html">Vivado Tool</a> and the license. </p>
+<p>Firstly, you need to have an x86 machine for development with <a href="https://www.xilinx.com/support/download.html">Vivado Tool</a> and the license.</p>
 <pre><code>export XILINX_VIVADO=&lt;...path...&gt;/Xilinx/Vivado/&lt;VERSION&gt;
 export XILINXD_LICENSE_FILE=&lt;pointer to Xilinx license&gt;
 export PATH=$PATH:${XILINX_VIVADO}/bin
@@ -217,28 +217,28 @@ export PATH=$PATH:${XILINX_VIVADO}/bin
 </div>
 <p>There is a file <code>setup_tools.ksh</code> in the root directory for reference. But for the beginning, only Vivado is required.</p>
 <p>Make sure you have <code>gcc</code>, <code>make</code>, <code>sed</code>, <code>awk</code>, <code>xterm</code> and <code>python</code> installed.
-<code>setup_tools.ksh</code> </p>
+<code>setup_tools.ksh</code></p>
 <p>You may install other simulators to accelerate the speed of simulation. For example, <a href="https://www.cadence.com/content/cadence-www/global/en_US/home/tools/system-design-and-verification/simulation-and-testbench-verification/xcelium-parallel-simulator.html">Cadence xcelium</a>. See in <a href="../6-co-simulation/index.html">co-simulation</a> for more information.</p>
 <h2 id="clone-github-repositories">Clone Github Repositories</h2>
 <p>TODO: Link to update</p>
-<pre><code>git clone git@github.ibm.com:OC-Enablement/oc-snap.git
-cd oc-snap
+<pre><code>git clone git@github.com:OpenCAPI/oc-accel.git
+cd oc-accel
 git submodule init
 git submodule update
 
 cd ..
-git clone git@github.ibm.com:lancet/ocse.git
+git clone git@github.com:OpenCAPI/ocse.git
 </code></pre>
 
-<p>It's better to have <code>ocse</code> stay in the same directory parallel to <code>oc-snap</code>. That is the default path of <code>$OCSE_ROOT</code>. Or you need to assign <code>$OCSE_ROOT</code> explicitly in <code>snap_env.sh</code>.</p>
+<p>It's better to have <code>ocse</code> stay in the same directory parallel to <code>oc-accel</code>. That is the default path of <code>$OCSE_ROOT</code>. Or you need to assign <code>$OCSE_ROOT</code> explicitly in <code>snap_env.sh</code>.</p>
 <h1 id="basic-terms">Basic terms</h1>
 <h2 id="option1-all-in-one-python-script">Option1: All-in-one python script</h2>
 <p>OC-Accel developed a "all-in-one" Python script to control the workflow. It's convenient to do batch work, or enable your regression verification or continuous integration.</p>
-<pre><code>cd oc-snap
+<pre><code>cd oc-accel
 ./ocaccel_workflow.py
 </code></pre>
 
-<p>This script will </p>
+<p>This script will</p>
 <ul>
 <li>Check environmental variables</li>
 <li>make snap_config</li>
@@ -252,7 +252,7 @@ git clone git@github.ibm.com:lancet/ocse.git
 <p>It helps you to do all kinds of operations in one command line.</p>
 <h2 id="option2-traditional-make-steps">Option2: Traditional "make" steps</h2>
 <p>If you have used SNAP for CAPI1.0 and CAPI2.0, you can continue to use these "traditional" make steps. Just typing "make" doesn't work. An explicit target is needed. You can find them in <code>Makefile</code> file.</p>
-<pre><code>cd oc-snap
+<pre><code>cd oc-accel
 make help
 </code></pre>
 
@@ -290,19 +290,19 @@ do only exist on an x86 platform
 <p>In fact, <code>make model</code> also creates a Vivado project <code>framework.xpr</code> in <code>hardware/viv_project</code>. Then it exports the simulation files and compiles them to a simulation model.</p>
 <h3 id="for-image-build">For Image build</h3>
 <ul>
-<li><code>make snap_config</code> If it has already been executed, no need to run it again. </li>
+<li><code>make snap_config</code> If it has already been executed, no need to run it again.</li>
 <li><code>make hw_project</code></li>
 <li><code>make image</code></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><strong>Use Vivado GUI</strong>: </p>
-<p>After <code>make hw_project</code>, you can open project <code>framework.xpr</code> in <code>hardware/viv_project</code>, and do following <strong>"run Synthesis"</strong>, <strong>"run Implementation"</strong> and <strong>"generate Bitstream"</strong> in Vivado GUI. </p>
+<p><strong>Use Vivado GUI</strong>:</p>
+<p>After <code>make hw_project</code>, you can open project <code>framework.xpr</code> in <code>hardware/viv_project</code>, and do following <strong>"run Synthesis"</strong>, <strong>"run Implementation"</strong> and <strong>"generate Bitstream"</strong> in Vivado GUI.</p>
 </div>
 <h2 id="output-files">Output files</h2>
 <ul>
 <li>
-<p>The log files during these steps are placed in <code>hardware/logs</code>. </p>
+<p>The log files during these steps are placed in <code>hardware/logs</code>.</p>
 </li>
 <li>
 <p>Simulation output files are placed in <code>hardware/sim/&lt;SIMULATOR&gt;/latest</code>.</p>

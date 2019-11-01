@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/misc/doc-guide.md"><i class="fa fa-github"></i> Edit on GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -202,8 +202,8 @@
 
 <h1 id="how-to-generate-this-website">How to generate this website</h1>
 <p>This static documentation website is created by <a href="https://www.mkdocs.org">MkDocs</a> and is using a theme from <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a>.</p>
-<p>It uses "github pages" and this site is hosted by Github. The documentation source files are written in Markdown format. </p>
-<p>With MkDocs tool, the generated site files (html files) are automatically pushed into a specific branch <code>gh-pages</code> of the git repository. </p>
+<p>It uses "github pages" and this site is hosted by Github. The documentation source files are written in Markdown format.</p>
+<p>With MkDocs tool, the generated site files (html files) are automatically pushed into a specific branch <code>gh-pages</code> of the git repository.</p>
 <h2 id="installation">Installation</h2>
 <h3 id="1-install-python-and-pip">1. Install python and pip</h3>
 <p><a href="https://realpython.com/installing-python/">python and pip</a></p>
@@ -211,15 +211,15 @@
 <pre><code class="bash">pip install mkdocs-bootswatch
 </code></pre>
 
-<p>Please refer to <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a> for more information. </p>
+<p>Please refer to <a href="https://mkdocs.github.io/mkdocs-bootswatch/">bootswatch</a> for more information.</p>
 <h3 id="3-install-a-markdown-editor">3. Install a markdown editor</h3>
-<p>You can simply edit the markdown (.md) files by any text editor, but it's better to user a professional markdown editor. </p>
+<p>You can simply edit the markdown (.md) files by any text editor, but it's better to user a professional markdown editor.</p>
 <ul>
 <li>
 <p><a href="https://typora.io/">typora</a>. It supports all of the platforms (Windows/MacOS/Linux). Please configure typora to <code>strict</code> Markdown mode. That ensures you get the same output effects on both <strong>typora</strong> and <strong>mkdocs</strong>.</p>
 </li>
 <li>
-<p><a href="https://code.visualstudio.com/">vscode</a>. It's also a good editor and has abundant functions and extensions. You can install extensions of Markdown, Preview and Spell checker. </p>
+<p><a href="https://code.visualstudio.com/">vscode</a>. It's also a good editor and has abundant functions and extensions. You can install extensions of Markdown, Preview and Spell checker.</p>
 </li>
 </ul>
 <h3 id="4-install-other-optional-tools">4. Install other optional tools</h3>
@@ -228,13 +228,13 @@
 <li>Alternative choice is <a href="https://inkscape.org/">Inkscape</a> which is a free drawing tool and can help you draw and convert vector graphics.</li>
 </ul>
 <h2 id="website-structure">Website Structure</h2>
-<p>First, you need to git clone the oc-snap repository and go to <code>web-doc</code> directory. Make sure you are working on a branch other than master.</p>
-<pre><code class="bash">git clone git@github.ibm.com:OC-Enablement/oc-snap.git
+<p>First, you need to git clone the oc-accel repository and go to <code>web-doc</code> directory. Make sure you are working on a branch other than master.</p>
+<pre><code class="bash">git clone git@github.com:OpenCAPI/oc-accel.git
 git checkout &lt;A branch other than master&gt;
-cd oc-snap/web-doc
+cd oc-accel/web-doc
 </code></pre>
 
-<p>The <code>docs</code> folder is where to put the markdown files, and the <code>mkdocs.yml</code> lists the website structure and global definitons. For example, this site has a structure like: </p>
+<p>The <code>docs</code> folder is where to put the markdown files, and the <code>mkdocs.yml</code> lists the website structure and global definitons. For example, this site has a structure like:</p>
 <pre><code>nav:
   - Home: 'index.md'
   - User Guide:
@@ -257,7 +257,7 @@ cd oc-snap/web-doc
     - 'SNAP Registers': 'deep-dive/registers.md'
     - 'SNAP Logic Design': 'deep-dive/snap_core.md'
     - 'New Board Support': 'deep-dive/board-package.md'
-  - Misc: 
+  - Misc:
     - 'Document Guide': 'misc/doc-guide.md'
 </code></pre>
 
@@ -280,11 +280,11 @@ cd oc-snap/web-doc
 <p>If you are using Typora, please enable "Copy images into ./${filename}.assets folder" in <code>Preferences</code> of typora.</p>
 </div>
 <h3 id="tools-to-draw-diagrams">Tools to draw diagrams</h3>
-<p>You can take any drawing tools to create diagrams. You can save them as PNG format, but the better way is to save to SVG format. </p>
+<p>You can take any drawing tools to create diagrams. You can save them as PNG format, but the better way is to save to SVG format.</p>
 <p>For the diagrams from Microsoft PowerPoint, you can select the region of a diagram in PPT, <code>Ctrl-C</code> to copy it, and <code>Ctrl-V</code> to paste it in Typora directly. In this case, the diagram is saved as an PNG file.</p>
 <p>But there is a better way to get the smallest file size and best quality:</p>
 <ul>
-<li>In PowerPoint, select the region of diagram, right-click mouse -&gt; "Save as Picture ..." and save it as "PDF" format. </li>
+<li>In PowerPoint, select the region of diagram, right-click mouse -&gt; "Save as Picture ..." and save it as "PDF" format.</li>
 <li>Open the PDF file with <a href="https://inkscape.org/">Inkscape</a>. (Right-click the file -&gt; "Open with ...", choose Inkscape in the poped up list). Unclick "Embed images" and then "OK".</li>
 <li>In Inkscape, save it as SVG file.</li>
 <li>Insert the SVG file into Typora.</li>
@@ -297,21 +297,21 @@ cd oc-snap/web-doc
 <h2 id="code-blocks-and-admonitions">Code blocks and Admonitions</h2>
 <h3 id="code-blocks">Code blocks</h3>
 <p>Please assign the code language so it can be correctly rendered. For example <code>``` C</code> for C language.</p>
-<pre><code class="C">// A function to implement bubble sort 
-void bubbleSort(int arr[], int n) 
-{ 
-   int i, j; 
-   for (i = 0; i &lt; n-1; i++)       
+<pre><code class="C">// A function to implement bubble sort
+void bubbleSort(int arr[], int n)
+{
+   int i, j;
+   for (i = 0; i &lt; n-1; i++)
 
-       // Last i elements are already in place    
-       for (j = 0; j &lt; n-i-1; j++)  
-           if (arr[j] &gt; arr[j+1]) 
-              swap(&amp;arr[j], &amp;arr[j+1]); 
-} 
+       // Last i elements are already in place
+       for (j = 0; j &lt; n-i-1; j++)
+           if (arr[j] &gt; arr[j+1])
+              swap(&amp;arr[j], &amp;arr[j+1]);
+}
 </code></pre>
 
 <h3 id="admonitions">Admonitions</h3>
-<p>You can use <code>!!! Note</code> or <code>!!! Warning</code> or <code>!!! Danger</code> to start a paragraph of admonitions. Then use 4 spaces to start the admonition text. </p>
+<p>You can use <code>!!! Note</code> or <code>!!! Warning</code> or <code>!!! Danger</code> to start a paragraph of admonitions. Then use 4 spaces to start the admonition text.</p>
 <p>For example</p>
 <pre><code>!!! Danger &quot;Error Message&quot;
 
@@ -324,14 +324,14 @@ void bubbleSort(int arr[], int n)
 <p>This is a dangerous error.</p>
 </div>
 <h2 id="deploy-to-github-pages">Deploy to Github Pages</h2>
-<p>When most of the edition work is done, and it's time to commit your documents to oc-snap github. </p>
+<p>When most of the edition work is done, and it's time to commit your documents to oc-snap github.</p>
 <p>First, you should commit and push your changes of source files (in <code>web-doc</code>) to git repository. Create pull request, ask someone to review the documents, merge them into master branch after getting approvements.</p>
 <p>Then you can simply publish website with just one step:</p>
-<pre><code class="bash">cd &lt;PATH&gt;/oc-snap/web-doc
+<pre><code class="bash">cd &lt;PATH&gt;/oc-accel/web-doc
 mkdocs gh-deploy
 </code></pre>
 
-<p>The entire website will be pushed to <code>gh-pages</code> branch of oc-snap repository. The documentation website will be available at <a href="https://pages.github.ibm.com/oc-enablement/oc-snap">https://pages.github.ibm.com/oc-enablement/oc-snap</a>!</p></div>
+<p>The entire website will be pushed to <code>gh-pages</code> branch of oc-snap repository. The documentation website will be available at <a href="https://opencapi.github.io/oc-accel/">https://opencapi.github.io/oc-accel/</a>!</p></div>
         </div>
 
         <footer class="col-md-12">

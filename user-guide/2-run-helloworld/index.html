@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/user-guide/2-run-helloworld.md"><i class="fa fa-github"></i> Edit on GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -208,14 +208,14 @@
 <p><img alt="snap-config-blue" src="../pictures/2-snap-config-blue.png" /></p>
 <p>Select HLS HelloWorld in "Action Type".</p>
 <p><img alt="select-helloworld" src="../pictures/2-select-helloworld.png" /></p>
-<p>There are some other choices listed in the menu. Please input <code>OCSE_ROOT</code> path. Select <code>xsim</code> (the default simulator). </p>
-<p>To select a TRUE/FALSE feature, press "Y" or "N". After everything done, move cursor to "Exit". </p>
+<p>There are some other choices listed in the menu. Please input <code>OCSE_ROOT</code> path. Select <code>xsim</code> (the default simulator).</p>
+<p>To select a TRUE/FALSE feature, press "Y" or "N". After everything done, move cursor to "Exit".</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This Kconfig menu is editable. If you want to add new features or enrich your own menu, please edit <code>scripts/Kconfig</code> file.</p>
 </div>
-<p>Then it starts to execute many steps to build a simulation model. It needs several minutes. While waiting for it, open another terminal tab and try to get familiar with some environmental variables. Open <code>snap_env.sh</code> and check the very basic ones: </p>
-<pre><code class="bash">export ACTION_ROOT=&lt;path_of_oc-snap&gt;/actions/hls_helloworld
+<p>Then it starts to execute many steps to build a simulation model. It needs several minutes. While waiting for it, open another terminal tab and try to get familiar with some environmental variables. Open <code>snap_env.sh</code> and check the very basic ones:</p>
+<pre><code class="bash">export ACTION_ROOT=&lt;path_of_oc-accel&gt;/actions/hls_helloworld
 export TIMING_LABLIMIT=&quot;-200&quot;
 export OCSE_ROOT=&lt;path_to_ocse&gt;/ocse
 </code></pre>
@@ -245,7 +245,7 @@ Runnig ... check ./snap_workflow.make_model.log for details of full progress
 
 <p>Then a Xterm window will popped up. (If it doesn't, check if you have installed it by typing <code>xterm</code> in your terminal.)
 <img alt="xterm-window" src="../pictures/2-xterm-window.png" /></p>
-<p>This Xterm window is where you run your application (software part). You can run anything as many times as you want in the xterm window, just like running in the terminal of a real server with FPGA card plugged. </p>
+<p>This Xterm window is where you run your application (software part). You can run anything as many times as you want in the xterm window, just like running in the terminal of a real server with FPGA card plugged.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>If you want to save the content running in this xterm window, please use <code>script</code> before running any commands. When you exit xterm window, everything is saved to a file -- "typescript" is its default name.</p>
@@ -258,12 +258,12 @@ exit
 Script done, file is typescript
 </code></pre>
 
-<p>Now let's run application <strong>snap_helloworld</strong>. It is located in <code>$ACTION_ROOT/sw</code>, where $ACTION_ROOT is <code>&lt;path_of_oc-snap&gt;/actions/hls_helloworld</code>. In the above window, it prints the help messages because it requires two arguments: an input text file and an output text file. </p>
+<p>Now let's run application <strong>snap_helloworld</strong>. It is located in <code>$ACTION_ROOT/sw</code>, where $ACTION_ROOT is <code>&lt;path_of_oc-accel&gt;/actions/hls_helloworld</code>. In the above window, it prints the help messages because it requires two arguments: an input text file and an output text file.</p>
 <p>We have prepared a script in <code>$ACTION_ROOT/tests/hw_test.sh</code> and you can run it directly.</p>
 <p>This example is asking FPGA to read the input file from host memory, converting the letters to capital case, and write them back to host memory and save in the output file.</p>
 <p><img alt="hw-test" src="../pictures/2-hw-test.png" /></p>
-<p>Now you have finished the software/hardware co-simulation. </p>
-<p>Type 'exit' in xterm window. </p>
+<p>Now you have finished the software/hardware co-simulation.</p>
+<p>Type 'exit' in xterm window.</p>
 <p>All the output logs, waveforms are in <code>hardware/sim/&lt;simulator&gt;/latest</code>.</p>
 <pre><code>hdclf154: luyong /afs/bb/u/luyong/p9/nd2/oc_dev/oc-snap/hardware/sim/xsim/latest $ ls
 debug.log   ocse_server.dat  snap_helloworld.log  tin      webtalk.jou  xsim.dir  xsrun.tcl
@@ -277,7 +277,7 @@ ocse.parms  sim.log          terminal.log         tout     xsaet.tcl    xsim.log
 </code></pre>
 
 <p><img alt="waveform" src="../pictures/2-waveform.png" /></p>
-<p>On the project scope (hierarchy) panel, the user logic is <code>action_w</code>. </p>
+<p>On the project scope (hierarchy) panel, the user logic is <code>action_w</code>.</p>
 <h2 id="make-fpga-bit-image">Make FPGA bit image</h2>
 <p>In above steps, you actually have finished steps of:</p>
 <ul>
@@ -312,13 +312,13 @@ After termination it can be restarted later.
     start route_design      with directive: Explore             18:04:55 Sat Sep 14 2019
     start opt_routed_design with directive: Explore             18:39:01 Sat Sep 14 2019
     generating reports                                          18:57:28 Sat Sep 14 2019
-    Timing (WNS)            -11 ps                                                    
-                            WARNING: TIMING FAILED, but may be OK for lab use                      
+    Timing (WNS)            -11 ps
+                            WARNING: TIMING FAILED, but may be OK for lab use
     generating bitstreams   type: user image                    18:58:28 Sat Sep 14 2019
 </code></pre>
 
 <p>So you can have an estimation of the progress.</p>
-<p>After it's completed, you can find the FPGA bit image files in <code>hardware/build/Images</code>. The file names have the information of build date/time, action name, card type and timing slack (-11ps here). </p>
+<p>After it's completed, you can find the FPGA bit image files in <code>hardware/build/Images</code>. The file names have the information of build date/time, action name, card type and timing slack (-11ps here).</p>
 <pre><code>$ cd hardware/build/Images
 $ ls
 oc_2019_0914_1657_25G_hls_helloworld_noSDRAM_AD9V3_-11.bit

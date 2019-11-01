@@ -179,7 +179,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.ibm.com/OC-Enablement/oc-snap"><i class="fa fa-github"></i> GitHub</a>
+                                <a href="https://github.com/OpenCAPI/oc-accel/edit/master/docs/user-guide/3-new-action.md"><i class="fa fa-github"></i> Edit on GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -207,8 +207,8 @@ git submodule init
 git submodule update
 </code></pre>
 
-<p>Delete the unnecessary branches, only keep "master", and create your own branches. </p>
-<p>When you want to sync with the original repository, do following steps: </p>
+<p>Delete the unnecessary branches, only keep "master", and create your own branches.</p>
+<p>When you want to sync with the original repository, do following steps:</p>
 <pre><code>git remote add upstream https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git
 </code></pre>
 
@@ -225,10 +225,10 @@ git submodule update
 git merge upstream/master
 </code></pre>
 
-<p>When you have some fixes and added some new features, create a pull request from your fork to the original repository. It will be reviewed and then the contribution will be merged. </p>
+<p>When you have some fixes and added some new features, create a pull request from your fork to the original repository. It will be reviewed and then the contribution will be merged.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>OC-Accel encourages people to create their own actions and the links will be recommended on <code>README.md</code>. But to keep the repository relatively small and neat, it will not copy every user action design into its original <code>actions</code> folder. </p>
+<p>OC-Accel encourages people to create their own actions and the links will be recommended on <code>README.md</code>. But to keep the repository relatively small and neat, it will not copy every user action design into its original <code>actions</code> folder.</p>
 <p>Submit an <strong>issue</strong> or <strong>pull</strong> request to start the discussion.</p>
 </div>
 <h1 id="a-new-action">A new action</h1>
@@ -264,9 +264,9 @@ git merge upstream/master
 </tr>
 </tbody>
 </table>
-<p>According to the action category, copy the folder of a proper example from <code>actions</code> and name it. </p>
+<p>According to the action category, copy the folder of a proper example from <code>actions</code> and name it.</p>
 <h2 id="give-it-a-name-and-type">Give it a name and type</h2>
-<p><strong>Step1:</strong> </p>
+<p><strong>Step1:</strong></p>
 <pre><code>make snap_config
 </code></pre>
 
@@ -274,13 +274,13 @@ git merge upstream/master
 <p><img alt="kconfig-name" src="../pictures/3-kconfig-name.png" /></p>
 <p><strong>Step2:</strong></p>
 <p>Edit <code>snap_env.sh</code>, point $ACTION_ROOT to the new action.</p>
-<pre><code class="bash">export ACTION_ROOT=&lt;...path...&gt;/oc-snap/actions/my_new_action
+<pre><code class="bash">export ACTION_ROOT=&lt;...path...&gt;/oc-accel/actions/my_new_action
 export TIMING_LABLIMIT=&quot;-200&quot;
 export OCSE_ROOT=&lt;...path...&gt;/ocse
 </code></pre>
 
 <p><strong>Step3:</strong></p>
-<p>Edit <code>software/tools/snap_actions.h</code>, add a row of the new action, with the company/person name, action type ID, and a short description. </p>
+<p>Edit <code>software/tools/snap_actions.h</code>, add a row of the new action, with the company/person name, action type ID, and a short description.</p>
 <pre><code class="C">static const struct actions_tab snap_actions[] = {
     { &quot;IBM&quot;, 0x10140000, &quot;hdl_example in VHDL  (512b)&quot;                           },
     { &quot;IBM&quot;, 0x10140002, &quot;hdl_single_engine in Verilog (1024b)&quot;                  },
@@ -300,19 +300,19 @@ export OCSE_ROOT=&lt;...path...&gt;/ocse
 </ul>
 <p>Do a <code>grep</code> search and replace them.</p>
 <h2 id="understand-the-workflow">Understand the workflow</h2>
-<p>Modify the example code (sw, hw and tests) to cook a new action. </p>
-<p>Understanding the workflow can help quickly identifying what's wrong. These steps are organized in </p>
+<p>Modify the example code (sw, hw and tests) to cook a new action.</p>
+<p>Understanding the workflow can help quickly identifying what's wrong. These steps are organized in</p>
 <ul>
 <li><code>Makefile</code></li>
 <li><code>hardware/Makefile</code></li>
 <li><code>software/Makefile</code></li>
-<li>Actions --&gt; <ul>
+<li>Actions --&gt;<ul>
 <li><code>$ACTION_ROOT/hw/Makefile</code></li>
 <li><code>$ACTION_ROOT/sw/Makefile</code></li>
 </ul>
 </li>
 </ul>
-<p>When adding a new action, before calling the "All-in-one" ocaccel_workflow.py, make sure the make process under $ACTION_ROOT works. </p>
+<p>When adding a new action, before calling the "All-in-one" ocaccel_workflow.py, make sure the make process under $ACTION_ROOT works.</p>
 <pre><code>cd $ACTION_ROOT/sw
 make
 cd $ACTION_ROOT/hw
@@ -326,7 +326,7 @@ make
 <li>Build Date/Time, Git Version and Card info will be hardcoded into snap_core logic by "<strong>patch_version.sh</strong>"</li>
 </ul>
 <h2 id="start-simulation">Start simulation</h2>
-<p>After clean up compiling errors in action sw and action hw, kick off a co-simulation by </p>
+<p>After clean up compiling errors in action sw and action hw, kick off a co-simulation by</p>
 <pre><code>./ocaccel_workflow.py
 </code></pre></div>
         </div>
