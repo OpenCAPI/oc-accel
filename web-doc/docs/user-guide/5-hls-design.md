@@ -85,7 +85,7 @@ However, usually the FPGA board provides more than one DDR channel. There are mu
 
 Some FPGA boards have HBM. The developer can enable it similarly like DDR, which is introduced in [Deep Dive: New board support].
 
-[Deep Dive: New board support]: ../../deep-dive/board-package/index.html
+[Deep Dive: New board support]: ../../deep-dive/board-package/
 
 Please be aware of the address range you can use for a single DDR channel. d_ddrmem is shaped as a **64Bytes width**, **(Capacity/64)** depth array. Exceeding the available DDR address range will lead to an unknown error.
 
@@ -135,7 +135,7 @@ memcopy_job_t Data;	/* up to 108 bytes */
 
 The above register layout is also drawn in [Deep Dive: Registers] 
 
-[Deep Dive: Registers]: ../../deep-dive/registers/index.html#action-register-definition
+[Deep Dive: Registers]: ../../deep-dive/registers/#action-register-definition
 
 ## HLS optimization
 

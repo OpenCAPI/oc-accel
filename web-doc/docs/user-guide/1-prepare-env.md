@@ -24,7 +24,7 @@ Make sure you have `gcc`, `make`, `sed`, `awk`, `xterm` and `python` installed.
 
 You may install other simulators to accelerate the speed of simulation. For example, [Cadence xcelium]. See in [co-simulation] for more information.
 
-[co-simulation]: ../6-co-simulation/index.html
+[co-simulation]: ../6-co-simulation/
 
 [ Vivado Tool ]: https://www.xilinx.com/support/download.html
 
@@ -148,5 +148,5 @@ In fact, `make model` also creates a Vivado project `framework.xpr` in `hardware
 
 Now, let's take an example `hls_helloworld`, and have a look at how it runs step by step. Please continue to read page [Run helloworld].
 
-[Run helloworld]: ../2-run-helloworld/index.html
+[Run helloworld]: ../2-run-helloworld/
 

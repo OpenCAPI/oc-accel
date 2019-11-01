@@ -43,7 +43,7 @@ Generally, creating an accelerator includes the steps as below:
 * The FPGA card (target hardware) is **NOT** required during architecture development.
 
 [Profiling]: <https://en.wikipedia.org/wiki/Profiling_(computer_programming)>
-[libosnap API functions]: ./deep-dive/software-api/index.html
+[libosnap API functions]: ./deep-dive/software-api/
 [Xilinx Vivado]: https://www.xilinx.com/support/download.html
 
 
@@ -53,7 +53,7 @@ Generally, creating an accelerator includes the steps as below:
 
 ## OC-Accel Framework
 
-[repository structure]: ./repository/index.html
+[repository structure]: ./repository/
 
 Now let's have a glance at the diagram of OC-Accel framework. For more details about the directories, files and design hierarchy, see in [repository structure] page.
 
