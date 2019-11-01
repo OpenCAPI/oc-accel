@@ -7,7 +7,7 @@ cd oc-snap
 ```
 Then a KConfig window will popped up. If it doesn't, check [Required tools] and search 'kconfig' on the homepage.
 
-[Required tools]: ../../index.html#required-tools-for-development
+[Required tools]: ../../#required-tools-for-development
 
 
 ![snap-config-blue](./pictures/2-snap-config-blue.png)
@@ -112,7 +112,7 @@ In above steps, you actually have finished steps of:
 
 (These targets are introduced in [Traditional "make" steps])
 
-[Traditional "make" steps]: ../1-prepare-env/index.html#option2-traditional-make-steps
+[Traditional "make" steps]: ../1-prepare-env/#option2-traditional-make-steps
 
 Now you can generate FPGA image by
 ```
@@ -167,8 +167,8 @@ oc_2019_0914_1657_25G_hls_helloworld_noSDRAM_AD9V3_-11_secondary.prm
 
 Then go to [Deploy on Power Server] to see how to download the bitstream and run.
 
-[Build image]: ../7-build-image/index.html
-[Deploy on Power Server]: ../8-deploy/index.html
+[Build image]: ../7-build-image/
+[Deploy on Power Server]: ../8-deploy/
 
 ## Summary
 Now you understand how to run an existing example. You can use the same method to run other examples in `actions` directory.
