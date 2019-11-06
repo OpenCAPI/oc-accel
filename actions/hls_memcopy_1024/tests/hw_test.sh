@@ -18,7 +18,7 @@
 
 verbose=0
 snap_card=0
-duration="NORMAL"
+duration="SHORT"
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
@@ -109,7 +109,7 @@ rm -f snap_memcopy.log
 touch snap_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<10000; size*=2 )); do
+    for (( size=64; size<128; size*=2 )); do
 	test_memcopy ${size}
     done
 fi

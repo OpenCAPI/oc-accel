@@ -1,1 +1,1 @@
-../../../../actions/hls_helloworld/tests/hw_test.sh
+../../../../actions/$ACT/tests/hw_test.sh
