@@ -19,6 +19,7 @@
 verbose=0
 snap_card=0
 duration="SHORT"
+size=10
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
@@ -34,7 +35,7 @@ function usage() {
     echo "  test_<action_type>.sh"
     echo "    [-C <card>] card to be used for the test"
     echo "    [-t <trace_level>]"
-    echo "    [-duration SHORT/NORMAL/LONG] run tests"
+    echo "    [-duration SHORT/NORMAL/LONG] run tests (default is SHORT)"
     echo
 }
 
@@ -81,6 +82,7 @@ function test_memcopy {
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
     echo -n "Doing snap_memcopy (aligned) ${size} bytes ... "
+    echo -n "Duration =$duration"
     cmd="snap_memcopy -C${snap_card} -X	\
 		-i ${size}_A.bin	\
 		-o ${size}_A.out >>	\
@@ -109,6 +111,7 @@ rm -f snap_memcopy.log
 touch snap_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
+
     for (( size=64; size<128; size*=2 )); do
 	test_memcopy ${size}
     done
@@ -138,7 +141,7 @@ function test_memcopy_to_ddr {
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy (aligned) ${size} bytes ... "
+    echo -n "Doing snap_memcopy to ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card} -X	\
 		-i ${size}_A.bin	\
                 -d 0x0 -D CARD_DRAM >>  \
@@ -157,7 +160,7 @@ rm -f snap_memcopy_to_ddr.log
 touch snap_memcopy_to_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<10000; size*=2 )); do
+    for (( size=64; size<128; size*=2 )); do
 	test_memcopy_to_ddr ${size}
     done
 fi
@@ -186,7 +189,7 @@ function test_memcopy_from_ddr {
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy (aligned) ${size} bytes ... "
+    echo -n "Doing snap_memcopy frm ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card} -X	\
 		-o ${size}_A.out	\
                 -a 0x0 -A CARD_DRAM -s ${size} >>  \
@@ -205,7 +208,7 @@ rm -f snap_memcopy_from_ddr.log
 touch snap_memcopy_from_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<10000; size*=2 )); do
+    for (( size=64; size<128; size*=2 )); do
 	test_memcopy_from_ddr ${size}
     done
 fi

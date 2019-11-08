@@ -89,19 +89,20 @@ Edit `software/tools/snap_actions.h`, add a row of the new action, with the comp
 
 ``` C
 static const struct actions_tab snap_actions[] = {
-    { "IBM", 0x10140000, "hdl_example in VHDL  (512b)"                           },
-    { "IBM", 0x10140002, "hdl_single_engine in Verilog (1024b)"                  },
-    { "IBM", 0x10140004, "UVM test for unit verification (no OCSE and software)" },
-
-    { "IBM", 0x10141001, "HLS Sponge           (512b)"                           },
-    { "IBM", 0x10141008, "HLS Hello World      (512b)"                           },
-    { "IBM", 0x1014100B, "HLS Memcopy 1024     (1024b)"                          },
+/* Recommended Usage OC HDL examples use 0x10142xxx IDs */
+    { "IBM", 0x10142000, "hdl_example in VHDL  (512b)"                           },
+    { "IBM", 0x10142002, "hdl_single_engine in Verilog (1024b)"                  },
+    { "IBM", 0x10142004, "UVM test for unit verification (no OCSE and software)" },
+/* recommended Usage OC HLS examples use 0x10143xxx IDs */
+    { "IBM", 0x10143001, "HLS Sponge           (512b)"                           },
+    { "IBM", 0x10143008, "HLS Hello World      (512b)"                           },
+    { "IBM", 0x1014300B, "HLS Memcopy 1024     (1024b)"                          },
 };
 ```
 
 **Step4:**
 
-The Action Type (for example, 0x10140000) should match with following places:
+The Action Type (for example, 0x10143000) should match with following places:
 
 * `actions/<my_new_action>/hw/`
 * `actions/<my_new_action>/sw/`

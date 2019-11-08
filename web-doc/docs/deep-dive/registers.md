@@ -257,7 +257,7 @@ The user can freely define and implement the Action registers if it is written i
   
 | Bits  | Attributes | Description|
 |------ |---| -----------|
-|31..0 |RO| Action Type, i.e, 0x10141008|
+|31..0 |RO| Action Type, i.e, 0x10143008|
 
 ### Action Version Register (AVR)
 
