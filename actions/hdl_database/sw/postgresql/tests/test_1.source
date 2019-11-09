@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS sm_test_1(pkt text, id SERIAL);
+
+CREATE OR REPLACE FUNCTION copy_if_not_exists_test_1 ()
+RETURNS void AS
+$_$
+BEGIN
+    IF NOT EXISTS (select * from sm_test_1) THEN
+        COPY sm_test_1 (pkt) FROM '/home/pengfei/capi/db/snap/actions/hdl_stringmatch/tests/packets/packet.1024.8000.no_match.txt' DELIMITER ' ' ;
+    END IF;
+END;
+$_$ LANGUAGE plpgsql;
+
+SELECT copy_if_not_exists_test_1();
+
+#explain analyze SELECT * FROM (SELECT psql_regex_capi(pkt, 'abc.*xyz') over(), pkt, id from sm_test_1) s WHERE psql_regex_capi = 1;
+explain analyze SELECT psql_regex_capi(pkt, 'abc.*xyz') over(), pkt, id from sm_test_1;
+explain analyze SELECT pkt, regexp_matches(pkt, 'abc.*xyz') from sm_test_1;

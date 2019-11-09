@@ -484,4 +484,6 @@ clean:
 			echo -e "                        Error: [make "$@"] failed for action/application in $(ACTION_ROOT)"; exit -1; \
 		fi                                          \
 	fi
+	@$(RM) .model_*
+	@$(RM) $(SNAP_HARDWARE_ROOT)/setup/snap_bitstream_post.tcl
 	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`" 1>/dev/null 2>/dev/null

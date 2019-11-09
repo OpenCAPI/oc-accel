@@ -1,0 +1,24 @@
+SET client_min_messages = warning;
+\set ECHO none
+\i psql_regex_capi.sql
+\set ECHO all
+RESET client_min_messages;
+
+-- DROP FUNCTION IF EXISTS create_if_not_exists;
+DROP TABLE IF EXISTS sm_test;
+CREATE TABLE IF NOT EXISTS sm_test(name text, pkt text);
+
+CREATE OR REPLACE FUNCTION copy_if_not_exists ()
+RETURNS void AS
+$_$
+BEGIN
+    IF NOT EXISTS (select * from sm_test) THEN
+        COPY sm_test FROM '/home/postgres/capi/packet.1024.10.txt' DELIMITER ' ' ;
+    END IF;
+END;
+$_$ LANGUAGE plpgsql;
+
+SELECT copy_if_not_exists();
+
+-- SELECT * FROM (SELECT psql_regex_capi_win(pkt, 'abc.*xyz') over(), pkt, name from sm_test) s WHERE psql_regex_capi_win = 1;
+SELECT psql_regex_capi('sm_test', 'abc.*xyz', 1);
