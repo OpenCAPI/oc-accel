@@ -49,7 +49,7 @@ Generally, creating an accelerator includes the steps as below:
 
 ### Deploy it and run
 
-* **Deploy to Power9 server**: Program the bit image to a real FPGA card. Compile the software code on Power9 and run! 
+* **Deploy to Server**: Program the bit image to a real FPGA card. Compile the software code on OpenCAPI-enabled systems and run! 
 
 ## OC-Accel Framework
 
@@ -96,7 +96,7 @@ Development is usually done on a **Linux (x86) computer**.
 
 ## Supported FPGA cards
 
-OC-Accel framework needs a FPGA card with OpenCAPI interface, and <u>a Slim-SAS cable</u> to connect to a Power9 server. Today it supports:
+OC-Accel framework needs a FPGA card with OpenCAPI interface, and <u>a Slim-SAS cable</u> to connect to the server. Today it supports:
 
 [Alphadata 9V3]: https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9v3
 [Alphadata 9H3]: https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9h3
@@ -112,7 +112,7 @@ For FPGA vendors, it's easy to enable a new FPGA card with OpenCAPI interface to
 
 ## Supported Servers for deployment
 
-OpenCAPI interface needs the support on processor side. You can run OpenCAPI acceleration on Power9 servers with LaGrange or Monza processors installed. Today you can choose:
+OpenCAPI interface needs the support on processor side. Today you can run OpenCAPI acceleration on POWER9 servers with LaGrange or Monza processors installed. Today you can choose:
 
 LaGrange processor based systems:
 
@@ -149,11 +149,11 @@ OpenCAPI is actually the third generation of [CAPI technology]. That's why its v
 
 Correspondingly, we call that SNAP1.0/2.0. The supported cards can be found [here].
 
-* SNAP1.0 runs on Power8 servers, with PCIe Gen3x8 cards. 
+* SNAP1.0 runs on POWER8 servers, with PCIe Gen3x8 cards. 
 
-* SNAP2.0 runs on Power9 servers, with PCIe Gen3x16 or PCIe Gen4x8 cards.
+* SNAP2.0 runs on POWER9 servers, with PCIe Gen3x16 or PCIe Gen4x8 cards.
 
-* OC-Accel runs on Power9 servers, using OpenCAPI x8 interface. 
+* OC-Accel runs on POWER9 servers, using OpenCAPI x8 interface. 
 
 Generally, your actions running on SNAP1.0/2.0 can be moved to OC-Accel directly without changing source-code. Check [Migration Guide] for more information.
 
