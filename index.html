@@ -234,7 +234,7 @@ Generally, creating an accelerator includes the steps as below:</p>
 </ul>
 <h3 id="deploy-it-and-run">Deploy it and run</h3>
 <ul>
-<li><strong>Deploy to Power9 server</strong>: Program the bit image to a real FPGA card. Compile the software code on Power9 and run! </li>
+<li><strong>Deploy to Server</strong>: Program the bit image to a real FPGA card. Compile the software code on OpenCAPI-enabled systems and run! </li>
 </ul>
 <h2 id="oc-accel-framework">OC-Accel Framework</h2>
 <p>Now let's have a glance at the diagram of OC-Accel framework. For more details about the directories, files and design hierarchy, see in <a href="./repository/">repository structure</a> page.</p>
@@ -273,7 +273,7 @@ Generally, creating an accelerator includes the steps as below:</p>
 <li>For simulation, OC-Accel also relies on the <code>xterm</code> program.</li>
 </ul>
 <h2 id="supported-fpga-cards">Supported FPGA cards</h2>
-<p>OC-Accel framework needs a FPGA card with OpenCAPI interface, and <u>a Slim-SAS cable</u> to connect to a Power9 server. Today it supports:</p>
+<p>OC-Accel framework needs a FPGA card with OpenCAPI interface, and <u>a Slim-SAS cable</u> to connect to the server. Today it supports:</p>
 <ul>
 <li><a href="https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9v3">Alphadata 9V3</a></li>
 <li><a href="https://www.alpha-data.com/dcp/products.php?product=adm-pcie-9h3">Alphadata 9H3</a></li>
@@ -281,7 +281,7 @@ Generally, creating an accelerator includes the steps as below:</p>
 </ul>
 <p>For FPGA vendors, it's easy to enable a new FPGA card with OpenCAPI interface to run OC-Accel, go to <a href="./deep-dive/board-package">New board support</a> page to learn how to.</p>
 <h2 id="supported-servers-for-deployment">Supported Servers for deployment</h2>
-<p>OpenCAPI interface needs the support on processor side. You can run OpenCAPI acceleration on Power9 servers with LaGrange or Monza processors installed. Today you can choose:</p>
+<p>OpenCAPI interface needs the support on processor side. Today you can run OpenCAPI acceleration on POWER9 servers with LaGrange or Monza processors installed. Today you can choose:</p>
 <p>LaGrange processor based systems:</p>
 <ul>
 <li>IPS FP5290</li>
@@ -308,13 +308,13 @@ grep KEYWORD * -r
 <p>Correspondingly, we call that SNAP1.0/2.0. The supported cards can be found <a href="https://github.com/open-power/snap/#31-fpga-card-selection">here</a>.</p>
 <ul>
 <li>
-<p>SNAP1.0 runs on Power8 servers, with PCIe Gen3x8 cards. </p>
+<p>SNAP1.0 runs on POWER8 servers, with PCIe Gen3x8 cards. </p>
 </li>
 <li>
-<p>SNAP2.0 runs on Power9 servers, with PCIe Gen3x16 or PCIe Gen4x8 cards.</p>
+<p>SNAP2.0 runs on POWER9 servers, with PCIe Gen3x16 or PCIe Gen4x8 cards.</p>
 </li>
 <li>
-<p>OC-Accel runs on Power9 servers, using OpenCAPI x8 interface. </p>
+<p>OC-Accel runs on POWER9 servers, using OpenCAPI x8 interface. </p>
 </li>
 </ul>
 <p>Generally, your actions running on SNAP1.0/2.0 can be moved to OC-Accel directly without changing source-code. Check <a href="user-guide/9-migrate">Migration Guide</a> for more information.</p>
