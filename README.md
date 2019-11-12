@@ -7,7 +7,7 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
 
 
 # Contributing
-This is an open-source project. We greatly appreciate your contributions and collaboration. 
+This is an open-source project. We greatly appreciate your contributions and collaboration.
 Before contributing to this project, please read and agree to the rules in
 * [CONTRIBUTING.md](CONTRIBUTING.md)
 
