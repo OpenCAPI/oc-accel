@@ -436,40 +436,15 @@ config PHY_SPEED
 	default "25.78125" if SPEED_25G
 	default "20.0" if SPEED_20G
 
-choice
-	bool "AXI ID width"
-	default AXI_IDW_3 
-	help
-	  ID width on AXI interface
-          There are five choices of axi id width the framework supports. Please select
-          one of them. Using less IDs can reduce the resource usage of snap_core.
-
-	config AXI_IDW_1
-		bool "1b: axi id width is 1b (2 IDs)"
+config AXI_ID_WIDTH
+	        prompt "axi id width on oc-accel&action interface, range 1-5"
+		int
+		default 1
+		range 1 5
 		help
-		  axi id width is 1b, snap interface supports up to 2 IDs.
-
-	config AXI_IDW_2
-		bool "2b: axi id width is 2b (4 IDs)"
-		help
-		  axi id width is 2b, snap interface supports up to 4 IDs.
-
-	config AXI_IDW_3
-		bool "3b: axi id width is 3b (8 IDs)"
-		help
-		  axi id width is 3b, snap interface supports up to 8 IDs.
-
-	config AXI_IDW_4
-		bool "4b: axi id width is 4b (16 IDs)"
-		help
-		  axi id width is 4b, snap interface supports up to 16 IDs.
-
-	config AXI_IDW_5
-		bool "5b: axi id width is 5b (32 IDs)"
-		help
-		  axi id width is 5b, snap interface supports up to 32 IDs.
-	
-endchoice
+		  ID width on AXI interface
+                  There are five choices of axi id width (1,2,3,4,5) the framework supports. 
+	          Please select one of them.
 
 #config ENABLE_PRFLOW
 #	bool "Cloud build (enabling Partial Reconfiguration)"

@@ -53,11 +53,7 @@ OCSE_PATH="../ocse"
 SPEED_25G=y
 # SPEED_20G is not set
 PHY_SPEED="25.78125"
-# AXI_IDW_1 is not set
-# AXI_IDW_2 is not set
-# AXI_IDW_3 is not set
-# AXI_IDW_4 is not set
-AXI_IDW_5=y
+AXI_ID_WIDTH=5
 # ENABLE_ILA is not set
 ILA_DEBUG="FALSE"
 CLOUD_USER_FLOW="FALSE"
