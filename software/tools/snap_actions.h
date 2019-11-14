@@ -30,6 +30,7 @@ static const struct actions_tab snap_actions[] = {
     { "IBM", 0x10140002, "hdl_single_engine in Verilog (1024b)"                  },
     { "IBM", 0x10140004, "UVM test for unit verification (no OCSE and software)" },
     { "IBM", 0x1014100E, "HDL multi-process example"                             },
+    { "IBM", 0x1014100D, "HDL database example"                                  },
 
     { "IBM", 0x10141008, "HLS Hello World      (512b)"                           },
     { "IBM", 0x1014100B, "HLS Memcopy 1024     (1024b)"                          },
