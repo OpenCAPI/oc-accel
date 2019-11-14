@@ -5,10 +5,6 @@
 AD9V3=y
 # AD9H3 is not set
 # AD9H7 is not set
-SPEED_25G=y
-# SPEED_20G is not set
-PHY_SPEED="25.78125"
-AXI_ID_WIDTH=5
 FPGACARD="AD9V3"
 FLASH_INTERFACE="SPIx8"
 FLASH_SIZE="64"
@@ -59,11 +55,16 @@ OCSE_PATH="../ocse"
 SPEED_25G=y
 # SPEED_20G is not set
 PHY_SPEED="25.78125"
-# AXI_IDW_1 is not set
-# AXI_IDW_2 is not set
-AXI_IDW_3=y
-# AXI_IDW_4 is not set
-# AXI_IDW_5 is not set
+AXI_ID_WIDTH=3
+# 50MHz is not set
+# 100MHz is not set
+# 150MHz is not set
+200MHz=y
+# 250MHz is not set
+# 300MHz is not set
+# 350MHz is not set
+# 400MHz is not set
+USER_CLOCK_FREQ=200
 # ENABLE_ILA is not set
 ILA_DEBUG="FALSE"
 CLOUD_USER_FLOW="FALSE"

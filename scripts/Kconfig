@@ -446,6 +446,82 @@ config AXI_ID_WIDTH
                   There are five choices of axi id width (1,2,3,4,5) the framework supports. 
 	          Please select one of them.
 
+choice
+	bool "Clock Frequency for Action  "
+	default 200MHz
+	help
+	  Clock frequency for action
+	  There are multiple frequencys the framework supports. Please select
+	  one of them.
+
+	config 50MHz
+		bool "Action work on 50MHz  (50.355MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 50MHz clock. A different clock with oc-accel bridge. 
+
+	config 100MHz
+		bool "Action work on 100MHz (100.710MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 100MHz clock. A different clock with oc-accel bridge. 
+
+	config 150MHz
+		bool "Action work on 150MHz (151.065MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 150MHz clock. A different clock with oc-accel bridge. 
+
+	config 200MHz
+		bool "Action work on 200MHz (201.420MHz to be accurate) clock"
+		help
+		  Action use 200MHz clock. Same clock with oc-accel bridge. 
+
+	config 250MHz
+		bool "Action work on 250MHz (251.775MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 250MHz clock. A different clock with oc-accel bridge. 
+
+	config 300MHz
+		bool "Action work on 300MHz (302.130MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 300MHz clock. A different clock with oc-accel bridge. 
+
+	config 350MHz
+		bool "Action work on 350MHz (352.485MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 350MHz clock. A different clock with oc-accel bridge. 
+
+	config 400MHz
+		bool "Action work on 400MHz (402.840MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 400MHz clock. A different clock with oc-accel bridge. 
+endchoice
+
+config USER_CLOCK_FREQ
+	int
+	default 50   if 50MHz
+	default 100  if 100MHz
+	default 150  if 150MHz
+	default 200  if 200MHz
+	default 250  if 250MHz
+	default 300  if 300MHz
+	default 350  if 350MHz
+	default 400  if 400MHz
+
+config ACTION_USER_CLOCK
+	bool
+	default y
+        prompt "Action's clock frequency is 200MHz ('n', unchecked) or other clock frequency ('y', checked)"
+	depends on OPENCAPI30 && (HDL_ACTION || HLS_ACTION)
+	help
+	  Input 'Y' if your action's clock frequency is not 200MHz.
+	  Leave it unchecked if it is 200MHz.
+
 #config ENABLE_PRFLOW
 #	bool "Cloud build (enabling Partial Reconfiguration)"
 #	help
