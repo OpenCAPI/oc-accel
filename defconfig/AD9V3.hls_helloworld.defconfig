@@ -5,10 +5,6 @@
 AD9V3=y
 # AD9H3 is not set
 # AD9H7 is not set
-SPEED_25G=y
-# SPEED_20G is not set
-PHY_SPEED="25.78125"
-AXI_ID_WIDTH=5
 FPGACARD="AD9V3"
 FLASH_INTERFACE="SPIx8"
 FLASH_SIZE="64"
@@ -26,7 +22,6 @@ NUM_OF_ACTIONS=1
 # HDL_UNIT_SIM is not set
 HLS_HELLOWORLD=y
 # HLS_MEMCOPY_1024 is not set
-# HLS_SPONGE is not set
 ACTION_HALF_WIDTH=y
 HALF_WIDTH="TRUE"
 ENABLE_HLS_SUPPORT=y
@@ -56,12 +51,21 @@ OCSE_PATH="../ocse"
 #
 # ================= Advanced Options: =================
 #
-# ENABLE_PRFLOW is not set
-USE_PRFLOW="FALSE"
+SPEED_25G=y
+# SPEED_20G is not set
+PHY_SPEED="25.78125"
+AXI_ID_WIDTH=5
+# 50MHz is not set
+# 100MHz is not set
+# 150MHz is not set
+200MHz=y
+# 250MHz is not set
+# 300MHz is not set
+# 350MHz is not set
+# 400MHz is not set
+USER_CLOCK_FREQ=200
 # ENABLE_ILA is not set
 ILA_DEBUG="FALSE"
-# ENABLE_FACTORY is not set
-FACTORY_IMAGE="FALSE"
 CLOUD_USER_FLOW="FALSE"
 CLOUD_BUILD_BITFILE="FALSE"
 UNIT_SIM_USED="FALSE"
