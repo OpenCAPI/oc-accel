@@ -426,6 +426,7 @@ class Testcase:
                 msg.ok_msg("An xterm (terminal) is chosen to run, ")
                 msg.ok_msg("please refer to the results of commands")
                 msg.ok_msg("you've ran in the terminal for testcase status.")
+                msg.ok_msg(" To display traces, execute: ./display_traces")
                 msg.ok_msg("================================================")
             else:
                 msg.ok_msg("============")

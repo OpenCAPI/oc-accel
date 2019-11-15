@@ -84,8 +84,11 @@ function test_helloworld {
     echo -n "Check results ... "
     diff tout tCAP 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
-	echo "failed"
-	echo "  Out and expected files are different!"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "                 TEST FAILED !"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "       Out and expected files are different!"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	exit 1
     fi
     echo "ok"
@@ -100,5 +103,7 @@ if [ "$duration" = "NORMAL" ]; then
   fi
 
 rm -f *.bin *.bin *.out
+echo "------------------------------------------------------"
 echo "Test OK"
+echo "------------------------------------------------------"
 exit 0
