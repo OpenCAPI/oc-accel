@@ -1,0 +1,2 @@
+#define NUM_KERNELS 1
+#define NVDLA_CONFIG 2

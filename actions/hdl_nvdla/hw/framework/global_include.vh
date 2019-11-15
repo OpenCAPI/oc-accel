@@ -1,0 +1,8 @@
+`define VLIB_BYPASS_POWER_CG
+`define NV_FPGA_FIFOGEN
+`define FPGA
+`define DESIGNWARE_NOEXIST
+`define NV_FPGA_SYSTEM
+`define NV_FPGA_UNIT
+`define XSDB_SLV_DIS
+`define NV_LARGE

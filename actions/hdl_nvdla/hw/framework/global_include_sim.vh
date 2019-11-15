@@ -1,0 +1,2 @@
+`define NVTOOLS_SYNC2D_GENERIC_CELL
+`define PRAND_OFF
