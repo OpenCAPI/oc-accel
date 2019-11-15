@@ -339,9 +339,7 @@ int main(int argc, char *argv[])
 	if (card == NULL) {
 		fprintf(stderr, "err: failed to open card %u: %s\n",
 			card_no, strerror(errno));
-                fprintf(stderr, "==========================\n");
-                fprintf(stderr, "== Did you consider running this command using sudo.\n");
-                fprintf(stderr, "==========================\n");
+                fprintf(stderr, "\n==> Did you consider running this command using sudo? <==\n");
 		goto out_error;
 	}
 
