@@ -46,7 +46,7 @@ from ocaccel_utils import msg
 class SimSession:
     def __init__(self, simulator_name = 'xsim', testcase_cmd = 'snap_example', testcase_args = "",\
                  ocse_root = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
-                 sim_timeout = 60, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
+                 sim_timeout = 600, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
         # prepare the environment
         self.simulator_name = simulator_name
         self.testcase_cmd = testcase_cmd
