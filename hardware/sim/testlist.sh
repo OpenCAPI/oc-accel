@@ -417,7 +417,7 @@
       done
     fi # hls_nvme_memcopy
  #
-    if [[ "$t0l" == "10143008" || "${env_action}" == "hls_helloworld"* ]];then echo -e "$del\ntesting helloworld"
+    if [[ "$t0l" == "10141008" || "${env_action}" == "hls_helloworld"* ]];then echo -e "$del\ntesting helloworld"
       step "snap_helloworld -h"
       echo "Hello world. This is my first CAPI SNAP experience. It's real fun." >tin
       cat tin |tr '[:lower:]' '[:upper:]' >tCAP

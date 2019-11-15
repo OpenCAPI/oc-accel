@@ -189,7 +189,7 @@ function test_memcopy_from_ddr {
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy frm ddr (aligned) ${size} bytes ... "
+    echo -n "Doing snap_memcopy from ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card} -X	\
 		-o ${size}_A.out	\
                 -a 0x0 -A CARD_DRAM -s ${size} >>  \
