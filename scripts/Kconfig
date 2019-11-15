@@ -141,6 +141,14 @@ choice
 		  - Accelerate
 		select DISABLE_SDRAM_AND_BRAM
 
+        config HDL_NVDLA
+                bool "HDL NVDLA"
+                help 
+                  This is a inference accelerator example which integrate nulti NVidia Deep
+                  Learning Accelerator engine on OpenCAPI
+                  - Accelerate
+                select DISABLE_SDRAM_AND_BRAM
+
 	config HDL_UNIT_SIM
 		bool "HDL UNIT SIM"
 		help
@@ -418,6 +426,45 @@ config DATABASE_REGEX_CONFIG
 	default "8X1"  if REGEX_8X1
 	help
 	  Number of kernels (engines) in database acceleration.
+
+config NUM_OF_NVDLA_KERNELS
+        depends on HDL_NVDLA
+	prompt "Number of nvdla kernels"
+	int
+	default 1
+	range 1 2
+	help
+	  Number of kernels (engines) for nvdla.
+
+choice
+	bool "NVDLA configuration"
+	help
+            Select different NVDLA configurations
+        depends on HDL_NVDLA
+	default NV_SMALL
+
+	config NV_SMALL
+		bool "nv_small -- NVDLA with 64 MACs"
+		help
+		  NVDLA with 64 MACs
+
+	config NV_LARGE
+		bool "nv_large -- NVDLA with 2048 MACs"
+		help
+		  NVDLA with 2048 MACs
+
+	config NV_FULL
+		bool "nv_full -- NVDLA with 2048 MACs and all feature"
+		help
+		  NVDLA with 2048 MACs and all feature
+endchoice
+
+config NVDLA_CONFIG 
+        depends on HDL_NVDLA
+	string
+	default "nv_small"     if NV_SMALL
+	default "nv_large"     if NV_LARGE
+	default "nv_full"      if NV_FULL
 
 config SIMULATOR
 	string
