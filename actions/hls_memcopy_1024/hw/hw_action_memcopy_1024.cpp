@@ -64,7 +64,7 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 		     wb_gbuf2dbuf_loop: for (int k=0; k<size_in_words_1024; k++) {
                                   for (int j=0; j<MEMDW_1024/MEMDW_512; j++) {
 		     #pragma HLS PIPELINE
-                                    (buffer_ddrmem + output_address)[k*MEMDW_1024/MEMDW_512+j] = (snap_membus_512_t)((buffer_gmem[k] >> j*MEMDW_512) & mask_512);
+                                    buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j] = (snap_membus_512_t)((buffer_gmem[k] >> j*MEMDW_512) & mask_512);
                                   }
                                }
 		     wb_dbuf2ddr_loop: for (int k=0; k<size_in_words_512; k++)
@@ -83,10 +83,9 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 		     wb_dbuf2gbuf_loop: for (int k=0; k<size_in_words_1024; k++) {
                                   for (int j=0; j<MEMDW_1024/MEMDW_512; j++) {
 		     #pragma HLS PIPELINE
-                                    //(buffer_gmem + output_address_1024)[k] |= (snap_membus_1024_t)(buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j] << j*MEMDW_512);
-                                    data_entry |= (snap_membus_1024_t)(buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j] << j*MEMDW_512);
+                                    data_entry |= ((snap_membus_1024_t)(buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j])) << j*MEMDW_512;
                                   }
-                                  (buffer_gmem + output_address_1024)[k] = data_entry;
+                                  buffer_gmem[k] = data_entry;
                                   data_entry = 0;
                                 }
 		     wb_gbuf2dout_loop: for (int k=0; k<size_in_words_1024; k++)
