@@ -197,7 +197,7 @@ echo -n "Git Version: "
 snap_peek -C ${snap_card} 0x0 || exit 1;
 echo -n "Build Date:  "
 snap_peek -C ${snap_card} 0x8 || exit 1;
-./process.awk snap_memcopy.log
+${ACTION_ROOT}/tests/process.awk snap_memcopy.log
 
 
 echo "ok"
