@@ -81,7 +81,7 @@ parser.add_option("-s", "--simulator", dest="simulator", default=None,
                   help="Simulator used for simulation. No default value.", metavar="<nosim, xcelium, xsim>")
 parser.add_option("-t", "--testcase", dest="testcase", default="terminal",
                   help="Testcase used for simulation, default: %default", metavar="STRING")
-parser.add_option("--simulator_start_timeout", dest="sim_timeout", type="int", default=60,
+parser.add_option("--simulator_start_timeout", dest="sim_timeout", type="int", default=600,
                   help="How long we will wait for simulator to start (in seconds), default: %default")
 parser.add_option("--make_timeout", dest="make_timeout", type="int", default=2592000,
                   help="How long we will wait for make model or make image to finish (in seconds), default: %default")
