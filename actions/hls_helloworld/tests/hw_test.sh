@@ -98,9 +98,12 @@ function test_helloworld {
 rm -f snap_helloworld.log
 touch snap_helloworld.log
 
-if [ "$duration" = "NORMAL" ]; then
+# Whatever duration is, we run the test
+# duration is used to run short test in simulation for example
+# helloworld is short by nature, so we can ignore duration setting
+# if [ "$duration" = "NORMAL" ]; then
   test_helloworld 
-  fi
+#  fi
 
 rm -f *.bin *.bin *.out
 echo "------------------------------------------------------"
