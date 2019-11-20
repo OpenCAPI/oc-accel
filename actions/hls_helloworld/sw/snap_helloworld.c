@@ -73,7 +73,7 @@ static void usage(const char *prog)
         "------------------------\n"
         "echo Clean possible temporary old files \n"
 	"echo Prepare the text to process\n"
-	"echo \"Hello world. This is my first CAPI SNAP experience. It's real fun!\""
+	"echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\""
 	" > /tmp/t1\n"
 	"\n"
 	"echo Run the application + hardware action\n"

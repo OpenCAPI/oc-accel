@@ -21,7 +21,7 @@
  * This makes it obvious that we are influenced by HLS details ...
  * The ACTION control bits are defined in the following file.
  */
-#define ACTION_TYPE_HDL_MULTI_PROCESS     0x1014100E	/* Action Type */
+#define ACTION_TYPE_HDL_MULTI_PROCESS     0x1014200E	/* Action Type */
 #define ACTION_REG_BASE                0x200
 #define ACTION_REG_ENG_RANGE           0x100
 #define reg(_reg,_id) ((ACTION_REG_BASE + (_id * ACTION_REG_ENG_RANGE)) + _reg)
