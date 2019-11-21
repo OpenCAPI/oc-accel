@@ -326,6 +326,7 @@ int main (int argc, char* argv[])
     int ch;
     unsigned int i;
     struct mdev_ctx* mctx = &master_ctx;
+    int mode;
 
     fd_out = stdout;        /* Default */
 
