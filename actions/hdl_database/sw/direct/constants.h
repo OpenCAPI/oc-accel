@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef F_CONSTANTS
+#define F_CONSTANTS
 #define ACTION_TYPE_DATABASE     0x00000003	/* Action Type */
 #define ACTION_REG_BASE                0x200
 #define ACTION_REG_ENG_RANGE           0x100
