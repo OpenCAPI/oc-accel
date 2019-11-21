@@ -65,6 +65,8 @@ module brdg_tlx_cmd_converter (
                           input      [0063:0]        tlx_wr_cmd_be                  , 
                           input      [1023:0]        tlx_wr_cdata_bus               ,    
                           output                     tlx_wr_cmd_ready               ,
+                          input      [0019:0]        tlx_wr_cmd_pasid               ,
+                          input      [0011:0]        tlx_wr_cmd_actag               ,
                             // read channel
                           input                      tlx_rd_cmd_valid               ,    
                           input      [0007:0]        tlx_rd_cmd_opcode              ,     
@@ -73,6 +75,8 @@ module brdg_tlx_cmd_converter (
                           input      [0001:0]        tlx_rd_cmd_dl                  , 
                           input      [0002:0]        tlx_rd_cmd_pl                  , 
                           output                     tlx_rd_cmd_ready               ,
+                          input      [0019:0]        tlx_rd_cmd_pasid               ,
+                          input      [0011:0]        tlx_rd_cmd_actag               ,
                             // context channel
                           input                      tlx_ac_cmd_valid               ,
                           input      [0019:0]        tlx_ac_cmd_pasid               ,
@@ -84,6 +88,8 @@ module brdg_tlx_cmd_converter (
                           input      [0067:0]        tlx_in_cmd_obj                 ,
                           input      [0015:0]        tlx_in_cmd_afutag              ,
                           input      [0007:0]        tlx_in_cmd_opcode              ,
+                          input      [0019:0]        tlx_in_cmd_pasid               ,
+                          input      [0011:0]        tlx_in_cmd_actag               ,
 
                           //---- control and status --------------------------------
                           input      [031:0]         debug_tlx_cmd_idle_lim         ,
@@ -99,8 +105,8 @@ module brdg_tlx_cmd_converter (
  reg         cmd_data_credit_run_out;
  reg         cmd_data_credit_lt_4;
  reg         cmd_data_credit_lt_2;
- wire[096:0] fifo_w_cmdcnv_din;  
- wire[096:0] fifo_w_cmdcnv_dout;  
+ wire[128:0] fifo_w_cmdcnv_din;  
+ wire[128:0] fifo_w_cmdcnv_dout;  
  wire[511:0] fifo_w_datcnv_o_din;
  wire[511:0] fifo_w_datcnv_o_dout;
  wire[511:0] fifo_w_datcnv_e_din;
@@ -121,6 +127,8 @@ module brdg_tlx_cmd_converter (
  wire[067:0] fifo_w_cmdcnv_dout_ea;
  wire[001:0] fifo_w_cmdcnv_dout_dl;   
  wire[002:0] fifo_w_cmdcnv_dout_pl;   
+ wire[011:0] fifo_w_cmdcnv_dout_actag; 
+ wire[019:0] fifo_w_cmdcnv_dout_pasid;
  wire[007:0] fifo_a_cmdcnv_dout_opcode;
  wire[011:0] fifo_a_cmdcnv_dout_actag; 
  wire[019:0] fifo_a_cmdcnv_dout_pasid;
@@ -129,8 +137,10 @@ module brdg_tlx_cmd_converter (
  wire[067:0] fifo_r_cmdcnv_dout_ea;
  wire[001:0] fifo_r_cmdcnv_dout_dl;   
  wire[002:0] fifo_r_cmdcnv_dout_pl;   
- wire[096:0] fifo_r_cmdcnv_din;  
- wire[096:0] fifo_r_cmdcnv_dout;  
+ wire[011:0] fifo_r_cmdcnv_dout_actag; 
+ wire[019:0] fifo_r_cmdcnv_dout_pasid;
+ wire[128:0] fifo_r_cmdcnv_din;  
+ wire[128:0] fifo_r_cmdcnv_dout;  
  wire        fifo_r_cmdcnv_den; 
  wire        fifo_r_cmdcnv_dv; 
  wire        fifo_r_cmdcnv_rdrq; 
@@ -160,9 +170,13 @@ module brdg_tlx_cmd_converter (
  reg [007:0] tlx_in_cmd_opcode_sync;
  reg [015:0] tlx_in_cmd_afutag_sync;
  reg [067:0] tlx_in_cmd_obj_sync;
+ reg [019:0] tlx_in_cmd_pasid_sync;
+ reg [011:0] tlx_in_cmd_actag_sync;
  reg [007:0] tlx_interrupt_opcode; 
  reg [015:0] tlx_interrupt_afutag; 
  reg [067:0] tlx_interrupt_obj; 
+ reg [019:0] tlx_interrupt_pasid;
+ reg [011:0] tlx_interrupt_actag;
 
 
 //---- output MUX ----
@@ -195,8 +209,14 @@ module brdg_tlx_cmd_converter (
                                                   tlx_interrupt_obj);
        afu_tlx_cmd_dl        <= fifo_w_cmdcnv_dv? fifo_w_cmdcnv_dout_dl     : fifo_r_cmdcnv_dout_dl;
        afu_tlx_cmd_pl        <= fifo_w_cmdcnv_dv? fifo_w_cmdcnv_dout_pl     : fifo_r_cmdcnv_dout_pl;
-       afu_tlx_cmd_actag     <= fifo_a_cmdcnv_dv? fifo_a_cmdcnv_dout_actag  : afu_tlx_cmd_actag;
-       afu_tlx_cmd_pasid     <= fifo_a_cmdcnv_dv? fifo_a_cmdcnv_dout_pasid  : afu_tlx_cmd_pasid;
+       afu_tlx_cmd_actag     <= fifo_a_cmdcnv_dv? fifo_a_cmdcnv_dout_actag  : 
+                               (fifo_w_cmdcnv_dv? fifo_w_cmdcnv_dout_actag : 
+                               (fifo_r_cmdcnv_dv? fifo_r_cmdcnv_dout_actag : 
+                                tlx_interrupt_actag));
+       afu_tlx_cmd_pasid     <= fifo_a_cmdcnv_dv? fifo_a_cmdcnv_dout_pasid  : 
+                               (fifo_w_cmdcnv_dv? fifo_w_cmdcnv_dout_pasid : 
+                               (fifo_r_cmdcnv_dv? fifo_r_cmdcnv_dout_pasid : 
+                                tlx_interrupt_pasid));
        afu_tlx_cdata_valid   <= (fifo_w_datcnv_o_dv  && (afu_tlx_cmd_dl[1])) || fifo_w_datcnv_e_dv;
        afu_tlx_cdata_bus     <= fifo_w_datcnv_e_dv? fifo_w_datcnv_e_dout : fifo_w_datcnv_o_dout;
      end
@@ -250,7 +270,7 @@ module brdg_tlx_cmd_converter (
 
 //---- put write data and command in clock converter FIFO ----
  assign fifo_w_cmdcnv_den   = tlx_wr_cmd_valid;
- assign fifo_w_cmdcnv_din   = {tlx_wr_cmd_pl, tlx_wr_cmd_dl, tlx_wr_cmd_afutag, tlx_wr_cmd_ea_or_obj, tlx_wr_cmd_opcode};//3+2+16+68+8 = 97
+ assign fifo_w_cmdcnv_din   = {tlx_wr_cmd_pasid, tlx_wr_cmd_actag, tlx_wr_cmd_pl, tlx_wr_cmd_dl, tlx_wr_cmd_afutag, tlx_wr_cmd_ea_or_obj, tlx_wr_cmd_opcode};//20+12+3+2+16+68+8 = 129
  assign fifo_w_datcnv_o_den = tlx_wr_cmd_valid;
  assign fifo_w_datcnv_o_din = tlx_wr_cdata_bus[1023:512];
  assign fifo_w_datcnv_e_den = tlx_wr_cmd_valid;
@@ -258,7 +278,7 @@ module brdg_tlx_cmd_converter (
 
 //---- FIFO for write command and info ---- 
  fifo_async #(
-              .DATA_WIDTH(97),
+              .DATA_WIDTH(129),
               .ADDR_WIDTH(5),
               .DISTR(1)
               ) mfifo_w_cmdcnv (
@@ -320,14 +340,16 @@ module brdg_tlx_cmd_converter (
  assign fifo_w_cmdcnv_dout_afutag = fifo_w_cmdcnv_dout[091:076];
  assign fifo_w_cmdcnv_dout_dl     = fifo_w_cmdcnv_dout[093:092];
  assign fifo_w_cmdcnv_dout_pl     = fifo_w_cmdcnv_dout[096:094];
+ assign fifo_w_cmdcnv_dout_actag  = fifo_w_cmdcnv_dout[108:097];
+ assign fifo_w_cmdcnv_dout_pasid  = fifo_w_cmdcnv_dout[128:109];
 
 //---- put read command in clock converter FIFO ----
- assign fifo_r_cmdcnv_din = {tlx_rd_cmd_pl, tlx_rd_cmd_dl, tlx_rd_cmd_afutag, tlx_rd_cmd_ea_or_obj, tlx_rd_cmd_opcode};
+ assign fifo_r_cmdcnv_din = {tlx_rd_cmd_pasid, tlx_rd_cmd_actag, tlx_rd_cmd_pl, tlx_rd_cmd_dl, tlx_rd_cmd_afutag, tlx_rd_cmd_ea_or_obj, tlx_rd_cmd_opcode};
  assign fifo_r_cmdcnv_den = tlx_rd_cmd_valid;
 
 //---- FIFO for read command and info ---- 
  fifo_async #(
-              .DATA_WIDTH(97),
+              .DATA_WIDTH(129),
               .ADDR_WIDTH(5),
               .DISTR(1)
               ) mfifo_r_cmdcnv (
@@ -351,6 +373,8 @@ module brdg_tlx_cmd_converter (
  assign fifo_r_cmdcnv_dout_afutag = fifo_r_cmdcnv_dout[091:076];
  assign fifo_r_cmdcnv_dout_dl     = fifo_r_cmdcnv_dout[093:092];
  assign fifo_r_cmdcnv_dout_pl     = fifo_r_cmdcnv_dout[096:094];
+ assign fifo_r_cmdcnv_dout_actag  = fifo_r_cmdcnv_dout[108:097];
+ assign fifo_r_cmdcnv_dout_pasid  = fifo_r_cmdcnv_dout[128:109];
 
 
 //---- put assign ACTAG info in clock converter FIFO ----
@@ -393,10 +417,10 @@ module brdg_tlx_cmd_converter (
    if(~rst_n) 
      cmd_crankshaft_sub <= 1'b0;
    else 
-     cmd_crankshaft_sub <= cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2;
+     cmd_crankshaft_sub <= cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2 &&  fifo_a_cmdcnv_empty;
 
- assign fifo_w_cmdcnv_rdrq   =  cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2;
- assign fifo_w_datcnv_e_rdrq =  cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2;
+ assign fifo_w_cmdcnv_rdrq   =  cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2 &&  fifo_a_cmdcnv_empty;
+ assign fifo_w_datcnv_e_rdrq =  cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2 &&  fifo_a_cmdcnv_empty;
  assign fifo_w_datcnv_o_rdrq =  cmd_crankshaft_sub;
  assign fifo_r_cmdcnv_rdrq   = ~cmd_crankshaft_main && ~cmd_credit_run_out &&  fifo_a_cmdcnv_empty && ~tlx_interrupt_valid_pre;
  assign fifo_a_cmdcnv_rdrq   = ~cmd_crankshaft_main && ~cmd_credit_run_out && ~fifo_a_cmdcnv_empty && ~tlx_interrupt_valid_pre;
@@ -522,12 +546,12 @@ module brdg_tlx_cmd_converter (
  always@(posedge clk_tlx or negedge rst_n)
    if(~rst_n) 
      tlx_in_cmd_pending <= 1'b0;
-   else if(~cmd_crankshaft_main && ~cmd_credit_run_out)
+   else if(~cmd_crankshaft_main && ~cmd_credit_run_out && fifo_a_cmdcnv_empty)
      tlx_in_cmd_pending <= 1'b0;
    else if(tlx_in_cmd_req_pipe[2] && ~tlx_in_cmd_rec)
      tlx_in_cmd_pending <= 1'b1;
 
- assign tlx_interrupt_valid_pre = ~cmd_crankshaft_main && ~cmd_credit_run_out && tlx_in_cmd_pending;
+ assign tlx_interrupt_valid_pre = ~cmd_crankshaft_main && ~cmd_credit_run_out && tlx_in_cmd_pending && fifo_a_cmdcnv_empty;
 
  always@(posedge clk_tlx or negedge rst_n)
    if(~rst_n) 
@@ -541,12 +565,16 @@ module brdg_tlx_cmd_converter (
        tlx_in_cmd_opcode_sync <= 8'd0;
        tlx_in_cmd_afutag_sync <= 16'd0;
        tlx_in_cmd_obj_sync    <= 68'd0;
+       tlx_in_cmd_pasid_sync  <= 20'd0;
+       tlx_in_cmd_actag_sync  <= 12'd0;
      end
    else if(tlx_in_cmd_valid)
      begin
        tlx_in_cmd_opcode_sync <= tlx_in_cmd_opcode;
        tlx_in_cmd_afutag_sync <= tlx_in_cmd_afutag;
        tlx_in_cmd_obj_sync    <= tlx_in_cmd_obj;
+       tlx_in_cmd_pasid_sync  <= tlx_in_cmd_pasid;
+       tlx_in_cmd_actag_sync  <= tlx_in_cmd_actag;
      end
 
  always@(posedge clk_tlx or negedge rst_n)
@@ -555,12 +583,16 @@ module brdg_tlx_cmd_converter (
        tlx_interrupt_opcode <= 8'd0;
        tlx_interrupt_afutag <= 16'd0;
        tlx_interrupt_obj    <= 68'd0;
+       tlx_interrupt_pasid  <= 20'd0;
+       tlx_interrupt_actag  <= 12'd0;
      end
    else 
      begin
        tlx_interrupt_opcode <= tlx_in_cmd_opcode_sync;
        tlx_interrupt_afutag <= tlx_in_cmd_afutag_sync;
        tlx_interrupt_obj    <= tlx_in_cmd_obj_sync;
+       tlx_interrupt_pasid  <= tlx_in_cmd_pasid_sync;
+       tlx_interrupt_actag  <= tlx_in_cmd_actag_sync;
      end
 
 
