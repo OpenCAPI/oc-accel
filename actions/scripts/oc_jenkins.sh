@@ -28,7 +28,7 @@ function test_10142000
 
 	echo "TEST HDL Example Action on Accel: $accel[$card] ..."
 	#mytest/tests/10140000_test.sh -C $card
-	mytest/tests/hw_test.sh -C $card
+	$mytest/tests/hw_test.sh -C $card
 	RC=$?
 	if [ $RC -ne 0 ]; then
 		return $RC
@@ -58,7 +58,7 @@ function test_all_actions() # $1 = card, $2 = accel
 
 	RC=0;
 	# Get SNAP Action number from Card
-	MY_ACTION=`./software/tools/snap_maint -C $card -m 1`
+	MY_ACTION=`./software/tools/oc_maint -C $card -m 1`
 	for action in $MY_ACTION ; do
 		run_test=1;
 		case $action in
