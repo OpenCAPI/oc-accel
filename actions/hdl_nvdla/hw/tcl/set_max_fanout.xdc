@@ -1,3 +1,19 @@
+#
+# Copyright 2019 International Business Machines
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
 #set_property MAX_FANOUT 50 [get_cells a0/action_w/nvdla_0/nvdla/u_partition_o/u_NV_NVDLA_cdp/u_dp/u_NV_NVDLA_CDP_DP_intp/u_interp_X./interp_in_shift_d1_reg*]
 #set_property MAX_FANOUT 50 [get_cells a0/action_w/nvdla_0/nvdla/u_partition_c/u_NV_NVDLA_csc/u_dl/dat_l0c0_dummy_reg*]
 #set_property MAX_FANOUT 60 [get_cells a0/action_w/nvdla_0/nvdla/u_partition_p/u_NV_NVDLA_sdp/u_core/u_bn_dppack/x_prelu_mul*]
