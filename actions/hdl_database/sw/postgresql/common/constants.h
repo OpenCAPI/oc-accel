@@ -1,12 +1,18 @@
-// ****************************************************************
-// (C) Copyright International Business Machines Corporation 2017
-// Author: Gou Peng Fei (shgoupf@cn.ibm.com)
-// ****************************************************************
-
-#ifndef __F_CONSTANTS__
-#define __F_CONSTANTS__
-
-/* Header file for SNAP Framework DATABASE code */
+/*
+ * Copyright 2019 International Business Machines
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #define ACTION_TYPE_DATABASE     0x00000003	/* Action Type */
 #define ACTION_REG_BASE                0x200
 #define ACTION_REG_ENG_RANGE           0x100
