@@ -108,7 +108,7 @@ function test_soft()
 	local card=$2
 
 	echo "Testing Software on Accel: $accel[$card] ..."
-	./software/tools/snap_maint -C $card -v
+	./software/tools/oc_maint -C $card -v
 	RC=$?
 	if [ $RC -ne 0 ]; then
 		return $RC
@@ -184,7 +184,7 @@ function test_hard()
 		return $RC
 	fi
 	echo "CONFIG Accel: $accel[$card] ..."
-	./software/tools/snap_maint -C $card -v
+	./software/tools/oc_maint -C $card -v
 	RC=$?
 	if [ $RC -ne 0 ]; then
 		echo "moving $IMAGE to $IMAGE.fault_config"
