@@ -320,7 +320,7 @@ if [[ $accel != "ALL" ]]; then
 			echo "---> Test Image# $test_done File: $IMAGE on $accel Card: $CARD"
 			if [ $CARD -eq "-1" ]; then
 				# Get all Cards in this System for Accel type i have to test
-				MY_CARDS=`./software/tools/snap_find_card -A $accel`
+				MY_CARDS=`./software/tools/oc_find_card -A $accel`
 				if [ $? -eq 0 ]; then
 					echo "Error: Can not find $accel Card in `hostname` !"
 					exit 1;
@@ -433,7 +433,7 @@ for card in $MY_CARDS ; do
 		echo "Can not find valid Accelerator for Card# $card"
 		continue
 	fi
-	# snap_find_card also detects GZIP cards, i will skip this cards
+	# oc_find_card also detects GZIP cards, i will skip this cards
 	if [[ $accel != "OC-AD9V3" ]]  && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
 		echo "Invalid Accelerator $accel for Card $card, skip"
 		continue
