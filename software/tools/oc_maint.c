@@ -39,7 +39,6 @@
 #include <libosnap.h>
 #include <osnap_tools.h>
 #include <osnap_global_regs.h>
-#include <osnap_m_regs.h>
 #include <osnap_hls_if.h>
 #include "snap_actions.h"
 
