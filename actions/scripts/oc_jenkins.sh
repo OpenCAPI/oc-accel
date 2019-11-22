@@ -58,8 +58,11 @@ function test_all_actions() # $1 = card, $2 = accel
 
 	RC=0;
 	# Get SNAP Action number from Card
-	# MY_ACTION=`./software/tools/oc_maint -C $card -m 1` # oc_maint -m1 not working for the moment
-	MY_ACTION=`./software/tools/oc_maint -C $card -v | awk '{print $2}'`
+
+	# MY_ACTION=`./software/tools/oc_maint -C $card -m 1`
+	# oc_maint -m1 not working for the moment ==> Using the following as a workaround
+	MY_ACTION=`./software/tools/oc_maint -C $card -v | grep -A10 -e "-+-" | grep -ve "-+-" | awk '{print $2}'`
+
 	for action in $MY_ACTION ; do
 		run_test=1;
 		case $action in
@@ -71,7 +74,7 @@ function test_all_actions() # $1 = card, $2 = accel
 		*"10142002") # HDL NVMe example
 			cmd="./actions/hdl_single_engine/tests/hw_general_test.sh"
 		;;
-		*"1014300B") # HLS Memcopy
+		*"1014300b") # HLS Memcopy
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
 		*"10143008") # HLS Hello World
