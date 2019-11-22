@@ -58,7 +58,9 @@ function test_all_actions() # $1 = card, $2 = accel
 
 	RC=0;
 	# Get SNAP Action number from Card
-	MY_ACTION=`./software/tools/oc_maint -C $card -m 1`
+	Right
+	# MY_ACTION=`./software/tools/oc_maint -C $card -m 1` # oc_maint -m1 not working for the moment
+	MY_ACTION=`./software/tools/oc_maint -C $card -v | awk '{print $2}'`
 	for action in $MY_ACTION ; do
 		run_test=1;
 		case $action in
