@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include <snap_regs.h>
+#include <osnap_regs.h>
 
 #ifdef __cplusplus
 extern "C" {
