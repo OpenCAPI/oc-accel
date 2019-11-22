@@ -294,7 +294,7 @@ echo "Testing in  : $MY_DIR"
 echo "Using Accel : $accel"
 echo "Using Card# : $CARD"
 echo "Using Image : $BINFILE"
-if [[ $accel == "OC-AD9V3" ]] && [[ $accel == "OC-AD9H3" ]] && [[ $accel == "OC-AD9H7" ]]; then
+if [[ $accel == "OC-AD9V3" ]] || [[ $accel == "OC-AD9H3" ]] || [[ $accel == "OC-AD9H7" ]]; then
 echo "Using sec Image : $BINFILE2"
 fi
 
