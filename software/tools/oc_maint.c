@@ -249,7 +249,7 @@ static void snap_decode (uint32_t atype, uint32_t level)
     return;
 }
 
-
+/*
 static int snap_action_info (void* handle)
 {
     uint32_t action_type, action_release;
@@ -266,6 +266,95 @@ static int snap_action_info (void* handle)
 
     VERBOSE2 ("[%s] Exit rc: %d\n", __func__, rc);
     return rc;
+}
+*/
+
+/*	Master Init */
+static int snap_m_init(void *handle, int mode)
+{
+	uint64_t reg, ssr, data;
+	uint32_t addr;
+	uint32_t atype, atype_next;
+	int msat, mact;
+	int i, sai, rc;
+	uint32_t v_addr, v_level;
+
+	VERBOSE2("[%s] Enter\n", __func__);
+	for (i = 0; i < 10; i++) {
+		reg = snap_read64(handle, SNAP_M_CTX, SNAP_M_SLR);	/* Get lock */
+		if (0 == reg) break;	/* Got Lock, continue */
+		sleep(1);	/* Try until lock is free */
+	}
+	if (10 == i) {
+		VERBOSE0("%s Error: Can not aquire SNAP lock\n", __func__);
+		return 1;
+	}
+	/* Have lock, check if done */
+	rc = 0;
+	/* Read SNAP Status Register (SSR) */
+	ssr = snap_read64(handle, SNAP_M_CTX, SNAP_M_SSR);
+	msat = (int)(ssr >> 4) & 0xf;   /* Get Maximum Short Action Type */
+	msat++;                         /* Make 1.. 16 */
+	mact = (int)ssr & 0xf;          /* Get Maximum Action ID */
+	mact++;                         /* Make 1..16 */
+	if (0x100 == (ssr &  0x100)) {  /* Check for Exploration Done */
+		VERBOSE1("SNAP FPGA Exploration already done (MSAT: %d MAID: %d)\n\n",
+			msat, mact);
+		VERBOSE1("   Short |  Action Type |   Level   | Action Name\n");
+		VERBOSE1("   ------+--------------+-----------+------------\n");
+		addr = SNAP_M_ATRI;
+		/* Set Address to read Version */
+		v_addr = SNAP_M_ACT_OFFSET + SNAP_ACTION_VERS_REG;
+		for (i = 0; i < mact; i++) {
+			reg = snap_read64(handle, SNAP_M_CTX, addr);
+			v_level = snap_read32(handle, v_addr);
+			snap_decode(reg, v_level);
+			addr += 8;
+			/* Show mode is used to display Action id only */
+			/* do not use with -v flags */
+			if (MODE_SHOW_ACTION == (MODE_SHOW_ACTION & mode))
+				VERBOSE0("0x%8.8x ", (uint32_t)reg);
+			v_addr += SNAP_M_ACT_SIZE;    /* Jump to next Version Reg */
+		}
+		rc = 0;
+		goto _snap_m_init_exit;
+	}
+
+	/* Read Action Type and configure */
+	sai = 0;                                /* Short Action Index */
+	addr = SNAP_M_ACT_OFFSET;               /* Base for 1st Action */
+	atype = unlock_action(handle, addr);
+	if (0xffffffff == atype) {
+		rc = 2;                         /* Can not unlock Action */
+		goto _snap_m_init_exit;
+	}
+	for (i = 0; i < mact; i++) {
+		atype_next = unlock_action(handle, addr);
+		if (0xffffffff == atype_next) {
+			rc = 2;
+			goto _snap_m_init_exit;
+		}
+		v_level = snap_read32(handle, addr + SNAP_ACTION_VERS_REG);
+		VERBOSE1("   %d Max AT: %d Found AT: 0x%8.8x --> Assign Short AT: %d\n",
+			i, mact, atype_next, sai);
+		data = (uint64_t)sai << 32ll | (uint64_t)atype_next;
+		snap_decode(data, v_level);
+		/* Configure Job Manager */
+		snap_write64(handle, SNAP_M_CTX, (SNAP_M_ATRI + i * 8), data);
+		if (atype != atype_next)
+			sai++;                  /* Next Short Action Index */
+		atype = atype_next;
+		addr += SNAP_M_ACT_SIZE;        /* Next Action Address */
+	}
+	rc = 0;
+	/* Set Command Register (SCR) */
+	reg = 0x10 + ((uint64_t)sai << 48ll);	/* Exploration Done + Maximum Short Action Type */
+	snap_write64(handle, SNAP_M_CTX, SNAP_M_SCR, reg);
+_snap_m_init_exit:
+	VERBOSE1("\n");
+	snap_write64(handle, SNAP_M_CTX, SNAP_M_SLR, 0); /* Release lock */
+	VERBOSE2("[%s] Exit rc: %d\n", __func__, rc);
+	return rc;
 }
 
 /* Leave a space at each end in the print line so that it can use -m1 -m2 ... */
@@ -448,7 +537,11 @@ int main (int argc, char* argv[])
     snap_version (mctx->handle);
 
 
-    rc = snap_action_info (mctx->handle);
+//    rc = snap_action_info (mctx->handle);
+
+	/* Init Master */
+	rc = snap_m_init(mctx->handle, mctx->mode);
+
 
 	/* Show Capabilities for different modes */
 	snap_show_cap(mctx->handle, mctx->mode);
