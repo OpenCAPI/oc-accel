@@ -37,7 +37,7 @@ module brdg_command_encode
                            input      [1023:0]        dma_cmd_data     ,
                            input      [0127:0]        dma_cmd_be       ,
                            input      [0063:0]        dma_cmd_ea       ,
-                           input      [`TAGW-1:0]      dma_cmd_tag      ,
+                           input      [`TAGW-1:0]     dma_cmd_tag      ,
 
                            //---- TLX interface ---------------------------
                              // command
@@ -116,7 +116,6 @@ module brdg_command_encode
            CHECK_PARTIAL = 5'h04,
            PARTIAL_L64B  = 5'h08,
            PARTIAL_H64B  = 5'h10;
-
 
 
 //---- command type decoding ----
@@ -368,6 +367,7 @@ module brdg_command_encode
                                        .partial_done     (partial_done  )  
                                        );
 
+
 //---- output to response decoder ----
  assign prt_cmd_valid = partial_valid;
  assign prt_cmd_last  = partial_done;
@@ -428,6 +428,16 @@ module brdg_command_encode
  assign prt_h = (prt_cstate==PARTIAL_H64B);
  assign prt_l = (prt_cstate==PARTIAL_L64B);
 
+ wire prt_cstate_h01_h02 = ((prt_cstate == IDLE)          && (prt_nstate == RD_PRT_FIFO));
+ wire prt_cstate_h04_h08 = ((prt_cstate == CHECK_PARTIAL) && (prt_nstate == PARTIAL_L64B));
+ wire prt_cstate_h04_h10 = ((prt_cstate == CHECK_PARTIAL) && (prt_nstate == PARTIAL_H64B));
+ wire prt_cstate_h08_h01 = ((prt_cstate == PARTIAL_L64B)  && (prt_nstate == IDLE));
+ wire prt_cstate_h08_h10 = ((prt_cstate == PARTIAL_L64B)  && (prt_nstate == PARTIAL_H64B));
+ wire prt_cstate_h08_h02 = ((prt_cstate == PARTIAL_L64B)  && (prt_nstate == RD_PRT_FIFO));
+ wire prt_cstate_h10_h01 = ((prt_cstate == PARTIAL_H64B)  && (prt_nstate == IDLE));
+ wire prt_cstate_h10_h02 = ((prt_cstate == PARTIAL_H64B)  && (prt_nstate == RD_PRT_FIFO));
+ 
+
 
 //=================================================================================================================
 // STATUS output for SNAP registers
@@ -467,6 +477,45 @@ module brdg_command_encode
 
        fir_fifo_overflow <= {fir_fifo_prt_data_overflow, fir_fifo_prt_info_overflow};
      end
+
+
+ // psl default clock = (posedge clk);
+
+//==== PSL ASSERTION ==============================================================================
+ // psl STROBE_VALID_SINGLE_PULSE : assert always (strobe_valid -> next(~strobe_valid)) report "strobe_valid not a single cycle pulse!";
+ 
+ // psl TLX_COMMAND_PARTIAL_FULL_CONFLICT : assert never (partial_valid && bypass_mode) report "partial and full command conflict! Each time either partial or full command is allowed to send to TLX.";
+//==== PSL ASSERTION ==============================================================================
+
+//==== PSL COVERAGE ==============================================================================
+ // psl DMA_CMD_HC_LC : cover {(dma_cmd_valid && (cpl_o && cpl_e))};
+ // psl DMA_CMD_HC_LP : cover {(dma_cmd_valid && (cpl_o && prt_e))};
+ // psl DMA_CMD_HP_LC : cover {(dma_cmd_valid && (prt_o && cpl_e))};
+ // psl DMA_CMD_HP_LP : cover {(dma_cmd_valid && (prt_o && prt_e))};
+ // psl DMA_CMD_HC_LN : cover {(dma_cmd_valid && (cpl_o && nul_e))};
+ // psl DMA_CMD_HN_LC : cover {(dma_cmd_valid && (nul_o && cpl_e))};
+ // psl DMA_CMD_HP_LN : cover {(dma_cmd_valid && (prt_o && nul_e))};
+ // psl DMA_CMD_HN_LP : cover {(dma_cmd_valid && (nul_o && prt_e))};
+ // psl DMA_CMD_HN_LN : cover {(dma_cmd_valid && (nul_o && nul_e))};
+ 
+ // psl PRT_CSTATE_H01_H02 : cover {(prt_cstate_h01_h02)};
+ // psl PRT_CSTATE_H04_H08 : cover {(prt_cstate_h04_h08)};
+ // psl PRT_CSTATE_H04_H10 : cover {(prt_cstate_h04_h10)};
+ // psl PRT_CSTATE_H08_H01 : cover {(prt_cstate_h08_h01)};
+ // psl PRT_CSTATE_H08_H10 : cover {(prt_cstate_h08_h10)};
+ // psl PRT_CSTATE_H08_H02 : cover {(prt_cstate_h08_h02)};
+ // psl PRT_CSTATE_H10_H01 : cover {(prt_cstate_h10_h01)};
+ // psl PRT_CSTATE_H10_H02 : cover {(prt_cstate_h10_h02)};
+
+ // psl TLX_CMD_AC : cover {(tlx_cmd_valid && (tlx_cmd_opcode == AFU_TLX_CMD_OPCODE_ASSIGN_ACTAG))};
+ // psl TLX_CMD_RD : cover {(tlx_cmd_valid && (tlx_cmd_opcode == AFU_TLX_CMD_OPCODE_RD_WNITC    ))};
+ // psl TLX_CMD_RP : cover {(tlx_cmd_valid && (tlx_cmd_opcode == AFU_TLX_CMD_OPCODE_PR_RD_WNITC ))};
+ // psl TLX_CMD_WR : cover {(tlx_cmd_valid && (tlx_cmd_opcode == AFU_TLX_CMD_OPCODE_DMA_W       ))};
+ // psl TLX_CMD_WP : cover {(tlx_cmd_valid && (tlx_cmd_opcode == AFU_TLX_CMD_OPCODE_DMA_PR_W    ))};
+ // psl TLX_CMD_IN : cover {(tlx_cmd_valid && (tlx_cmd_opcode == AFU_TLX_CMD_OPCODE_INTRP_REQ   ))};
+ 
+ // psl PRT_FIFO_ALMOST_FULL : cover {fifo_prt_info_count[4]};
+//==== PSL COVERAGE ==============================================================================
 
 
 endmodule

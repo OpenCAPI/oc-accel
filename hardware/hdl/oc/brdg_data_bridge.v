@@ -577,6 +577,7 @@ module brdg_data_bridge
  `endif
 
 
+
 //=================================================================================================================
 // STATUS output for SNAP registers
 //=================================================================================================================
@@ -663,6 +664,21 @@ module brdg_data_bridge
      end
 
 
+// psl default clock = (posedge clk);
+
+//==== PSL ASSERTION ==============================================================================
+// psl DMA_COMMAND_RETRY_CONFLICT : assert never (retry_tag_out_valid_sync && local_cmd_valid_sync) report "retry and normal command conflict! It's not allowed to send both retry command from retry FIFO and normal command from AXI to command encoder simultanuously.";
+
+// psl SURPLUS_TLX_RSP : assert never (fifo_rcy_tag_full && dma_resp_valid) report "all buffer slots have been released, response from TLX is nevertheless received.";
+
+// psl SURPLUS_AXI_CMD : assert never (fifo_rcy_tag_empty && local_cmd_valid) report "buffer slots have been used up, command from AXI is nevertheless received.";
+//==== PSL ASSERTION ==============================================================================
+
+//==== PSL COVERAGE ==============================================================================
+ // psl RETRY_FIFO_ALMOST_FULL : cover {retry_intrpt};
+ // psl TAG_ALL_CLAIMED : cover {~fifo_rcy_tag_full; fifo_rcy_tag_full};
+ // psl TAG_ALL_SET_FREE : cover {~fifo_rcy_tag_empty; fifo_rcy_tag_empty};
+//==== PSL COVERAGE ==============================================================================
 
 
 endmodule

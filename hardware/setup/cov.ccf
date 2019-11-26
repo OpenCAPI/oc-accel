@@ -1,0 +1,4 @@
+select_functional
+set_covergroup -default_goal 100
+set_covergroup -per_instance_default_one
+set_libcell_scoring

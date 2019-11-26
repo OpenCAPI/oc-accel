@@ -104,7 +104,6 @@ module brdg_partial_sequencer (
                           m_1B_all_1 
                           };
 
-
 //-----------------------------------------------------------------------------------------------------------------
 // STATEMACHINE for partial command sequencing
 // * Each 2's power aligned subsection in strobe is checked.
@@ -439,5 +438,20 @@ module brdg_partial_sequencer (
 //---- current partial sequencing is done, synced with partial_valid ----
  assign partial_done = (cstate == CYC_UPDATE) && (part_cmd_cyc[0] || part_all_nil);
 
+
+ // psl default clock = (posedge clk);
+
+//==== PSL COVERAGE ==============================================================================
+ // psl PARTIAL_1ST_32B : cover {strobe_valid; (m_32B_all_1)};
+ // psl PARTIAL_1ST_16B : cover {strobe_valid; (~m_32B_all_1 && m_16B_all_1)};
+ // psl PARTIAL_1ST_08B : cover {strobe_valid; (~m_32B_all_1 && ~m_16B_all_1 && m_8B_all_1)};
+ // psl PARTIAL_1ST_04B : cover {strobe_valid; (~m_32B_all_1 && ~m_16B_all_1 && ~m_8B_all_1 && m_4B_all_1)};
+ // psl PARTIAL_1ST_02B : cover {strobe_valid; (~m_32B_all_1 && ~m_16B_all_1 && ~m_8B_all_1 && ~m_4B_all_1 && m_2B_all_1)};
+ // psl PARTIAL_1ST_01B : cover {strobe_valid; (~m_32B_all_1 && ~m_16B_all_1 && ~m_8B_all_1 && ~m_4B_all_1 && ~m_2B_all_1 && m_1B_all_1)};
+//==== PSL COVERAGE ==============================================================================
+
+//==== PSL ASSERTION ==============================================================================
+ // psl PARTIAL_CNT_OVERFLOW : assert never (partial_valid && (&partial_cnt)) report "decomposed partial commands number exceeds partial counter limit!";
+//==== PSL ASSERTION ==============================================================================
 
 endmodule
