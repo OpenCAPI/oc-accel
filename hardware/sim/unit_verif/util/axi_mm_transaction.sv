@@ -31,7 +31,7 @@ class axi_mm_transaction extends uvm_sequence_item;
     rand bit [255:0][1023:0]  data;
     rand bit [255:0][127:0]   data_strobe;
     rand bit [7:0]            axi_id;
-    rand bit [7:0]            axi_usr;
+    rand bit [8:0]            axi_usr;
     rand int                  byte_size;           // value of 2^arsize/awsize
     rand int                  burst_length;        // arlen/awlen+1
     rand uvm_axi_txn_e        trans;
