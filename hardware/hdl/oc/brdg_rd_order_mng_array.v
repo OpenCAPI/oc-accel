@@ -54,9 +54,6 @@ module brdg_rd_order_mng_array
                             input           [0031:0] ret_ready
                             `endif
 
-                            //interface with context update module
-                            //output wire              last_context_cleared
-
                         );
 
     parameter IDN  = 2**`IDW;      // number of axi id supported
@@ -233,6 +230,7 @@ module brdg_rd_order_mng_array
     //#---- 4) use rsv_pre_ptr_latch as address, sotre rsv_tag_latch to certain entry in    -----#
     //#----    beat_info_nxt_ptr array                                                      -----#
     //############################################################################################
+
 
     //----1) sotre tag of current beat to pre_ptr_array and   ---------------
     //----   release the entry when response last beat to lcl ---------------
@@ -633,7 +631,81 @@ module brdg_rd_order_mng_array
 
     assign rec_tag = ret_tag;
 
-    //assign last_context_cleared = !(|beat_info_valid_vector);
+
+    //==============================================================================================================
+    //================================             psl coverage              =======================================
+    //==============================================================================================================
+    // psl default clock = (posedge clk);
+    wire [IDN-1:0] pre_ptr_reserve_at_clean;
+    wire [IDN-1:0] rsv_beat_at_clear_head;
+    wire [IDN-1:0] rsv_beat_at_idle_head;
+    wire [IDN-1:0] rsv_head_at_clear;
+    wire [IDN-1:0] store_rsp_at_loadout;
+    generate 
+        for(j=0; j<IDN; j=j+1)
+        begin:id_array_cover
+            assign pre_ptr_reserve_at_clean[j] = reserve_pre_ptr[j] && clear_pre_ptr[j];
+            assign rsv_beat_at_clear_head[j] = rsv_valid_latch_for_idx[j] && clear_head_beat[j];
+            assign rsv_beat_at_idle_head[j] = rsv_valid_latch_for_idx[j] && (!rsv_beat_nh_latch);
+            assign rsv_head_at_clear[j] = reserve_new_head_beat[j] && clear_head_beat[j];
+            assign store_rsp_at_loadout[j] = store_rsp_in[j] && load_rsp_out[j] && rsp_latch_rdy;
+            //---- make sure we have checked the condition when reserve_pre_ptr and clear_pre_ptr 
+            //---- happen in the same time and they are handled by the right priority
+            //---- if we can not cover this case for all 32 axi ids, at least cover it for id
+            // psl PRE_PTR_RESERVE_AT_CLEAN : cover {(reserve_pre_ptr[j] && clear_pre_ptr[j])};
+
+            //---- make sure we have checked the condition when reserve a new beat for idx and its
+            //---- head beat is beening cleared at the same time, so that the new beat should be 
+            //---- stored to the head beat array entry for this id
+            //---- if we can not cover this case for all 32 axi ids, at least cover it for id
+            // psl RSV_BEAT_AT_CLEAR_HEAD : cover {(rsv_valid_latch_for_idx[j] && clear_head_beat[j])};
+
+            //---- make sure we have checked the condition when reserve a new beat for idx and this
+            //---- axi id has no head beat now, so that the new beat should be 
+            //---- stored to the head beat array entry for this id
+            //---- if we can not cover this case for all 32 axi ids, at least cover it for id
+            // psl RSV_BEAT_AT_IDLE_HEAD : cover {(rsv_valid_latch_for_idx[j] && (!rsv_beat_nh_latch))};
+            
+            //---- make sure we have checked the condition when reserve a new head beat for idx and
+            //---- the previous head beat for this id is been cleared at the same time and they are handled
+            //---- by the right priority
+            // psl RSV_HEAD_AT_CLEAR : cover {(reserve_new_head_beat[j] && clear_head_beat[j])};
+           
+            //---- make sure we have checked the condition when store rsp in response latch array and
+            //---- load rsp out of this array happen at the same time and this 2 actions are handled by
+            //---- the right priority
+            // psl STORE_RSP_AT_LOADOUT_ARRAY : cover {(store_rsp_in[j] && load_rsp_out[j] && rsp_latch_rdy)};
+
+        end
+    endgenerate 
+    // psl PRE_PTR_RESERVE_AT_CLEAN_SIMPLE : cover {(|pre_ptr_reserve_at_clean[IDN-1:0])};
+    // psl RSV_BEAT_AT_CLEAR_HEAD_SIMPLE : cover {(|rsv_beat_at_clear_head[IDN-1:0])};
+    // psl RSV_BEAT_AT_IDLE_HEAD_SIMPLE : cover {(|rsv_beat_at_idle_head[IDN-1:0])};
+    // psl RSV_HEAD_AT_CLEAR_SIMPLE : cover {(|rsv_head_at_clear[IDN-1:0])};
+    // psl STORE_RSP_AT_LOADOUT_SIMPLE : cover {(|store_rsp_at_loadout[IDN-1:0])};
+
+    wire [ARYD-1:0] clear_beat_at_rsv_nxtp;
+    generate 
+        for(i=0; i<ARYD; i=i+1)
+        begin:tag_array_cover
+            assign clear_beat_at_rsv_nxtp[i] = clear_beat_info_entry[i] && reserve_nxt_ptr[i];
+
+            //---- make sure we have checked the condition when clear beat info entry and reserve its nxt_ptr 
+            //---- happens at the same time and these 2 actions are handled in the right priority
+            // psl CLEAR_BEAT_AT_RSV_NXTP : cover {(clear_beat_info_entry[i] && reserve_nxt_ptr[i])};
+        end
+    endgenerate
+    // psl CLEAR_BEAT_AT_RSV_NXTP_SIMPLE : cover {(|clear_beat_at_rsv_nxtp[ARYD-1:0])};
+
+
+    //---- make sure we have checked the condition when reserve a new beat
+    //---- and its previous beat is been cleared
+    // psl RSV_BEAT_AT_CLEAR_PRE : cover {(rsv_valid && pre_ptr_valid[rsv_axi_id] && clear_pre_ptr[rsv_axi_id])};
+    
+    //---- make sure we have checked the condition when store rsp to ret_xxx registers and load rsp out of these
+    //---- regsters happen at the same time and store and load are handled in right priority
+    // psl  STORE_RSP_AT_LOADOUT_REG : cover {(rsp_latch_valid_o && ret_ready)};
+
 `ifdef ILA_DEBUG
     reg   [31:0]     rsv_counter                 ;
     reg   [31:0]     ret_counter                 ;
