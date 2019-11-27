@@ -247,7 +247,7 @@ class Simulator:
             if self.wave:
                 sim_args += " -input ncaet.tcl"
             sim_args += " -input ncrun.tcl -r"
-            unit_args = "".join(("+UVM_TESTNAME=", self.unit_test, " -seed ", self.sv_seed, " +UVM_VERBOSITY=", self.uvm_ver))
+            unit_args = "".join(("+UVM_TESTNAME=", self.unit_test, " -seed ", self.sv_seed, " +UVM_VERBOSITY=", self.uvm_ver, " -coverage a -covfile ", self.ocaccel_root, "/hardware/setup/cov.ccf", " -covoverwrite -covtest ", self.unit_test))
             if self.unit_sim == False:
                 sim_top  = "work.top"
             else:
