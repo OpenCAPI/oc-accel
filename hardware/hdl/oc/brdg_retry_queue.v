@@ -244,6 +244,8 @@ module brdg_retry_queue
                             nstate = IDLE;
    endcase
 
+
+
 //---- timing adjustment for xlate_pending and xlate_done comparison ----
  always@(posedge clk or negedge rst_n)
    if(~rst_n) 
@@ -328,5 +330,26 @@ module brdg_retry_queue
 //---- indicate no retry request in queue ----
  assign rty_busy = ~fifo_retry_empty;
         
+
+ wire cstate_h01_h02 = ((cstate == IDLE) && (nstate == RETRY_RELEASE));
+ wire cstate_h02_h04 = ((cstate == RETRY_RELEASE) && (nstate == RETRY_CHECK));
+ wire cstate_h04_h01 = ((cstate == RETRY_CHECK) && (nstate == IDLE));
+ wire cstate_h04_h08 = ((cstate == RETRY_CHECK) && (nstate == RETRY_BACKOFF));
+ wire cstate_h04_h10 = ((cstate == RETRY_CHECK) && (nstate == RETRY_NOW));
+ wire cstate_h10_h01 = ((cstate == RETRY_NOW) && (nstate == IDLE));
+
+
+
+ // psl default clock = (posedge clk);
+
+//==== PSL COVERAGE ==============================================================================
+ // psl PRT_CSTATE_H01_H02 : cover {(cstate_h01_h02)};
+ // psl PRT_CSTATE_H02_H04 : cover {(cstate_h02_h04)};
+ // psl PRT_CSTATE_H04_H01 : cover {(cstate_h04_h01)};
+ // psl PRT_CSTATE_H04_H08 : cover {(cstate_h04_h08)};
+ // psl PRT_CSTATE_H04_H10 : cover {(cstate_h04_h10)};
+ // psl PRT_CSTATE_H10_H01 : cover {(cstate_h10_h01)};
+//==== PSL COVERAGE ==============================================================================
+
 
 endmodule
