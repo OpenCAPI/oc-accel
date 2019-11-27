@@ -45,6 +45,7 @@ set top_xdc_dir         $fpga_card_dir/xdc
 set nvme_used           $::env(NVME_USED)
 set bram_used           $::env(BRAM_USED)
 set sdram_used          $::env(SDRAM_USED)
+set hbm_used            $::env(HBM_USED)
 set ila_debug           [string toupper $::env(ILA_DEBUG)]
 set simulator           $::env(SIMULATOR)
 set denali_used         $::env(DENALI_USED)
@@ -255,6 +256,14 @@ if { $fpga_card == "AD9V3" } {
     set_property used_in_synthesis false [get_files $top_xdc_dir/snap_ddr4_b0pins.xdc]
   }
 }
+
+# HBM XDCs
+if { $hbm_used == "TRUE" } {
+  add_files -fileset constrs_1 -norecurse $top_xdc_dir/snap_hbm_timing.xdc
+  set_property used_in_synthesis true [get_files $top_xdc_dir/snap_hbm_timing.xdc]
+  set_property used_in_implementation true [get_files $top_xdc_dir/snap_hbm_timing.xdc]
+}
+
 
 if { $ila_debug == "TRUE" } {
   # Way1: Use ila_xdc
