@@ -75,7 +75,7 @@ module brdg_response_decode
  reg [0004:00]   rsp_code; 
  reg [0001:00]   rsp_dl;   
  reg [0001:00]   rsp_dp;   
- wire[0015:00]   rsp_type;
+ wire[0017:00]   rsp_type;
  wire[0001:00]   rsp_pos;
  wire[`TAGW-1:00]rsp_tag;
  wire            response_wr_done;
@@ -110,6 +110,7 @@ module brdg_response_decode
  wire            fifo_rsp_good_partial_dv;
  wire            fifo_rsp_good_full_dv;
  wire            fifo_rsp_bad_full_dv;
+ reg             all_fifos_emptied;
  reg [0511:00]   tmp_partial_rd_data_o;
  reg [0511:00]   tmp_partial_rd_data_e;
  wire[0004:00]   rsp_rty_typ;
@@ -202,7 +203,6 @@ module brdg_response_decode
 
 
 
-
 //=================================================================================================================
 //
 //  RESPONSE INFORMATION DECODE 
@@ -255,25 +255,28 @@ module brdg_response_decode
 
  // response type
  assign rsp_type = {
-           /*bitf*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_BAD_LENGTH),
-           /*bite*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_BAD_LENGTH),
-           /*bitd*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_ADR_ERROR),
-           /*bitc*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_ADR_ERROR),
-           /*bitd*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_DERROR),
-           /*bitc*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_DERROR),
-           /*bitb*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_BAD_ADDR),
-           /*bita*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_BAD_ADDR),
-           /*bit9*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_FAILED),
-           /*bit8*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_FAILED),
-           /*bit7*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_RTY_REQ),
-           /*bit6*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_RTY_REQ),
-           /*bit5*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_XLATE_PENDING),
-           /*bit4*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_XLATE_PENDING),
-           /*bit3*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_XLATE_DONE)   && (rsp_code == TLX_AFU_RESP_CODE_RTY_REQ),
-           /*bit2*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_XLATE_DONE)   && (rsp_code == TLX_AFU_RESP_CODE_DONE),
-           /*bit1*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_RESPONSE),
-           /*bit0*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_RESPONSE)
+           /*bit17*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_BAD_LENGTH),
+           /*bit16*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_BAD_LENGTH),
+           /*bit15*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_ADR_ERROR),
+           /*bit14*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_ADR_ERROR),
+           /*bit13*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_DERROR),
+           /*bit12*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_DERROR),
+           /*bit11*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_BAD_ADDR),
+           /*bit10*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_BAD_ADDR),
+           /*bit09*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_FAILED),
+           /*bit08*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_FAILED),
+           /*bit07*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_RTY_REQ),
+           /*bit06*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_RTY_REQ),
+           /*bit05*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_FAILED) && (rsp_code == TLX_AFU_RESP_CODE_XLATE_PENDING),
+           /*bit04*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_FAILED)  && (rsp_code == TLX_AFU_RESP_CODE_XLATE_PENDING),
+           /*bit03*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_XLATE_DONE)   && (rsp_code == TLX_AFU_RESP_CODE_RTY_REQ),
+           /*bit02*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_XLATE_DONE)   && (rsp_code == TLX_AFU_RESP_CODE_DONE),
+           /*bit01*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_WRITE_RESPONSE),
+           /*bit00*/ (rsp_opcode == TLX_AFU_RESP_OPCODE_READ_RESPONSE)
                     };
+
+
+
 
  // response data length and position:
  //  * full resp for 128B : 2'b11; 
@@ -286,14 +289,14 @@ module brdg_response_decode
  
  // decode responses
  assign response_wr_done                = rsp_type[1];
- assign response_wr_failed              = rsp_type[9] || rsp_type[11] || rsp_type[13] || rsp_type[15];
+ assign response_wr_failed              = rsp_type[9] || rsp_type[11] || rsp_type[13] || rsp_type[15] || rsp_type[17];
  assign response_wr_xlate_pending       = rsp_type[5];
  assign response_wr_xlate_done          = rsp_type[2] && response_write;
  assign response_wr_xlate_retry         = rsp_type[3] && response_write;
  assign response_wr_retry               = rsp_type[7];
  assign response_rd_xlate_pending       = rsp_type[4];
  assign response_rd_done                = rsp_type[0];
- assign response_rd_failed              = rsp_type[8] || rsp_type[10] || rsp_type[12] || rsp_type[14];
+ assign response_rd_failed              = rsp_type[8] || rsp_type[10] || rsp_type[12] || rsp_type[14] || rsp_type[16];
  assign response_rd_retry               = rsp_type[6];
  assign response_rd_xlate_done          = rsp_type[2] && response_read;
  assign response_rd_xlate_retry         = rsp_type[3] && response_read;
@@ -469,6 +472,8 @@ module brdg_response_decode
    else if(fifo_rsp_good_partial_dv && fifo_rsp_good_dout[7])
      tmp_partial_rd_data_e <= (tmp_partial_rd_data_e | fifo_rspdat_e_dout[511:0]);
 
+
+
 //---- FIFO to buffer information of bad response ----
  assign fifo_rsp_bad_din = {rsp_pos, rsp_tag};
  assign fifo_rsp_bad_den = rsp_bad_full_valid && (MODE);
@@ -491,6 +496,21 @@ module brdg_response_decode
 
  assign fifo_rsp_bad_rdrq = ~fifo_rsp_bad_empty && ~fifo_rsp_good_rdrq;                                 
  assign fifo_rsp_bad_full_dv = fifo_rsp_bad_dv;
+
+ reg fifo_rsp_good_den_sync;
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n) 
+     fifo_rsp_good_den_sync <= 1'b0;
+   else
+     fifo_rsp_good_den_sync <= fifo_rsp_good_den;
+
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n) 
+     all_fifos_emptied <= 1'b1;
+   else if(fifo_rsp_good_den_sync)
+     all_fifos_emptied <= 1'b0;
+   else if(fifo_rsp_good_empty)
+     all_fifos_emptied <= 1'b1;
 
    end
  endgenerate
@@ -847,4 +867,80 @@ module brdg_response_decode
 
 
 
+ // psl default clock = (posedge clk);
+
+//==== PSL ASSERTION ==============================================================================
+ // psl TLX_RESPONSE_DATA_SYNC : assert always ((MODE)? (all_fifos_emptied ? (fifo_rsp_good_empty && fifo_rspdat_o_empty && fifo_rspdat_e_empty) : 1'b1) : 1'b1) report "TLX response and data not synced! Response info and data FIFO should always be in the same status because good TLX response info and response data are expected to come in pairs.";
+ 
+ // psl DATA_BRIDGE_RESPONSE_CONFLICT : assert always ((MODE)? onehot0({fifo_rsp_good_full_dv, fifo_rsp_bad_full_dv, rty_valid, prt_valid}) : onehot0({rsp_good_full_valid, rsp_bad_full_valid, rty_valid, prt_valid})) report "there should be only one response among good, bad, retry and partial responses committed to data bridge each time!";
+//==== PSL ASSERTION ==============================================================================
+
+
+//==== PSL COVERAGE ==============================================================================
+ // psl TLX_RSP_17_DL1_DP0 : cover {(rsp_valid && (rsp_type[17]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_16_DL1_DP0 : cover {(rsp_valid && (rsp_type[16]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_15_DL1_DP0 : cover {(rsp_valid && (rsp_type[15]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_14_DL1_DP0 : cover {(rsp_valid && (rsp_type[14]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_13_DL1_DP0 : cover {(rsp_valid && (rsp_type[13]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_12_DL1_DP0 : cover {(rsp_valid && (rsp_type[12]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_11_DL1_DP0 : cover {(rsp_valid && (rsp_type[11]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_10_DL1_DP0 : cover {(rsp_valid && (rsp_type[10]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_09_DL1_DP0 : cover {(rsp_valid && (rsp_type[09]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_08_DL1_DP0 : cover {(rsp_valid && (rsp_type[08]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_07_DL1_DP0 : cover {(rsp_valid && (rsp_type[07]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_06_DL1_DP0 : cover {(rsp_valid && (rsp_type[06]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_05_DL1_DP0 : cover {(rsp_valid && (rsp_type[05]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_04_DL1_DP0 : cover {(rsp_valid && (rsp_type[04]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_03_DL1_DP0 : cover {(rsp_valid && (rsp_type[03]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_02_DL1_DP0 : cover {(rsp_valid && (rsp_type[02]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_01_DL1_DP0 : cover {(rsp_valid && (rsp_type[01]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+ // psl TLX_RSP_00_DL1_DP0 : cover {(rsp_valid && (rsp_type[00]) && (rsp_dl==2'd1) && (rsp_dp==2'd0))};
+
+ // psl TLX_RSP_17_DL1_DP1 : cover {(rsp_valid && (rsp_type[17]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_16_DL1_DP1 : cover {(rsp_valid && (rsp_type[16]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_15_DL1_DP1 : cover {(rsp_valid && (rsp_type[15]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_14_DL1_DP1 : cover {(rsp_valid && (rsp_type[14]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_13_DL1_DP1 : cover {(rsp_valid && (rsp_type[13]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_12_DL1_DP1 : cover {(rsp_valid && (rsp_type[12]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_11_DL1_DP1 : cover {(rsp_valid && (rsp_type[11]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_10_DL1_DP1 : cover {(rsp_valid && (rsp_type[10]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_09_DL1_DP1 : cover {(rsp_valid && (rsp_type[09]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_08_DL1_DP1 : cover {(rsp_valid && (rsp_type[08]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_07_DL1_DP1 : cover {(rsp_valid && (rsp_type[07]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_06_DL1_DP1 : cover {(rsp_valid && (rsp_type[06]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_05_DL1_DP1 : cover {(rsp_valid && (rsp_type[05]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_04_DL1_DP1 : cover {(rsp_valid && (rsp_type[04]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_03_DL1_DP1 : cover {(rsp_valid && (rsp_type[03]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_02_DL1_DP1 : cover {(rsp_valid && (rsp_type[02]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_01_DL1_DP1 : cover {(rsp_valid && (rsp_type[01]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+ // psl TLX_RSP_00_DL1_DP1 : cover {(rsp_valid && (rsp_type[00]) && (rsp_dl==2'd1) && (rsp_dp==2'd1))};
+
+ // psl TLX_RSP_17_DL2 : cover {(rsp_valid && (rsp_type[17]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_16_DL2 : cover {(rsp_valid && (rsp_type[16]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_15_DL2 : cover {(rsp_valid && (rsp_type[15]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_14_DL2 : cover {(rsp_valid && (rsp_type[14]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_13_DL2 : cover {(rsp_valid && (rsp_type[13]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_12_DL2 : cover {(rsp_valid && (rsp_type[12]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_11_DL2 : cover {(rsp_valid && (rsp_type[11]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_10_DL2 : cover {(rsp_valid && (rsp_type[10]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_09_DL2 : cover {(rsp_valid && (rsp_type[09]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_08_DL2 : cover {(rsp_valid && (rsp_type[08]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_07_DL2 : cover {(rsp_valid && (rsp_type[07]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_06_DL2 : cover {(rsp_valid && (rsp_type[06]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_05_DL2 : cover {(rsp_valid && (rsp_type[05]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_04_DL2 : cover {(rsp_valid && (rsp_type[04]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_03_DL2 : cover {(rsp_valid && (rsp_type[03]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_02_DL2 : cover {(rsp_valid && (rsp_type[02]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_01_DL2 : cover {(rsp_valid && (rsp_type[01]) && (rsp_dl==2'd2))};
+ // psl TLX_RSP_00_DL2 : cover {(rsp_valid && (rsp_type[00]) && (rsp_dl==2'd2))};
+ 
+ // psl TLX_RSP_PRT_NO_DATA  : cover {prt_rsp_last_no_data};
+ // psl TLX_RSP_PRT_ALL_DATA : cover {prt_rsp_last_all_data};
+ // psl TLX_RSP_PRT_ANY_RTY  : cover {prt_rsp_retry};
+ // psl TLX_RSP_PRT_ANY_DONE : cover {prt_rsp_done};
+ // psl TLX_RSP_PRT_ANY_FAIL : cover {prt_rsp_failed};
+//==== PSL CONVERAGE ==============================================================================
+             
+
 endmodule
+

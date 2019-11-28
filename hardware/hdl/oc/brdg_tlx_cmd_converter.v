@@ -403,7 +403,6 @@ module brdg_tlx_cmd_converter (
 
 
 
-
 //-----------------------------------------------------------------------------------------------------------------
 //  CREDIT MANAGEMENT                                                   
 //-----------------------------------------------------------------------------------------------------------------
@@ -609,5 +608,28 @@ module brdg_tlx_cmd_converter (
      end
 
 
+//==== PSL ASSERTION ==============================================================================
+ // psl PREMATURE_INTERRUPT : assert never (tlx_in_cmd_valid && tlx_in_cmd_req) @(posedge clk_afu) report "interrupt precedes the last acknowledgement! The interrupt command should never be sent until the last interrupt ackowledgement is confirmed.";
+ 
+ // psl TLX_COMMAND_CHANNELS_CONFLICT : assert always onehot0({fifo_w_cmdcnv_dv, fifo_r_cmdcnv_dv, fifo_a_cmdcnv_dv, tlx_interrupt_valid}) @(posedge clk_tlx) report "TLX commands from write/read/assign_actag/interrupt have conflicts! Each time there's only one channel from write, read, assign_actag and interrupt being enabled.";
+ 
+ // psl TLX_COMMAND_WRITE_DATA_DEFICIENT : assert always ((fifo_w_cmdcnv_rdrq && fifo_w_datcnv_e_rdrq) -> next(fifo_w_datcnv_o_rdrq)) @(posedge clk_tlx) report "lacking command data to TLX! The odd data FIFO should always be read following the reading of even data FIFO.";
+//==== PSL ASSERTION ==============================================================================
+ 
+
+//==== PSL COVERAGE ==============================================================================
+ // psl SINGLE_COMMAND_A   : cover {(fifo_a_cmdcnv_dv)} @(posedge clk_tlx) ;
+ // psl SINGLE_COMMAND_I   : cover {(tlx_interrupt_valid)} @(posedge clk_tlx) ;
+ // psl DUPLEX_COMMAND_W_R : cover {fifo_w_cmdcnv_dv; fifo_r_cmdcnv_dv} @(posedge clk_tlx) ;
+ // psl DUPLEX_COMMAND_R_W : cover {fifo_r_cmdcnv_dv; fifo_w_cmdcnv_dv} @(posedge clk_tlx) ;
+ 
+ // psl CMD_CREDIT_RUNOUT : cover {(cmd_credit_run_out)} @(posedge clk_tlx);
+ // psl CMD_CREDIT_LT_4 : cover {(cmd_data_credit_lt_4)} @(posedge clk_tlx);
+ // psl CMD_CREDIT_LT_2 : cover {(cmd_data_credit_lt_2)} @(posedge clk_tlx);
+ // psl CMD_DATA_CREDIT_RUNOUT : cover {(cmd_data_credit_run_out)} @(posedge clk_tlx);
+ 
+ // psl DMA_CMD_JAM : cover {(tlx_wr_cmd_ready || tlx_rd_cmd_ready)} @(posedge clk_afu);
+//==== PSL COVERAGE ==============================================================================
+ 
 
 endmodule
