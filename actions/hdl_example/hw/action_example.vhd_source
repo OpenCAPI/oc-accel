@@ -378,7 +378,7 @@ architecture action_example of action_example is
 begin
 
     int_ctx <= reg_0x20(CONTEXT_BITS - 1 downto 0);
-    int_src <= reg_0x48 & reg_0x4c;
+    int_src <= reg_0x4c & reg_0x48;
 
   ----
   ---- ILA core
