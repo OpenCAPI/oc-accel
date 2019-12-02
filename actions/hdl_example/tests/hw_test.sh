@@ -22,7 +22,9 @@
 verbose=0
 snap_card=0
 iteration=1
-FUNC="./actions/hdl_example/sw/snap_example"
+ddr_test=0
+SNAP_ROOT="."
+FUNC="${SNAP_ROOT}/actions/hdl_example/sw/snap_example"
 
 function test () # $1 = card, $2 = action, $3 = 4k or 64, $4 = min_align, $5 = dma_size
 {
@@ -181,6 +183,7 @@ function usage() {
 	echo "    [-C <card>]        card to be used for the test"
 	echo "    [-t <trace_level>]"
 	echo "    [-i <iteration>]"
+	echo "    [-d] Perform DDR test"
 }
 
 #
@@ -188,7 +191,7 @@ function usage() {
 #
 PROGRAM=$0
 
-while getopts "C:t:i:h" opt; do
+while getopts "C:t:i:hd" opt; do
 	case $opt in
 	C)
 	snap_card=$OPTARG;
@@ -199,6 +202,9 @@ while getopts "C:t:i:h" opt; do
 	i)
 	iteration=$OPTARG;
 	;;
+	d)
+	ddr_test=1;
+        ;;
 	h)
 	usage;
 	exit 0;
@@ -209,62 +215,13 @@ while getopts "C:t:i:h" opt; do
 	esac
 done
 
-# Configure my Snap Card
-echo "Configure Card[$snap_card] ...."
-cmd=`./software/tools/snap_maint -C $snap_card`
-eval ${cmd}
-if [ $? -ne 0 ]; then
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
-fi
-# Get Card Name
-echo -n "Detect Card[$snap_card] .... "
-CARD=`./software/tools/snap_maint -C $snap_card -m 4 | tr -d '[:space:]'`
-if [ -z $CARD ]; then
-	echo "ERROR: Invalid Card."
-	exit 1
-fi
-
-# Get Values from Card Card using mode 5 and mode 6
-MIN_ALIGN=`./software/tools/snap_maint -C $snap_card -m 5 | tr -d '[:space:]'`
-MIN_BLOCK=`./software/tools/snap_maint -C $snap_card -m 6 | tr -d '[:space:]'`
+MIN_ALIGN=1
+MIN_BLOCK=1
 echo -n " (Align: $MIN_ALIGN Min Block: $MIN_BLOCK) "
-
-case $CARD in
-"AD8K5" )
-        echo "-> AlphaData $CARD Card"
-        ;;
-"S121B" )
-        echo "-> Semptian $CARD Card"
-        ;;
-"ADKU3" )
-	echo "-> AlphaData $CARD Card"
-	;;
-"N250S" )
-	echo "-> Nallatech $CARD Card"
-	;;
-"N250SP" )
-	echo "-> Nallatech $CARD Card"
-	;;
-"FX609" )
-	echo "-> Flyslice $CARD Card"
-	;;
-"S241" )
-	echo "-> Semptian $CARD Card"
-	;;
-"RCXVUP" )
-	echo "-> ReflexCES $CARD Card"
-	;;
-* )
-	echo "-> $CARD is Invalid"
-	exit 1
-	;;
-esac;
 
 for ((iter=1;iter <= iteration;iter++))
 {
-	echo "Iteration $iter of $iteration on $CARD[$snap_card]"
+	echo "Iteration $iter of $iteration on CARD[$snap_card]"
 	echo "Testing Action 1 from 200 msec to 1 sec in 200 msec steps"
 	cmd="${FUNC} -a 1 -C${snap_card} -e 1000 -t 2"
 	eval ${cmd}
@@ -288,15 +245,12 @@ for ((iter=1;iter <= iteration;iter++))
 	test_rnd $snap_card 2   $MIN_ALIGN $MIN_BLOCK
 
 	# Check SDRAM
-	RAM=`./software/tools/snap_maint -C $snap_card -m 3`
-	if [ ! -z $RAM ]; then
+	if [ $ddr_test -eq 1 ]; then
 		test     $snap_card 6 4k $MIN_ALIGN $MIN_BLOCK
 		test     $snap_card 6 64 $MIN_ALIGN $MIN_BLOCK
 		test_sb  $snap_card 6    $MIN_ALIGN $MIN_BLOCK
 		test_bs  $snap_card 6    $MIN_ALIGN $MIN_BLOCK
 		test_rnd $snap_card 6    $MIN_ALIGN $MIN_BLOCK
-	else
-		echo "No SDRAM, skipping this test"
 	fi
 }
 echo "---------->>>> Exit Good <<<<<<--------------"
