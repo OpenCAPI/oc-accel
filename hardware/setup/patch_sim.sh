@@ -53,6 +53,7 @@ case $SIMULATOR in
     if [ -f ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f ]; then
       perl -i.ori -pe 'BEGIN{undef $/;} s/(^-makelib.*\n.*glbl.v.*\n.*endlib)//mg' ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f; # remove glbl.v from compile list
       perl -i.ori -pe 'BEGIN{undef $/;} s/(^-endlib.*\n^-makelib xcelium_lib\/.* \\\n)//mg' ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f; # merge everything to one lib
+      perl -i.ori -pe 'BEGIN{undef $/;} s/^-makelib xcelium_lib\/xil_defaultlib/-makelib xcelium_lib\/work/mg' ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f; # set lib name to work in run.f
     fi
     ;;
   "questa"|"modelsim")
