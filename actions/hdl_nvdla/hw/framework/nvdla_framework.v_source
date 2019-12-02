@@ -134,7 +134,7 @@ module nvdla_framework #(
     //----------------------------------------------
     // DBB AXI INTERFACE
     //----------------------------------------------
-    /---------------- Write Address Channel Signals ----------------/
+    //---------------- Write Address Channel Signals ----------------/
     wire [#NVDLA_DBB_ADDR_WIDTH-1:0]   dbb_s_axi_awaddr  [KERNEL_NUM-1:0] ;
     wire [3-1:0]                       dbb_s_axi_awprot  [KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_awvalid [KERNEL_NUM-1:0] ;
@@ -147,18 +147,18 @@ module nvdla_framework #(
     wire [4-1:0]                       dbb_s_axi_awqos   [KERNEL_NUM-1:0] ;
     wire [4-1:0]                       dbb_s_axi_awregion[KERNEL_NUM-1:0] ;
     wire [8-1:0]                       dbb_s_axi_awid    [KERNEL_NUM-1:0] ;
-    /---------------- Write Data Channel Signals ----------------/
+    //---------------- Write Data Channel Signals ----------------/
     wire [#NVDLA_DBB_DATA_WIDTH-1:0]   dbb_s_axi_wdata [KERNEL_NUM-1:0] ;
     wire [#NVDLA_DBB_DATA_WIDTH/8-1:0] dbb_s_axi_wstrb [KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_wvalid[KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_wready[KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_wlast [KERNEL_NUM-1:0] ;
-    /---------------- Write Response Channel Signals ----------------/
+    //---------------- Write Response Channel Signals ----------------/
     wire [2-1:0]                       dbb_s_axi_bresp [KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_bvalid[KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_bready[KERNEL_NUM-1:0] ;
     wire [8-1:0]                       dbb_s_axi_bid   [KERNEL_NUM-1:0] ;
-    /---------------- Read Address Channel Signals ----------------/
+    //---------------- Read Address Channel Signals ----------------/
     wire [#NVDLA_DBB_ADDR_WIDTH-1:0]   dbb_s_axi_araddr  [KERNEL_NUM-1:0] ;
     wire [3-1:0]                       dbb_s_axi_arprot  [KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_arvalid [KERNEL_NUM-1:0] ;
@@ -171,7 +171,7 @@ module nvdla_framework #(
     wire [4-1:0]                       dbb_s_axi_arqos   [KERNEL_NUM-1:0] ;
     wire [4-1:0]                       dbb_s_axi_arregion[KERNEL_NUM-1:0] ;
     wire [8-1:0]                       dbb_s_axi_arid    [KERNEL_NUM-1:0] ;
-    /---------------- Read Data Channel Signals ----------------/
+    //---------------- Read Data Channel Signals ----------------/
     wire [#NVDLA_DBB_DATA_WIDTH-1:0]   dbb_s_axi_rdata [KERNEL_NUM-1:0] ;
     wire [2-1:0]                       dbb_s_axi_rresp [KERNEL_NUM-1:0] ;
     wire                               dbb_s_axi_rvalid[KERNEL_NUM-1:0] ;
@@ -183,7 +183,7 @@ module nvdla_framework #(
     //----------------------------------------------
     // SRAM AXI INTERFACE
     //----------------------------------------------
-    /--------- Write Address Channel Signals of SRAM-----------/
+    //--------- Write Address Channel Signals of SRAM-----------/
     wire                               cvsram_s_axi_awvalid[KERNEL_NUM-1:0] ;
     wire                               cvsram_s_axi_awready[KERNEL_NUM-1:0] ;
     wire [8-1:0]                       cvsram_s_axi_awid   [KERNEL_NUM-1:0] ;
@@ -194,18 +194,18 @@ module nvdla_framework #(
     wire                               cvsram_s_axi_awlock [KERNEL_NUM-1:0] ;
     wire [4-1:0]                       cvsram_s_axi_awcache[KERNEL_NUM-1:0] ;
     wire [3-1:0]                       cvsram_s_axi_awprot [KERNEL_NUM-1:0] ;
-    /----------- Write Data Channel Signals of SRAM------------/
+    //----------- Write Data Channel Signals of SRAM------------/
     wire                               cvsram_s_axi_wvalid[KERNEL_NUM-1:0] ;
     wire                               cvsram_s_axi_wready[KERNEL_NUM-1:0] ;
     wire [#NVDLA_SRAM_DATA_WIDTH-1:0]  cvsram_s_axi_wdata [KERNEL_NUM-1:0] ;
     wire [#NVDLA_SRAM_DATA_WIDTH/8-1:0]cvsram_s_axi_wstrb [KERNEL_NUM-1:0] ;
     wire                               cvsram_s_axi_wlast [KERNEL_NUM-1:0] ;
-    /--------- Write Response Channel Signals of SRAM----------/
+    //--------- Write Response Channel Signals of SRAM----------/
     wire                               cvsram_s_axi_bvalid[KERNEL_NUM-1:0] ;
     wire                               cvsram_s_axi_bready[KERNEL_NUM-1:0] ;
     wire [8-1:0]                       cvsram_s_axi_bid   [KERNEL_NUM-1:0] ;
     wire [2-1:0]                       cvsram_s_axi_bresp [KERNEL_NUM-1:0] ;
-    /---------- Read Address Channel Signals of SRAM-----------/
+    //---------- Read Address Channel Signals of SRAM-----------/
     wire                               cvsram_s_axi_arvalid[KERNEL_NUM-1:0] ;
     wire                               cvsram_s_axi_arready[KERNEL_NUM-1:0] ;
     wire [8-1:0]                       cvsram_s_axi_arid   [KERNEL_NUM-1:0] ;
@@ -216,7 +216,7 @@ module nvdla_framework #(
     wire                               cvsram_s_axi_arlock [KERNEL_NUM-1:0] ;
     wire [4-1:0]                       cvsram_s_axi_arcache[KERNEL_NUM-1:0] ;
     wire [3-1:0]                       cvsram_s_axi_arprot [KERNEL_NUM-1:0] ;
-    /---------- Read Address Channel Signals of SRAM-----------/
+    //---------- Read Address Channel Signals of SRAM-----------/
     wire                               cvsram_s_axi_rvalid[KERNEL_NUM-1:0] ;
     wire                               cvsram_s_axi_rready[KERNEL_NUM-1:0] ;
     wire [8-1:0]                       cvsram_s_axi_rid   [KERNEL_NUM-1:0] ;
