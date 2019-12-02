@@ -1023,6 +1023,9 @@ module framework_afu (
 `ifdef ACTION_USER_CLOCK
     assign reset_action_q = reset_action_tmp || (!user_clock_enabled);
 
+    reg                 action_int_req_level;
+    reg [`INT_BITS-1:0] action_int_src_level;
+    reg [`CTXW-1:0]     action_int_ctx_level;
     reg                 int_req_q1;
     reg                 int_req_q2;
     reg [`INT_BITS-1:0] int_src_q1;
@@ -1030,14 +1033,32 @@ module framework_afu (
     reg [`CTXW-1:0]     int_ctx_q1;
     reg [`CTXW-1:0]     int_ctx_q2;
 
+    always@(posedge clock_act or posedge reset_action_q)
+    begin
+        if(reset_action_q)
+            action_int_req_level <= 1'b0;
+        if(action_int_req_ack)
+            action_int_req_level <= 1'b0;
+        else if(action_int_req)
+            action_int_req_level <= 1'b1;
+    end
+
+    always@(posedge clock_act)
+    begin
+        if(action_int_req)
+        begin
+            action_int_src_level <= action_int_src;
+            action_int_ctx_level <= action_int_ctx;
+        end
+    end
 
     always@(posedge clock_afu)
     begin
-        int_req_q1 <= action_int_req;
+        int_req_q1 <= action_int_req_level;
         int_req_q2 <= int_req_q1;
-        int_src_q1 <= action_int_src;
+        int_src_q1 <= action_int_src_level;
         int_src_q2 <= int_src_q1;
-        int_ctx_q1 <= action_int_ctx;
+        int_ctx_q1 <= action_int_ctx_level;
         int_ctx_q2 <= int_ctx_q1;
     end
 
