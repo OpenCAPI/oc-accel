@@ -4488,7 +4488,9 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k extends bfm_seque
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
 		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        //randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);};
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
