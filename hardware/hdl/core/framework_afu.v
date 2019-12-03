@@ -1037,7 +1037,7 @@ module framework_afu (
     begin
         if(reset_action_q)
             action_int_req_level <= 1'b0;
-        if(action_int_req_ack)
+        else if(action_int_req_ack)
             action_int_req_level <= 1'b0;
         else if(action_int_req)
             action_int_req_level <= 1'b1;
