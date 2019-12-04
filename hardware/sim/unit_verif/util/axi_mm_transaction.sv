@@ -1,9 +1,19 @@
+/*
+ * Copyright 2019 International Business Machines
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// ****************************************************************
-// (C) Copyright International Business Machines Corporation 2017
-//              All Rights Reserved -- Property of IBM
-//                     *** IBM Confidential ***
-// ****************************************************************
 //------------------------------------------------------------------------------
 //
 // CLASS: axi_mm_transaction
@@ -21,7 +31,7 @@ class axi_mm_transaction extends uvm_sequence_item;
     rand bit [255:0][1023:0]  data;
     rand bit [255:0][127:0]   data_strobe;
     rand bit [7:0]            axi_id;
-    rand bit [7:0]            axi_usr;
+    rand bit [8:0]            axi_usr;
     rand int                  byte_size;           // value of 2^arsize/awsize
     rand int                  burst_length;        // arlen/awlen+1
     rand uvm_axi_txn_e        trans;

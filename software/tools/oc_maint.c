@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 International Business Machines
+ * Copyright 2019 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,10 +76,18 @@ struct mdev_ctx {
     bool quiet;                /* False or true -q option */
     pid_t pid;
     pid_t my_sid;                /* for sid */
+	int mode;		/* See below */
     uint64_t fir[SNAP_M_FIR_NUM];
 };
 
 static struct mdev_ctx        master_ctx;
+
+#define MODE_SHOW_ACTION  0x0001
+#define MODE_SHOW_NVME    0x0002
+#define MODE_SHOW_CARD    0x0004
+#define MODE_SHOW_SDRAM   0x0008
+#define MODE_SHOW_DMA_ALIGN 0x00010
+#define MODE_SHOW_DMA_MIN   0x00020
 
 /*
  * Open AFU Master Device
@@ -260,6 +268,35 @@ static int snap_action_info (void* handle)
     return rc;
 }
 
+/* Leave a space at each end in the print line so that it can use -m1 -m2 ... */
+static void snap_show_cap(void *handle, int mode)
+{
+	unsigned long val;
+
+	if (MODE_SHOW_NVME == (MODE_SHOW_NVME & mode)) {
+		snap_card_ioctl(handle, GET_NVME_ENABLED, (unsigned long)&val);
+		if (1 == val)
+			VERBOSE0("NVME ");
+	}
+	if (MODE_SHOW_SDRAM == (MODE_SHOW_SDRAM & mode)) {
+		snap_card_ioctl(handle, GET_SDRAM_SIZE, (unsigned long)&val);
+		if (0 != val)
+			VERBOSE0("%d ", (int)val);
+	}
+	if (MODE_SHOW_CARD == (MODE_SHOW_CARD & mode)) {
+		char buffer[16];
+		snap_card_ioctl(handle, GET_CARD_NAME, (unsigned long)&buffer);
+		VERBOSE0("%s ", buffer);
+	}
+	if (MODE_SHOW_DMA_ALIGN == (MODE_SHOW_DMA_ALIGN & mode)) {
+		snap_card_ioctl(handle, GET_DMA_ALIGN, (unsigned long)&val);
+		VERBOSE0("%d ", (int)val);
+	}
+	if (MODE_SHOW_DMA_MIN == (MODE_SHOW_DMA_MIN & mode)) {
+		snap_card_ioctl(handle, GET_DMA_MIN_SIZE, (unsigned long)&val);
+		VERBOSE0("%d ", (int)val);
+	}
+}
 
 static void help (char* prog)
 {
@@ -269,6 +306,13 @@ static void help (char* prog)
             "\t-h, --help                This help message\n"
             "\t-q, --quiet                No output at all\n"
             "\t-v, --verbose        \tverbose mode, up to -vvv\n"
+	        "\t-m, --mode		Mode:\n"
+	        "\t	1 = Show Action number only\n"
+	        "\t	2 = Show NVME if enabled\n"
+	        "\t	3 = Show SDRAM Size in MB\n"
+	        "\t	4 = Show Card\n"
+	        "\t	5 = Show DMA Alignment\n"
+	        "\t	6 = Show DMA Minimum Transfer Size\n"
             "\n"
             "\n", prog);
 }
@@ -282,6 +326,7 @@ int main (int argc, char* argv[])
     int ch;
     unsigned int i;
     struct mdev_ctx* mctx = &master_ctx;
+    int mode;
 
     fd_out = stdout;        /* Default */
 
@@ -291,6 +336,7 @@ int main (int argc, char* argv[])
     mctx->dt = 1;                /* Default, 1 sec delay time */
     mctx->count = -1;        /* Default, run forever */
     mctx->card = 0;                /* Default, Card 0 */
+	mctx->mode = 0;		    /* Default, nothing to watch */
     mctx->daemon = false;        /* Not in Daemon mode */
 
     for (i = 0; i < SNAP_M_FIR_NUM; i++) {
@@ -310,9 +356,10 @@ int main (int argc, char* argv[])
             { "count",        required_argument, NULL, 'c' },
             { "interval",        required_argument, NULL, 'i' },
             { "daemon",        no_argument,           NULL, 'd' },
+			{ "mode",	required_argument, NULL, 'm' },
             { 0,                0,                   NULL,  0  }
         };
-        ch = getopt_long (argc, argv, "C:c:i:Vqhvd",
+        ch = getopt_long (argc, argv, "C:c:i:m:Vqhvd",
                           long_options, &option_index);
 
         if (-1 == ch) {
@@ -359,6 +406,22 @@ int main (int argc, char* argv[])
             mctx->daemon = true;
             break;
 
+		case 'm':	/* --mode */
+			mode = strtoul(optarg, NULL, 0);
+			switch (mode) {
+			case 1: mctx->mode |= MODE_SHOW_ACTION; break;
+			case 2: mctx->mode |= MODE_SHOW_NVME; break;
+			case 3: mctx->mode |= MODE_SHOW_SDRAM; break;
+			case 4: mctx->mode |= MODE_SHOW_CARD; break;
+			case 5: mctx->mode |= MODE_SHOW_DMA_ALIGN; break;
+			case 6: mctx->mode |= MODE_SHOW_DMA_MIN; break;
+			default:
+				fprintf(stderr, "Please provide correct "
+					"Mode Option (1..6)\n");
+				exit(EXIT_FAILURE);
+			}
+			break;
+
         default:
             help (argv[0]);
             exit (EXIT_FAILURE);
@@ -387,6 +450,8 @@ int main (int argc, char* argv[])
 
     rc = snap_action_info (mctx->handle);
 
+	/* Show Capabilities for different modes */
+	snap_show_cap(mctx->handle, mctx->mode);
 
     //if (0 != rc)
     goto __main_exit;        /* Exit here.... for now */

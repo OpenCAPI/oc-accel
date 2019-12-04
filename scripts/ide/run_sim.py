@@ -46,7 +46,7 @@ from ocaccel_utils import msg
 class SimSession:
     def __init__(self, simulator_name = 'xsim', testcase_cmd = 'snap_example', testcase_args = "",\
                  ocse_root = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
-                 sim_timeout = 60, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
+                 sim_timeout = 600, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
         # prepare the environment
         self.simulator_name = simulator_name
         self.testcase_cmd = testcase_cmd
@@ -66,7 +66,7 @@ class SimSession:
         self.simulator = Simulator(simulator_name, self.ocaccel_root, self.sim_timeout, self.unit_sim, self.sv_seed, self.unit_test, self.uvm_ver, self.wave)
         # No OCSE if in unit sim mode
         if self.unit_sim == False:
-            self.ocse = OCSE(ocse_root, self.simulator.simout)
+            self.ocse = OCSE(ocse_root, self.simulator.simout, self.sim_timeout)
         self.testcase = Testcase(testcase_cmd, self.simulator.simout, testcase_args)
 
     def run(self):
@@ -247,7 +247,7 @@ class Simulator:
             if self.wave:
                 sim_args += " -input ncaet.tcl"
             sim_args += " -input ncrun.tcl -r"
-            unit_args = "".join(("+UVM_TESTNAME=", self.unit_test, " -seed ", self.sv_seed, " +UVM_VERBOSITY=", self.uvm_ver))
+            unit_args = "".join(("+UVM_TESTNAME=", self.unit_test, " -seed ", self.sv_seed, " +UVM_VERBOSITY=", self.uvm_ver, " -coverage a -covfile ", self.ocaccel_root, "/hardware/setup/cov.ccf", " -covoverwrite -covtest ", self.unit_test))
             if self.unit_sim == False:
                 sim_top  = "work.top"
             else:
@@ -335,10 +335,10 @@ class Simulator:
         msg.header_msg(" Simulator running successfully on socket: %s" % host_shim)
 
 class OCSE:
-    def __init__(self, ocse_root = os.path.abspath('../ocse'), simout = '.'):
+    def __init__(self, ocse_root = os.path.abspath('../ocse'), simout = '.', timeout = 300):
         self.ocse_root = ocse_root
         self.simout = simout
-        self.timeout = 30
+        self.timeout = timeout
         self.ocse_pid = None
         self.setup()
 
@@ -379,7 +379,7 @@ class OCSE:
         ocse_server_dat_line = None
         progress_bar_size = 30
         for i in range(self.timeout):
-            sleep(0.25)
+            sleep(1)
             progress_bar(i, self.timeout, progress_bar_size)
             ocse_server_dat_line = grep_file(self.ocse_log, "listening on")
             if ocse_server_dat_line is not None:
@@ -426,6 +426,7 @@ class Testcase:
                 msg.ok_msg("An xterm (terminal) is chosen to run, ")
                 msg.ok_msg("please refer to the results of commands")
                 msg.ok_msg("you've ran in the terminal for testcase status.")
+                msg.ok_msg(" To display traces, execute: ./display_traces")
                 msg.ok_msg("================================================")
             else:
                 msg.ok_msg("============")

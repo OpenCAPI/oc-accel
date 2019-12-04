@@ -23,4 +23,5 @@
  set pack_assert_off { ieee.std_logic_arith ieee.numeric_std }
 #run 50000 ns					;# limit test length
  run 						;# runforever, until application closes sim
+ assertion -summary
  exit

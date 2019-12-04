@@ -84,8 +84,11 @@ function test_helloworld {
     echo -n "Check results ... "
     diff tout tCAP 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
-	echo "failed"
-	echo "  Out and expected files are different!"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "                 TEST FAILED !"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	echo "       Out and expected files are different!"
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	exit 1
     fi
     echo "ok"
@@ -95,10 +98,15 @@ function test_helloworld {
 rm -f snap_helloworld.log
 touch snap_helloworld.log
 
-if [ "$duration" = "NORMAL" ]; then
+# Whatever duration is, we run the test
+# duration is used to run short test in simulation for example
+# helloworld is short by nature, so we can ignore duration setting
+# if [ "$duration" = "NORMAL" ]; then
   test_helloworld 
-  fi
+#  fi
 
 rm -f *.bin *.bin *.out
+echo "------------------------------------------------------"
 echo "Test OK"
+echo "------------------------------------------------------"
 exit 0

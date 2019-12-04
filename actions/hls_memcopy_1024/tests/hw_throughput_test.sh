@@ -32,30 +32,34 @@ echo "ACTION_ROOT : ${ACTION_ROOT}"
 function usage() {
     echo "Usage:"
     echo "  test_<action_type>.sh"
-    echo "    [-C <card>] card to be used for the test"
+    echo "    [-C <card>] card number to be used for the test"
     echo "    [-t <trace_level>]"
+    echo "    [-N ] No Interrupt and poll done bit"
     echo "    [-d SHORT/NORMAL/LONG/INCR] 512B / 512KB / 512MB / INCR transfer tests"
     echo
 }
 
-while getopts ":C:t:d:h" opt; do
+while getopts ":C:t:d:Nh" opt; do
     case $opt in
-	C)
-	snap_card=$OPTARG;
-	;;
-	t)
-	export SNAP_TRACE=$OPTARG;
-	;;
-	d)
-	duration=$OPTARG;
-	;;
-	h)
-	usage;
-	exit 0;
-	;;
-	\?)
-	echo "Invalid option: -$OPTARG" >&2
-	;;
+    C)
+    snap_card=$OPTARG;
+    ;;
+    t)
+    export SNAP_TRACE=$OPTARG;
+    ;;
+    d)
+    duration=$OPTARG;
+    ;;
+    N)
+    noirq=" -N ";
+    ;;
+    h)
+    usage;
+    exit 0;
+    ;;
+    \?)
+    echo "Invalid option: -$OPTARG" >&2
+    ;;
     esac
 done
 
@@ -66,11 +70,11 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 # [ -z "$STATE" ] && echo "Need to set STATE" && exit 1;
 
 if [ -z "$SNAP_CONFIG" ]; then
-	echo "Get CARD VERSION"
-	#snap_maint -C ${snap_card} -v || exit 1;
-#	snap_peek -C ${snap_card} 0x0 || exit 1;
-#	snap_peek -C ${snap_card} 0x8 || exit 1;
-#	echo
+    echo "Get CARD VERSION"
+    #snap_maint -C ${snap_card} -v || exit 1;
+#    snap_peek -C ${snap_card} 0x0 || exit 1;
+#    snap_peek -C ${snap_card} 0x8 || exit 1;
+#    echo
 fi
 
 #### MEMCOPY ##########################################################
@@ -79,18 +83,18 @@ function test_memcopy {
 echo "---------------- Testing size $1: --------------"
 local size=$1
 if [ ${size} -gt 1073741824 ]; then
-	blk_count=$((${size}/1073741824))
-	echo "$blk_count"
+    blk_count=$((${size}/1073741824))
+    echo "$blk_count"
         unit_name="GB"
         echo "Creating a" $blk_count "GBytes file ... takes serveral minutes or so ..."
         dd if=/dev/urandom of=temp_A.bin count=${blk_count} bs=1G 2> dd.log
 elif [ ${size} -gt 1048576 ]; then
-	blk_count=$((${size}/1048576))
+    blk_count=$((${size}/1048576))
         unit_name="MB"
         echo "Creating a" $blk_count "MBytes file ... takes a minute or so ..."
         dd if=/dev/urandom of=temp_A.bin count=${blk_count} bs=1M 2> dd.log
 elif [ ${size} -gt 1024 ]; then
-	blk_count=$((${size}/1024))
+    blk_count=$((${size}/1024))
         unit_name="KB"
         echo "Creating a" $blk_count "KBytes file ... "
         dd if=/dev/urandom of=temp_A.bin count=${blk_count} bs=1K 2> dd.log
@@ -104,92 +108,96 @@ fi
 #    echo "Doing snap_memcopy benchmarking with" ${size} "bytes transfers ... "
 
     echo -n "Read from Host Memory to FPGA ... "
-    cmd="snap_memcopy -C${snap_card} 	\
-		-i temp_A.bin	>>	\
-		snap_memcopy.log 2>&1"
+    cmd="snap_memcopy -C${snap_card} ${noirq}     \
+        -i temp_A.bin    >>    \
+        memcopy_throughput.log 2>&1"
+    echo ${cmd} >> memcopy_throughput.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_memcopy.log
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
+        echo "cmd: ${cmd}"
+        echo "failed, please check memcopy_throughput.log"
+        exit 1
     fi
     echo "ok"
 
     echo -n "Write from FPGA to Host Memory ... "
-    cmd="snap_memcopy -C${snap_card} 	\
-		-o temp_A.out		\
-		-s ${size} 	>>	\
-		snap_memcopy.log 2>&1"
+    cmd="snap_memcopy -C${snap_card} ${noirq}    \
+        -o temp_A.out        \
+        -s ${size}     >>    \
+        memcopy_throughput.log 2>&1"
+    echo ${cmd} >> memcopy_throughput.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_memcopy.log
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
+        echo "cmd: ${cmd}"
+        echo "failed, please check memcopy_throughput.log"
+        exit 1
     fi
     echo "ok"
 
     echo -n "Read from Card DDR Memory to FPGA ... "
-    cmd="snap_memcopy -C${snap_card} 	\
-		-A CARD_DRAM -a 0x0	\
-		-s ${size} 	>>	\
-		snap_memcopy.log 2>&1"
+    cmd="snap_memcopy -C${snap_card}     ${noirq}\
+        -A CARD_DRAM -a 0x0    \
+        -s ${size}     >>    \
+        memcopy_throughput.log 2>&1"
+    echo ${cmd} >> memcopy_throughput.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_memcopy.log
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
+        echo "cmd: ${cmd}"
+        echo "failed, please check memcopy_throughput.log"
+        exit 1
     fi
     echo "ok"
 
     echo -n "Write from FPGA to Card DDR Memory ... "
-    cmd="snap_memcopy -C${snap_card} 	\
-		-D CARD_DRAM -d 0x0	\
-		-s ${size} 	>>	\
-		snap_memcopy.log 2>&1"
+    cmd="snap_memcopy -C${snap_card}     ${noirq}\
+        -D CARD_DRAM -d 0x0    \
+        -s ${size}     >>    \
+        memcopy_throughput.log 2>&1"
+    echo ${cmd} >> memcopy_throughput.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_memcopy.log
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
+        echo "cmd: ${cmd}"
+        echo "failed, please check memcopy_throughput.log"
+        exit 1
     fi
     echo "ok"
 }
 
-rm -f snap_memcopy.log
-touch snap_memcopy.log
+rm -f memcopy_throughput.log
+touch memcopy_throughput.log
 
 if [ "$duration" = "SHORT" ]; then
-	size=512
-	test_memcopy ${size}
+    size=512
+    test_memcopy ${size}
 fi
 if [ "$duration" = "NORMAL" ]; then
-	size=524288
-	test_memcopy ${size}
+    size=524288
+    test_memcopy ${size}
 fi
 if [ "$duration" = "LONG" ]; then
-	size=536870912
-	test_memcopy ${size}
+    size=536870912
+    test_memcopy ${size}
 fi
 
 #echo
 #echo "READ/WRITE Performance Results"
-#grep "memcopy of" snap_memcopy.log
+#grep "memcopy of" memcopy_throughput.log
 #echo
 
 ############## INCR Also do some awk processing ##############
 if [ "$duration" = "INCR" ]; then
-	size=512
-	exp=9
-	while [ $exp -lt 34 ]
-	do
-		test_memcopy ${size}
-		exp=$(($exp + 1))
-		size=$(($size * 2))
-	done
+    size=512
+    exp=9
+  # -lt 31 means 1GB
+  # -lt 32 means 2GB
+  # -lt 33 means 4GB
+  # -lt 34 means 8GB
+    while [ $exp -lt 31 ]
+    do
+        test_memcopy ${size}
+        exp=$(($exp + 1))
+        size=$(($size * 2))
+    done
 fi
 #Print build date and version
 echo
@@ -197,8 +205,7 @@ echo -n "Git Version: "
 snap_peek -C ${snap_card} 0x0 || exit 1;
 echo -n "Build Date:  "
 snap_peek -C ${snap_card} 0x8 || exit 1;
-./process.awk snap_memcopy.log
-
+${ACTION_ROOT}/tests/process.awk snap_memcopy.log
 
 echo "ok"
 
