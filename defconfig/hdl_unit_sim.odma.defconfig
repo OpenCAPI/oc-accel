@@ -65,6 +65,7 @@ Action_clock_200MHz=y
 # Action_clock_350MHz is not set
 # Action_clock_400MHz is not set
 USER_CLOCK_FREQ=200
+HLS_CLOCK_PERIOD_CONSTRAINT="4ns"
 # ENABLE_ILA is not set
 ILA_DEBUG="FALSE"
 CLOUD_USER_FLOW="FALSE"

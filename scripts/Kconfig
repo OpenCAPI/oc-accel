@@ -602,6 +602,14 @@ config ACTION_USER_CLOCK
 	  Input 'Y' if your action's clock frequency is not 200MHz.
 	  Leave it unchecked if it is 200MHz.
 
+config HLS_CLOCK_PERIOD_CONSTRAINT
+	prompt "The clock period constrant used when hls is compiled to rtl, only used for hls action"
+	string
+	default "4ns"
+	range "1ns" "20ns"
+	help
+	  The clock period constrant in "ns" used when hls is compiled to rtl, 
+
 #config ENABLE_PRFLOW
 #	bool "Cloud build (enabling Partial Reconfiguration)"
 #	help
