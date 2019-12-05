@@ -459,7 +459,6 @@ static double get_variance (double *bandwidth_array, uint32_t test_count, double
     uint32_t i;
     double variance_sum = 0;
     double variance;
-    double deviation;
     double bandwidth;
     double * ptr_bandwidth = (double*) bandwidth_array;
 
@@ -511,7 +510,6 @@ int main (int argc, char* argv[])
     int cmd;
     int rc = 1;
     uint32_t i;
-    uint64_t cir;
     uint32_t timeout = ACTION_WAIT_TIME;
     snap_action_flag_t attach_flags = 0;
     struct snap_action* act = NULL;
@@ -704,8 +702,8 @@ int main (int argc, char* argv[])
 
     rtotal_bytes = (uint64_t)rnum * (uint64_t)rblen * (uint64_t)rwidth;
     wtotal_bytes = (uint64_t)wnum * (uint64_t)wblen * (uint64_t)wwidth;
-    VERBOSE0 ("Read total bytes is: %d\n", rtotal_bytes);
-    VERBOSE0 ("Write total bytes is: %d\n", wtotal_bytes);
+    VERBOSE0 ("Read total bytes is: %ld\n", rtotal_bytes);
+    VERBOSE0 ("Write total bytes is: %ld\n", wtotal_bytes);
 
     if(wrap_pattern == 0){
         src_base = alloc_mem (size_4KB, rtotal_bytes);

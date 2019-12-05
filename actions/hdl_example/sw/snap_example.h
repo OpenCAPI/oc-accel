@@ -24,7 +24,7 @@
 #include <osnap_hls_if.h>
 
 /* Header file for SNAP Framework example code */
-#define ACTION_TYPE_EXAMPLE     0x10140000	/* Action Type */
+#define ACTION_TYPE_EXAMPLE     0x10142000	/* Action Type */
 
 #define ACTION_CONFIG           0x30
 #define ACTION_CONFIG_COUNT     1       /* Count Mode */

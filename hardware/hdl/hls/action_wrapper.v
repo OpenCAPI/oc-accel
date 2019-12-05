@@ -41,7 +41,7 @@ module action_wrapper (
    output                                  s_axi_ctrl_reg_wready    ,
    input [(`AXI_LITE_DW/8)-1 : 0]           s_axi_ctrl_reg_wstrb     ,
    input                                   s_axi_ctrl_reg_wvalid    ,
-   `ifdef ENABLE_DDR
+`ifdef ENABLE_AXI_CARD_MEM
    output [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0]  m_axi_card_mem0_araddr   ,
    output [ 1 : 0]                         m_axi_card_mem0_arburst  ,
    output [ 3 : 0]                         m_axi_card_mem0_arcache  ,
@@ -158,7 +158,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
  hls_action hls_action_0 (
     .ap_clk                       ( ap_clk                  ) ,
     .ap_rst_n                     ( hls_rst_n_q             ) ,
-`ifdef ENABLE_DDR
+`ifdef ENABLE_AXI_CARD_MEM
     .m_axi_card_mem0_araddr       (temp_card_mem0_araddr    ) ,
     .m_axi_card_mem0_arburst      (m_axi_card_mem0_arburst  ) ,
     .m_axi_card_mem0_arcache      (m_axi_card_mem0_arcache  ) ,
@@ -345,8 +345,10 @@ assign  m_axi_host_mem_awid  [ `IDW-1 : 1 ] = 'b0;
 //assign  m_axi_host_mem_wuser [ `AXI_WUSER-1 : 1 ] = 'b0;
 
 
-`ifdef ENABLE_DDR
+`ifdef ENABLE_AXI_CARD_MEM
 assign m_axi_card_mem0_araddr = temp_card_mem0_araddr[`AXI_CARD_MEM_ADDR_WIDTH-1:0];
 assign m_axi_card_mem0_awaddr = temp_card_mem0_awaddr[`AXI_CARD_MEM_ADDR_WIDTH-1:0];
+assign m_axi_card_mem0_arid  [ `AXI_CARD_MEM_ID_WIDTH-1 : 1 ] = 'b0;
+assign m_axi_card_mem0_awid  [ `AXI_CARD_MEM_ID_WIDTH-1 : 1 ] = 'b0;
 `endif
 endmodule

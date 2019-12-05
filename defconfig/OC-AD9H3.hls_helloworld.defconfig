@@ -1,0 +1,79 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# Kernel Configuration
+#
+# AD9V3 is not set
+AD9H3=y
+# AD9H7 is not set
+FPGACARD="AD9H3"
+FLASH_INTERFACE="SPIx8"
+FLASH_SIZE="64"
+FLASH_FACTORYADDR="0x00000000"
+FLASH_USERADDR="0x08000000"
+OPENCAPI30=y
+CAPI_VER="opencapi30"
+FPGACHIP="xcvu33p-fsvh2104-2-e"
+NUM_OF_ACTIONS=1
+# HLS_ACTION is not set
+# HDL_ACTION is not set
+# HDL_EXAMPLE is not set
+# HDL_SINGLE_ENGINE is not set
+# HDL_MULTI_PROCESS is not set
+# HDL_DATABASE is not set
+# HDL_NVDLA is not set
+# HDL_UNIT_SIM is not set
+HLS_HELLOWORLD=y
+# HLS_MEMCOPY_1024 is not set
+ACTION_HALF_WIDTH=y
+HALF_WIDTH="TRUE"
+ENABLE_HLS_SUPPORT=y
+HLS_SUPPORT="TRUE"
+DISABLE_SDRAM_AND_BRAM=y
+# FORCE_SDRAM_OR_BRAM is not set
+SDRAM_USED="FALSE"
+HBM_USED="FALSE"
+BRAM_USED="FALSE"
+DDR3_USED="FALSE"
+DDR4_USED="FALSE"
+DDRI_USED="FALSE"
+DISABLE_NVME=y
+# FORCE_NVME is not set
+NVME_USED="FALSE"
+USER_CLOCK="FALSE"
+# ACTION_USER_CLOCK is not set
+SIM_XSIM=y
+# SIM_IRUN is not set
+# SIM_XCELIUM is not set
+# SIM_MODELSIM is not set
+# SIM_QUESTA is not set
+# NO_SIM is not set
+SIMULATOR="xsim"
+DENALI_USED="FALSE"
+OCSE_PATH="../ocse"
+
+#
+# ================= Advanced Options: =================
+#
+SPEED_25G=y
+# SPEED_20G is not set
+PHY_SPEED="25.78125"
+AXI_ID_WIDTH=3
+# 50MHz is not set
+# 100MHz is not set
+# 150MHz is not set
+200MHz=y
+# 250MHz is not set
+# 300MHz is not set
+# 350MHz is not set
+# 400MHz is not set
+USER_CLOCK_FREQ=200
+HLS_CLOCK_PERIOD_CONSTRAINT="4ns"
+# ENABLE_ILA is not set
+ILA_DEBUG="FALSE"
+CLOUD_USER_FLOW="FALSE"
+CLOUD_BUILD_BITFILE="FALSE"
+UNIT_SIM_USED="FALSE"
+# ENABLE_ODMA is not set
+ODMA_USED="FALSE"
+# ENABLE_FLASH is not set
+FLASH_USED="FALSE"
