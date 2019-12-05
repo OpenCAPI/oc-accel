@@ -562,6 +562,28 @@ config ODMA_USED
 	default "TRUE"  if ENABLE_ODMA
 	default "FALSE" if ! ENABLE_ODMA
 
+config ENABLE_ODMA_ST_MODE
+	bool "Enable ODMA AXI4-Stream data transfer mode."
+    default n
+	help
+	   Enable ODMA Stream mode.
+
+config ODMA_ST_MODE_USED
+	string
+	default "TRUE"  if ENABLE_ODMA_ST_MODE
+	default "FALSE" if ! ENABLE_ODMA_ST_MODE
+
+config ENABLE_ODMA_512
+	bool "Enable ODMA data transfer with 512b data width."
+    default n
+	help
+	   Enable ODMA data width with 512bits.
+
+config ODMA_512_USED
+	string
+	default "TRUE"  if ENABLE_ODMA_512
+	default "FALSE" if ! ENABLE_ODMA_512
+
 config ENABLE_FLASH
 	bool "Enable FLASH"
     default n

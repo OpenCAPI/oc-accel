@@ -296,50 +296,67 @@ module framework_afu (
   wire [`CTXW-1:0]            int_ctx         ;
 
 `ifdef ENABLE_ODMA
-  wire [`AXI_MM_AW-1:0]       axi_mm_awaddr   ;
-  wire [`IDW-1:0]             axi_mm_awid     ;
-  wire [7:0]                 axi_mm_awlen    ;
-  wire [2:0]                 axi_mm_awsize   ;
-  wire [1:0]                 axi_mm_awburst  ;
-  wire [2:0]                 axi_mm_awprot   ;
-  wire [3:0]                 axi_mm_awqos    ;
-  wire [3:0]                 axi_mm_awregion ;
-  wire [`AXI_AWUSER-1:0]      axi_mm_awuser   ;
-  wire                       axi_mm_awvalid  ;
-  wire [1:0]                 axi_mm_awlock   ;
-  wire [3:0]                 axi_mm_awcache  ;
-  wire                       axi_mm_awready  ;
-  wire [`AXI_MM_DW-1:0]       axi_mm_wdata    ;
-  wire                       axi_mm_wlast    ;
-  wire [`AXI_MM_DW/8-1:0]     axi_mm_wstrb    ;
-  wire                       axi_mm_wvalid   ;
-  wire [`AXI_WUSER-1:0]       axi_mm_wuser    ;
-  wire                       axi_mm_wready   ;
-  wire                       axi_mm_bvalid   ;
-  wire [1:0]                 axi_mm_bresp    ;
-  wire [`IDW-1:0]             axi_mm_bid      ;
-  wire [`AXI_BUSER-1:0]       axi_mm_buser    ;
-  wire                       axi_mm_bready   ;
-  wire [`AXI_MM_AW-1:0]       axi_mm_araddr   ;
-  wire [1:0]                 axi_mm_arburst  ;
-  wire [3:0]                 axi_mm_arcache  ;
-  wire [`IDW-1:0]             axi_mm_arid     ;
-  wire [7:0]                 axi_mm_arlen    ;
-  wire [1:0]                 axi_mm_arlock   ;
-  wire [2:0]                 axi_mm_arprot   ;
-  wire [3:0]                 axi_mm_arqos    ;
-  wire                       axi_mm_arready  ;
-  wire [3:0]                 axi_mm_arregion ;
-  wire [2:0]                 axi_mm_arsize   ;
-  wire [`AXI_ARUSER-1:0]      axi_mm_aruser   ;
-  wire                       axi_mm_arvalid  ;
-  wire [`AXI_MM_DW-1:0]       axi_mm_rdata    ;
-  wire [`IDW-1:0]             axi_mm_rid      ;
-  wire                       axi_mm_rlast    ;
-  wire                       axi_mm_rready   ;
-  wire [1:0]                 axi_mm_rresp    ;
-  wire [`AXI_RUSER-1:0]       axi_mm_ruser    ;
-  wire                       axi_mm_rvalid   ;
+    `ifndef ENABLE_ODMA_ST_MODE
+        wire [`AXI_MM_AW-1:0]       axi_mm_awaddr   ;
+        wire [`IDW-1:0]             axi_mm_awid     ;
+        wire [7:0]                 axi_mm_awlen    ;
+        wire [2:0]                 axi_mm_awsize   ;
+        wire [1:0]                 axi_mm_awburst  ;
+        wire [2:0]                 axi_mm_awprot   ;
+        wire [3:0]                 axi_mm_awqos    ;
+        wire [3:0]                 axi_mm_awregion ;
+        wire [`AXI_AWUSER-1:0]      axi_mm_awuser   ;
+        wire                       axi_mm_awvalid  ;
+        wire [1:0]                 axi_mm_awlock   ;
+        wire [3:0]                 axi_mm_awcache  ;
+        wire                       axi_mm_awready  ;
+        wire [`AXI_MM_DW-1:0]       axi_mm_wdata    ;
+        wire                       axi_mm_wlast    ;
+        wire [`AXI_MM_DW/8-1:0]     axi_mm_wstrb    ;
+        wire                       axi_mm_wvalid   ;
+        wire [`AXI_WUSER-1:0]       axi_mm_wuser    ;
+        wire                       axi_mm_wready   ;
+        wire                       axi_mm_bvalid   ;
+        wire [1:0]                 axi_mm_bresp    ;
+        wire [`IDW-1:0]             axi_mm_bid      ;
+        wire [`AXI_BUSER-1:0]       axi_mm_buser    ;
+        wire                       axi_mm_bready   ;
+        wire [`AXI_MM_AW-1:0]       axi_mm_araddr   ;
+        wire [1:0]                 axi_mm_arburst  ;
+        wire [3:0]                 axi_mm_arcache  ;
+        wire [`IDW-1:0]             axi_mm_arid     ;
+        wire [7:0]                 axi_mm_arlen    ;
+        wire [1:0]                 axi_mm_arlock   ;
+        wire [2:0]                 axi_mm_arprot   ;
+        wire [3:0]                 axi_mm_arqos    ;
+        wire                       axi_mm_arready  ;
+        wire [3:0]                 axi_mm_arregion ;
+        wire [2:0]                 axi_mm_arsize   ;
+        wire [`AXI_ARUSER-1:0]      axi_mm_aruser   ;
+        wire                       axi_mm_arvalid  ;
+        wire [`AXI_MM_DW-1:0]       axi_mm_rdata    ;
+        wire [`IDW-1:0]             axi_mm_rid      ;
+        wire                       axi_mm_rlast    ;
+        wire                       axi_mm_rready   ;
+        wire [1:0]                 axi_mm_rresp    ;
+        wire [`AXI_RUSER-1:0]       axi_mm_ruser    ;
+        wire                       axi_mm_rvalid   ;
+    `else
+        wire                        m_axis_tready    ; 
+        wire                        m_axis_tlast     ; 
+        wire [`AXI_ST_DW - 1:0]      m_axis_tdata     ; 
+        wire [`AXI_ST_DW/8 - 1:0]    m_axis_tkeep     ; 
+        wire                        m_axis_tvalid    ; 
+        wire [`IDW - 1:0]           m_axis_tid        ; 
+        wire [`AXI_ST_USER - 1:0]    m_axis_tuser     ; 
+        wire                        s_axis_tready    ; 
+        wire                        s_axis_tlast     ; 
+        wire [`AXI_ST_DW - 1:0]      s_axis_tdata     ; 
+        wire [`AXI_ST_DW/8 - 1:0]    s_axis_tkeep     ; 
+        wire                        s_axis_tvalid    ; 
+        wire [`IDW - 1:0]           s_axis_tid       ; 
+        wire [`AXI_ST_USER - 1:0]    s_axis_tuser     ; 
+    `endif
   //
   //ActionAXI-LiteslaveInterface
   wire                       a_s_axi_arvalid ;
@@ -969,6 +986,7 @@ module framework_afu (
 
 `else
       // ODMA mode: AXI4-MM Interface to action
+   `ifndef ENABLE_ODMA_ST_MODE
       .axi_mm_awaddr                      ( axi_mm_awaddr  ),
       .axi_mm_awid                        ( axi_mm_awid    ),
       .axi_mm_awlen                       ( axi_mm_awlen   ),
@@ -1013,6 +1031,22 @@ module framework_afu (
       .axi_mm_rresp                       ( axi_mm_rresp   ),
       .axi_mm_ruser                       ( axi_mm_ruser   ),
       .axi_mm_rvalid                      ( axi_mm_rvalid  ),
+   `else
+      .m_axis_tready                      ( m_axis_tready  ),
+      .m_axis_tlast                       ( m_axis_tlast   ),
+      .m_axis_tdata                       ( m_axis_tdata   ),
+      .m_axis_tkeep                       ( m_axis_tkeep   ),
+      .m_axis_tvalid                      ( m_axis_tvalid  ),
+      .m_axis_tid                         ( m_axis_tid     ),
+      .m_axis_tuser                       ( m_axis_tuser   ),
+      .s_axis_tready                      ( s_axis_tready  ),
+      .s_axis_tlast                       ( s_axis_tlast   ),
+      .s_axis_tdata                       ( s_axis_tdata   ),
+      .s_axis_tkeep                       ( s_axis_tkeep   ),
+      .s_axis_tvalid                      ( s_axis_tvalid  ),
+      .s_axis_tid                         ( s_axis_tid   ),
+      .s_axis_tuser                       ( s_axis_tuser   ),
+   `endif 
       // To Action: AXI_Lite Slave Interface
       .a_s_axi_arvalid                    ( a_s_axi_arvalid ),
       .a_s_axi_araddr                     ( a_s_axi_araddr  ),
@@ -1198,7 +1232,7 @@ module framework_afu (
       .interrupt                             ( int_req                 ) ,
       .interrupt_src                         ( int_src                 ) ,
       .interrupt_ctx                         ( int_ctx                 ) ,
-
+`ifndef ENABLE_ODMA_ST_MODE
       .axi_mm_araddr                         ( axi_mm_araddr           ) ,
       .axi_mm_arburst                        ( axi_mm_arburst          ) ,
       .axi_mm_arcache                        ( axi_mm_arcache          ) ,
@@ -1243,6 +1277,22 @@ module framework_afu (
       .axi_mm_buser                          ( axi_mm_buser            ) ,
       .axi_mm_bid                            ( axi_mm_bid              ) ,
       .axi_mm_bready                         ( axi_mm_bready           ) ,
+`else
+      .m_axis_tready                         ( m_axis_tready           ) ,
+      .m_axis_tlast                          ( m_axis_tlast            ) ,
+      .m_axis_tdata                          ( m_axis_tdata            ) ,
+      .m_axis_tkeep                          ( m_axis_tkeep            ) ,
+      .m_axis_tvalid                         ( m_axis_tvalid           ) ,
+      .m_axis_tid                            ( m_axis_tid              ) ,
+      .m_axis_tuser                          ( m_axis_tuser            ) ,
+      .s_axis_tready                         ( s_axis_tready           ) ,
+      .s_axis_tlast                          ( s_axis_tlast            ) ,
+      .s_axis_tdata                          ( s_axis_tdata            ) ,
+      .s_axis_tkeep                          ( s_axis_tkeep            ) ,
+      .s_axis_tvalid                         ( s_axis_tvalid           ) ,
+      .s_axis_tid                            ( s_axis_tid              ) ,
+      .s_axis_tuser                          ( s_axis_tuser            ) ,
+`endif
       .a_s_axi_arvalid                       ( a_m_axi_arvalid         ) ,
       .a_s_axi_araddr                        ( a_m_axi_araddr          ) ,
       .a_s_axi_arready                       ( a_m_axi_arready         ) ,
