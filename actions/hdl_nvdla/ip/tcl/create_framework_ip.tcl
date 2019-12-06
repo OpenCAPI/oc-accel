@@ -26,12 +26,12 @@ set sram_data_width   [lindex $argv 4]
 set aip_dir 	$action_root/ip/framework
 #set log_dir     $action_root/../../hardware/logs
 set log_dir     .
-set log_file    $log_dir/create_database_framework_ip.log
+set log_file    $log_dir/create_nvdla_framework_ip.log
 set src_dir 	$aip_dir/framework_ip_prj/framework_ip_prj.srcs/sources_1/ip
 
 
 ## Create a new Vivado IP Project
-puts "\[CREATE_DATABASE_FRAMEWORK_IPs..........\] start [clock format [clock seconds] -format {%T %a %b %d/ %Y}]"
+puts "\[CREATE_NVDLA_FRAMEWORK_IPs..........\] start [clock format [clock seconds] -format {%T %a %b %d/ %Y}]"
 puts "                        FPGACHIP = $fpga_part"
 puts "                        ACTION_ROOT = $action_root"
 puts "                        NUM_KERNELS = $num_kernels"
@@ -127,4 +127,4 @@ set_property generate_synth_checkpoint false [get_files $src_dir/axi_bram_ctrl_0
 generate_target all [get_files  $src_dir/axi_bram_ctrl_0/axi_bram_ctrl_0.xci] > $log_file
 
 close_project
-puts "\[CREATE_DATABASE_FRAMEWORK_IPs..........\] done  [clock format [clock seconds] -format {%T %a %b %d %Y}]"
+puts "\[CREATE_NVDLA_FRAMEWORK_IPs..........\] done  [clock format [clock seconds] -format {%T %a %b %d %Y}]"

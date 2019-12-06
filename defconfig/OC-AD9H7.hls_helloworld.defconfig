@@ -19,7 +19,6 @@ NUM_OF_ACTIONS=1
 # HDL_EXAMPLE is not set
 # HDL_SINGLE_ENGINE is not set
 # HDL_MULTI_PROCESS is not set
-# HDL_DATABASE is not set
 # HDL_NVDLA is not set
 # HDL_UNIT_SIM is not set
 HLS_HELLOWORLD=y
