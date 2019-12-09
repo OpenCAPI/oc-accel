@@ -179,6 +179,7 @@ clean_config: clean
 
 clean_env: clean_config
 	@$(RM) $(snap_env_sh)
+	@$(RM) $(snap_env_sh).bak
 
 gitclean:
 	@echo -e "[GITCLEAN............] cleaning and resetting snap git";

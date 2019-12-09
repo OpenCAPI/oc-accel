@@ -150,6 +150,8 @@ while [ -z "$SETUP_DONE" ]; do
     AR='${SNAP_ROOT}/actions/hdl_helloworld'
   elif [ -n "$HDL_SINGLE_ENGINE" ]; then
     AR='${SNAP_ROOT}/actions/hdl_single_engine'
+  elif [ -n "$HDL_DATABASE" ]; then
+    AR='${SNAP_ROOT}/actions/hdl_database'
   elif [ -n "$HDL_MULTI_PROCESS" ]; then
     AR='${SNAP_ROOT}/actions/hdl_multi_process'
   elif [ -n "$HDL_NVDLA" ]; then

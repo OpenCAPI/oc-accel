@@ -45,8 +45,8 @@ $(objs): snap_actions.h $(libs)
 $(libs):
 	$(MAKE) -C $(shell dirname $@)
 
-snap_actions.h: $(SNAP_ROOT)/actions
-	$(CFG_SNAP_ACTIONS_H) < $< > $@
+#snap_actions.h: $(SNAP_ROOT)/actions
+#	$(CFG_SNAP_ACTIONS_H) < $< > $@
 
 ### Deactivate existing implicit rule
 %: %.c
