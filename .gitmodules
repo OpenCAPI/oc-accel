@@ -1,6 +1,12 @@
 [submodule "hardware/oc-bip"]
 	path = hardware/oc-bip
 	url = https://github.com/collinqian/OpenCAPI3.0_Client_RefDesign.git
+[submodule "actions/hdl_nvdla/sw/nvdla-sw"]
+	path = actions/hdl_nvdla/sw/nvdla-sw
+	url = https://github.com/shgoupf/nvdla-sw.git
+[submodule "actions/hdl_nvdla/nvdla-capi"]
+	path = actions/hdl_nvdla/nvdla-capi
+	url = https://github.com/shgoupf/nvdla-hw.git
 [submodule "actions/hdl_database/string-match-fpga"]
 	path = actions/hdl_database/string-match-fpga
 	url = git@github.ibm.com:shgoupf/string-match-fpga.git

@@ -1,0 +1,652 @@
+/*
+ * Copyright 2019 International Business Machines
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+`timescale 1ns/1ps
+
+//`include "project.vh"
+
+module nvdla_framework #(
+    parameter KERNEL_NUM = NUM_KERNELS,
+    // Parameters of Axi Slave Bus Interface AXI_CTRL_REG
+    parameter C_S_AXI_CTRL_REG_DATA_WIDTH    = 32,
+    parameter C_S_AXI_CTRL_REG_ADDR_WIDTH    = 32,
+
+    // Parameters of Axi Master Bus Interface AXI_HOST_MEM ; to Host memory
+    parameter C_M_AXI_HOST_MEM_ID_WIDTH      = 4,
+    parameter C_M_AXI_HOST_MEM_ADDR_WIDTH    = 64,
+    parameter C_M_AXI_HOST_MEM_DATA_WIDTH    = 1024,
+    parameter C_M_AXI_KERNEL_DATA_WIDTH      = 512,
+    parameter C_M_AXI_HOST_MEM_AWUSER_WIDTH  = 8,
+    parameter C_M_AXI_HOST_MEM_ARUSER_WIDTH  = 8,
+    parameter C_M_AXI_HOST_MEM_WUSER_WIDTH   = 1,
+    parameter C_M_AXI_HOST_MEM_RUSER_WIDTH   = 1,
+    parameter C_M_AXI_HOST_MEM_BUSER_WIDTH   = 1,
+    parameter INT_BITS                       = 64,
+    parameter CONTEXT_BITS                   = 8
+)
+(
+    input  clk                       ,
+    input  rst_n                     ,
+
+    //
+    // AXI Control Register Interface
+    input  [C_S_AXI_CTRL_REG_ADDR_WIDTH-1 : 0 ]     s_axi_snap_araddr     ,
+    output                                          s_axi_snap_arready    ,
+    input                                           s_axi_snap_arvalid    ,
+    input  [0002:0]                                 s_axi_snap_arprot     ,
+    input  [C_S_AXI_CTRL_REG_ADDR_WIDTH-1 : 0 ]     s_axi_snap_awaddr     ,
+    output                                          s_axi_snap_awready    ,
+    input                                           s_axi_snap_awvalid    ,
+    input  [0002:0]                                 s_axi_snap_awprot     ,
+    input                                           s_axi_snap_bready     ,
+    output [1 : 0 ]                                 s_axi_snap_bresp      ,
+    output                                          s_axi_snap_bvalid     ,
+    output [C_S_AXI_CTRL_REG_DATA_WIDTH-1 : 0 ]     s_axi_snap_rdata      ,
+    input                                           s_axi_snap_rready     ,
+    output [1 : 0 ]                                 s_axi_snap_rresp      ,
+    output                                          s_axi_snap_rvalid     ,
+    input  [C_S_AXI_CTRL_REG_DATA_WIDTH-1 : 0 ]     s_axi_snap_wdata      ,
+    output                                          s_axi_snap_wready     ,
+    input  [(C_S_AXI_CTRL_REG_DATA_WIDTH/8)-1 : 0 ] s_axi_snap_wstrb      ,
+    input                                           s_axi_snap_wvalid     ,
+    //
+    // AXI Host Memory Interface
+    output [C_M_AXI_HOST_MEM_ADDR_WIDTH-1 : 0     ]   m_axi_snap_araddr     ,
+    output [1 : 0                                 ]   m_axi_snap_arburst    ,
+    output [3 : 0                                 ]   m_axi_snap_arcache    ,
+    output [C_M_AXI_HOST_MEM_ID_WIDTH-1 : 0       ]   m_axi_snap_arid       ,
+    output [7 : 0                                 ]   m_axi_snap_arlen      ,
+    output                                            m_axi_snap_arlock     ,
+    output [2 : 0                                 ]   m_axi_snap_arprot     ,
+    output [3 : 0                                 ]   m_axi_snap_arqos      ,
+    input                                             m_axi_snap_arready    ,
+    output [3 : 0                                 ]   m_axi_snap_arregion   ,
+    output [2 : 0                                 ]   m_axi_snap_arsize     ,
+    output [C_M_AXI_HOST_MEM_ARUSER_WIDTH-1 : 0   ]   m_axi_snap_aruser     ,
+    output                                            m_axi_snap_arvalid    ,
+    output [C_M_AXI_HOST_MEM_ADDR_WIDTH-1 : 0     ]   m_axi_snap_awaddr     ,
+    output [1 : 0                                 ]   m_axi_snap_awburst    ,
+    output [3 : 0                                 ]   m_axi_snap_awcache    ,
+    output [C_M_AXI_HOST_MEM_ID_WIDTH-1 : 0       ]   m_axi_snap_awid       ,
+    output [7 : 0                                 ]   m_axi_snap_awlen      ,
+    output                                            m_axi_snap_awlock     ,
+    output [2 : 0                                 ]   m_axi_snap_awprot     ,
+    output [3 : 0                                 ]   m_axi_snap_awqos      ,
+    input                                             m_axi_snap_awready    ,
+    output [3 : 0                                 ]   m_axi_snap_awregion   ,
+    output [2 : 0                                 ]   m_axi_snap_awsize     ,
+    output [C_M_AXI_HOST_MEM_AWUSER_WIDTH-1 : 0   ]   m_axi_snap_awuser     ,
+    output                                            m_axi_snap_awvalid    ,
+    input  [C_M_AXI_HOST_MEM_ID_WIDTH-1 : 0       ]   m_axi_snap_bid        ,
+    output                                            m_axi_snap_bready     ,
+    input  [1 : 0                                 ]   m_axi_snap_bresp      ,
+    input                                             m_axi_snap_bvalid     ,
+    input  [C_M_AXI_HOST_MEM_DATA_WIDTH-1 : 0     ]   m_axi_snap_rdata      ,
+    input  [C_M_AXI_HOST_MEM_ID_WIDTH-1 : 0       ]   m_axi_snap_rid        ,
+    input                                             m_axi_snap_rlast      ,
+    output                                            m_axi_snap_rready     ,
+    input  [1 : 0                                 ]   m_axi_snap_rresp      ,
+    input                                             m_axi_snap_rvalid     ,
+    output [C_M_AXI_HOST_MEM_DATA_WIDTH-1 : 0     ]   m_axi_snap_wdata      ,
+    output                                            m_axi_snap_wlast      ,
+    input                                             m_axi_snap_wready     ,
+    output [(C_M_AXI_HOST_MEM_DATA_WIDTH/8)-1 : 0 ]   m_axi_snap_wstrb      ,
+    output [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0       ]   m_axi_snap_wid        ,
+    output                                            m_axi_snap_wvalid     ,
+
+    // Other signals
+    input                     i_app_ready              ,
+    input      [31:0]         i_action_type            ,
+    input      [31:0]         i_action_version         ,
+    output                    o_interrupt              ,
+    output     [INT_BITS-1:0] o_interrupt_src          ,
+    input                     i_interrupt_ack
+    );
+
+    wire               direct_reset_;
+    wire               global_clk_ovr_on;
+    wire               test_mode;
+    wire               tmc2slcg_disable_clock_gating;
+    wire [31:0]        nvdla_pwrbus_ram_a_pd;
+    wire [31:0]        nvdla_pwrbus_ram_c_pd;
+    wire [31:0]        nvdla_pwrbus_ram_ma_pd;
+    wire [31:0]        nvdla_pwrbus_ram_mb_pd;
+    wire [31:0]        nvdla_pwrbus_ram_o_pd;
+    wire [31:0]        nvdla_pwrbus_ram_p_pd;
+    wire [7:0]         interconnect_awid;
+    wire [7:0]         interconnect_arid;
+    wire [7:0]         interconnect_bid;
+    wire [7:0]         interconnect_rid;
+
+    //----------------------------------------------
+    // DBB AXI INTERFACE
+    //----------------------------------------------
+    //---------------- Write Address Channel Signals ----------------/
+    wire [#NVDLA_DBB_ADDR_WIDTH-1:0]   dbb_s_axi_awaddr  [KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       dbb_s_axi_awprot  [KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_awvalid [KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_awready [KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       dbb_s_axi_awsize  [KERNEL_NUM-1:0] ;
+    wire [2-1:0]                       dbb_s_axi_awburst [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       dbb_s_axi_awcache [KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       dbb_s_axi_awlen   [KERNEL_NUM-1:0] ;
+    wire [1-1:0]                       dbb_s_axi_awlock  [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       dbb_s_axi_awqos   [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       dbb_s_axi_awregion[KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       dbb_s_axi_awid    [KERNEL_NUM-1:0] ;
+    //---------------- Write Data Channel Signals ----------------/
+    wire [#NVDLA_DBB_DATA_WIDTH-1:0]   dbb_s_axi_wdata [KERNEL_NUM-1:0] ;
+    wire [#NVDLA_DBB_DATA_WIDTH/8-1:0] dbb_s_axi_wstrb [KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_wvalid[KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_wready[KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_wlast [KERNEL_NUM-1:0] ;
+    //---------------- Write Response Channel Signals ----------------/
+    wire [2-1:0]                       dbb_s_axi_bresp [KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_bvalid[KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_bready[KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       dbb_s_axi_bid   [KERNEL_NUM-1:0] ;
+    //---------------- Read Address Channel Signals ----------------/
+    wire [#NVDLA_DBB_ADDR_WIDTH-1:0]   dbb_s_axi_araddr  [KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       dbb_s_axi_arprot  [KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_arvalid [KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_arready [KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       dbb_s_axi_arsize  [KERNEL_NUM-1:0] ;
+    wire [2-1:0]                       dbb_s_axi_arburst [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       dbb_s_axi_arcache [KERNEL_NUM-1:0] ;
+    wire [1-1:0]                       dbb_s_axi_arlock  [KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       dbb_s_axi_arlen   [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       dbb_s_axi_arqos   [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       dbb_s_axi_arregion[KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       dbb_s_axi_arid    [KERNEL_NUM-1:0] ;
+    //---------------- Read Data Channel Signals ----------------/
+    wire [#NVDLA_DBB_DATA_WIDTH-1:0]   dbb_s_axi_rdata [KERNEL_NUM-1:0] ;
+    wire [2-1:0]                       dbb_s_axi_rresp [KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_rvalid[KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_rready[KERNEL_NUM-1:0] ;
+    wire                               dbb_s_axi_rlast [KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       dbb_s_axi_rid   [KERNEL_NUM-1:0] ;
+
+    #ifdef SRAM
+    //----------------------------------------------
+    // SRAM AXI INTERFACE
+    //----------------------------------------------
+    //--------- Write Address Channel Signals of SRAM-----------/
+    wire                               cvsram_s_axi_awvalid[KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_awready[KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       cvsram_s_axi_awid   [KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       cvsram_s_axi_awlen  [KERNEL_NUM-1:0] ;
+    wire [#NVDLA_SRAM_ADDR_WIDTH-1:0]  cvsram_s_axi_awaddr [KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       cvsram_s_axi_awsize [KERNEL_NUM-1:0] ;
+    wire [2-1:0]                       cvsram_s_axi_awburst[KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_awlock [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       cvsram_s_axi_awcache[KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       cvsram_s_axi_awprot [KERNEL_NUM-1:0] ;
+    //----------- Write Data Channel Signals of SRAM------------/
+    wire                               cvsram_s_axi_wvalid[KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_wready[KERNEL_NUM-1:0] ;
+    wire [#NVDLA_SRAM_DATA_WIDTH-1:0]  cvsram_s_axi_wdata [KERNEL_NUM-1:0] ;
+    wire [#NVDLA_SRAM_DATA_WIDTH/8-1:0]cvsram_s_axi_wstrb [KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_wlast [KERNEL_NUM-1:0] ;
+    //--------- Write Response Channel Signals of SRAM----------/
+    wire                               cvsram_s_axi_bvalid[KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_bready[KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       cvsram_s_axi_bid   [KERNEL_NUM-1:0] ;
+    wire [2-1:0]                       cvsram_s_axi_bresp [KERNEL_NUM-1:0] ;
+    //---------- Read Address Channel Signals of SRAM-----------/
+    wire                               cvsram_s_axi_arvalid[KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_arready[KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       cvsram_s_axi_arid   [KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       cvsram_s_axi_arlen  [KERNEL_NUM-1:0] ;
+    wire [#NVDLA_SRAM_ADDR_WIDTH-1:0]  cvsram_s_axi_araddr [KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       cvsram_s_axi_arsize [KERNEL_NUM-1:0] ;
+    wire [2-1:0]                       cvsram_s_axi_arburst[KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_arlock [KERNEL_NUM-1:0] ;
+    wire [4-1:0]                       cvsram_s_axi_arcache[KERNEL_NUM-1:0] ;
+    wire [3-1:0]                       cvsram_s_axi_arprot [KERNEL_NUM-1:0] ;
+    //---------- Read Address Channel Signals of SRAM-----------/
+    wire                               cvsram_s_axi_rvalid[KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_rready[KERNEL_NUM-1:0] ;
+    wire [8-1:0]                       cvsram_s_axi_rid   [KERNEL_NUM-1:0] ;
+    wire                               cvsram_s_axi_rlast [KERNEL_NUM-1:0] ;
+    wire [#NVDLA_SRAM_DATA_WIDTH-1:0]  cvsram_s_axi_rdata [KERNEL_NUM-1:0] ;
+    wire [2-1:0]                       cvsram_s_axi_rresp [KERNEL_NUM-1:0] ;
+    #endif
+
+    //////////////////////////////////////////////////////////////////////////
+    // AXI lite. Has KERNEL_NUM + 1 slaves
+    //
+    // signal [0]  ----> kernel 0 --> 0x20000
+    // signal [1]  ----> kernel 1 --> 0x40000
+    // signal [2]  ----> kernel 2 --> 0x60000
+    // signal [3]  ----> kernel 3 --> 0x80000
+    // signal [KERNEL_NUM] ------> global registers (0x00000-0x0FFFF)
+
+    wire [KERNEL_NUM-1:0] kernel_o_interrupt;
+    wire [CONTEXT_BITS-1:0] kernel_o_context [KERNEL_NUM-1:0];
+    wire               kernel_s_axi_snap_awready [KERNEL_NUM:0];
+    wire [31:0]        kernel_s_axi_snap_awaddr [KERNEL_NUM:0];
+    wire [2:0]         kernel_s_axi_snap_awprot [KERNEL_NUM:0];
+    wire               kernel_s_axi_snap_awvalid [KERNEL_NUM:0];
+    // axi write data channel
+    wire               kernel_s_axi_snap_wready [KERNEL_NUM:0];
+    wire [31:0]        kernel_s_axi_snap_wdata [KERNEL_NUM:0];
+    wire [3:0]         kernel_s_axi_snap_wstrb [KERNEL_NUM:0];
+    wire               kernel_s_axi_snap_wvalid [KERNEL_NUM:0];
+    // AXI response channel
+    wire [1:0]         kernel_s_axi_snap_bresp [KERNEL_NUM:0];
+    wire               kernel_s_axi_snap_bvalid [KERNEL_NUM:0];
+    wire               kernel_s_axi_snap_bready [KERNEL_NUM:0];
+    // AXI read address channel
+    wire               kernel_s_axi_snap_arready [KERNEL_NUM:0];
+    wire               kernel_s_axi_snap_arvalid [KERNEL_NUM:0];
+    wire [31:0]        kernel_s_axi_snap_araddr [KERNEL_NUM:0];
+    wire [2:0]         kernel_s_axi_snap_arprot [KERNEL_NUM:0];
+    // AXI read data channel
+    wire [31:0]        kernel_s_axi_snap_rdata [KERNEL_NUM:0];
+    wire [1:0]         kernel_s_axi_snap_rresp [KERNEL_NUM:0];
+    wire               kernel_s_axi_snap_rready [KERNEL_NUM:0];
+    wire               kernel_s_axi_snap_rvalid [KERNEL_NUM:0];
+
+
+    // Make wuser stick to 0
+    assign test_mode                     = 1'b0;
+    assign global_clk_ovr_on             = 1'b0;
+    assign tmc2slcg_disable_clock_gating = 1'b1;
+    assign direct_reset_                 = 1'b0;
+    assign nvdla_pwrbus_ram_c_pd         = 32'b0;
+    assign nvdla_pwrbus_ram_p_pd         = 32'b0;
+    assign nvdla_pwrbus_ram_o_pd         = 32'b0;
+    assign nvdla_pwrbus_ram_a_pd         = 32'b0;
+    assign nvdla_pwrbus_ram_ma_pd        = 32'b0;
+    assign nvdla_pwrbus_ram_mb_pd        = 32'b0;
+
+    assign m_axi_snap_aruser         = 8'b0;
+    assign m_axi_snap_awuser         = 8'b0;
+
+genvar i;
+generate
+for(i=0; i<KERNEL_NUM; i=i+1) begin:k_inst
+
+    assign dbb_s_axi_arburst [i]       = 2'b01;
+    assign dbb_s_axi_awburst [i]       = 2'b01;
+
+    assign dbb_s_axi_arcache [i]       = 4'b0010;
+    assign dbb_s_axi_awcache [i]       = 4'b0010;
+    assign dbb_s_axi_arlock  [i]       = 1'b0;
+    assign dbb_s_axi_arprot  [i]       = 3'b000;
+    assign dbb_s_axi_arqos   [i]       = 4'b0000;
+    assign dbb_s_axi_awlock  [i]       = 1'b0;
+    assign dbb_s_axi_awprot  [i]       = 3'b000;
+    assign dbb_s_axi_awqos   [i]       = 4'b0000;
+    assign dbb_s_axi_arregion[i]       = 4'b0000;
+    assign dbb_s_axi_awregion[i]       = 4'b0000;
+
+    // Burst size always match with data bus width
+    assign dbb_s_axi_arsize[i]         = 3'd#NVDLA_PRIMARY_MEMIF_WIDTH_LOG2;
+    assign dbb_s_axi_awsize[i]         = 3'd#NVDLA_PRIMARY_MEMIF_WIDTH_LOG2;
+
+    assign dbb_s_axi_arlen[i][7:4]     = 4'b0;
+    assign dbb_s_axi_awlen[i][7:4]     = 4'b0;
+    assign dbb_s_axi_bid[i][7:4]       = 4'b0;
+    assign dbb_s_axi_rid[i][7:4]       = 4'b0;
+
+    nvdla nvdla_0 (
+        .dla_core_clk                   (clk                           ) // |< i
+        ,.global_clk_ovr_on             (global_clk_ovr_on             ) // |< i
+        ,.tmc2slcg_disable_clock_gating (tmc2slcg_disable_clock_gating ) // |< i
+        ,.direct_reset_                 (direct_reset_                 ) // |< i
+        ,.test_mode                     (test_mode                     ) // |< i
+        // AXI-lite Interface
+        ,.s_axi_aclk                    (clk                ) // |< i
+        ,.s_axi_aresetn                 (rst_n               ) // |< i
+        ,.s_axi_awaddr                  ({15'b0, kernel_s_axi_snap_awaddr [i][16:0]} ) // |< i
+        ,.s_axi_awvalid                 (kernel_s_axi_snap_awvalid[i] ) // |< i
+        ,.s_axi_awready                 (kernel_s_axi_snap_awready[i] ) // |> o
+        ,.s_axi_wdata                   (kernel_s_axi_snap_wdata  [i] ) // |< i
+        ,.s_axi_wvalid                  (kernel_s_axi_snap_wvalid [i] ) // |< i
+        ,.s_axi_wready                  (kernel_s_axi_snap_wready [i] ) // |> o
+        ,.s_axi_bresp                   (kernel_s_axi_snap_bresp  [i] ) // |> o
+        ,.s_axi_bvalid                  (kernel_s_axi_snap_bvalid [i] ) // |> o
+        ,.s_axi_bready                  (kernel_s_axi_snap_bready [i] ) // |< i
+        ,.s_axi_araddr                  ({15'b0, kernel_s_axi_snap_araddr [i][16:0]} ) // |< i
+        ,.s_axi_arvalid                 (kernel_s_axi_snap_arvalid[i] ) // |< i
+        ,.s_axi_arready                 (kernel_s_axi_snap_arready[i] ) // |> o
+        ,.s_axi_rdata                   (kernel_s_axi_snap_rdata  [i] ) // |> o
+        ,.s_axi_rresp                   (kernel_s_axi_snap_rresp  [i] ) // |> o
+        ,.s_axi_rvalid                  (kernel_s_axi_snap_rvalid [i] ) // |> o
+        ,.s_axi_rready                  (kernel_s_axi_snap_rready [i] ) // |< i
+        // ------------------
+        ,.nvdla_core2dbb_aw_awvalid     (dbb_s_axi_awvalid   [i] ) // |> o
+        ,.nvdla_core2dbb_aw_awready     (dbb_s_axi_awready   [i] ) // |< i
+        ,.nvdla_core2dbb_aw_awid        (dbb_s_axi_awid      [i] ) // |> o
+        ,.nvdla_core2dbb_aw_awlen       (dbb_s_axi_awlen[i][3:0] ) // |> o
+        ,.nvdla_core2dbb_aw_awaddr      (dbb_s_axi_awaddr    [i] ) // |> o
+        ,.nvdla_core2dbb_w_wvalid       (dbb_s_axi_wvalid    [i] ) // |> o
+        ,.nvdla_core2dbb_w_wready       (dbb_s_axi_wready    [i] ) // |< i
+        ,.nvdla_core2dbb_w_wdata        (dbb_s_axi_wdata     [i] ) // |> o
+        ,.nvdla_core2dbb_w_wstrb        (dbb_s_axi_wstrb     [i] ) // |> o
+        ,.nvdla_core2dbb_w_wlast        (dbb_s_axi_wlast     [i] ) // |> o
+        ,.nvdla_core2dbb_b_bvalid       (dbb_s_axi_bvalid    [i] ) // |< i
+        ,.nvdla_core2dbb_b_bready       (dbb_s_axi_bready    [i] ) // |> o
+        ,.nvdla_core2dbb_b_bid          (dbb_s_axi_bid       [i] ) // |< i
+        ,.nvdla_core2dbb_ar_arvalid     (dbb_s_axi_arvalid   [i] ) // |> o
+        ,.nvdla_core2dbb_ar_arready     (dbb_s_axi_arready   [i] ) // |< i
+        ,.nvdla_core2dbb_ar_arid        (dbb_s_axi_arid      [i] ) // |> o
+        ,.nvdla_core2dbb_ar_arlen       (dbb_s_axi_arlen[i][3:0] ) // |> o
+        ,.nvdla_core2dbb_ar_araddr      (dbb_s_axi_araddr    [i] ) // |> o
+        ,.nvdla_core2dbb_r_rvalid       (dbb_s_axi_rvalid    [i] ) // |< i
+        ,.nvdla_core2dbb_r_rready       (dbb_s_axi_rready    [i] ) // |> o
+        ,.nvdla_core2dbb_r_rid          (dbb_s_axi_rid       [i] ) // |< i
+        ,.nvdla_core2dbb_r_rlast        (dbb_s_axi_rlast     [i] ) // |< i
+        ,.nvdla_core2dbb_r_rdata        (dbb_s_axi_rdata     [i] ) // |< i
+        #ifdef SRAM
+        // --------------------
+        ,.nvdla_core2cvsram_aw_awvalid  (cvsram_s_axi_awvalid[i])     //|> o
+        ,.nvdla_core2cvsram_aw_awready  (cvsram_s_axi_awready[i])     //|< i
+        ,.nvdla_core2cvsram_aw_awid     (cvsram_s_axi_awid   [i])     //|> o
+        ,.nvdla_core2cvsram_aw_awlen    (cvsram_s_axi_awlen  [i])     //|> o
+        ,.nvdla_core2cvsram_aw_awaddr   (cvsram_s_axi_awaddr [i])     //|> o
+        ,.nvdla_core2cvsram_w_wvalid    (cvsram_s_axi_wvalid [i])     //|> o
+        ,.nvdla_core2cvsram_w_wready    (cvsram_s_axi_wready [i])     //|< i
+        ,.nvdla_core2cvsram_w_wdata     (cvsram_s_axi_wdata  [i])     //|> o
+        ,.nvdla_core2cvsram_w_wstrb     (cvsram_s_axi_wstrb  [i])     //|> o
+        ,.nvdla_core2cvsram_w_wlast     (cvsram_s_axi_wlast  [i])     //|> o
+        ,.nvdla_core2cvsram_b_bvalid    (cvsram_s_axi_bvalid [i])     //|< i
+        ,.nvdla_core2cvsram_b_bready    (cvsram_s_axi_bready [i])     //|> o
+        ,.nvdla_core2cvsram_b_bid       (cvsram_s_axi_bid    [i])     //|< i
+        ,.nvdla_core2cvsram_ar_arvalid  (cvsram_s_axi_arvalid[i])     //|> o
+        ,.nvdla_core2cvsram_ar_arready  (cvsram_s_axi_arready[i])     //|< i
+        ,.nvdla_core2cvsram_ar_arid     (cvsram_s_axi_arid   [i])     //|> o
+        ,.nvdla_core2cvsram_ar_arlen    (cvsram_s_axi_arlen  [i])     //|> o
+        ,.nvdla_core2cvsram_ar_araddr   (cvsram_s_axi_araddr [i])     //|> o
+        ,.nvdla_core2cvsram_r_rvalid    (cvsram_s_axi_rvalid [i])     //|< i
+        ,.nvdla_core2cvsram_r_rready    (cvsram_s_axi_rready [i])     //|> o
+        ,.nvdla_core2cvsram_r_rid       (cvsram_s_axi_rid    [i])     //|< i
+        ,.nvdla_core2cvsram_r_rlast     (cvsram_s_axi_rlast  [i])     //|< i
+        ,.nvdla_core2cvsram_r_rdata     (cvsram_s_axi_rdata  [i])     //|< i
+        #endif
+        // Interrupt
+        ,.intr_o                        (kernel_o_interrupt  [i]) // |> o
+        ,.nvdla_pwrbus_ram_c_pd         (nvdla_pwrbus_ram_c_pd  ) // |< i
+        ,.nvdla_pwrbus_ram_ma_pd        (nvdla_pwrbus_ram_ma_pd ) // |< i -
+        ,.nvdla_pwrbus_ram_mb_pd        (nvdla_pwrbus_ram_mb_pd ) // |< i -
+        ,.nvdla_pwrbus_ram_p_pd         (nvdla_pwrbus_ram_p_pd  ) // |< i
+        ,.nvdla_pwrbus_ram_o_pd         (nvdla_pwrbus_ram_o_pd  ) // |< i
+        ,.nvdla_pwrbus_ram_a_pd         (nvdla_pwrbus_ram_a_pd  ) // |< i
+        );
+
+    #ifdef SRAM
+    //----------------------------------------------
+    // SRAM AXI INTERFACE
+    //----------------------------------------------
+    // Always assume incremental burst
+    assign cvsram_s_axi_arburst[i]        = 2'b01;
+    assign cvsram_s_axi_awburst[i]        = 2'b01;
+
+    assign cvsram_s_axi_arcache[i]        = 4'b0010;
+    assign cvsram_s_axi_awcache[i]        = 4'b0010;
+    assign cvsram_s_axi_arlock [i]        = 1'b0;
+    assign cvsram_s_axi_arprot [i]        = 3'b000;
+    assign cvsram_s_axi_awlock [i]        = 1'b0;
+    assign cvsram_s_axi_awprot [i]        = 3'b000;
+
+    // Burst size always match with data bus width
+    assign cvsram_s_axi_arsize[i]         = 3'd#NVDLA_SECONDARY_MEMIF_WIDTH_LOG2;
+    assign cvsram_s_axi_awsize[i]         = 3'd#NVDLA_SECONDARY_MEMIF_WIDTH_LOG2;
+
+    assign cvsram_s_axi_arlen[i][7:4]     = 4'b0;
+    assign cvsram_s_axi_awlen[i][7:4]     = 4'b0;
+
+    axi_bram_ctrl_0 axi_bram_0 (
+        .s_axi_aclk     (clk                  ) ,                             // input wire s_axi_aclk
+        .s_axi_aresetn  (rst_n                 ) ,                  // input wire s_axi_aresetn
+        .s_axi_awid     (cvsram_s_axi_awid   [i] ) ,               // input wire [7 : 0] s_axi_awid
+        .s_axi_awaddr   (cvsram_s_axi_awaddr [i] ) ,             // input wire [17 : 0] s_axi_awaddr
+        .s_axi_awlen    (cvsram_s_axi_awlen  [i] ) ,              // input wire [7 : 0] s_axi_awlen
+        .s_axi_awsize   (cvsram_s_axi_awsize [i] ) ,             // input wire [2 : 0] s_axi_awsize
+        .s_axi_awburst  (cvsram_s_axi_awburst[i] ) ,            // input wire [1 : 0] s_axi_awburst
+        .s_axi_awlock   (cvsram_s_axi_awlock [i] ) ,             // input wire s_axi_awlock
+        .s_axi_awcache  (cvsram_s_axi_awcache[i] ) ,            // input wire [3 : 0] s_axi_awcache
+        .s_axi_awprot   (cvsram_s_axi_awprot [i] ) ,             // input wire [2 : 0] s_axi_awprot
+        .s_axi_awvalid  (cvsram_s_axi_awvalid[i] ) ,            // input wire s_axi_awvalid
+        .s_axi_awready  (cvsram_s_axi_awready[i] ) ,            // output wire s_axi_awready
+        .s_axi_wdata    (cvsram_s_axi_wdata  [i] ) ,              // input wire [255 : 0] s_axi_wdata
+        .s_axi_wstrb    (cvsram_s_axi_wstrb  [i] ) ,              // input wire [31 : 0] s_axi_wstrb
+        .s_axi_wlast    (cvsram_s_axi_wlast  [i] ) ,              // input wire s_axi_wlast
+        .s_axi_wvalid   (cvsram_s_axi_wvalid [i] ) ,             // input wire s_axi_wvalid
+        .s_axi_wready   (cvsram_s_axi_wready [i] ) ,             // output wire s_axi_wready
+        .s_axi_bid      (cvsram_s_axi_bid    [i] ) ,                // output wire [7 : 0] s_axi_bid
+        .s_axi_bresp    (cvsram_s_axi_bresp  [i] ) ,              // output wire [1 : 0] s_axi_bresp
+        .s_axi_bvalid   (cvsram_s_axi_bvalid [i] ) ,             // output wire s_axi_bvalid
+        .s_axi_bready   (cvsram_s_axi_bready [i] ) ,             // input wire s_axi_bready
+        .s_axi_arid     (cvsram_s_axi_arid   [i] ) ,               // input wire [7 : 0] s_axi_arid
+        .s_axi_araddr   (cvsram_s_axi_araddr [i] ) ,             // input wire [17 : 0] s_axi_araddr
+        .s_axi_arlen    (cvsram_s_axi_arlen  [i] ) ,              // input wire [7 : 0] s_axi_arlen
+        .s_axi_arsize   (cvsram_s_axi_arsize [i] ) ,             // input wire [2 : 0] s_axi_arsize
+        .s_axi_arburst  (cvsram_s_axi_arburst[i] ) ,            // input wire [1 : 0] s_axi_arburst
+        .s_axi_arlock   (cvsram_s_axi_arlock [i] ) ,             // input wire s_axi_arlock
+        .s_axi_arcache  (cvsram_s_axi_arcache[i] ) ,            // input wire [3 : 0] s_axi_arcache
+        .s_axi_arprot   (cvsram_s_axi_arprot [i] ) ,             // input wire [2 : 0] s_axi_arprot
+        .s_axi_arvalid  (cvsram_s_axi_arvalid[i] ) ,            // input wire s_axi_arvalid
+        .s_axi_arready  (cvsram_s_axi_arready[i] ) ,            // output wire s_axi_arready
+        .s_axi_rid      (cvsram_s_axi_rid    [i] ) ,                // output wire [7 : 0] s_axi_rid
+        .s_axi_rdata    (cvsram_s_axi_rdata  [i] ) ,              // output wire [255 : 0] s_axi_rdata
+        .s_axi_rresp    (cvsram_s_axi_rresp  [i] ) ,              // output wire [1 : 0] s_axi_rresp
+        .s_axi_rlast    (cvsram_s_axi_rlast  [i] ) ,              // output wire s_axi_rlast
+        .s_axi_rvalid   (cvsram_s_axi_rvalid [i] ) ,             // output wire s_axi_rvalid
+        .s_axi_rready   (cvsram_s_axi_rready [i] ) // input wire s_axi_rready
+                                              ) ;
+    #endif
+end
+endgenerate
+
+    //8-to-1 AXI MM interconnect
+    host_axi_interconnect_0 axi_mm_X (
+        .INTERCONNECT_ACLK           ( clk),
+        .INTERCONNECT_ARESETN        ( rst_n),
+
+        //: my $kn = NUM_KERNELS;
+        //: for (my $i = 0; $i < $kn; $i++) {
+        //:     my $s = sprintf("%02d", $i);
+        //:     print qq(
+        //:     .S${s}_AXI_ARESET_OUT_N        (                             ) ,
+        //:     .S${s}_AXI_ACLK                ( clk                         ) ,
+        //:     .S${s}_AXI_AWID                ( dbb_s_axi_awid    [$i][3:0] ) ,
+        //:     .S${s}_AXI_AWADDR              ( dbb_s_axi_awaddr  [$i]      ) ,
+        //:     .S${s}_AXI_AWLEN               ( dbb_s_axi_awlen   [$i]      ) ,
+        //:     .S${s}_AXI_AWSIZE              ( dbb_s_axi_awsize  [$i]      ) ,
+        //:     .S${s}_AXI_AWBURST             ( dbb_s_axi_awburst [$i]      ) ,
+        //:     .S${s}_AXI_AWLOCK              ( dbb_s_axi_awlock  [$i]      ) ,
+        //:     .S${s}_AXI_AWCACHE             ( dbb_s_axi_awcache [$i]      ) ,
+        //:     .S${s}_AXI_AWPROT              ( dbb_s_axi_awprot  [$i]      ) ,
+        //:     .S${s}_AXI_AWQOS               ( dbb_s_axi_awqos   [$i]      ) ,
+        //:     .S${s}_AXI_AWVALID             ( dbb_s_axi_awvalid [$i]      ) ,
+        //:     .S${s}_AXI_AWREADY             ( dbb_s_axi_awready [$i]      ) ,
+        //:     .S${s}_AXI_WDATA               ( dbb_s_axi_wdata   [$i]      ) ,
+        //:     .S${s}_AXI_WSTRB               ( dbb_s_axi_wstrb   [$i]      ) ,
+        //:     .S${s}_AXI_WLAST               ( dbb_s_axi_wlast   [$i]      ) ,
+        //:     .S${s}_AXI_WVALID              ( dbb_s_axi_wvalid  [$i]      ) ,
+        //:     .S${s}_AXI_WREADY              ( dbb_s_axi_wready  [$i]      ) ,
+        //:     .S${s}_AXI_BID                 ( dbb_s_axi_bid     [$i][3:0] ) ,
+        //:     .S${s}_AXI_BRESP               ( dbb_s_axi_bresp   [$i]      ) ,
+        //:     .S${s}_AXI_BVALID              ( dbb_s_axi_bvalid  [$i]      ) ,
+        //:     .S${s}_AXI_BREADY              ( dbb_s_axi_bready  [$i]      ) ,
+        //:     .S${s}_AXI_ARID                ( dbb_s_axi_arid    [$i][3:0] ) ,
+        //:     .S${s}_AXI_ARADDR              ( dbb_s_axi_araddr  [$i]      ) ,
+        //:     .S${s}_AXI_ARLEN               ( dbb_s_axi_arlen   [$i]      ) ,
+        //:     .S${s}_AXI_ARSIZE              ( dbb_s_axi_arsize  [$i]      ) ,
+        //:     .S${s}_AXI_ARBURST             ( dbb_s_axi_arburst [$i]      ) ,
+        //:     .S${s}_AXI_ARLOCK              ( dbb_s_axi_arlock  [$i]      ) ,
+        //:     .S${s}_AXI_ARCACHE             ( dbb_s_axi_arcache [$i]      ) ,
+        //:     .S${s}_AXI_ARPROT              ( dbb_s_axi_arprot  [$i]      ) ,
+        //:     .S${s}_AXI_ARQOS               ( dbb_s_axi_arqos   [$i]      ) ,
+        //:     .S${s}_AXI_ARVALID             ( dbb_s_axi_arvalid [$i]      ) ,
+        //:     .S${s}_AXI_ARREADY             ( dbb_s_axi_arready [$i]      ) ,
+        //:     .S${s}_AXI_RID                 ( dbb_s_axi_rid     [$i][3:0] ) ,
+        //:     .S${s}_AXI_RDATA               ( dbb_s_axi_rdata   [$i]      ) ,
+        //:     .S${s}_AXI_RRESP               ( dbb_s_axi_rresp   [$i]      ) ,
+        //:     .S${s}_AXI_RLAST               ( dbb_s_axi_rlast   [$i]      ) ,
+        //:     .S${s}_AXI_RVALID              ( dbb_s_axi_rvalid  [$i]      ) ,
+        //:     .S${s}_AXI_RREADY              ( dbb_s_axi_rready  [$i]      ) ,
+        //:                                                                  ) ;
+        //: }
+        
+        .M00_AXI_ARESET_OUT_N        (                                              ) ,
+        .M00_AXI_ACLK                ( clk                                          ) ,
+        .M00_AXI_AWID                ( interconnect_awid                            ) ,
+        .M00_AXI_AWADDR              ( m_axi_snap_awaddr[#NVDLA_DBB_ADDR_WIDTH-1:0] ) ,
+        .M00_AXI_AWLEN               ( m_axi_snap_awlen                             ) ,
+        .M00_AXI_AWSIZE              ( m_axi_snap_awsize                            ) ,
+        .M00_AXI_AWBURST             ( m_axi_snap_awburst                           ) ,
+        .M00_AXI_AWLOCK              ( m_axi_snap_awlock                            ) ,
+        .M00_AXI_AWCACHE             ( m_axi_snap_awcache                           ) ,
+        .M00_AXI_AWPROT              ( m_axi_snap_awprot                            ) ,
+        .M00_AXI_AWQOS               ( m_axi_snap_awqos                             ) ,
+        .M00_AXI_AWVALID             ( m_axi_snap_awvalid                           ) ,
+        .M00_AXI_AWREADY             ( m_axi_snap_awready                           ) ,
+        .M00_AXI_WDATA               ( m_axi_snap_wdata                             ) ,
+        .M00_AXI_WSTRB               ( m_axi_snap_wstrb                             ) ,
+        .M00_AXI_WLAST               ( m_axi_snap_wlast                             ) ,
+        .M00_AXI_WVALID              ( m_axi_snap_wvalid                            ) ,
+        .M00_AXI_WREADY              ( m_axi_snap_wready                            ) ,
+        .M00_AXI_BID                 ( interconnect_bid                             ) ,
+        .M00_AXI_BRESP               ( m_axi_snap_bresp                             ) ,
+        .M00_AXI_BVALID              ( m_axi_snap_bvalid                            ) ,
+        .M00_AXI_BREADY              ( m_axi_snap_bready                            ) ,
+        .M00_AXI_ARID                ( interconnect_arid                            ) ,
+        .M00_AXI_ARADDR              ( m_axi_snap_araddr[#NVDLA_DBB_ADDR_WIDTH-1:0] ) ,
+        .M00_AXI_ARLEN               ( m_axi_snap_arlen                             ) ,
+        .M00_AXI_ARSIZE              ( m_axi_snap_arsize                            ) ,
+        .M00_AXI_ARBURST             ( m_axi_snap_arburst                           ) ,
+        .M00_AXI_ARLOCK              ( m_axi_snap_arlock                            ) ,
+        .M00_AXI_ARCACHE             ( m_axi_snap_arcache                           ) ,
+        .M00_AXI_ARPROT              ( m_axi_snap_arprot                            ) ,
+        .M00_AXI_ARQOS               ( m_axi_snap_arqos                             ) ,
+        .M00_AXI_ARVALID             ( m_axi_snap_arvalid                           ) ,
+        .M00_AXI_ARREADY             ( m_axi_snap_arready                           ) ,
+        .M00_AXI_RID                 ( interconnect_rid                             ) ,
+        .M00_AXI_RDATA               ( m_axi_snap_rdata                             ) ,
+        .M00_AXI_RRESP               ( m_axi_snap_rresp                             ) ,
+        .M00_AXI_RLAST               ( m_axi_snap_rlast                             ) ,
+        .M00_AXI_RVALID              ( m_axi_snap_rvalid                            ) ,
+        .M00_AXI_RREADY              ( m_axi_snap_rready                            )
+                                                                                    ) ;
+
+    assign m_axi_snap_arid = interconnect_arid[C_M_AXI_HOST_MEM_ID_WIDTH-1 : 0];
+    assign m_axi_snap_awid = interconnect_awid[C_M_AXI_HOST_MEM_ID_WIDTH-1 : 0];
+    assign interconnect_rid = {{(8-C_M_AXI_HOST_MEM_ID_WIDTH){1'b0}},m_axi_snap_rid};
+    assign interconnect_bid = {{(8-C_M_AXI_HOST_MEM_ID_WIDTH){1'b0}},m_axi_snap_bid};
+    
+    #ifdef NVDLA_DBB_ADDR_WIDTH < 64
+    assign m_axi_snap_araddr[63:#NVDLA_DBB_ADDR_WIDTH]  = 32'b0;
+    assign m_axi_snap_awaddr[63:#NVDLA_DBB_ADDR_WIDTH]  = 32'b0;
+    #endif
+
+    //1-to-8 AXI-lite crossbar (demux)
+    host_axi_lite_crossbar_0 axi_lite_X (
+        .aclk(clk)
+        ,.aresetn(rst_n)
+        ,.s_axi_awaddr( s_axi_snap_awaddr )
+        ,.s_axi_awprot( s_axi_snap_awprot )
+        ,.s_axi_awvalid( s_axi_snap_awvalid )
+        ,.s_axi_awready( s_axi_snap_awready )
+        ,.s_axi_wdata( s_axi_snap_wdata )
+        ,.s_axi_wstrb( s_axi_snap_wstrb )
+        ,.s_axi_wvalid( s_axi_snap_wvalid )
+        ,.s_axi_wready( s_axi_snap_wready )
+        ,.s_axi_bresp( s_axi_snap_bresp )
+        ,.s_axi_bvalid( s_axi_snap_bvalid )
+        ,.s_axi_bready( s_axi_snap_bready )
+        ,.s_axi_araddr( s_axi_snap_araddr )
+        ,.s_axi_arprot( s_axi_snap_arprot )
+        ,.s_axi_arvalid( s_axi_snap_arvalid )
+        ,.s_axi_arready( s_axi_snap_arready )
+        ,.s_axi_rdata( s_axi_snap_rdata )
+        ,.s_axi_rresp( s_axi_snap_rresp )
+        ,.s_axi_rvalid( s_axi_snap_rvalid )
+        ,.s_axi_rready( s_axi_snap_rready )
+
+        //: my $kn = NUM_KERNELS;
+        //: my @signals = qw(awaddr awprot awvalid awready wdata wstrb wvalid wready bresp bvalid bready araddr arprot arvalid arready rdata rresp rvalid rready);
+        //: foreach my $si (@signals) {
+        //:     print qq {
+        //:     ,.m_axi_${si}(\{
+        //:     };
+        //:     for (my $i = $kn; $i >= 0; $i--) {
+        //:         if ($i == 0) {
+        //:             print qq(
+        //:             kernel_s_axi_snap_${si}[$i]
+        //:             );
+        //:         } else {
+        //:             print qq(
+        //:             kernel_s_axi_snap_${si}[$i],
+        //:             );
+        //:         }
+        //:     }
+        //:     print qq {
+        //:     \})
+        //:     };
+        //: }
+
+        );
+
+
+    axi_lite_global_slave #(
+        .KERNEL_NUM   (KERNEL_NUM                                            ) ,
+        .DATA_WIDTH   (32                                                    ) ,
+        .ADDR_WIDTH   (32                                                    )
+        ) maxi_lite_global_slave (
+        .clk                        (clk                                     ) ,
+        .rst_n                      (rst_n                                   ) ,
+        .s_axi_awready              (kernel_s_axi_snap_awready [ KERNEL_NUM] ) ,
+        .s_axi_awaddr               (kernel_s_axi_snap_awaddr  [ KERNEL_NUM] ) ,//32b
+        .s_axi_awprot               (kernel_s_axi_snap_awprot  [ KERNEL_NUM] ) ,//3b
+        .s_axi_awvalid              (kernel_s_axi_snap_awvalid [ KERNEL_NUM] ) ,
+        .s_axi_wready               (kernel_s_axi_snap_wready  [ KERNEL_NUM] ) ,
+        .s_axi_wdata                (kernel_s_axi_snap_wdata   [ KERNEL_NUM] ) ,//32b
+        .s_axi_wstrb                (kernel_s_axi_snap_wstrb   [ KERNEL_NUM] ) ,//4b
+        .s_axi_wvalid               (kernel_s_axi_snap_wvalid  [ KERNEL_NUM] ) ,
+        .s_axi_bresp                (kernel_s_axi_snap_bresp   [ KERNEL_NUM] ) ,//2b
+        .s_axi_bvalid               (kernel_s_axi_snap_bvalid  [ KERNEL_NUM] ) ,
+        .s_axi_bready               (kernel_s_axi_snap_bready  [ KERNEL_NUM] ) ,
+        .s_axi_arready              (kernel_s_axi_snap_arready [ KERNEL_NUM] ) ,
+        .s_axi_arvalid              (kernel_s_axi_snap_arvalid [ KERNEL_NUM] ) ,
+        .s_axi_araddr               (kernel_s_axi_snap_araddr  [ KERNEL_NUM] ) ,//32b
+        .s_axi_arprot               (kernel_s_axi_snap_arprot  [ KERNEL_NUM] ) ,//3b
+        .s_axi_rdata                (kernel_s_axi_snap_rdata   [ KERNEL_NUM] ) ,//32b
+        .s_axi_rresp                (kernel_s_axi_snap_rresp   [ KERNEL_NUM] ) ,//2b
+        .s_axi_rready               (kernel_s_axi_snap_rready  [ KERNEL_NUM] ) ,
+        .s_axi_rvalid               (kernel_s_axi_snap_rvalid  [ KERNEL_NUM] ) ,
+        .manager_start              (                                        ) ,
+        .run_mode                   (                                        ) ,
+        .init_addr                  (                                        ) ,
+        .completion_addr            (                                        ) ,
+        .completion_size            (                                        ) ,
+        .new_job                    (                                        ) ,
+        .job_done                   (                                        ) ,
+        .job_start                  (0                                       ) ,
+        .real_done                  (                                        ) ,
+        .kernel_start               (                                        ) ,
+        .i_action_type              (i_action_type                           ) ,
+        .i_action_version           (i_action_version                        ) ,
+        .kernel_complete            (kernel_o_interrupt                      ) ,
+        .kernel_complete_posedge    (                                        ) ,
+        .o_interrupt                (o_interrupt                             ) ,
+        .o_interrupt_src            (o_interrupt_src                         ) ,
+        .i_interrupt_ack            (i_interrupt_ack                         )
+        );
+
+endmodule

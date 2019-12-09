@@ -1,0 +1,390 @@
+/*
+ * Copyright 2019 International Business Machines
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+`timescale 1ns/1ps
+
+module nvdla (
+    dla_core_clk                   //|< i
+    ,global_clk_ovr_on             //|< i
+    ,tmc2slcg_disable_clock_gating //|< i
+    ,direct_reset_                 //|< i
+    ,test_mode                     //|< i
+    //AXI-lite Interface
+    ,s_axi_aclk                    //|< i
+    ,s_axi_aresetn                 //|< i
+    ,s_axi_awaddr                  //|< i
+    ,s_axi_awvalid                 //|< i
+    ,s_axi_awready                 //|> o
+    ,s_axi_wdata                   //|< i
+    ,s_axi_wvalid                  //|< i
+    ,s_axi_wready                  //|> o
+    ,s_axi_bresp                   //|> o
+    ,s_axi_bvalid                  //|> o
+    ,s_axi_bready                  //|< i
+    ,s_axi_araddr                  //|< i
+    ,s_axi_arvalid                 //|< i
+    ,s_axi_arready                 //|> o
+    ,s_axi_rdata                   //|> o
+    ,s_axi_rresp                   //|> o
+    ,s_axi_rvalid                  //|> o
+    ,s_axi_rready                  //|< i 
+    //------------------
+    ,nvdla_core2dbb_aw_awvalid     //|> o
+    ,nvdla_core2dbb_aw_awready     //|< i
+    ,nvdla_core2dbb_aw_awid        //|> o
+    ,nvdla_core2dbb_aw_awlen       //|> o
+    ,nvdla_core2dbb_aw_awaddr      //|> o
+    ,nvdla_core2dbb_w_wvalid       //|> o
+    ,nvdla_core2dbb_w_wready       //|< i
+    ,nvdla_core2dbb_w_wdata        //|> o
+    ,nvdla_core2dbb_w_wstrb        //|> o
+    ,nvdla_core2dbb_w_wlast        //|> o
+    ,nvdla_core2dbb_b_bvalid       //|< i
+    ,nvdla_core2dbb_b_bready       //|> o
+    ,nvdla_core2dbb_b_bid          //|< i
+    ,nvdla_core2dbb_ar_arvalid     //|> o
+    ,nvdla_core2dbb_ar_arready     //|< i
+    ,nvdla_core2dbb_ar_arid        //|> o
+    ,nvdla_core2dbb_ar_arlen       //|> o
+    ,nvdla_core2dbb_ar_araddr      //|> o
+    ,nvdla_core2dbb_r_rvalid       //|< i
+    ,nvdla_core2dbb_r_rready       //|> o
+    ,nvdla_core2dbb_r_rid          //|< i
+    ,nvdla_core2dbb_r_rlast        //|< i
+    ,nvdla_core2dbb_r_rdata        //|< i
+    #ifdef SRAM
+    ,nvdla_core2cvsram_aw_awvalid  //|> o
+    ,nvdla_core2cvsram_aw_awready  //|< i
+    ,nvdla_core2cvsram_aw_awid     //|> o
+    ,nvdla_core2cvsram_aw_awlen    //|> o
+    ,nvdla_core2cvsram_aw_awaddr   //|> o
+    ,nvdla_core2cvsram_w_wvalid    //|> o
+    ,nvdla_core2cvsram_w_wready    //|< i
+    ,nvdla_core2cvsram_w_wdata     //|> o
+    ,nvdla_core2cvsram_w_wstrb     //|> o
+    ,nvdla_core2cvsram_w_wlast     //|> o
+    ,nvdla_core2cvsram_b_bvalid    //|< i
+    ,nvdla_core2cvsram_b_bready    //|> o
+    ,nvdla_core2cvsram_b_bid       //|< i
+    ,nvdla_core2cvsram_ar_arvalid  //|> o
+    ,nvdla_core2cvsram_ar_arready  //|< i
+    ,nvdla_core2cvsram_ar_arid     //|> o
+    ,nvdla_core2cvsram_ar_arlen    //|> o
+    ,nvdla_core2cvsram_ar_araddr   //|> o
+    ,nvdla_core2cvsram_r_rvalid    //|< i
+    ,nvdla_core2cvsram_r_rready    //|> o
+    ,nvdla_core2cvsram_r_rid       //|< i
+    ,nvdla_core2cvsram_r_rlast     //|< i
+    ,nvdla_core2cvsram_r_rdata     //|< i
+    #endif
+    //Interrput
+    ,intr_o                        //|> o
+    ,nvdla_pwrbus_ram_c_pd         //|< i
+    ,nvdla_pwrbus_ram_ma_pd        //|< i *
+    ,nvdla_pwrbus_ram_mb_pd        //|< i *
+    ,nvdla_pwrbus_ram_p_pd         //|< i
+    ,nvdla_pwrbus_ram_o_pd         //|< i
+    ,nvdla_pwrbus_ram_a_pd         //|< i
+    );
+
+    ////////////////////////////////////////////////////////////////////////////////
+    input  dla_core_clk; 
+    input  global_clk_ovr_on;               //Stick to 0 in TB
+    input  tmc2slcg_disable_clock_gating;   //Stick to 0 in TB
+    input  direct_reset_;
+    input  test_mode;
+
+    //AXI interface 
+    input         s_axi_aclk;
+    input         s_axi_aresetn;
+    input [31:0]  s_axi_awaddr;
+    input         s_axi_awvalid;
+    output        s_axi_awready;
+    input [31:0]  s_axi_wdata;
+    input         s_axi_wvalid;
+    output        s_axi_wready;
+    output [1:0]  s_axi_bresp;
+    output        s_axi_bvalid;
+    input         s_axi_bready;
+    input [31:0]  s_axi_araddr;
+    input         s_axi_arvalid;
+    output        s_axi_arready;
+    output [31:0] s_axi_rdata;
+    output [1:0]  s_axi_rresp;
+    output        s_axi_rvalid;
+    input         s_axi_rready;
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ///////////////
+    output        nvdla_core2dbb_aw_awvalid;
+    input         nvdla_core2dbb_aw_awready;
+    output  [7:0] nvdla_core2dbb_aw_awid;
+    output  [3:0] nvdla_core2dbb_aw_awlen;
+    output [#NVDLA_DBB_ADDR_WIDTH-1:0] nvdla_core2dbb_aw_awaddr;
+
+    output         nvdla_core2dbb_w_wvalid; 
+    input          nvdla_core2dbb_w_wready; 
+    output [#NVDLA_DBB_DATA_WIDTH-1:0] nvdla_core2dbb_w_wdata;
+    output  [#NVDLA_DBB_DATA_WIDTH/8-1:0] nvdla_core2dbb_w_wstrb;
+    output         nvdla_core2dbb_w_wlast;
+
+    output        nvdla_core2dbb_ar_arvalid; 
+    input         nvdla_core2dbb_ar_arready;
+    output  [7:0] nvdla_core2dbb_ar_arid;
+    output  [3:0] nvdla_core2dbb_ar_arlen;
+    output [#NVDLA_DBB_ADDR_WIDTH-1:0] nvdla_core2dbb_ar_araddr;
+
+    input        nvdla_core2dbb_b_bvalid; 
+    output       nvdla_core2dbb_b_bready;
+    input  [7:0] nvdla_core2dbb_b_bid;
+
+    input          nvdla_core2dbb_r_rvalid;
+    output         nvdla_core2dbb_r_rready;
+    input    [7:0] nvdla_core2dbb_r_rid;
+    input          nvdla_core2dbb_r_rlast;
+    input  [#NVDLA_DBB_DATA_WIDTH-1:0] nvdla_core2dbb_r_rdata;
+
+    #ifdef SRAM
+    output        nvdla_core2cvsram_aw_awvalid;
+    input         nvdla_core2cvsram_aw_awready;
+    output  [7:0] nvdla_core2cvsram_aw_awid;
+    output  [3:0] nvdla_core2cvsram_aw_awlen;
+    output [#NVDLA_SRAM_ADDR_WIDTH-1:0] nvdla_core2cvsram_aw_awaddr;
+
+    output         nvdla_core2cvsram_w_wvalid;
+    input          nvdla_core2cvsram_w_wready;
+    output [#NVDLA_SRAM_DATA_WIDTH-1:0] nvdla_core2cvsram_w_wdata;
+    output  [#NVDLA_SRAM_DATA_WIDTH/8-1:0] nvdla_core2cvsram_w_wstrb;
+    output         nvdla_core2cvsram_w_wlast;
+
+    input        nvdla_core2cvsram_b_bvalid; 
+    output       nvdla_core2cvsram_b_bready;
+    input  [7:0] nvdla_core2cvsram_b_bid;
+
+    output        nvdla_core2cvsram_ar_arvalid;
+    input         nvdla_core2cvsram_ar_arready;
+    output  [7:0] nvdla_core2cvsram_ar_arid;
+    output  [3:0] nvdla_core2cvsram_ar_arlen;
+    output [#NVDLA_SRAM_ADDR_WIDTH-1:0] nvdla_core2cvsram_ar_araddr;
+
+    input          nvdla_core2cvsram_r_rvalid;
+    output         nvdla_core2cvsram_r_rready;
+    input    [7:0] nvdla_core2cvsram_r_rid;
+    input          nvdla_core2cvsram_r_rlast;
+    input  [#NVDLA_SRAM_DATA_WIDTH-1:0] nvdla_core2cvsram_r_rdata;
+    #endif
+
+    output  intr_o;
+
+    input [31:0] nvdla_pwrbus_ram_c_pd;
+    input [31:0] nvdla_pwrbus_ram_ma_pd;
+    input [31:0] nvdla_pwrbus_ram_mb_pd;
+    input [31:0] nvdla_pwrbus_ram_p_pd;
+    input [31:0] nvdla_pwrbus_ram_o_pd;
+    input [31:0] nvdla_pwrbus_ram_a_pd;
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////----Wire & Reg Degine------////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+    //AXI-lite 2 APB internal connections
+    wire         dla_reset_rstn;
+    wire         dla_csb_clk;
+
+    //AXI 2 CSB internal connections
+    wire         csb2nvdla_valid;  
+    wire         csb2nvdla_ready; 
+    wire [15:0]  csb2nvdla_addr;
+    wire [31:0]  csb2nvdla_wdat;
+    wire         csb2nvdla_write;
+    wire         csb2nvdla_nposted;
+    wire         nvdla2csb_valid;
+    wire [31:0]  nvdla2csb_data;
+
+    //AXI-lite 2 APB internal connections
+    wire [31:0]  m_apb_paddr;  
+    wire [0:0]   m_apb_psel;   
+    wire         m_apb_penable;
+    wire         m_apb_pwrite; 
+    wire [31:0]  m_apb_pwdata; 
+    wire [0:0]   m_apb_pready; 
+    wire [31:0]  m_apb_prdata; 
+    wire [0:0]   m_apb_pslverr;
+    wire [31:0]  s_apb_paddr;  
+    wire [0:0]   s_apb_psel;   
+    wire         s_apb_penable;
+    wire         s_apb_pwrite; 
+    wire [31:0]  s_apb_pwdata; 
+    wire [0:0]   s_apb_pready; 
+    wire [31:0]  s_apb_prdata; 
+    wire         pclk;
+    wire         prstn;
+
+    //Interrupt
+    wire   dla_intr;
+
+    assign intr_o = dla_intr;
+
+    //AXI -> APB
+    assign pclk          = s_axi_aclk;
+    assign prstn         = s_axi_aresetn;
+    assign s_apb_paddr   = m_apb_paddr;
+    assign s_apb_psel    = m_apb_psel;
+    assign s_apb_penable = m_apb_penable;
+    assign s_apb_pwrite  = m_apb_pwrite;
+    assign s_apb_pwdata  = m_apb_pwdata;
+    //APB -> AXI
+    assign m_apb_pready  = s_apb_pready;
+    assign m_apb_prdata  = s_apb_prdata;
+    //Default Value for Unused connections
+    assign m_apb_pslverr = 0;
+
+    //AXI -> CSB
+    assign dla_csb_clk    =  s_axi_aclk;
+    assign dla_reset_rstn =  s_axi_aresetn; 
+
+    ////////////////////////////////////////////////////////////////////////////////
+    axi_apb_bridge_0  axi2apb(
+        //AXI-S Side
+        .s_axi_aclk       (s_axi_aclk    ) ,     // input wire s_axi_aclk
+        .s_axi_aresetn    (s_axi_aresetn ) ,     // input wire s_axi_aresetn
+        .s_axi_awaddr     (s_axi_awaddr  ) ,     // input wire [31 : 0] s_axi_awaddr
+        .s_axi_awvalid    (s_axi_awvalid ) ,     // input wire s_axi_awvalid
+        .s_axi_awready    (s_axi_awready ) ,     // output wire s_axi_awready
+        .s_axi_wdata      (s_axi_wdata   ) ,     // input wire [31 : 0] s_axi_wdata
+        .s_axi_wvalid     (s_axi_wvalid  ) ,     // input wire s_axi_wvalid
+        .s_axi_wready     (s_axi_wready  ) ,     // output wire s_axi_wready
+        .s_axi_bresp      (s_axi_bresp   ) ,     // output wire [1 : 0] s_axi_bresp
+        .s_axi_bvalid     (s_axi_bvalid  ) ,     // output wire s_axi_bvalid
+        .s_axi_bready     (s_axi_bready  ) ,     // input wire s_axi_bready
+        .s_axi_araddr     (s_axi_araddr  ) ,     // input wire [31 : 0] s_axi_araddr
+        .s_axi_arvalid    (s_axi_arvalid ) ,     // input wire s_axi_arvalid
+        .s_axi_arready    (s_axi_arready ) ,     // output wire s_axi_arready
+        .s_axi_rdata      (s_axi_rdata   ) ,     // output wire [31 : 0] s_axi_rdata
+        .s_axi_rresp      (s_axi_rresp   ) ,     // output wire [1 : 0] s_axi_rresp
+        .s_axi_rvalid     (s_axi_rvalid  ) ,     // output wire s_axi_rvalid
+        .s_axi_rready     (s_axi_rready  ) ,     // input wire s_axi_rready
+        //APB-M Side
+        .m_apb_paddr      (m_apb_paddr   ) ,     // output wire [31 : 0] m_apb_paddr
+        .m_apb_psel       (m_apb_psel    ) ,     // output wire [0 : 0] m_apb_psel
+        .m_apb_penable    (m_apb_penable ) ,     // output wire m_apb_penable
+        .m_apb_pwrite     (m_apb_pwrite  ) ,     // output wire m_apb_pwrite
+        .m_apb_pwdata     (m_apb_pwdata  ) ,     // output wire [31 : 0] m_apb_pwdata
+        .m_apb_pready     (m_apb_pready  ) ,     // input wire [0 : 0] m_apb_pready
+        .m_apb_prdata     (m_apb_prdata  ) ,     // input wire [31 : 0] m_apb_prdata
+        .m_apb_pslverr    (m_apb_pslverr )       // input wire [0 : 0] m_apb_pslverr
+        );
+
+    ////////////////////////////////////////////////////////////////////////////////
+    NV_NVDLA_apb2csb  apb2csb(
+        //APB-S Side
+        .pclk                 (pclk             )
+        ,.prstn               (prstn            )
+        ,.paddr               (s_apb_paddr      )
+        ,.psel                (s_apb_psel       )
+        ,.penable             (s_apb_penable    )
+        ,.pwrite              (s_apb_pwrite     )
+        ,.pwdata              (s_apb_pwdata     )
+        ,.pready              (s_apb_pready     )
+        ,.prdata              (s_apb_prdata     )
+        //CSB-M Side
+        ,.csb2nvdla_addr      (csb2nvdla_addr   )
+        ,.csb2nvdla_nposted   (csb2nvdla_nposted)
+        ,.csb2nvdla_valid     (csb2nvdla_valid  )
+        ,.csb2nvdla_wdat      (csb2nvdla_wdat   )
+        ,.csb2nvdla_write     (csb2nvdla_write  )
+        ,.csb2nvdla_ready     (csb2nvdla_ready  )
+        ,.nvdla2csb_data      (nvdla2csb_data   )
+        ,.nvdla2csb_valid     (nvdla2csb_valid  )
+        );
+
+    ////////////////////////////////////////////////////////////////////////////////
+    NV_nvdla nvdla (
+        .dla_core_clk                     (dla_core_clk                    )
+        ,.global_clk_ovr_on               (global_clk_ovr_on               )
+        ,.tmc2slcg_disable_clock_gating   (tmc2slcg_disable_clock_gating   )
+        ,.direct_reset_                   (direct_reset_                   )
+        ,.test_mode                       (test_mode                       )
+        ,.dla_csb_clk                     (dla_csb_clk                     )
+        ,.dla_reset_rstn                  (dla_reset_rstn                  )
+        //CSB2APB                                                                   
+        ,.csb2nvdla_valid                 (csb2nvdla_valid                 )
+        ,.csb2nvdla_ready                 (csb2nvdla_ready                 )
+        ,.csb2nvdla_addr                  (csb2nvdla_addr                  )
+        ,.csb2nvdla_wdat                  (csb2nvdla_wdat                  )
+        ,.csb2nvdla_write                 (csb2nvdla_write                 )
+        ,.csb2nvdla_nposted               (csb2nvdla_nposted               )
+        ,.nvdla2csb_valid                 (nvdla2csb_valid                 )
+        ,.nvdla2csb_data                  (nvdla2csb_data                  )
+        ,.nvdla2csb_wr_complete           (nvdla2csb_wr_complete           )
+        //-------                                                              
+        ,.nvdla_core2dbb_aw_awvalid       (nvdla_core2dbb_aw_awvalid       )
+        ,.nvdla_core2dbb_aw_awready       (nvdla_core2dbb_aw_awready       )
+        ,.nvdla_core2dbb_aw_awid          (nvdla_core2dbb_aw_awid          )
+        ,.nvdla_core2dbb_aw_awlen         (nvdla_core2dbb_aw_awlen         )
+        ,.nvdla_core2dbb_aw_awaddr        (nvdla_core2dbb_aw_awaddr        )
+        ,.nvdla_core2dbb_w_wvalid         (nvdla_core2dbb_w_wvalid         )
+        ,.nvdla_core2dbb_w_wready         (nvdla_core2dbb_w_wready         )
+        ,.nvdla_core2dbb_w_wdata          (nvdla_core2dbb_w_wdata          )
+        ,.nvdla_core2dbb_w_wstrb          (nvdla_core2dbb_w_wstrb          )
+        ,.nvdla_core2dbb_w_wlast          (nvdla_core2dbb_w_wlast          )
+        ,.nvdla_core2dbb_b_bvalid         (nvdla_core2dbb_b_bvalid         )
+        ,.nvdla_core2dbb_b_bready         (nvdla_core2dbb_b_bready         )
+        ,.nvdla_core2dbb_b_bid            (nvdla_core2dbb_b_bid            )
+        ,.nvdla_core2dbb_ar_arvalid       (nvdla_core2dbb_ar_arvalid       )
+        ,.nvdla_core2dbb_ar_arready       (nvdla_core2dbb_ar_arready       )
+        ,.nvdla_core2dbb_ar_arid          (nvdla_core2dbb_ar_arid          )
+        ,.nvdla_core2dbb_ar_arlen         (nvdla_core2dbb_ar_arlen         )
+        ,.nvdla_core2dbb_ar_araddr        (nvdla_core2dbb_ar_araddr        )
+        ,.nvdla_core2dbb_r_rvalid         (nvdla_core2dbb_r_rvalid         )
+        ,.nvdla_core2dbb_r_rready         (nvdla_core2dbb_r_rready         )
+        ,.nvdla_core2dbb_r_rid            (nvdla_core2dbb_r_rid            )
+        ,.nvdla_core2dbb_r_rlast          (nvdla_core2dbb_r_rlast          )
+        ,.nvdla_core2dbb_r_rdata          (nvdla_core2dbb_r_rdata          )
+        #ifdef SRAM
+        ,.nvdla_core2cvsram_aw_awvalid    (nvdla_core2cvsram_aw_awvalid    )
+        ,.nvdla_core2cvsram_aw_awready    (nvdla_core2cvsram_aw_awready    )
+        ,.nvdla_core2cvsram_aw_awid       (nvdla_core2cvsram_aw_awid       )
+        ,.nvdla_core2cvsram_aw_awlen      (nvdla_core2cvsram_aw_awlen      )
+        ,.nvdla_core2cvsram_aw_awaddr     (nvdla_core2cvsram_aw_awaddr     )
+        ,.nvdla_core2cvsram_w_wvalid      (nvdla_core2cvsram_w_wvalid      )
+        ,.nvdla_core2cvsram_w_wready      (nvdla_core2cvsram_w_wready      )
+        ,.nvdla_core2cvsram_w_wdata       (nvdla_core2cvsram_w_wdata       )
+        ,.nvdla_core2cvsram_w_wstrb       (nvdla_core2cvsram_w_wstrb       )
+        ,.nvdla_core2cvsram_w_wlast       (nvdla_core2cvsram_w_wlast       )
+        ,.nvdla_core2cvsram_b_bvalid      (nvdla_core2cvsram_b_bvalid      )
+        ,.nvdla_core2cvsram_b_bready      (nvdla_core2cvsram_b_bready      )
+        ,.nvdla_core2cvsram_b_bid         (nvdla_core2cvsram_b_bid         )
+        ,.nvdla_core2cvsram_ar_arvalid    (nvdla_core2cvsram_ar_arvalid    )
+        ,.nvdla_core2cvsram_ar_arready    (nvdla_core2cvsram_ar_arready    )
+        ,.nvdla_core2cvsram_ar_arid       (nvdla_core2cvsram_ar_arid       )
+        ,.nvdla_core2cvsram_ar_arlen      (nvdla_core2cvsram_ar_arlen      )
+        ,.nvdla_core2cvsram_ar_araddr     (nvdla_core2cvsram_ar_araddr     )
+        ,.nvdla_core2cvsram_r_rvalid      (nvdla_core2cvsram_r_rvalid      )
+        ,.nvdla_core2cvsram_r_rready      (nvdla_core2cvsram_r_rready      )
+        ,.nvdla_core2cvsram_r_rid         (nvdla_core2cvsram_r_rid         )
+        ,.nvdla_core2cvsram_r_rlast       (nvdla_core2cvsram_r_rlast       )
+        ,.nvdla_core2cvsram_r_rdata       (nvdla_core2cvsram_r_rdata       )
+        #endif
+        //Interrupt
+        ,.dla_intr                        (dla_intr                        )
+        ,.nvdla_pwrbus_ram_c_pd           (nvdla_pwrbus_ram_c_pd           )
+        ,.nvdla_pwrbus_ram_ma_pd          (nvdla_pwrbus_ram_ma_pd          )
+        ,.nvdla_pwrbus_ram_mb_pd          (nvdla_pwrbus_ram_mb_pd          )
+        ,.nvdla_pwrbus_ram_p_pd           (nvdla_pwrbus_ram_p_pd           )
+        ,.nvdla_pwrbus_ram_o_pd           (nvdla_pwrbus_ram_o_pd           )
+        ,.nvdla_pwrbus_ram_a_pd           (nvdla_pwrbus_ram_a_pd           )
+        );
+endmodule
