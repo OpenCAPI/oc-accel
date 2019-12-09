@@ -20,6 +20,7 @@ HDL_EXAMPLE=y
 # HDL_SINGLE_ENGINE is not set
 # HDL_MULTI_PROCESS is not set
 # HDL_NVDLA is not set
+# HDL_DATABASE is not set
 # HDL_UNIT_SIM is not set
 # HLS_HELLOWORLD is not set
 # HLS_MEMCOPY_1024 is not set
