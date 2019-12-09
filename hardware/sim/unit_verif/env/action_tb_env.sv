@@ -16,6 +16,8 @@
 `ifndef _ACTION_TB_ENV_SV_
 `define _ACTION_TB_ENV_SV_
 
+`include "../../../hdl/core/snap_global_vars.v"
+
 //-------------------------------------------------------------------------------------
 //
 // CLASS: action_tb_env
@@ -28,9 +30,17 @@ class action_tb_env extends uvm_env;
 
     string                    tID;
     tlx_afu_monitor           tlx_afu_mon;
-    axi_mm_monitor            axi_mm_mon;
+    `ifndef ENABLE_ODMA_ST_MODE
+        axi_mm_monitor            axi_mm_mon;
+    `else
+        axi_st_monitor            axi_st_mon;
+    `endif
 	axi_lite_monitor		  axi_lite_mon; //added at 2019.08.14
-    bridge_check_scoreboard   bridge_check_sbd;
+    `ifndef ENABLE_ODMA
+        bridge_check_scoreboard   bridge_check_sbd;
+    `else
+        odma_check_scoreboard     odma_check_sbd;
+    `endif
     //tl_bfm_env                bfm_env;
     tl_agent                  bfm_agt;
     tb_vseqr                  vsqr; 
@@ -76,15 +86,24 @@ function void action_tb_env::build_phase(uvm_phase phase);
     super.build_phase(phase);
     `uvm_info(tID, $sformatf("build_phase begin ..."), UVM_MEDIUM)
     brdg_cfg = brdg_cfg_obj::type_id::create("brdg_cfg", this);
-    axi_mm_mon       = axi_mm_monitor::type_id::create("axi_mm_mon", this); 
+    `ifndef ENABLE_ODMA_ST_MODE
+        axi_mm_mon       = axi_mm_monitor::type_id::create("axi_mm_mon", this);
+    `else
+        axi_st_mon       = axi_st_monitor::type_id::create("axi_st_mon", this);
+    `endif
 	axi_lite_mon	 = axi_lite_monitor::type_id::create("axi_lite_mon", this); //added at 2019.08.14
     tlx_afu_mon      = tlx_afu_monitor::type_id::create("tlx_afu_mon", this);
-    bridge_check_sbd = bridge_check_scoreboard::type_id::create("bridge_check_sbd", this);    
+    `ifndef ENABLE_ODMA    
+        bridge_check_sbd = bridge_check_scoreboard::type_id::create("bridge_check_sbd", this);
+    `else
+        odma_check_sbd   = odma_check_scoreboard::type_id::create("odma_check_sbd", this);
+    `endif
     vsqr             = tb_vseqr::type_id::create("vsqr", this);
 //    bfm_env          = tl_bfm_env::type_id::create("bfm_env", this);
     bfm_agt          = tl_agent::type_id::create("bfm_agt", this);
     //host_mem         = host_mem_model::type_id::create("host_mem", this);
     uvm_config_db #(brdg_cfg_obj)::set(this, "bridge_check_sbd", "brdg_cfg", brdg_cfg);
+    uvm_config_db #(brdg_cfg_obj)::set(this, "odma_check_sbd", "brdg_cfg", brdg_cfg);
 
 endfunction : build_phase
 
@@ -93,13 +112,24 @@ endfunction : build_phase
 function void action_tb_env::connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     `uvm_info(tID, $sformatf("connect_phase begin ..."), UVM_HIGH)
-    //Connect components/tlm ports
-    tlx_afu_mon.tlx_afu_tran_port.connect(bridge_check_sbd.aimp_tlx_afu);
-    tlx_afu_mon.afu_tlx_tran_port.connect(bridge_check_sbd.aimp_afu_tlx);    
-    tlx_afu_mon.intrp_tran_port.connect(bridge_check_sbd.aimp_intrp);
-    axi_mm_mon.axi_mm_tran_port.connect(bridge_check_sbd.aimp_axi_mm);
-    axi_mm_mon.axi_mm_cmd_rd_port.connect(bridge_check_sbd.aimp_axi_mm_cmd_rd);
-    axi_mm_mon.axi_mm_cmd_wr_port.connect(bridge_check_sbd.aimp_axi_mm_cmd_wr);
+    //Connect components/tlm ports for scoreboard
+    `ifndef ENABLE_ODMA
+        tlx_afu_mon.tlx_afu_tran_port.connect(bridge_check_sbd.aimp_tlx_afu);
+        tlx_afu_mon.afu_tlx_tran_port.connect(bridge_check_sbd.aimp_afu_tlx);    
+        tlx_afu_mon.intrp_tran_port.connect(bridge_check_sbd.aimp_intrp);
+        axi_mm_mon.axi_mm_tran_port.connect(bridge_check_sbd.aimp_axi_mm);
+        axi_mm_mon.axi_mm_cmd_rd_port.connect(bridge_check_sbd.aimp_axi_mm_cmd_rd);
+        axi_mm_mon.axi_mm_cmd_wr_port.connect(bridge_check_sbd.aimp_axi_mm_cmd_wr);
+    `else
+        tlx_afu_mon.tlx_afu_tran_port.connect(odma_check_sbd.aimp_tlx_afu_odma);
+        tlx_afu_mon.afu_tlx_tran_port.connect(odma_check_sbd.aimp_afu_tlx_odma);
+        tlx_afu_mon.afu_tlx_tran_port.connect(odma_check_sbd.aimp_afu_tlx_odma); 
+        `ifndef ENABLE_ODMA_ST_MODE
+            axi_mm_mon.axi_mm_tran_port.connect(odma_check_sbd.aimp_axi_mm_odma);
+        `else
+            axi_st_mon.axi_st_tran_port.connect(odma_check_sbd.aimp_axi_st_odma);
+        `endif
+    `endif
     //Connect sequencers to virtual sequencer
     //vsqr.tx_sqr = bfm_env.bfm_agt.tx_sqr;
     //vsqr.cfg_obj = bfm_env.bfm_agt.cfg_obj;

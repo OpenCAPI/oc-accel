@@ -101,15 +101,16 @@ wire   [0002:0]    dsc_cmp_cnt;
 
 reg    [0021:0]    lcl_rd_req_cnt;
 reg    [0021:0]    lcl_rd_req_number;
-reg    [0007:0]    lcl_rd_first_len;
-reg    [0006:0]    lcl_rd_last_len;
-wire   [0127:0]    lcl_rd_be_last;
+//reg    [0007:0]    lcl_rd_first_len;
+//reg    [0006:0]    lcl_rd_last_len;
+reg    [0127:0]    lcl_rd_be_last;
 reg    [0127:0]    lcl_rd_be_first;
 reg                parser_ready;
 reg    [0005:0]    rd_axi_id_reg;
 reg    [0063:0]    lcl_src_addr;
 
 reg                dsc0_onflight;
+reg                dsc0_interrupt_req;
 reg    [0001:0]    dsc0_channel_id;
 reg    [0029:0]    dsc0_dsc_id;
 reg    [0015:0]    dsc0_axi_req_number;
@@ -136,6 +137,7 @@ wire               dsc0_axi_data_first_beat;
 wire               dsc0_axi_data_last_beat; 
 
 reg                dsc1_onflight;
+reg                dsc1_interrupt_req;
 reg    [0001:0]    dsc1_channel_id;
 reg    [0029:0]    dsc1_dsc_id;
 reg    [0015:0]    dsc1_axi_req_number;
@@ -162,6 +164,7 @@ wire               dsc1_axi_data_first_beat;
 wire               dsc1_axi_data_last_beat; 
 
 reg                dsc2_onflight;
+reg                dsc2_interrupt_req;
 reg    [0001:0]    dsc2_channel_id;
 reg    [0029:0]    dsc2_dsc_id;
 reg    [0015:0]    dsc2_axi_req_number;
@@ -188,6 +191,7 @@ wire               dsc2_axi_data_first_beat;
 wire               dsc2_axi_data_last_beat; 
 
 reg                dsc3_onflight;
+reg                dsc3_interrupt_req;
 reg    [0001:0]    dsc3_channel_id;
 reg    [0029:0]    dsc3_dsc_id;
 reg    [0015:0]    dsc3_axi_req_number;
@@ -222,14 +226,15 @@ wire               lcl_rd_issue;
 wire   [0002:0]    engine_id;
 reg    [0255:0]    descriptor;
 wire               is_dsc_valid;
+wire               interrupt_req;
 wire   [0001:0]    channel_id;
 wire   [0029:0]    dsc_id;
 wire   [0027:0]    dsc_len;
-wire   [0028:0]    dsc_len_128B_extend;
+wire   [0028:0]    dst_len_128B_extend;
+wire   [0028:0]    src_len_128B_extend;
 wire   [0063:0]    src_addr;
 wire   [0063:0]    dst_addr;
-wire               dsc_data_128B_align;
-wire               dsc_data_4KB_align;
+wire               dst_data_4KB_align;
 
 wire               add_dsc0;
 wire               add_dsc1;
@@ -293,7 +298,7 @@ wire               lcl_rd_data_receive_dsc1;
 wire               lcl_rd_data_receive_dsc2;
 wire               lcl_rd_data_receive_dsc3;
 
-reg    [0001:0]    current_data_channel_id;
+reg    [0002:0]    current_data_channel_id;
 wire               data_id_match;
 wire               rdata_to_fifo;
 
@@ -367,8 +372,40 @@ reg                dsc1_cmp_status;
 reg                dsc2_cmp_status;
 reg                dsc3_cmp_status;
 
-wire   [0012:0]    dsc_first_4KB_len;
-wire   [0027:0]    dsc_len_without_first_burst;
+wire   [0012:0]    dst_first_4KB_len;
+wire   [0027:0]    dst_len_without_first_burst;
+
+
+`ifdef ACTION_DATA_WIDTH_512
+    reg    [0007:0]   m_axi_awlen_128B;
+    reg               m_axi_wvalid_even;
+    reg    [1023:0]   m_axi_wdata_128B;
+    reg    [0127:0]   m_axi_wstrb_128B;
+    reg               m_axi_wvalid_odd;
+    reg    [0511:0]   m_axi_wdata_64B_odd;
+    reg    [0063:0]   m_axi_wstrb_64B_odd;
+    wire              axi_wdata_onduty;
+    reg               m_axi_wbeat_even;
+    reg               m_axi_wbeat_odd;
+    wire   [0007:0]   dsc0_first_awlen_64B;
+    wire   [0007:0]   dsc0_last_awlen_64B; 
+    wire   [0007:0]   dsc1_first_awlen_64B;
+    wire   [0007:0]   dsc1_last_awlen_64B; 
+    wire   [0007:0]   dsc2_first_awlen_64B;
+    wire   [0007:0]   dsc2_last_awlen_64B; 
+    wire   [0007:0]   dsc3_first_awlen_64B;
+    wire   [0007:0]   dsc3_last_awlen_64B; 
+    wire              axi_data_issue_odd;
+    wire              m_axi_wready_odd;
+    wire               dsc0_axi_data_first_beat_128B; 
+    wire               dsc1_axi_data_first_beat_128B; 
+    wire               dsc2_axi_data_first_beat_128B; 
+    wire               dsc3_axi_data_first_beat_128B; 
+    wire               dsc0_axi_data_last_beat_128B; 
+    wire               dsc1_axi_data_last_beat_128B; 
+    wire               dsc2_axi_data_last_beat_128B; 
+    wire               dsc3_axi_data_last_beat_128B; 
+`endif
 
 
 /////////////////////////////
@@ -384,7 +421,7 @@ reg [27:0] lcl_rd_data_cnt;
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
         lcl_rd_cnt <= 28'd0;
-    else if (lcl_rd_valid && lcl_rd_ready && (lcl_rd_axi_id == 5'b10010))
+    else if (lcl_rd_valid && lcl_rd_ready && (lcl_rd_axi_id == 5'b00010))
         lcl_rd_cnt <= (lcl_rd_last)? 28'd0 : lcl_rd_cnt + 1;
     else
         lcl_rd_cnt <= lcl_rd_cnt;
@@ -392,7 +429,7 @@ always @(posedge clk or negedge rst_n)
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
         lcl_rd_data_cnt <= 28'd0;
-    else if (lcl_rd_data_valid && lcl_rd_rsp_ready[2] && (lcl_rd_data_axi_id == 5'b10010))
+    else if (lcl_rd_data_valid && lcl_rd_rsp_ready[2] && (lcl_rd_data_axi_id == 5'b00010))
         lcl_rd_data_cnt <= (lcl_rd_data_last)? 28'd0 : lcl_rd_data_cnt + 1;
     else
         lcl_rd_data_cnt <= lcl_rd_data_cnt;
@@ -490,28 +527,46 @@ assign dst_addr = descriptor[191:128];
 assign channel_id = descriptor[223:222];
 assign dsc_id = descriptor[221:192];
 assign engine_id = `H2AMM_ENGINE_ID;
+assign interrupt_req = descriptor[1];
+
+wire             is_dsc_unalign;
+wire [0127:0]    full_wr_be;
+wire [0127:0]    lcl_first_be;
+wire [0127:0]    lcl_last_be;
+wire [0021:0]    lcl_req_len;
+wire [0007:0]    lcl_first_len;
+wire [0007:0]    lcl_first_extended_len;
 
 
-// Signals for 128B/4K unalignment
-// dsc_len_128B_extend: Extend dsc_len for dst_addr 128B alignment
-// dsc_first_4KB_len:
-assign dsc_len_128B_extend = dsc_len + dst_addr[6:0];
-assign dsc_first_4KB_len = 13'h1000 - {dst_addr[11:7], 7'b0000000};
-assign dsc_len_without_first_burst = (dsc_len_128B_extend > dsc_first_4KB_len)? (dsc_len_128B_extend - dsc_first_4KB_len) : 28'h0;
+wire [0021:0]    axi_wdata_len;
+wire [0007:0]    axi_wbeat_first;
+wire [0127:0]    axi_wstrb_first;
+wire [0127:0]    axi_wstrb_last;
 
-assign dsc_data_128B_align = (dsc_len_128B_extend[6:0] == 7'd0);
-assign dsc_data_4KB_align = (dsc_len_without_first_burst[11:0] == 12'd0);
+assign full_wr_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
+assign is_dsc_unalign = (src_addr[6:0] != 7'b0) || (dst_addr[6:0] != 7'b0);
 
-wire [0127:0]    wr_be;
-wire [0007:0]    first_128B_data_len;
-wire [0027:0]    dsc_len_without_first_beat;
-wire [0127:0]    first_128B_be;
+assign dst_len_128B_extend = dsc_len + dst_addr[6:0];
+assign src_len_128B_extend = dsc_len + src_addr[6:0];
 
-// for dst_addr 128B unalign
-assign wr_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
-assign first_128B_data_len = (dsc_len > (8'h80 - dst_addr[6:0]))? (8'h80 - dst_addr[6:0]) : dsc_len;
-assign dsc_len_without_first_beat = dsc_len - first_128B_data_len;
-assign first_128B_be = (wr_be >> (8'h80 - first_128B_data_len)) << (8'h80 - first_128B_data_len); 
+
+assign lcl_first_extended_len = src_addr[6:0];
+assign lcl_req_len = (src_len_128B_extend[6:0] == 7'd0)? (src_len_128B_extend >> 7) : ((src_len_128B_extend >> 7) + 1);
+assign lcl_first_len = (dsc_len > (8'd128 - src_addr[6:0]))? (8'd128 - src_addr[6:0]) : dsc_len;
+assign lcl_first_be = (dsc_len > (8'd128 - src_addr[6:0]))? ((full_wr_be >> (8'd128 - lcl_first_len)) << (8'd128 - lcl_first_len)) : (full_wr_be << (8'd128 - lcl_first_extended_len - lcl_first_len) >> (8'd128 - lcl_first_len) << (lcl_first_extended_len));
+assign lcl_last_be = (src_len_128B_extend[6:0] == 7'd0)? full_wr_be : (full_wr_be >> (8'd128 - src_len_128B_extend[6:0]));
+
+assign axi_wdata_len = (dst_len_128B_extend[6:0] == 7'd0)?  (dst_len_128B_extend >> 7) : ((dst_len_128B_extend >> 7) + 1); 
+assign axi_wbeat_first = (dsc_len > (8'd128 - dst_addr[6:0]))? (8'd128 - dst_addr[6:0]) : dsc_len;
+//assign axi_wstrb_first = (full_wr_be >> (8'd128 - axi_wbeat_first)) << (8'd128 - axi_wbeat_first);
+assign axi_wstrb_first = lcl_first_be;
+assign axi_wstrb_last = (dst_len_128B_extend[6:0] == 7'd0)? full_wr_be : (full_wr_be >> (8'd128 - dst_len_128B_extend[6:0]));
+
+
+assign dst_first_4KB_len = (dst_len_128B_extend > (13'h1000 - {dst_addr[11:7], 7'b0000000}))? (13'h1000 - {dst_addr[11:7], 7'b0000000}) : dst_len_128B_extend;
+assign dst_len_without_first_burst = (dst_len_128B_extend > dst_first_4KB_len)? (dst_len_128B_extend - dst_first_4KB_len) : 28'h0;
+
+assign dst_data_4KB_align = (dst_len_without_first_burst[11:0] == 12'd0);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -562,7 +617,7 @@ always @(posedge clk or negedge rst_n)
         lcl_rd_req_cnt <= 0;
     else
         case ({is_dsc_valid, lcl_rd_issue})
-            2'b10:  lcl_rd_req_cnt <= (dsc_len_without_first_beat[6:0] == 7'b0)? (dsc_len_without_first_beat[27:7] + 1) : (dsc_len_without_first_beat[27:7] + 2);
+            2'b10:  lcl_rd_req_cnt <= lcl_req_len;
             2'b01:  lcl_rd_req_cnt <= lcl_rd_req_cnt - 1;
             default: lcl_rd_req_cnt <= lcl_rd_req_cnt;
         endcase
@@ -571,44 +626,31 @@ always @(posedge clk or negedge rst_n)
     if (!rst_n)
         lcl_rd_req_number <= 22'd0;
     else if (is_dsc_valid)
-        lcl_rd_req_number <= (dsc_len_without_first_beat[6:0] == 7'b0)? (dsc_len_without_first_beat[27:7] + 1) : (dsc_len_without_first_beat[27:7] + 2);
+        lcl_rd_req_number <= lcl_req_len;
     else
         lcl_rd_req_number <= lcl_rd_req_number;
-
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
-        lcl_rd_first_len <= 8'b0;
-    else if (is_dsc_valid)
-        lcl_rd_first_len <= first_128B_data_len;
-    else
-        lcl_rd_first_len <= lcl_rd_first_len;
-   
-// get the lcl_rd_be from the dsc_len low 7 bits
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        lcl_rd_last_len <= 0;
-    else if (is_dsc_valid)
-        lcl_rd_last_len <= dsc_len_without_first_beat[6:0];
-    else 
-        lcl_rd_last_len <= lcl_rd_last_len;
-
-assign lcl_rd_be_last = (lcl_rd_last_len == 7'd0)? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF : (128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF >> (128 - lcl_rd_last_len));
 
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
         lcl_rd_be_first <= 128'h0;
     else if (is_dsc_valid)
-        lcl_rd_be_first <= first_128B_be;
+        lcl_rd_be_first <= lcl_first_be;
     else
         lcl_rd_be_first <= lcl_rd_be_first;
 
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
+        lcl_rd_be_last <= 128'h0;
+    else if (is_dsc_valid)
+        lcl_rd_be_last <= lcl_last_be;
+    else
+        lcl_rd_be_last <= lcl_rd_be_last;
+
+always @(posedge clk or negedge rst_n)
+    if (!rst_n)
         lcl_src_addr <= 64'b0;
     else if (is_dsc_valid)
-        lcl_src_addr <= src_addr;
-    else if (lcl_rd_issue && lcl_rd_first)
-        lcl_src_addr <= lcl_src_addr + lcl_rd_first_len;
+        lcl_src_addr <= {src_addr[63:7], 7'b0000000};
     else if (lcl_rd_issue && (~lcl_rd_last))
         lcl_src_addr <= lcl_src_addr + 64'd128;
     else 
@@ -625,24 +667,6 @@ assign lcl_rd_ea = lcl_src_addr;
 assign lcl_rd_ctx = 9'b0;
 assign lcl_rd_ctx_valid = 0;
 assign lcl_rd_be = (lcl_rd_first)? lcl_rd_be_first : ((lcl_rd_last)? lcl_rd_be_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF);
-
-// TODO: Address alginment logic 
-// For LCL Rd IF: lcl_rd_ea_first lcl_rd_be_first lcl_rd_be_last
-// For LCL Rd Data IF: record the first beat and last beat lcl_rd_be signals
-// For AXI-MM Wr Data channel: m_axi_wstrb
-// 
-// Address 128B unalgin & Data 128B unalgin: 1) we will extend address to a 128B algin address
-//                                           2) we will extend the dsc_len to a 128B algin
-//                                           3) we will record the first and last lcl_rd_be                     
-//                                           4) according to the recorded lcl_rd_be, we will generate m_axi_wstrb for first and last beat
-//
-// if the descriptor only have an unaligned 128B data but the address is 128B algined: only the last beat lcl_rd_be & m_axi_wstrb is different
-//                        have an unaligned 128B address: both the first and the last beats of the descriptor's lcl_rd_be & m_axi_wstrb is different          
-//                       
-// lcl_rd_req_cnt will be different and also the dsc*_axi_data_cnt/dsc*_axi_burst_cnt will be different
-// For each descriptor: we will keep a first_be and last_be signals for first and last beats                           
-// 
-
 
 // parser_ready signal back to dsc_buffer
 always @(posedge clk or negedge rst_n)
@@ -742,13 +766,26 @@ always @(posedge clk or negedge rst_n)
     if (!rst_n)
         dsc0_onflight <= 1'b0;
     else
-        case ({add_dsc0, dsc0_cmp, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
+        casex ({add_dsc0, dsc0_cmp, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
             5'b10000: dsc0_onflight <= 1'b1;
             5'b0x100: dsc0_onflight <= dsc1_onflight;
             5'b0x010: dsc0_onflight <= dsc2_onflight;
             5'b0x001: dsc0_onflight <= dsc3_onflight;
             5'b01000: dsc0_onflight <= 1'b0;
             default:  dsc0_onflight <= dsc0_onflight;
+        endcase
+
+// for dsc0_interrupt_req
+always @(posedge clk or negedge rst_n)
+    if (!rst_n)
+        dsc0_interrupt_req <= 1'b0;
+    else
+        case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
+            4'b1000: dsc0_interrupt_req <= interrupt_req;
+            4'b0100: dsc0_interrupt_req <= dsc1_interrupt_req;
+            4'b0010: dsc0_interrupt_req <= dsc2_interrupt_req;
+            4'b0001: dsc0_interrupt_req <= dsc3_interrupt_req;
+            default: dsc0_interrupt_req <= dsc0_interrupt_req;
         endcase
 
 // for dsc0_channel_id
@@ -783,7 +820,7 @@ always @(posedge clk or negedge rst_n)
         dsc0_axi_req_number <= 16'd0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            4'b1000:  dsc0_axi_req_number <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);// TODO: Need to make sure whether it need a +1 when data unalignment occurs
+            4'b1000:  dsc0_axi_req_number <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);// TODO: Need to make sure whether it need a +1 when data unalignment occurs
             4'b0100:  dsc0_axi_req_number <= dsc1_axi_req_number;
             4'b0010:  dsc0_axi_req_number <= dsc2_axi_req_number;
             4'b0001:  dsc0_axi_req_number <= dsc3_axi_req_number;
@@ -796,7 +833,7 @@ always @(posedge clk or negedge rst_n)
         dsc0_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc0, dsc0_axi_req_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            5'b10000:  dsc0_axi_req_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);// TODO: Need to make sure whether it need a +1 when data unalignment occurs
+            5'b10000:  dsc0_axi_req_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);// TODO: Need to make sure whether it need a +1 when data unalignment occurs
             5'b01000:  dsc0_axi_req_cnt <= dsc0_axi_req_cnt - 1;
             5'b00100:  dsc0_axi_req_cnt <= (dsc1_axi_req_issue)? (dsc1_axi_req_cnt - 1) : dsc1_axi_req_cnt;
             5'b00010:  dsc0_axi_req_cnt <= (dsc2_axi_req_issue)? (dsc2_axi_req_cnt - 1) : dsc2_axi_req_cnt;
@@ -810,23 +847,13 @@ always @(posedge clk or negedge rst_n)
         dsc0_axi_burst_cnt <= 16'd0;
     else
         casex ({add_dsc0, dsc0_axi_burst_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            5'b10000:  dsc0_axi_burst_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);// TODO: Need to make sure whether it need a +1 when data unalignment occurs
+            5'b10000:  dsc0_axi_burst_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);// TODO: Need to make sure whether it need a +1 when data unalignment occurs
             5'b01000:  dsc0_axi_burst_cnt <= (dsc0_axi_burst_cnt == 16'd1)? dsc0_axi_burst_cnt : (dsc0_axi_burst_cnt - 1);
             5'b0x100:  dsc0_axi_burst_cnt <= (dsc1_axi_burst_issue)? (dsc1_axi_burst_cnt - 1) : dsc1_axi_burst_cnt;
             5'b0x010:  dsc0_axi_burst_cnt <= (dsc2_axi_burst_issue)? (dsc2_axi_burst_cnt - 1) : dsc2_axi_burst_cnt;
             5'b00001:  dsc0_axi_burst_cnt <= (dsc3_axi_burst_issue)? (dsc3_axi_burst_cnt - 1) : dsc3_axi_burst_cnt;
             default:   dsc0_axi_burst_cnt <= dsc0_axi_burst_cnt; 
         endcase 
-
-// for dsc0_axi_burst_data_cnt
-always @(*) begin
-    if (dsc0_axi_burst_cnt == dsc0_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
-        dsc0_axi_burst_data_cnt = dsc0_first_awlen + 1;
-    else if (dsc0_axi_burst_cnt == 16'd1)
-        dsc0_axi_burst_data_cnt = (dsc0_first_awlen + 1) + ((dsc0_axi_req_number - 2) << 5) + (dsc0_last_awlen + 1);
-    else
-        dsc0_axi_burst_data_cnt = (dsc0_first_awlen + 1) + ((dsc0_axi_req_number - dsc0_axi_burst_cnt) << 5);
-end
 
 // for dsc0_dst_addr
 // TODO: Address is not alignment with 4K
@@ -849,7 +876,7 @@ always @(posedge clk or negedge rst_n)
         dsc0_first_awlen <= 8'h0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            4'b1000: dsc0_first_awlen <= (dsc_len_128B_extend > dsc_first_4KB_len)? ((dsc_first_4KB_len >> 7) - 1) : ((dsc_len_128B_extend >> 7) - 1);
+            4'b1000: dsc0_first_awlen <= (dst_first_4KB_len[6:0] == 7'b0)? ((dst_first_4KB_len >> 7) - 1) : (dst_first_4KB_len >> 7);
             4'b0100: dsc0_first_awlen <= dsc1_first_awlen; 
             4'b0010: dsc0_first_awlen <= dsc2_first_awlen; 
             4'b0001: dsc0_first_awlen <= dsc3_first_awlen;
@@ -862,7 +889,7 @@ always @(posedge clk or negedge rst_n)
         dsc0_last_awlen <= 8'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            4'b1000: dsc0_last_awlen <= (dsc_data_4KB_align)? 8'd31 : ({3'b0, dsc_len_without_first_burst[11:7]} - 1);
+            4'b1000: dsc0_last_awlen <= (dst_data_4KB_align)? 8'd31 : ((dst_len_without_first_burst[6:0] != 7'b0000000)? dst_len_without_first_burst[11:7] :(dst_len_without_first_burst[11:7] - 1));
             4'b0100: dsc0_last_awlen <= dsc1_last_awlen;
             4'b0010: dsc0_last_awlen <= dsc2_last_awlen;
             4'b0001: dsc0_last_awlen <= dsc3_last_awlen;
@@ -870,32 +897,87 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 
-// for dsc0_axi_data_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc0_axi_data_cnt <= 21'd0;
-    else
-        case ({add_dsc0, dsc0_axi_data_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            5'b10000:  dsc0_axi_data_cnt <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1); 
-            5'b01000:  dsc0_axi_data_cnt <= dsc0_axi_data_cnt - 1;
-            5'b00100:  dsc0_axi_data_cnt <= (dsc1_axi_data_issue)? (dsc1_axi_data_cnt - 1) : dsc1_axi_data_cnt;
-            5'b00010:  dsc0_axi_data_cnt <= (dsc2_axi_data_issue)? (dsc2_axi_data_cnt - 1) : dsc2_axi_data_cnt;
-            5'b00001:  dsc0_axi_data_cnt <= (dsc1_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
-            default:   dsc0_axi_data_cnt <= dsc0_axi_data_cnt; 
-        endcase 
+`ifdef ACTION_DATA_WIDTH_512
+// TODO
+    // for dsc0_axi_data_cnt
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc0_axi_data_cnt <= 21'd0;
+        else
+            case ({add_dsc0, dsc0_axi_data_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
+                5'b10000:  dsc0_axi_data_cnt <= (axi_wdata_len << 1); 
+                5'b01000:  dsc0_axi_data_cnt <= dsc0_axi_data_cnt - 1;
+                5'b00100:  dsc0_axi_data_cnt <= (dsc1_axi_data_issue)? (dsc1_axi_data_cnt - 1) : dsc1_axi_data_cnt;
+                5'b00010:  dsc0_axi_data_cnt <= (dsc2_axi_data_issue)? (dsc2_axi_data_cnt - 1) : dsc2_axi_data_cnt;
+                5'b00001:  dsc0_axi_data_cnt <= (dsc1_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
+                default:   dsc0_axi_data_cnt <= dsc0_axi_data_cnt; 
+            endcase 
+    
+    // for dsc0_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc0_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
+                4'b1000:  dsc0_axi_data_number <= (axi_wdata_len << 1);
+                4'b0100:  dsc0_axi_data_number <= dsc1_axi_data_number;
+                4'b0010:  dsc0_axi_data_number <= dsc2_axi_data_number;
+                4'b0001:  dsc0_axi_data_number <= dsc3_axi_data_number;
+                default:  dsc0_axi_data_number <= dsc0_axi_data_number; 
+            endcase 
 
-// for dsc0_axi_data_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc0_axi_data_number <= 21'd0;
-    else
-        case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            4'b1000:  dsc0_axi_data_number <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1);
-            4'b0100:  dsc0_axi_data_number <= dsc1_axi_data_number;
-            4'b0010:  dsc0_axi_data_number <= dsc2_axi_data_number;
-            4'b0001:  dsc0_axi_data_number <= dsc3_axi_data_number;
-            default:  dsc0_axi_data_number <= dsc0_axi_data_number; 
-        endcase 
+
+    assign dsc0_first_awlen_64B = (dsc0_first_awlen << 1) + 1;
+    assign dsc0_last_awlen_64B  = (dsc0_last_awlen << 1) + 1;
+    // for dsc0_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc0_axi_burst_cnt == dsc0_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc0_axi_burst_data_cnt = dsc0_first_awlen_64B + 1;
+        else if (dsc0_axi_burst_cnt == 16'd1)
+            dsc0_axi_burst_data_cnt = (dsc0_first_awlen_64B + 1) + ((dsc0_axi_req_number - 2) << 6) + (dsc0_last_awlen_64B + 1);
+        else
+            dsc0_axi_burst_data_cnt = (dsc0_first_awlen_64B + 1) + ((dsc0_axi_req_number - dsc0_axi_burst_cnt) << 6);
+    end
+    assign dsc0_axi_data_first_beat_128B = (dsc0_axi_data_cnt == dsc0_axi_data_number || (dsc0_axi_data_cnt == dsc0_axi_data_number - 1)) && dsc0_onflight;
+    assign dsc0_axi_data_last_beat_128B = (dsc0_axi_data_cnt == 21'd2 || dsc0_axi_data_cnt == 21'd1) && dsc0_onflight;
+`else
+    // for dsc0_axi_data_cnt
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc0_axi_data_cnt <= 21'd0;
+        else
+            case ({add_dsc0, dsc0_axi_data_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
+                5'b10000:  dsc0_axi_data_cnt <= axi_wdata_len; 
+                5'b01000:  dsc0_axi_data_cnt <= dsc0_axi_data_cnt - 1;
+                5'b00100:  dsc0_axi_data_cnt <= (dsc1_axi_data_issue)? (dsc1_axi_data_cnt - 1) : dsc1_axi_data_cnt;
+                5'b00010:  dsc0_axi_data_cnt <= (dsc2_axi_data_issue)? (dsc2_axi_data_cnt - 1) : dsc2_axi_data_cnt;
+                5'b00001:  dsc0_axi_data_cnt <= (dsc1_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
+                default:   dsc0_axi_data_cnt <= dsc0_axi_data_cnt; 
+            endcase 
+    
+    // for dsc0_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc0_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
+                4'b1000:  dsc0_axi_data_number <= axi_wdata_len;
+                4'b0100:  dsc0_axi_data_number <= dsc1_axi_data_number;
+                4'b0010:  dsc0_axi_data_number <= dsc2_axi_data_number;
+                4'b0001:  dsc0_axi_data_number <= dsc3_axi_data_number;
+                default:  dsc0_axi_data_number <= dsc0_axi_data_number; 
+            endcase 
+
+    // for dsc0_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc0_axi_burst_cnt == dsc0_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc0_axi_burst_data_cnt = dsc0_first_awlen + 1;
+        else if (dsc0_axi_burst_cnt == 16'd1)
+            dsc0_axi_burst_data_cnt = (dsc0_first_awlen + 1) + ((dsc0_axi_req_number - 2) << 5) + (dsc0_last_awlen + 1);
+        else
+            dsc0_axi_burst_data_cnt = (dsc0_first_awlen + 1) + ((dsc0_axi_req_number - dsc0_axi_burst_cnt) << 5);
+    end
+`endif
 
 assign dsc0_axi_data_first_beat = (dsc0_axi_data_cnt == dsc0_axi_data_number) && dsc0_onflight;
 assign dsc0_axi_data_last_beat = (dsc0_axi_data_cnt == 21'd1) && dsc0_onflight;
@@ -906,27 +988,25 @@ always @(posedge clk or negedge rst_n)
          dsc0_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            4'b1000: dsc0_axi_wstrb_first <= first_128B_be;
+            4'b1000: dsc0_axi_wstrb_first <= axi_wstrb_first;
             4'b0100: dsc0_axi_wstrb_first <= dsc1_axi_wstrb_first;
             4'b0010: dsc0_axi_wstrb_first <= dsc2_axi_wstrb_first;
             4'b0001: dsc0_axi_wstrb_first <= dsc3_axi_wstrb_first;
             default: dsc0_axi_wstrb_first <= dsc0_axi_wstrb_first;
         endcase
 
-// for dsc0_axi_data_last_byte
+// for dsc0_axi_wstrb_last
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
-         dsc0_axi_data_last_byte <= 7'b0;
+         dsc0_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            4'b1000: dsc0_axi_data_last_byte <= dsc_len_128B_extend[6:0];
-            4'b0100: dsc0_axi_data_last_byte <= dsc1_axi_data_last_byte;
-            4'b0010: dsc0_axi_data_last_byte <= dsc2_axi_data_last_byte;
-            4'b0001: dsc0_axi_data_last_byte <= dsc3_axi_data_last_byte;
-            default: dsc0_axi_data_last_byte <= dsc0_axi_data_last_byte;
+            4'b1000: dsc0_axi_wstrb_last <= axi_wstrb_last;
+            4'b0100: dsc0_axi_wstrb_last <= dsc1_axi_wstrb_last;
+            4'b0010: dsc0_axi_wstrb_last <= dsc2_axi_wstrb_last;
+            4'b0001: dsc0_axi_wstrb_last <= dsc3_axi_wstrb_last;
+            default: dsc0_axi_wstrb_last <= dsc0_axi_wstrb_last;
         endcase
-
-assign dsc0_axi_wstrb_last = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF >> (128 - dsc0_axi_data_last_byte);
 
 // for dsc0_axi_resp_cnt
 always @(posedge clk or negedge rst_n)
@@ -934,7 +1014,7 @@ always @(posedge clk or negedge rst_n)
         dsc0_axi_resp_cnt <= 16'd0;
     else
         casex ({add_dsc0, dsc0_axi_resp_received, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
-            5'b10000:  dsc0_axi_resp_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            5'b10000:  dsc0_axi_resp_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             5'b01000:  dsc0_axi_resp_cnt <= dsc0_axi_resp_cnt - 1;
             5'b0x100:  dsc0_axi_resp_cnt <= (dsc1_axi_resp_received)? (dsc1_axi_resp_cnt - 1) : dsc1_axi_resp_cnt;
             5'b0x010:  dsc0_axi_resp_cnt <= (dsc2_axi_resp_received)? (dsc2_axi_resp_cnt - 1) : dsc2_axi_resp_cnt;
@@ -1059,9 +1139,21 @@ always @(posedge clk or negedge rst_n)
             4'b0x10: dsc1_onflight <= dsc2_onflight;
             4'b0x01: dsc1_onflight <= dsc3_onflight;
             4'b0100: dsc1_onflight <= 1'b0;
-            default:;
+            default: dsc1_onflight <= dsc1_onflight;
         endcase
         
+// for dsc1_interrupt_req
+always @(posedge clk or negedge rst_n)
+    if (!rst_n)
+        dsc1_interrupt_req <= 1'b0;
+    else
+        case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
+            3'b100: dsc1_interrupt_req <= interrupt_req;
+            3'b010: dsc1_interrupt_req <= dsc2_interrupt_req;
+            3'b001: dsc1_interrupt_req <= dsc3_interrupt_req;
+            default:dsc1_interrupt_req <= dsc1_interrupt_req;
+        endcase
+
 // for dsc1_channel_id
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
@@ -1071,7 +1163,7 @@ always @(posedge clk or negedge rst_n)
             3'b100: dsc1_channel_id <= channel_id;
             3'b010: dsc1_channel_id <= dsc2_channel_id;
             3'b001: dsc1_channel_id <= dsc3_channel_id;
-            default:;
+            default:dsc1_channel_id <= dsc1_channel_id;
         endcase
 
 // for dsc1_dsc_id
@@ -1083,7 +1175,7 @@ always @(posedge clk or negedge rst_n)
             3'b100: dsc1_dsc_id <= dsc_id;
             3'b010: dsc1_dsc_id <= dsc2_dsc_id;
             3'b001: dsc1_dsc_id <= dsc3_dsc_id;
-            default:;
+            default:dsc1_dsc_id <= dsc1_dsc_id;
         endcase
 
 // for dsc1_axi_req_number
@@ -1092,7 +1184,7 @@ always @(posedge clk or negedge rst_n)
         dsc1_axi_req_number <= 16'd0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
-            3'b100: dsc1_axi_req_number <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            3'b100: dsc1_axi_req_number <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             3'b010: dsc1_axi_req_number <= dsc2_axi_req_number;
             3'b001: dsc1_axi_req_number <= dsc3_axi_req_number;
             default:dsc1_axi_req_number <= dsc1_axi_req_number;
@@ -1104,7 +1196,7 @@ always @(posedge clk or negedge rst_n)
         dsc1_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc1, dsc1_axi_req_issue, dsc_move_2_1, dsc_move_3_1})
-            4'b1000: dsc1_axi_req_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            4'b1000: dsc1_axi_req_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             4'b0100: dsc1_axi_req_cnt <= dsc1_axi_req_cnt - 1;
             4'b0010: dsc1_axi_req_cnt <= (dsc2_axi_req_issue)? (dsc2_axi_req_cnt - 1) : dsc2_axi_req_cnt;
             4'b0001: dsc1_axi_req_cnt <= (dsc3_axi_req_issue)? (dsc3_axi_req_cnt - 1) : dsc3_axi_req_cnt;
@@ -1117,31 +1209,21 @@ always @(posedge clk or negedge rst_n)
         dsc1_axi_burst_cnt <= 16'd0;
     else
         casex ({add_dsc1, dsc1_axi_burst_issue, dsc_move_2_1, dsc_move_3_1})
-            4'b1000: dsc1_axi_burst_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            //4'b1000: dsc1_axi_burst_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
+            4'b1x00: dsc1_axi_burst_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             4'b0100: dsc1_axi_burst_cnt <= (dsc1_axi_burst_cnt == 16'd1)? dsc1_axi_burst_cnt : (dsc1_axi_burst_cnt - 1);
             4'b0x10: dsc1_axi_burst_cnt <= (dsc2_axi_burst_issue)? (dsc2_axi_burst_cnt - 1) : dsc2_axi_burst_cnt;
             4'b0x01: dsc1_axi_burst_cnt <= (dsc3_axi_burst_issue)? (dsc3_axi_burst_cnt - 1) : dsc3_axi_burst_cnt;
             default: dsc1_axi_burst_cnt <= dsc1_axi_burst_cnt;
         endcase
 
-// for dsc1_axi_burst_data_cnt
-always @(*) begin
-    if (dsc1_axi_burst_cnt == dsc1_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
-        dsc1_axi_burst_data_cnt = dsc1_first_awlen + 1;
-    else if (dsc1_axi_burst_cnt == 16'd1)
-        dsc1_axi_burst_data_cnt = (dsc1_first_awlen + 1) + ((dsc1_axi_req_number - 2) << 5) + (dsc1_last_awlen + 1);
-    else
-        dsc1_axi_burst_data_cnt = (dsc1_first_awlen + 1) + ((dsc1_axi_req_number - dsc1_axi_burst_cnt) << 5);
-end
-
 // for dsc1_dst_addr
-// TODO: Address is not alignment with 4K
 always @(posedge clk or negedge rst_n)
     if(!rst_n)
         dsc1_dst_addr <= 64'h0;
     else
         case ({add_dsc1, dsc1_axi_req_issue, dsc_move_2_1, dsc_move_3_1})
-            4'b1000:  dsc1_dst_addr <= dst_addr;
+            4'b1000:  dsc1_dst_addr <= {dst_addr[63:7], 7'b0000000};
             4'b0100:  dsc1_dst_addr <= (dsc1_axi_req_cnt == 16'd1)? dsc1_dst_addr : {(dsc1_dst_addr[63:12] + 1), 12'h000};        // Each AXI-MM Write transfer is a 4K busrt
             4'b0010:  dsc1_dst_addr <= (dsc2_axi_req_issue)? ((dsc2_axi_req_cnt == 16'd1)? dsc2_dst_addr : {(dsc2_dst_addr[63:12] + 1), 12'h000}) : dsc2_dst_addr;
             4'b0001:  dsc1_dst_addr <= (dsc3_axi_req_issue)? ((dsc3_axi_req_cnt == 16'd1)? dsc3_dst_addr : {(dsc3_dst_addr[63:12] + 1), 12'h000}) : dsc3_dst_addr;
@@ -1154,7 +1236,7 @@ always @(posedge clk or negedge rst_n)
         dsc1_first_awlen <= 8'd0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
-            3'b100: dsc1_first_awlen <= (dsc_len_128B_extend > dsc_first_4KB_len)? ((dsc_first_4KB_len >> 7) - 1) : ((dsc_len_128B_extend >> 7) - 1);
+            3'b100: dsc1_first_awlen <= (dst_first_4KB_len[6:0] == 7'b0)? ((dst_first_4KB_len >> 7) - 1) : (dst_first_4KB_len >> 7);
             3'b010: dsc1_first_awlen <= dsc2_first_awlen;
             3'b001: dsc1_first_awlen <= dsc3_first_awlen;
             default: dsc1_first_awlen <= dsc1_first_awlen;
@@ -1166,36 +1248,88 @@ always @(posedge clk or negedge rst_n)
         dsc1_last_awlen <= 8'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
-            3'b100:  dsc1_last_awlen <= (dsc_data_4KB_align)? 8'd31 : ({3'b0, dsc_len_without_first_burst[11:7]} - 1);
+            3'b100:  dsc1_last_awlen <= (dst_data_4KB_align)? 8'd31 : ((dst_len_without_first_burst[6:0] != 7'b0000000)? dst_len_without_first_burst[11:7] :(dst_len_without_first_burst[11:7] - 1));
             3'b010:  dsc1_last_awlen <= dsc2_last_awlen;
             3'b001:  dsc1_last_awlen <= dsc3_last_awlen;
             default: dsc1_last_awlen <= dsc1_last_awlen;
         endcase
 
+`ifdef ACTION_DATA_WIDTH_512
+// TODO
 // for dsc1_axi_data_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc1_axi_data_cnt <= 21'd0;
-    else
-        casex ({add_dsc1, dsc1_axi_data_issue, dsc_move_2_1, dsc_move_3_1})
-            4'b1xxx: dsc1_axi_data_cnt <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1);
-            4'b0100: dsc1_axi_data_cnt <= dsc1_axi_data_cnt - 1;
-            4'b0x10: dsc1_axi_data_cnt <= (dsc2_axi_data_issue)? (dsc2_axi_data_cnt - 1) : dsc2_axi_data_cnt;
-            4'b0x01: dsc1_axi_data_cnt <= (dsc3_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
-            default: dsc1_axi_data_cnt <= dsc1_axi_data_cnt;
-        endcase
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc1_axi_data_cnt <= 21'd0;
+        else
+            casex ({add_dsc1, dsc1_axi_data_issue, dsc_move_2_1, dsc_move_3_1})
+                4'b1xxx: dsc1_axi_data_cnt <= (axi_wdata_len << 1);
+                4'b0100: dsc1_axi_data_cnt <= dsc1_axi_data_cnt - 1;
+                4'b0x10: dsc1_axi_data_cnt <= (dsc2_axi_data_issue)? (dsc2_axi_data_cnt - 1) : dsc2_axi_data_cnt;
+                4'b0x01: dsc1_axi_data_cnt <= (dsc3_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
+                default: dsc1_axi_data_cnt <= dsc1_axi_data_cnt;
+            endcase
+    
+    // for dsc1_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc1_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
+                3'b100: dsc1_axi_data_number <= (axi_wdata_len << 1);
+                3'b010: dsc1_axi_data_number <= dsc2_axi_data_number;
+                3'b001: dsc1_axi_data_number <= dsc3_axi_data_number;
+                default: dsc1_axi_data_number <= dsc1_axi_data_number;
+            endcase
 
-// for dsc1_axi_data_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc1_axi_data_number <= 21'd0;
-    else
-        case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
-            3'b100: dsc1_axi_data_number <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1);
-            3'b010: dsc1_axi_data_number <= dsc2_axi_data_number;
-            3'b001: dsc1_axi_data_number <= dsc3_axi_data_number;
-            default: dsc1_axi_data_number <= dsc1_axi_data_number;
-        endcase
+    assign dsc1_first_awlen_64B = (dsc1_first_awlen << 1) + 1;
+    assign dsc1_last_awlen_64B  = (dsc1_last_awlen << 1) + 1;
+    // for dsc1_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc1_axi_burst_cnt == dsc1_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc1_axi_burst_data_cnt = dsc1_first_awlen_64B + 1;
+        else if (dsc1_axi_burst_cnt == 16'd1)
+            dsc1_axi_burst_data_cnt = (dsc1_first_awlen_64B + 1) + ((dsc1_axi_req_number - 2) << 6) + (dsc1_last_awlen_64B + 1);
+        else
+            dsc1_axi_burst_data_cnt = (dsc1_first_awlen_64B + 1) + ((dsc1_axi_req_number - dsc1_axi_burst_cnt) << 6);
+    end
+    assign dsc1_axi_data_first_beat_128B = (dsc1_axi_data_cnt == dsc1_axi_data_number || (dsc1_axi_data_cnt == dsc1_axi_data_number - 1)) && dsc1_onflight;
+    assign dsc1_axi_data_last_beat_128B = (dsc1_axi_data_cnt == 21'd2 || dsc1_axi_data_cnt == 21'd1) && dsc1_onflight;
+`else
+    // for dsc1_axi_data_cnt
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc1_axi_data_cnt <= 21'd0;
+        else
+            casex ({add_dsc1, dsc1_axi_data_issue, dsc_move_2_1, dsc_move_3_1})
+                4'b1xxx: dsc1_axi_data_cnt <= axi_wdata_len;
+                4'b0100: dsc1_axi_data_cnt <= dsc1_axi_data_cnt - 1;
+                4'b0x10: dsc1_axi_data_cnt <= (dsc2_axi_data_issue)? (dsc2_axi_data_cnt - 1) : dsc2_axi_data_cnt;
+                4'b0x01: dsc1_axi_data_cnt <= (dsc3_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
+                default: dsc1_axi_data_cnt <= dsc1_axi_data_cnt;
+            endcase
+    
+    // for dsc1_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc1_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
+                3'b100: dsc1_axi_data_number <= axi_wdata_len;
+                3'b010: dsc1_axi_data_number <= dsc2_axi_data_number;
+                3'b001: dsc1_axi_data_number <= dsc3_axi_data_number;
+                default: dsc1_axi_data_number <= dsc1_axi_data_number;
+            endcase
+
+    // for dsc1_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc1_axi_burst_cnt == dsc1_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc1_axi_burst_data_cnt = dsc1_first_awlen + 1;
+        else if (dsc1_axi_burst_cnt == 16'd1)
+            dsc1_axi_burst_data_cnt = (dsc1_first_awlen + 1) + ((dsc1_axi_req_number - 2) << 5) + (dsc1_last_awlen + 1);
+        else
+            dsc1_axi_burst_data_cnt = (dsc1_first_awlen + 1) + ((dsc1_axi_req_number - dsc1_axi_burst_cnt) << 5);
+    end
+`endif
 
 assign dsc1_axi_data_first_beat = (dsc1_axi_data_cnt == dsc1_axi_data_number) && dsc1_onflight;
 assign dsc1_axi_data_last_beat = (dsc1_axi_data_cnt == 21'd1) && dsc1_onflight;
@@ -1206,7 +1340,7 @@ always @(posedge clk or negedge rst_n)
          dsc1_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
-            3'b100:  dsc1_axi_wstrb_first <= first_128B_be;
+            3'b100:  dsc1_axi_wstrb_first <= axi_wstrb_first;
             3'b010:  dsc1_axi_wstrb_first <= dsc2_axi_wstrb_first;
             3'b001:  dsc1_axi_wstrb_first <= dsc3_axi_wstrb_first;
             default: dsc1_axi_wstrb_first <= dsc1_axi_wstrb_first;
@@ -1215,16 +1349,14 @@ always @(posedge clk or negedge rst_n)
 // for dsc1_axi_data_last_byte
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
-         dsc1_axi_data_last_byte <= 7'b0;
+         dsc1_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
-            3'b100:  dsc1_axi_data_last_byte <= dsc_len_128B_extend[6:0];
-            3'b010:  dsc1_axi_data_last_byte <= dsc2_axi_data_last_byte;
-            3'b001:  dsc1_axi_data_last_byte <= dsc3_axi_data_last_byte;
-            default: dsc1_axi_data_last_byte <= dsc1_axi_data_last_byte;
+            3'b100:  dsc1_axi_wstrb_last <= axi_wstrb_last;
+            3'b010:  dsc1_axi_wstrb_last <= dsc2_axi_wstrb_last;
+            3'b001:  dsc1_axi_wstrb_last <= dsc3_axi_wstrb_last;
+            default: dsc1_axi_wstrb_last <= dsc1_axi_wstrb_last;
         endcase
-
-assign dsc1_axi_wstrb_last = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF >> (128 - dsc1_axi_data_last_byte);
 
 // for dsc1_axi_resp_cnt
 always @(posedge clk or negedge rst_n)
@@ -1232,7 +1364,7 @@ always @(posedge clk or negedge rst_n)
         dsc1_axi_resp_cnt <= 16'd0;
     else
         casex ({add_dsc1, dsc1_axi_resp_received, dsc_move_2_1, dsc_move_3_1})
-            4'b1000: dsc1_axi_resp_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            4'b1000: dsc1_axi_resp_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             4'b0100: dsc1_axi_resp_cnt <= dsc1_axi_resp_cnt - 1;
             4'b0x10: dsc1_axi_resp_cnt <= (dsc2_axi_resp_received)? (dsc2_axi_resp_cnt - 1) : dsc2_axi_resp_cnt;
             4'b0x01: dsc1_axi_resp_cnt <= (dsc3_axi_resp_received)? (dsc3_axi_resp_cnt - 1) : dsc3_axi_resp_cnt;
@@ -1347,9 +1479,19 @@ always @(posedge clk or negedge rst_n)
             3'b100: dsc2_onflight <= 1'b1;
             3'b0x1: dsc2_onflight <= dsc3_onflight;
             3'b010: dsc2_onflight <= 1'b0;
-            default:;
+            default:dsc2_onflight <= dsc2_onflight;
         endcase
 
+// for dsc2_interrupt_req
+always @(posedge clk or negedge rst_n)
+    if (!rst_n)
+        dsc2_interrupt_req <= 1'b0;
+    else 
+        case ({add_dsc2, dsc_move_3_2})
+            2'b10:   dsc2_interrupt_req <= interrupt_req;
+            2'b01:   dsc2_interrupt_req <= dsc3_interrupt_req;
+            default: dsc2_interrupt_req <= dsc2_interrupt_req;
+        endcase
 // for dsc2_channel_id
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
@@ -1358,7 +1500,7 @@ always @(posedge clk or negedge rst_n)
         case ({add_dsc2, dsc_move_3_2})
             2'b10: dsc2_channel_id <= channel_id;
             2'b01: dsc2_channel_id <= dsc3_channel_id;
-            default:;
+            default: dsc2_channel_id <= dsc2_channel_id;
         endcase
 
 // for dsc2_dsc_id
@@ -1369,7 +1511,7 @@ always @(posedge clk or negedge rst_n)
         case ({add_dsc2, dsc_move_3_2})
             2'b10: dsc2_dsc_id <= dsc_id;
             2'b01: dsc2_dsc_id <= dsc3_dsc_id;
-            default:;
+            default: dsc2_dsc_id <= dsc2_dsc_id;
         endcase
 
 // for dsc2_axi_req_number
@@ -1378,7 +1520,7 @@ always @(posedge clk or negedge rst_n)
         dsc2_axi_req_number <= 16'd0;
     else
         case ({add_dsc2, dsc_move_3_2})
-            2'b10: dsc2_axi_req_number <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            2'b10: dsc2_axi_req_number <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             2'b01: dsc2_axi_req_number <= dsc3_axi_req_number;
             default: dsc2_axi_req_number <= dsc2_axi_req_number; 
         endcase 
@@ -1389,7 +1531,7 @@ always @(posedge clk or negedge rst_n)
         dsc2_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc2, dsc2_axi_req_issue, dsc_move_3_2})
-            3'b100: dsc2_axi_req_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            3'b100: dsc2_axi_req_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             3'b010: dsc2_axi_req_cnt <= dsc2_axi_req_cnt - 1;
             3'b001: dsc2_axi_req_cnt <= (dsc3_axi_req_issue)? (dsc3_axi_req_cnt - 1) : dsc3_axi_req_cnt;
             default:dsc2_axi_req_cnt <= dsc2_axi_req_cnt; 
@@ -1401,30 +1543,19 @@ always @(posedge clk or negedge rst_n)
         dsc2_axi_burst_cnt <= 16'd0;
     else
         casex ({add_dsc2, dsc2_axi_burst_issue, dsc_move_3_2})
-            3'b100: dsc2_axi_burst_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            3'b1x0: dsc2_axi_burst_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             3'b010: dsc2_axi_burst_cnt <= (dsc2_axi_burst_cnt == 16'd1)? dsc2_axi_burst_cnt : (dsc2_axi_burst_cnt - 1);
             3'b0x1: dsc2_axi_burst_cnt <= (dsc3_axi_burst_issue)? (dsc3_axi_burst_cnt - 1) : dsc3_axi_burst_cnt;
             default:dsc2_axi_burst_cnt <= dsc2_axi_burst_cnt; 
         endcase 
 
-// for dsc2_axi_burst_data_cnt
-always @(*) begin
-    if (dsc2_axi_burst_cnt == dsc2_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
-        dsc2_axi_burst_data_cnt = dsc2_first_awlen + 1;
-    else if (dsc2_axi_burst_cnt == 16'd1)
-        dsc2_axi_burst_data_cnt = (dsc2_first_awlen + 1) + ((dsc2_axi_req_number - 2) << 5) + (dsc2_last_awlen + 1);
-    else
-        dsc2_axi_burst_data_cnt = (dsc2_first_awlen + 1) + ((dsc2_axi_req_number - dsc2_axi_burst_cnt) << 5);
-end
-
 // for dsc2_dst_addr
-// TODO: Address is not alignment with 4K
 always @(posedge clk or negedge rst_n)
     if(!rst_n)
         dsc2_dst_addr <= 64'h0;
     else
         case ({add_dsc2, dsc2_axi_req_issue, dsc_move_3_2})
-            3'b100:  dsc2_dst_addr <= dst_addr;
+            3'b100:  dsc2_dst_addr <= {dst_addr[63:7], 7'b0000000};
             3'b010:  dsc2_dst_addr <= (dsc2_axi_req_cnt == 16'd1)? dsc2_dst_addr : {(dsc2_dst_addr[63:12] + 1), 12'h000};        // Each AXI-MM Write transfer is a 4K busrt
             3'b001:  dsc2_dst_addr <= (dsc3_axi_req_issue)? ((dsc3_axi_req_cnt == 16'd1)? dsc3_dst_addr : {(dsc3_dst_addr[63:12] + 1), 12'h000}) : dsc3_dst_addr;
             default: dsc2_dst_addr <= dsc2_dst_addr;
@@ -1436,7 +1567,7 @@ always @(posedge clk or negedge rst_n)
         dsc2_first_awlen <= 8'd0;
     else
         case ({add_dsc2, dsc_move_3_2})
-            2'b10:    dsc2_first_awlen <= (dsc_len_128B_extend > dsc_first_4KB_len)? ((dsc_first_4KB_len >> 7) - 1) : ((dsc_len_128B_extend >> 7) - 1);
+            2'b10:    dsc2_first_awlen <= (dst_first_4KB_len[6:0] == 7'b0)? ((dst_first_4KB_len >> 7) - 1) : (dst_first_4KB_len >> 7);
             2'b01:    dsc2_first_awlen <= dsc3_first_awlen;
             default:  dsc2_first_awlen <= dsc2_first_awlen;
         endcase
@@ -1447,33 +1578,83 @@ always @(posedge clk or negedge rst_n)
         dsc2_last_awlen <= 8'b0;
     else
         case ({add_dsc2, dsc_move_3_2})
-            2'b10:   dsc2_last_awlen <= (dsc_data_4KB_align)? 8'd31 : ({3'b0, dsc_len_without_first_burst[11:7]} - 1);
+            2'b10:   dsc2_last_awlen <= (dst_data_4KB_align)? 8'd31 : ((dst_len_without_first_burst[6:0] != 7'b0000000)? dst_len_without_first_burst[11:7] :(dst_len_without_first_burst[11:7] - 1));
             2'b01:   dsc2_last_awlen <= dsc3_last_awlen;
             default: dsc2_last_awlen <= dsc2_last_awlen;
         endcase
 
+`ifdef ACTION_DATA_WIDTH_512
+// TODO
 // for dsc2_axi_data_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc2_axi_data_cnt <= 21'd0;
-    else
-        casex ({add_dsc2, dsc2_axi_data_issue, dsc_move_3_2})
-            3'b1xx: dsc2_axi_data_cnt <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1);
-            3'b010: dsc2_axi_data_cnt <= dsc2_axi_data_cnt - 1;
-            3'b0x1: dsc2_axi_data_cnt <= (dsc3_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
-            default:dsc2_axi_data_cnt <= dsc2_axi_data_cnt; 
-        endcase 
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc2_axi_data_cnt <= 21'd0;
+        else
+            casex ({add_dsc2, dsc2_axi_data_issue, dsc_move_3_2})
+                3'b1xx: dsc2_axi_data_cnt <= (axi_wdata_len << 1);
+                3'b010: dsc2_axi_data_cnt <= dsc2_axi_data_cnt - 1;
+                3'b0x1: dsc2_axi_data_cnt <= (dsc3_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
+                default:dsc2_axi_data_cnt <= dsc2_axi_data_cnt; 
+            endcase 
+    
+    // for dsc2_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc2_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc2, dsc_move_3_2})
+                2'b10:  dsc2_axi_data_number <= (axi_wdata_len << 1);
+                2'b01:  dsc2_axi_data_number <= dsc3_axi_data_number;
+                default:dsc2_axi_data_number <= dsc2_axi_data_number; 
+            endcase 
 
-// for dsc2_axi_data_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc2_axi_data_number <= 21'd0;
-    else
-        case ({add_dsc2, dsc_move_3_2})
-            2'b10:  dsc2_axi_data_number <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1);
-            2'b01:  dsc2_axi_data_number <= dsc3_axi_data_number;
-            default:dsc2_axi_data_number <= dsc2_axi_data_number; 
-        endcase 
+    assign dsc2_first_awlen_64B = (dsc2_first_awlen << 1) + 1;
+    assign dsc2_last_awlen_64B  = (dsc2_last_awlen << 1) + 1;
+    // for dsc2_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc2_axi_burst_cnt == dsc2_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc2_axi_burst_data_cnt = dsc2_first_awlen_64B + 1;
+        else if (dsc2_axi_burst_cnt == 16'd1)
+            dsc2_axi_burst_data_cnt = (dsc2_first_awlen_64B + 1) + ((dsc2_axi_req_number - 2) << 6) + (dsc2_last_awlen_64B + 1);
+        else
+            dsc2_axi_burst_data_cnt = (dsc2_first_awlen_64B + 1) + ((dsc2_axi_req_number - dsc2_axi_burst_cnt) << 6);
+    end
+    assign dsc2_axi_data_first_beat_128B = (dsc2_axi_data_cnt == dsc2_axi_data_number || (dsc2_axi_data_cnt == dsc2_axi_data_number - 1)) && dsc2_onflight;
+    assign dsc2_axi_data_last_beat_128B = (dsc2_axi_data_cnt == 21'd2 || dsc2_axi_data_cnt == 21'd1) && dsc2_onflight;
+`else
+    // for dsc2_axi_data_cnt
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc2_axi_data_cnt <= 21'd0;
+        else
+            casex ({add_dsc2, dsc2_axi_data_issue, dsc_move_3_2})
+                3'b1xx: dsc2_axi_data_cnt <= axi_wdata_len;
+                3'b010: dsc2_axi_data_cnt <= dsc2_axi_data_cnt - 1;
+                3'b0x1: dsc2_axi_data_cnt <= (dsc3_axi_data_issue)? (dsc3_axi_data_cnt - 1) : dsc3_axi_data_cnt;
+                default:dsc2_axi_data_cnt <= dsc2_axi_data_cnt; 
+            endcase 
+    
+    // for dsc2_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc2_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc2, dsc_move_3_2})
+                2'b10:  dsc2_axi_data_number <= axi_wdata_len;
+                2'b01:  dsc2_axi_data_number <= dsc3_axi_data_number;
+                default:dsc2_axi_data_number <= dsc2_axi_data_number; 
+            endcase 
+
+    // for dsc2_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc2_axi_burst_cnt == dsc2_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc2_axi_burst_data_cnt = dsc2_first_awlen + 1;
+        else if (dsc2_axi_burst_cnt == 16'd1)
+            dsc2_axi_burst_data_cnt = (dsc2_first_awlen + 1) + ((dsc2_axi_req_number - 2) << 5) + (dsc2_last_awlen + 1);
+        else
+            dsc2_axi_burst_data_cnt = (dsc2_first_awlen + 1) + ((dsc2_axi_req_number - dsc2_axi_burst_cnt) << 5);
+    end
+`endif
 
 assign dsc2_axi_data_first_beat = (dsc2_axi_data_cnt == dsc2_axi_data_number) && dsc2_onflight;
 assign dsc2_axi_data_last_beat = (dsc2_axi_data_cnt == 21'd1) && dsc2_onflight;
@@ -1484,7 +1665,7 @@ always @(posedge clk or negedge rst_n)
          dsc2_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc2, dsc_move_3_2})
-            2'b10:   dsc2_axi_wstrb_first <= first_128B_be;
+            2'b10:   dsc2_axi_wstrb_first <= axi_wstrb_first;
             2'b01:   dsc2_axi_wstrb_first <= dsc3_axi_wstrb_first;
             default: dsc2_axi_wstrb_first <= dsc2_axi_wstrb_first;
         endcase
@@ -1492,15 +1673,13 @@ always @(posedge clk or negedge rst_n)
 // for dsc2_axi_data_last_byte
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
-         dsc2_axi_data_last_byte <= 7'b0;
+         dsc2_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc2, dsc_move_3_2})
-            2'b10:   dsc2_axi_data_last_byte <= dsc_len_128B_extend[6:0];
-            2'b01:   dsc2_axi_data_last_byte <= dsc3_axi_data_last_byte;
-            default: dsc2_axi_data_last_byte <= dsc2_axi_data_last_byte;
+            2'b10:   dsc2_axi_wstrb_last <= axi_wstrb_last;
+            2'b01:   dsc2_axi_wstrb_last <= dsc3_axi_wstrb_last;
+            default: dsc2_axi_wstrb_last <= dsc2_axi_wstrb_last;
         endcase
-
-assign dsc2_axi_wstrb_last = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF >> (128 - dsc2_axi_data_last_byte);
 
 // for dsc2_axi_resp_cnt
 always @(posedge clk or negedge rst_n)
@@ -1508,7 +1687,7 @@ always @(posedge clk or negedge rst_n)
         dsc2_axi_resp_cnt <= 16'd0;
     else
         casex ({add_dsc2, dsc2_axi_resp_received, dsc_move_3_2})
-            3'b100:  dsc2_axi_resp_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            3'b100:  dsc2_axi_resp_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             3'b010:  dsc2_axi_resp_cnt <= dsc2_axi_resp_cnt - 1;
             3'b0x1:  dsc2_axi_resp_cnt <= (dsc3_axi_resp_received)? (dsc3_axi_resp_cnt - 1) : dsc3_axi_resp_cnt;
             default: dsc2_axi_resp_cnt <= dsc2_axi_resp_cnt;
@@ -1602,7 +1781,18 @@ always @(posedge clk or negedge rst_n)
         case ({add_dsc3, dsc3_clear})
             2'b10: dsc3_onflight <= 1'b1;
             2'b01: dsc3_onflight <= 1'b0;
-            default:;
+            default: dsc3_onflight <= dsc3_onflight;
+        endcase
+
+// for dsc3_interrupt_req
+always @(posedge clk or negedge rst_n)
+    if (!rst_n)
+        dsc3_interrupt_req <= 1'b0;
+    else
+        case ({add_dsc3, dsc3_clear})
+            2'b10:   dsc3_interrupt_req <= interrupt_req;
+            2'b01:   dsc3_interrupt_req <= 1'b0;
+            default: dsc3_interrupt_req <= dsc3_interrupt_req;
         endcase
 
 // for dsc3_channel_id
@@ -1613,7 +1803,7 @@ always @(posedge clk or negedge rst_n)
         case ({add_dsc3, dsc3_clear})
             2'b10: dsc3_channel_id <= channel_id;
             2'b01: dsc3_channel_id <= 2'b00;
-            default:;
+            default: dsc3_channel_id <= dsc3_channel_id;
         endcase
 
 // for dsc3_dsc_id
@@ -1624,7 +1814,7 @@ always @(posedge clk or negedge rst_n)
         case ({add_dsc3, dsc3_clear})
             2'b10: dsc3_dsc_id <= dsc_id;
             2'b01: dsc3_dsc_id <= 30'b0;
-            default:;
+            default: dsc3_dsc_id <= dsc3_dsc_id;
         endcase
 
 // for dsc3_axi_req_number
@@ -1633,7 +1823,7 @@ always @(posedge clk or negedge rst_n)
         dsc3_axi_req_number <= 16'd0;
     else
         case ({add_dsc3, dsc3_clear})
-            2'b10: dsc3_axi_req_number <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            2'b10: dsc3_axi_req_number <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             2'b01: dsc3_axi_req_number <= 16'd0;
             default: dsc3_axi_req_number <= dsc3_axi_req_number; 
         endcase 
@@ -1644,7 +1834,7 @@ always @(posedge clk or negedge rst_n)
         dsc3_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc3, dsc3_axi_req_issue, dsc3_clear})
-            3'b100:  dsc3_axi_req_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            3'b100:  dsc3_axi_req_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             3'b010:  dsc3_axi_req_cnt <= dsc3_axi_req_cnt - 1;
             3'b001:  dsc3_axi_req_cnt <= 16'd0;
             default: dsc3_axi_req_cnt <= dsc3_axi_req_cnt; 
@@ -1655,31 +1845,20 @@ always @(posedge clk or negedge rst_n)
     if (!rst_n)
         dsc3_axi_burst_cnt <= 16'd0;
     else
-        case ({add_dsc3, dsc3_axi_burst_issue, dsc3_clear})
-            3'b100:  dsc3_axi_burst_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+        casex ({add_dsc3, dsc3_axi_burst_issue, dsc3_clear})
+            3'b1x0:  dsc3_axi_burst_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             3'b010:  dsc3_axi_burst_cnt <= (dsc3_axi_burst_cnt == 16'd1)? dsc3_axi_burst_cnt : (dsc3_axi_burst_cnt - 1);
             3'b001:  dsc3_axi_burst_cnt <= 16'd0;
             default: dsc3_axi_burst_cnt <= dsc3_axi_burst_cnt; 
         endcase 
 
-// for dsc3_axi_burst_data_cnt
-always @(*) begin
-    if (dsc3_axi_burst_cnt == dsc3_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
-        dsc3_axi_burst_data_cnt = dsc3_first_awlen + 1;
-    else if (dsc3_axi_burst_cnt == 16'd1)
-        dsc3_axi_burst_data_cnt = (dsc3_first_awlen + 1) + ((dsc3_axi_req_number - 2) << 5) + (dsc3_last_awlen + 1);
-    else
-        dsc3_axi_burst_data_cnt = (dsc3_first_awlen + 1) + ((dsc3_axi_req_number - dsc3_axi_burst_cnt) << 5);
-end
-
 // for dsc3_dst_addr
-// TODO: Address is not alignment with 4K
 always @(posedge clk or negedge rst_n)
     if(!rst_n)
         dsc3_dst_addr <= 64'h0;
     else
         case ({add_dsc3, dsc3_axi_req_issue, dsc3_clear})
-            3'b100:  dsc3_dst_addr <= dst_addr;
+            3'b100:  dsc3_dst_addr <= {dst_addr[63:7], 7'b0000000};
             3'b010:  dsc3_dst_addr <= (dsc3_axi_req_cnt == 16'd1)? dsc3_dst_addr : {(dsc3_dst_addr[63:12] + 1), 12'h000};        // Each AXI-MM Write transfer is a 4K busrt
             3'b001:  dsc3_dst_addr <= 64'h0;
             default: dsc3_dst_addr <= dsc3_dst_addr;
@@ -1691,7 +1870,7 @@ always @(posedge clk or negedge rst_n)
         dsc3_first_awlen <= 8'd0;
     else
         case ({add_dsc3, dsc3_clear})
-            2'b10: dsc3_first_awlen <= (dsc_len_128B_extend > dsc_first_4KB_len)? ((dsc_first_4KB_len >> 7) - 1) : ((dsc_len_128B_extend >> 7) - 1);
+            2'b10: dsc3_first_awlen <= (dst_first_4KB_len[6:0] == 7'b0)? ((dst_first_4KB_len >> 7) - 1) : (dst_first_4KB_len >> 7);
             2'b01: dsc3_first_awlen <= 8'd0;
             default: dsc3_first_awlen <= dsc3_first_awlen;
         endcase
@@ -1702,33 +1881,83 @@ always @(posedge clk or negedge rst_n)
         dsc3_last_awlen <= 8'b0;
     else
         case ({add_dsc3, dsc3_clear})
-            2'b10:   dsc3_last_awlen <= (dsc_data_4KB_align)? 8'd31 : ({3'b0, dsc_len_without_first_burst[11:7]} - 1);
+            2'b10:   dsc3_last_awlen <= (dst_data_4KB_align)? 8'd31 : ((dst_len_without_first_burst[6:0] != 7'b0000000)? dst_len_without_first_burst[11:7] :(dst_len_without_first_burst[11:7] - 1));
             2'b01:   dsc3_last_awlen <= 8'b0;
             default: dsc3_last_awlen <= dsc3_last_awlen;
         endcase
 
-// for dsc3_axi_data_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc3_axi_data_cnt <= 21'd0;
-    else
-        casex ({add_dsc3, dsc3_axi_data_issue, dsc3_clear})
-            3'b1xx:  dsc3_axi_data_cnt <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1);
-            3'b010:  dsc3_axi_data_cnt <= dsc3_axi_data_cnt - 1;
-            3'b001:  dsc3_axi_data_cnt <= 21'd0;
-            default: dsc3_axi_data_cnt <= dsc3_axi_data_cnt; 
-        endcase 
+`ifdef ACTION_DATA_WIDTH_512
+// TODO
+    // for dsc3_axi_data_cnt
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc3_axi_data_cnt <= 21'd0;
+        else
+            casex ({add_dsc3, dsc3_axi_data_issue, dsc3_clear})
+                3'b1xx:  dsc3_axi_data_cnt <= (axi_wdata_len << 1);
+                3'b010:  dsc3_axi_data_cnt <= dsc3_axi_data_cnt - 1;
+                3'b001:  dsc3_axi_data_cnt <= 21'd0;
+                default: dsc3_axi_data_cnt <= dsc3_axi_data_cnt; 
+            endcase 
+    
+    // for dsc3_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc3_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc3, dsc3_clear})
+                2'b10:  dsc3_axi_data_number <= (axi_wdata_len << 1);
+                2'b01:  dsc3_axi_data_number <= 21'd0;
+                default: dsc3_axi_data_number <= dsc3_axi_data_number; 
+            endcase 
 
-// for dsc3_axi_data_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
-        dsc3_axi_data_number <= 21'd0;
-    else
-        case ({add_dsc3, dsc3_clear})
-            2'b10:  dsc3_axi_data_number <= (dsc_data_128B_align)? dsc_len_128B_extend[27:7] : (dsc_len_128B_extend[27:7] + 1);
-            2'b01:  dsc3_axi_data_number <= 21'd0;
-            default: dsc3_axi_data_number <= dsc3_axi_data_number; 
-        endcase 
+    assign dsc3_first_awlen_64B = (dsc3_first_awlen << 1) + 1;
+    assign dsc3_last_awlen_64B  = (dsc3_last_awlen << 1) + 1;
+    // for dsc3_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc3_axi_burst_cnt == dsc3_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc3_axi_burst_data_cnt = dsc3_first_awlen_64B + 1;
+        else if (dsc3_axi_burst_cnt == 16'd1)
+            dsc3_axi_burst_data_cnt = (dsc3_first_awlen_64B + 1) + ((dsc3_axi_req_number - 2) << 6) + (dsc3_last_awlen_64B + 1);
+        else
+            dsc3_axi_burst_data_cnt = (dsc3_first_awlen_64B + 1) + ((dsc3_axi_req_number - dsc3_axi_burst_cnt) << 6);
+    end
+    assign dsc3_axi_data_first_beat_128B = (dsc3_axi_data_cnt == dsc3_axi_data_number || (dsc3_axi_data_cnt == dsc3_axi_data_number - 1)) && dsc3_onflight;
+    assign dsc3_axi_data_last_beat_128B = (dsc3_axi_data_cnt == 21'd2 || dsc3_axi_data_cnt == 21'd1) && dsc3_onflight;
+`else
+    // for dsc3_axi_data_cnt
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc3_axi_data_cnt <= 21'd0;
+        else
+            casex ({add_dsc3, dsc3_axi_data_issue, dsc3_clear})
+                3'b1xx:  dsc3_axi_data_cnt <= axi_wdata_len;
+                3'b010:  dsc3_axi_data_cnt <= dsc3_axi_data_cnt - 1;
+                3'b001:  dsc3_axi_data_cnt <= 21'd0;
+                default: dsc3_axi_data_cnt <= dsc3_axi_data_cnt; 
+            endcase 
+    
+    // for dsc3_axi_data_number
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            dsc3_axi_data_number <= 21'd0;
+        else
+            case ({add_dsc3, dsc3_clear})
+                2'b10:  dsc3_axi_data_number <= axi_wdata_len;
+                2'b01:  dsc3_axi_data_number <= 21'd0;
+                default: dsc3_axi_data_number <= dsc3_axi_data_number; 
+            endcase 
+
+    // for dsc3_axi_burst_data_cnt
+    always @(*) begin
+        if (dsc3_axi_burst_cnt == dsc3_axi_req_number)          // if there is only 1 burst, it will not trun to the 1st else if
+            dsc3_axi_burst_data_cnt = dsc3_first_awlen + 1;
+        else if (dsc3_axi_burst_cnt == 16'd1)
+            dsc3_axi_burst_data_cnt = (dsc3_first_awlen + 1) + ((dsc3_axi_req_number - 2) << 5) + (dsc3_last_awlen + 1);
+        else
+            dsc3_axi_burst_data_cnt = (dsc3_first_awlen + 1) + ((dsc3_axi_req_number - dsc3_axi_burst_cnt) << 5);
+    end
+`endif
 
 assign dsc3_axi_data_first_beat = (dsc3_axi_data_cnt == dsc3_axi_data_number) && dsc3_onflight;
 assign dsc3_axi_data_last_beat = (dsc3_axi_data_cnt == 21'd1) && dsc3_onflight;
@@ -1739,23 +1968,21 @@ always @(posedge clk or negedge rst_n)
          dsc3_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc3, dsc3_clear})
-            2'b10:   dsc3_axi_wstrb_first <= first_128B_be;
+            2'b10:   dsc3_axi_wstrb_first <= axi_wstrb_first;
             2'b01:   dsc3_axi_wstrb_first <= 128'b0;
-            default: dsc3_axi_wstrb_first <= dsc2_axi_wstrb_first;
+            default: dsc3_axi_wstrb_first <= dsc3_axi_wstrb_first;
         endcase
 
 // for dsc3_axi_data_last_byte
 always @(posedge clk or negedge rst_n)
     if (!rst_n)
-         dsc3_axi_data_last_byte <= 7'b0;
+         dsc3_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc3, dsc3_clear})
-            2'b10:   dsc3_axi_data_last_byte <= dsc_len_128B_extend[6:0];
-            2'b01:   dsc3_axi_data_last_byte <= 7'b0;
-            default: dsc3_axi_data_last_byte <= dsc3_axi_data_last_byte;
+            2'b10:   dsc3_axi_wstrb_last <= axi_wstrb_last;
+            2'b01:   dsc3_axi_wstrb_last <= 128'b0;
+            default: dsc3_axi_wstrb_last <= dsc3_axi_wstrb_last;
         endcase
-
-assign dsc3_axi_wstrb_last = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF >> (128 - dsc3_axi_data_last_byte);
 
 // for dsc3_axi_resp_cnt
 always @(posedge clk or negedge rst_n)
@@ -1763,7 +1990,7 @@ always @(posedge clk or negedge rst_n)
         dsc3_axi_resp_cnt <= 16'd0;
     else
         case ({add_dsc3, dsc3_axi_resp_received, dsc3_clear})
-            3'b100:  dsc3_axi_resp_cnt <= (dsc_data_4KB_align)? (dsc_len_without_first_burst[27:12] + 1) : (dsc_len_without_first_burst[27:12] + 2);
+            3'b100:  dsc3_axi_resp_cnt <= (dst_data_4KB_align)? (dst_len_without_first_burst[27:12] + 1) : (dst_len_without_first_burst[27:12] + 2);
             3'b010:  dsc3_axi_resp_cnt <= dsc3_axi_resp_cnt - 1;
             3'b001:  dsc3_axi_resp_cnt <= 16'd0;
             default: dsc3_axi_resp_cnt <= dsc3_axi_resp_cnt;
@@ -1969,15 +2196,20 @@ assign lcl_rd_data_receive_dsc3 = lcl_rd_data_valid && lcl_rd_rsp_ready[3] && (l
 // data_id_match pulled up when the lcl read data id is the same with the current axi_wr_data_id
 always @(*) begin
     case (axi_wr_data_id)
-        2'd0: current_data_channel_id = dsc0_channel_id;
-        2'd1: current_data_channel_id = dsc1_channel_id;
-        2'd2: current_data_channel_id = dsc2_channel_id;
-        2'd3: current_data_channel_id = dsc3_channel_id;
+        3'd0: current_data_channel_id = dsc0_channel_id;
+        3'd1: current_data_channel_id = dsc1_channel_id;
+        3'd2: current_data_channel_id = dsc2_channel_id;
+        3'd3: current_data_channel_id = dsc3_channel_id;
+        default: current_data_channel_id = 3'd7;
     endcase
 end
 
-assign data_id_match = (lcl_rd_data_axi_id[4:3] == current_data_channel_id); 
-assign rdata_to_fifo = (~data_id_match) || (rdata_fifo0_ren | rdata_fifo1_ren | rdata_fifo2_ren | rdata_fifo3_ren ) || (~m_axi_wready); 
+assign data_id_match = ({1'b0, lcl_rd_data_axi_id[4:3]} == current_data_channel_id); 
+`ifdef  ACTION_DATA_WIDTH_512
+    assign rdata_to_fifo = (~data_id_match) || (rdata_fifo0_ren | rdata_fifo1_ren | rdata_fifo2_ren | rdata_fifo3_ren) || (~m_axi_wready_odd); 
+`else
+    assign rdata_to_fifo = (~data_id_match) || (rdata_fifo0_ren | rdata_fifo1_ren | rdata_fifo2_ren | rdata_fifo3_ren) || (~m_axi_wready); 
+`endif
 
 // if the data_id_match is 0, will put the lcl read data into read data channel fifo
 // each fifo is only store data from one specific channel
@@ -2108,21 +2340,37 @@ assign rdata_fifo3_empty = (rdata_fifo3_cnt == 6'd0);
 //************************************************//
 
 // For data Arbiter, it will pull up&down rdata_fifo*_ren and rdata_lcl_ren signals
-always @(*) begin 
-    case (lcl_rd_data_axi_id[4:3])
-        2'd0: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo0_empty && m_axi_wready; 
-        2'd1: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo1_empty && m_axi_wready; 
-        2'd2: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo2_empty && m_axi_wready; 
-        2'd3: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo3_empty && m_axi_wready;
-        default: ;
-    endcase 
-end
-
-assign rdata_fifo0_ren = (current_data_channel_id == 2'd0) && (~rdata_fifo0_empty) && m_axi_wready;
-assign rdata_fifo1_ren = (current_data_channel_id == 2'd1) && (~rdata_fifo1_empty) && m_axi_wready;
-assign rdata_fifo2_ren = (current_data_channel_id == 2'd2) && (~rdata_fifo2_empty) && m_axi_wready;
-assign rdata_fifo3_ren = (current_data_channel_id == 2'd3) && (~rdata_fifo3_empty) && m_axi_wready;
-
+`ifdef  ACTION_DATA_WIDTH_512
+    always @(*) begin 
+        case (lcl_rd_data_axi_id[4:3])
+            2'd0: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo0_empty && axi_data_issue_odd;
+            2'd1: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo1_empty && axi_data_issue_odd; 
+            2'd2: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo2_empty && axi_data_issue_odd; 
+            2'd3: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo3_empty && axi_data_issue_odd;
+            default: ;
+        endcase 
+    end
+    
+    assign rdata_fifo0_ren = (current_data_channel_id == 3'd0) && (~rdata_fifo0_empty) && axi_data_issue_odd;
+    assign rdata_fifo1_ren = (current_data_channel_id == 3'd1) && (~rdata_fifo1_empty) && axi_data_issue_odd;
+    assign rdata_fifo2_ren = (current_data_channel_id == 3'd2) && (~rdata_fifo2_empty) && axi_data_issue_odd;
+    assign rdata_fifo3_ren = (current_data_channel_id == 3'd3) && (~rdata_fifo3_empty) && axi_data_issue_odd;
+`else
+    always @(*) begin 
+        case (lcl_rd_data_axi_id[4:3])
+            2'd0: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo0_empty && m_axi_wready; 
+            2'd1: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo1_empty && m_axi_wready; 
+            2'd2: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo2_empty && m_axi_wready; 
+            2'd3: rdata_lcl_ren = lcl_rd_data_valid && data_id_match && rdata_fifo3_empty && m_axi_wready;
+            default: ;
+        endcase 
+    end
+    
+    assign rdata_fifo0_ren = (current_data_channel_id == 3'd0) && (~rdata_fifo0_empty) && m_axi_wready;
+    assign rdata_fifo1_ren = (current_data_channel_id == 3'd1) && (~rdata_fifo1_empty) && m_axi_wready;
+    assign rdata_fifo2_ren = (current_data_channel_id == 3'd2) && (~rdata_fifo2_empty) && m_axi_wready;
+    assign rdata_fifo3_ren = (current_data_channel_id == 3'd3) && (~rdata_fifo3_empty) && m_axi_wready;
+`endif
 
 //************************************************//
 //    AXI-MM Write Addr/Req Channel               //
@@ -2158,20 +2406,30 @@ always @(*) begin
    endcase
 end
 
-always @(*) begin
-   case (axi_wr_req_id)
-       3'b000:  m_axi_awlen = (dsc0_axi_req_cnt == dsc0_axi_req_number)? dsc0_first_awlen : ((dsc0_axi_req_cnt == 16'd1)? dsc0_last_awlen : 8'd31); 
-       3'b001:  m_axi_awlen = (dsc1_axi_req_cnt == dsc1_axi_req_number)? dsc1_first_awlen : ((dsc1_axi_req_cnt == 16'd1)? dsc1_last_awlen : 8'd31); 
-       3'b010:  m_axi_awlen = (dsc2_axi_req_cnt == dsc2_axi_req_number)? dsc2_first_awlen : ((dsc2_axi_req_cnt == 16'd1)? dsc2_last_awlen : 8'd31); 
-       3'b011:  m_axi_awlen = (dsc3_axi_req_cnt == dsc3_axi_req_number)? dsc3_first_awlen : ((dsc3_axi_req_cnt == 16'd1)? dsc3_last_awlen : 8'd31); 
-       default: m_axi_awlen = 8'd0;
-   endcase
-end
-
 `ifdef ACTION_DATA_WIDTH_512
 // TODO: will also support 64B data width
-//
-`else 
+    always @(*) begin
+       case (axi_wr_req_id)
+           3'b000:  m_axi_awlen_128B = (dsc0_axi_req_cnt == dsc0_axi_req_number)? dsc0_first_awlen : ((dsc0_axi_req_cnt == 16'd1)? dsc0_last_awlen : 8'd31); 
+           3'b001:  m_axi_awlen_128B = (dsc1_axi_req_cnt == dsc1_axi_req_number)? dsc1_first_awlen : ((dsc1_axi_req_cnt == 16'd1)? dsc1_last_awlen : 8'd31); 
+           3'b010:  m_axi_awlen_128B = (dsc2_axi_req_cnt == dsc2_axi_req_number)? dsc2_first_awlen : ((dsc2_axi_req_cnt == 16'd1)? dsc2_last_awlen : 8'd31); 
+           3'b011:  m_axi_awlen_128B = (dsc3_axi_req_cnt == dsc3_axi_req_number)? dsc3_first_awlen : ((dsc3_axi_req_cnt == 16'd1)? dsc3_last_awlen : 8'd31); 
+           default: m_axi_awlen_128B = 8'd0;
+       endcase
+    end
+    assign m_axi_awlen = (m_axi_awlen_128B << 1) + 1;
+    assign m_axi_awsize = 3'b110;
+
+`else
+    always @(*) begin
+       case (axi_wr_req_id)
+           3'b000:  m_axi_awlen = (dsc0_axi_req_cnt == dsc0_axi_req_number)? dsc0_first_awlen : ((dsc0_axi_req_cnt == 16'd1)? dsc0_last_awlen : 8'd31); 
+           3'b001:  m_axi_awlen = (dsc1_axi_req_cnt == dsc1_axi_req_number)? dsc1_first_awlen : ((dsc1_axi_req_cnt == 16'd1)? dsc1_last_awlen : 8'd31); 
+           3'b010:  m_axi_awlen = (dsc2_axi_req_cnt == dsc2_axi_req_number)? dsc2_first_awlen : ((dsc2_axi_req_cnt == 16'd1)? dsc2_last_awlen : 8'd31); 
+           3'b011:  m_axi_awlen = (dsc3_axi_req_cnt == dsc3_axi_req_number)? dsc3_first_awlen : ((dsc3_axi_req_cnt == 16'd1)? dsc3_last_awlen : 8'd31); 
+           default: m_axi_awlen = 8'd0;
+       endcase
+    end
     assign m_axi_awsize = 3'b111;                            // AXI-MM Write Data width is 128B
 `endif
 
@@ -2190,64 +2448,128 @@ assign m_axi_awuser = {AXI_AWUSER_WIDTH{1'b0}};
 
 always @(*) begin
     case (current_data_channel_id)
-        2'd0: wdata_from_fifo = (~rdata_fifo0_empty);
-        2'd1: wdata_from_fifo = (~rdata_fifo1_empty);
-        2'd2: wdata_from_fifo = (~rdata_fifo2_empty);
-        2'd3: wdata_from_fifo = (~rdata_fifo3_empty);
+        3'd0: wdata_from_fifo = (~rdata_fifo0_empty);
+        3'd1: wdata_from_fifo = (~rdata_fifo1_empty);
+        3'd2: wdata_from_fifo = (~rdata_fifo2_empty);
+        3'd3: wdata_from_fifo = (~rdata_fifo3_empty);
         default: wdata_from_fifo = 1'b0;
     endcase
 end
 
 always @(*) begin
     case (current_data_channel_id)
-        2'd0: axi_data_valid = (wdata_from_fifo)? rdata_fifo0_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
-        2'd1: axi_data_valid = (wdata_from_fifo)? rdata_fifo1_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
-        2'd2: axi_data_valid = (wdata_from_fifo)? rdata_fifo2_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
-        2'd3: axi_data_valid = (wdata_from_fifo)? rdata_fifo3_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
+        3'd0: axi_data_valid = (wdata_from_fifo)? rdata_fifo0_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
+        3'd1: axi_data_valid = (wdata_from_fifo)? rdata_fifo1_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
+        3'd2: axi_data_valid = (wdata_from_fifo)? rdata_fifo2_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
+        3'd3: axi_data_valid = (wdata_from_fifo)? rdata_fifo3_valid : ((~rdata_to_fifo)? lcl_rd_data_valid : 1'b0);
         default: axi_data_valid = 1'b0;
     endcase
 end
 
 
-always @(*) begin
-    case (axi_wr_data_id)
-        3'd0: m_axi_wvalid = (dsc0_axi_data_cnt != 21'd0) && axi_data_valid;
-        3'd1: m_axi_wvalid = (dsc1_axi_data_cnt != 21'd0) && axi_data_valid;
-        3'd2: m_axi_wvalid = (dsc2_axi_data_cnt != 21'd0) && axi_data_valid;
-        3'd3: m_axi_wvalid = (dsc3_axi_data_cnt != 21'd0) && axi_data_valid;
-        default: m_axi_wvalid = 1'b0;
-    endcase
-end
-
 `ifdef ACTION_DATA_WIDTH_512
-// TODO: will also support 64B data width
-//
+   // TODO
+   // dsc*_axi_data_number is an even value
+   // dsc*_axi_data_cnt will alternate as¿?
+   // even | odd | even | odd | even | odd | ... ... | even (21'b10) | odd (21'b01, last beat)         
+   //
+   
+    assign axi_wdata_onduty = (axi_wr_data_id != 3'd7);
+    assign axi_data_issue_odd = m_axi_wbeat_odd && m_axi_wvalid && m_axi_wready;
+    assign m_axi_wready_odd = m_axi_wready && m_axi_wbeat_odd; 
+
     always @(*) begin
-        case (current_data_channel_id)
-            2'd0: m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo0_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
-            2'd1: m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo1_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
-            2'd2: m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo2_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
-            2'd3: m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo3_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+        case (axi_wr_data_id)
+            3'd0:    m_axi_wvalid_even = (dsc0_axi_data_cnt != 21'd0) && axi_data_valid;
+            3'd1:    m_axi_wvalid_even = (dsc1_axi_data_cnt != 21'd0) && axi_data_valid;
+            3'd2:    m_axi_wvalid_even = (dsc2_axi_data_cnt != 21'd0) && axi_data_valid;
+            3'd3:    m_axi_wvalid_even = (dsc3_axi_data_cnt != 21'd0) && axi_data_valid;
+            default: m_axi_wvalid_even = 1'b0;
         endcase
     end
 
     always @(posedge clk or negedge rst_n)
         if (!rst_n)
-            m_axi_wdata_64B_odd <= 1'b0;
-        else if
-    
-`else 
+            m_axi_wvalid_odd <= 1'b0;
+        else
+            m_axi_wvalid_odd <= m_axi_wvalid_even;         
+
     always @(*) begin
         case (current_data_channel_id)
-            2'd0: m_axi_wdata = (wdata_from_fifo)? rdata_fifo0_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
-            2'd1: m_axi_wdata = (wdata_from_fifo)? rdata_fifo1_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
-            2'd2: m_axi_wdata = (wdata_from_fifo)? rdata_fifo2_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
-            2'd3: m_axi_wdata = (wdata_from_fifo)? rdata_fifo3_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            3'd0:    m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo0_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            3'd1:    m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo1_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            3'd2:    m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo2_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            3'd3:    m_axi_wdata_128B = (wdata_from_fifo)? rdata_fifo3_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            default: m_axi_wdata_128B = 1024'b0;
         endcase
     end
 
-    // TODO: need to add strobe logic for last dump
-    //assign m_axi_wstrb = (m_axi_wlast)? m_axi_wstrb_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            m_axi_wdata_64B_odd <= 512'b0;
+        else
+            m_axi_wdata_64B_odd <= m_axi_wdata_128B[1023:512];
+        
+    always @(*)
+        case (axi_wr_data_id)
+            3'd0:    m_axi_wstrb_128B = (dsc0_axi_data_first_beat_128B)? dsc0_axi_wstrb_first : ((dsc0_axi_data_last_beat_128B)? dsc0_axi_wstrb_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF);
+            3'd1:    m_axi_wstrb_128B = (dsc1_axi_data_first_beat_128B)? dsc1_axi_wstrb_first : ((dsc1_axi_data_last_beat_128B)? dsc1_axi_wstrb_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF);
+            3'd2:    m_axi_wstrb_128B = (dsc2_axi_data_first_beat_128B)? dsc2_axi_wstrb_first : ((dsc2_axi_data_last_beat_128B)? dsc2_axi_wstrb_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF);
+            3'd3:    m_axi_wstrb_128B = (dsc3_axi_data_first_beat_128B)? dsc3_axi_wstrb_first : ((dsc3_axi_data_last_beat_128B)? dsc3_axi_wstrb_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF);
+            default: m_axi_wstrb_128B = 128'h0;
+        endcase
+
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            m_axi_wstrb_64B_odd <= 64'h0;
+        else
+            m_axi_wstrb_64B_odd <= m_axi_wstrb_128B[127:64];
+        
+    always @(*) begin
+        case (axi_wr_data_id)
+            3'd0:    m_axi_wbeat_even = (dsc0_axi_data_cnt[0] == 1'b0) && dsc0_onflight;
+            3'd1:    m_axi_wbeat_even = (dsc1_axi_data_cnt[0] == 1'b0) && dsc1_onflight;
+            3'd2:    m_axi_wbeat_even = (dsc2_axi_data_cnt[0] == 1'b0) && dsc2_onflight;
+            3'd3:    m_axi_wbeat_even = (dsc3_axi_data_cnt[0] == 1'b0) && dsc3_onflight;
+            default: m_axi_wbeat_even = 1'b0;
+        endcase
+    end
+
+    always @(*) begin
+        case (axi_wr_data_id)
+            3'd0:    m_axi_wbeat_odd = (dsc0_axi_data_cnt[0] == 1'b1) && dsc0_onflight;
+            3'd1:    m_axi_wbeat_odd = (dsc1_axi_data_cnt[0] == 1'b1) && dsc1_onflight;
+            3'd2:    m_axi_wbeat_odd = (dsc2_axi_data_cnt[0] == 1'b1) && dsc2_onflight;
+            3'd3:    m_axi_wbeat_odd = (dsc3_axi_data_cnt[0] == 1'b1) && dsc3_onflight;
+            default: m_axi_wbeat_odd = 1'b0;
+        endcase
+    end
+
+    assign m_axi_wvalid = (m_axi_wbeat_even)? m_axi_wvalid_even : m_axi_wvalid_odd;
+    assign m_axi_wdata = (m_axi_wbeat_even)? m_axi_wdata_128B[511:0] : m_axi_wdata_64B_odd;
+    assign m_axi_wstrb = (m_axi_wbeat_even)? m_axi_wstrb_128B[63:0] : m_axi_wstrb_64B_odd;
+    
+`else 
+    always @(*) begin
+        case (axi_wr_data_id)
+            3'd0: m_axi_wvalid = (dsc0_axi_data_cnt != 21'd0) && axi_data_valid;
+            3'd1: m_axi_wvalid = (dsc1_axi_data_cnt != 21'd0) && axi_data_valid;
+            3'd2: m_axi_wvalid = (dsc2_axi_data_cnt != 21'd0) && axi_data_valid;
+            3'd3: m_axi_wvalid = (dsc3_axi_data_cnt != 21'd0) && axi_data_valid;
+            default: m_axi_wvalid = 1'b0;
+        endcase
+    end
+
+    always @(*) begin
+        case (current_data_channel_id)
+            3'd0: m_axi_wdata = (wdata_from_fifo)? rdata_fifo0_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            3'd1: m_axi_wdata = (wdata_from_fifo)? rdata_fifo1_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            3'd2: m_axi_wdata = (wdata_from_fifo)? rdata_fifo2_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            3'd3: m_axi_wdata = (wdata_from_fifo)? rdata_fifo3_dout : ((~rdata_to_fifo)? lcl_rd_data : 1024'b0);
+            default: m_axi_wdata = 1024'b0;
+        endcase
+    end
+
     always @(*) begin
         case (axi_wr_data_id)
             3'd0: m_axi_wstrb = (dsc0_axi_data_first_beat)? dsc0_axi_wstrb_first : ((dsc0_axi_data_last_beat)? dsc0_axi_wstrb_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF);
@@ -2257,7 +2579,6 @@ end
             default: m_axi_wstrb = 128'h0;
         endcase
     end
-    assign m_axi_wuser = 1'b0;
 `endif
 
 always @(*) begin
@@ -2269,7 +2590,7 @@ always @(*) begin
         default: m_axi_wlast = 0;
     endcase
 end
-
+assign m_axi_wuser = 1'b0;
 
 //************************************************//
 //    AXI-MM Write Response Channel               //
@@ -2335,7 +2656,8 @@ assign dsc0_cmp_data = {190'b0,
                         62'b0,
                         1'b0, dsc0_lcl_rd_error,
                         dsc0_error_src_addr,
-                        94'b0,
+                        93'b0,
+                        dsc0_interrupt_req,
                         dsc0_channel_id,
                         dsc0_dsc_id,
                         dsc0_axi_resp_complete,
@@ -2347,7 +2669,8 @@ assign dsc1_cmp_data = {190'b0,
                         62'b0,
                         1'b0, dsc1_lcl_rd_error,
                         dsc1_error_src_addr,
-                        94'b0,
+                        93'b0,
+                        dsc1_interrupt_req,
                         dsc1_channel_id,
                         dsc1_dsc_id,
                         dsc1_axi_resp_complete,
@@ -2359,7 +2682,8 @@ assign dsc2_cmp_data = {190'b0,
                         62'b0,
                         1'b0, dsc2_lcl_rd_error,
                         dsc2_error_src_addr,
-                        94'b0,
+                        93'b0,
+                        dsc2_interrupt_req,
                         dsc2_channel_id,
                         dsc2_dsc_id,
                         dsc2_axi_resp_complete,
@@ -2371,7 +2695,8 @@ assign dsc3_cmp_data = {190'b0,
                         62'b0,
                         1'b0, dsc3_lcl_rd_error,
                         dsc3_error_src_addr,
-                        94'b0,
+                        93'b0,
+                        dsc3_interrupt_req,
                         dsc3_channel_id,
                         dsc3_dsc_id,
                         dsc3_axi_resp_complete,

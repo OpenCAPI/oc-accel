@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+`include "snap_global_vars.v"
+
 //------------------------------------------------------------------------------
 // Convert bit width to byte log width
 //------------------------------------------------------------------------------
@@ -210,6 +212,14 @@
 `define INTR_CHNL_REQ                   32'h00002044
 `define INTR_USER_PENDING               32'h00002048
 `define INTR_CHNL_PENDING               32'h0000204C
+`define INTR_CH0_OBJ_HANDLE_LO          32'h00002050
+`define INTR_CH0_OBJ_HANDLE_HI          32'h00002054
+`define INTR_CH1_OBJ_HANDLE_LO          32'h00002058
+`define INTR_CH1_OBJ_HANDLE_HI          32'h0000205C
+`define INTR_CH2_OBJ_HANDLE_LO          32'h00002060
+`define INTR_CH2_OBJ_HANDLE_HI          32'h00002064
+`define INTR_CH3_OBJ_HANDLE_LO          32'h00002068
+`define INTR_CH3_OBJ_HANDLE_HI          32'h0000206C
 
 //Config registers
 `define CFG_ID                          32'h00003000
@@ -269,4 +279,9 @@
 `define DMA_COMMON_DSC_CREDIT_EN        32'h00006020
 `define DMA_COMMON_DSC_CREDIT_EN_W1S    32'h00006024
 `define DMA_COMMON_DSC_CREDIT_EN_W1C    32'h00006028
+
+`ifdef ENABLE_ODMA_512
+    `define ACTION_DATA_WIDTH_512
+`endif
+
 
