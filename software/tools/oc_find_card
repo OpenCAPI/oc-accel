@@ -1,0 +1,467 @@
+#!/bin/bash
+
+#
+# Copyright 2017, International Business Machines
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# Figure out SNAP supported cards in the system. We have AlphaData KU3
+# and Nallatech 250S cards. This script should help automatic testing of
+# any available cards in one system. It should print out a list of
+# available cards of each type.
+#
+
+# output formatting
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+# modified jan 16th 2018 to have -v option providing extra information
+version=2.0
+accel=UNKNOWN
+VERBOSE=0
+
+# Print usage message helper function
+function usage() {
+	echo "Usage: $PROGRAM"
+	echo "    [-v] Prints extra information (to be put as first param)"
+	echo "    [-A] <accelerator> use either ADKU3, N250S, S121B_BPIx16, S121B_SPIx4, AD8K5, RCXVUP, FX609, S241, N250SP, AD9V3, U200 or ALL"
+	echo "    [-C] <0..3> Print accelerator name for this Card"
+	echo "    [-V] provides version"
+	echo "  prints out a list of CAPI Cards found in this System."
+	echo
+	echo "  Supported CAPI Cards are:"
+	echo "     [N250S ADKU3 S121B_BPIx16 S121B_SPIx4 AD8K5 RCXVUP N250SP S241 FX609 AD9V3 U200]"
+	echo "     ------------------- Example -----------------------------------------"
+	echo "     $PROGRAM -A ALL"
+	echo "        Print a list (e.g. 0 1 2 3) of all CAPI cards in this System"
+	echo "     $PROGRAM -A ADKU3"
+	echo "        Prints a list of ADKU3 CAPI Cards found"
+	echo "     $PROGRAM -C 0"
+	echo "         Prints the Type of CAPI Card 0"
+	echo "     $PROGRAM -v -A ALL"
+	echo "         Prints Verbose Informations for all CAPI Cards"
+	echo "  Exit code will return how many accelerator's are available."
+}
+
+# Add a function to delay this script if Flash Update is in progress.
+# Flash Update will reset the Capi Card and the card will disappear for
+# some time.
+function wait_no_flash() {
+	for i in `seq 1 50`; do
+		if [ ! -d /var/cxl/capi-flash-script.lock ]; then
+			break;
+		fi
+		sleep 5
+		if [ $VERBOSE -eq 1 ] ; then
+		  echo "capi-flash-script is locked in /var/cxl. Waiting for unlock (250s)"
+		fi
+	done
+	if [ $i -ge 50 ]; then
+		if [ $VERBOSE -eq 1 ] ; then
+		  echo "ERROR: Timeout. Flash is pending ......."
+		fi
+		exit 0
+	fi
+}
+
+function wait_no_flash_oc() {
+        for i in `seq 1 50`; do 
+                if [ ! -d /var/ocxl/capi-flash-script.lock ]; then
+                        break;                                  
+                fi                                                      
+                sleep 5                                                         
+                if [ $VERBOSE -eq 1 ] ; then                                                      
+                  echo "capi-flash-script is locked in /var/ocxl. Waiting for unlock (250s)"               
+                fi                                                                                        
+        done                                                                                              
+        if [ $i -ge 50 ]; then                                                                                            
+                if [ $VERBOSE -eq 1 ] ; then                                                                                                
+                  echo "ERROR: Timeout. Flash is pending ......."                                                                                   
+                fi                                                                                                                                          
+                exit 0                                                                                                                                      
+        fi                                                                                                                                          
+}
+#
+# We need to take into account that there might be other CAPI cards
+# in our system. Therefore we check the psl_revision, which identifies
+# the card hardware and the device id in the configuration record cr0
+# which is the unique id the card has. The combination of both, should
+# be more or less bullet prove.
+#
+function detect_snap_cards() {
+	local check_dev=$1
+	local check_sub=$2
+	local card_name=$3
+	local rc=0
+
+	wait_no_flash
+
+	# We have MAX 4 CAPI cards in one system
+	for card in `seq 0 3` ; do
+		if [ ! -d /sys/class/cxl/card${card} ]; then
+			continue
+		fi
+
+		device=`cat /sys/class/cxl/card${card}/afu${card}.0/cr0/device`
+		if [ "$device" != "$check_dev" ]; then
+			continue
+		fi
+		sub=`cat /sys/class/cxl/card$card/device/subsystem_device`
+		if [ "$sub" = "$check_sub" ]; then
+			if [ $VERBOSE -eq 1 ] ; then
+				psl_revision=`cat /sys/class/cxl/card${card}/psl_revision`
+				image_loaded=`cat /sys/class/cxl/card${card}/image_loaded`
+				load_image_on_perst=`cat /sys/class/cxl/card${card}/load_image_on_perst`
+				pci=`ls -lhaF //sys/class/cxl/card${card}/device | awk -F"../../../" '{print $2}'`
+				slot=`cat /sys/firmware/opal/msglog | grep SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
+				echo -e ""
+				echo -e "$card_name card has been detected in CAPI card position: ${card}"
+				psl_revision_hex=`printf '0x%x\n' ${psl_revision}`
+				echo " PSL Revision is                                                : ${psl_revision_hex}"
+				echo -e " Device ID    is                                                : ${check_dev}"
+                                echo -e " Sub device   is                                                : ${check_sub}"
+				echo -e " Image loaded is self defined as                                : ${image_loaded}"
+				echo -e " Next image to be loaded at next reset (load_image_on_perst) is : ${load_image_on_perst}"
+				echo -e " Card PCI location is                                           : ${pci::-1}"
+				echo -e " Card PCI physical slot is                                      : ${slot}"
+			else
+				echo -n "${card} "
+			fi
+			rc=$((rc +1))
+		fi
+	done
+	wait_no_flash_oc
+	# Find all OC cards in the system
+	if [ -d /sys/class/ocxl ]; then
+		
+	        allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
+		allcards_array=($allcards)
+		# get number of cards in system
+		n=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' | wc -w`
+		for ((card = 0 ; card < $n ; card++)); do
+	        mycard=${allcards_array[$card]::-2}
+	                if [ ! -d /sys/bus/pci/devices/${mycard} ]; then
+	                        continue
+	                fi
+	  
+                device=`cat /sys/bus/pci/devices/${mycard}/device`
+                if [ "$device" != "$check_dev" ]; then
+                        continue
+                fi
+                sub=`cat /sys/bus/pci/devices/${mycard}/subsystem_device`
+                if [ "$sub" = "$check_sub" ]; then
+                        if [ $VERBOSE -eq 1 ] ; then
+                                #psl_revision=`cat /sys/class/cxl/card${card}/psl_revision`
+#                                image_loaded=`cat /var/ocxl/card${card}| awk {'print $8'}`
+#                                load_image_on_perst=`cat /sys/class/cxl/card${card}/load_image_on_perst`a
+                                image_loaded="factory"
+				load_image_on_perst="factory"
+
+                                pci=${allcards_array[$card]}
+                                slot=`cat /sys/firmware/opal/msglog | grep SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
+                                echo -e ""
+                                echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
+                                psl_revision_hex=`printf '0x%x\n' ${psl_revision}`
+#                                echo " PSL Revision is                                                : ${psl_revision_hex}"
+                                echo -e " Device ID    is                                                : ${check_dev}"
+                                echo -e " Sub device   is                                                : ${check_sub}"
+                                echo -e " Image loaded is self defined as                                : ${image_loaded}"
+                                echo -e " Next image to be loaded at next reset (load_image_on_perst) is : ${load_image_on_perst}"
+                                echo -e " Card PCI location is                                           : ${pci::-2}"
+                                echo -e " Card PCI physical slot is                                      : ${slot}"
+                        else
+                                echo -n "${card} "
+                        fi
+                        rc=$((rc +1))
+                fi
+
+		done
+	fi
+	return $rc
+}
+
+function detect_card_name()
+{
+	local card=$1
+	local dev=$2
+	local sub=$3
+	local name=$4
+
+	wait_no_flash
+
+	if [ -d /sys/class/cxl/card${card} ]; then
+		psl_revision=`cat /sys/class/cxl/card${card}/psl_revision`
+		this_dev=`cat /sys/class/cxl/card${card}/afu${card}.0/cr0/device`
+		if [ "$this_dev" = "$dev" ]; then
+			this_sub=`cat /sys/class/cxl/card$card/device/subsystem_device`
+			if [ "$this_sub" = "$sub" ]; then
+			        if [ $VERBOSE -eq 1 ] ; then
+					echo -e "CAPI Card $card is detected as $name card"
+				else
+					echo -n $name
+				fi
+				return 1
+			fi
+		fi
+	fi
+	return 0
+}
+
+function detect_oc_card_name()
+{
+        local card=$1
+        local dev=$2
+        local sub=$3
+        local name=$4
+
+        wait_no_flash_oc
+        # Find all OC cards in the system
+        allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
+        allcards_array=($allcards)
+        mycard=${allcards_array[$card]::-2}
+
+
+        if [ -d /sys/bus/pci/devices/${mycard} ]; then
+                this_dev=`cat /sys/bus/pci/devices/${mycard}/device`
+                if [ "$this_dev" = "$dev" ]; then
+                        this_sub=`cat /sys/bus/pci/devices/${mycard}/subsystem_device`
+                        if [ "$this_sub" = "$sub" ]; then
+                                if [ $VERBOSE -eq 1 ] ; then
+                                        echo -e "OPENCAPI Card $card is detected as $name card"
+                                else
+                                        echo -n $name
+                                fi
+                                return 1
+                        fi
+                fi
+        fi
+        return 0
+}
+
+# Main Start here
+# Parse any options given on the command line
+
+PROGRAM=$0
+while getopts ":vA:C:Vh" opt; do
+	case ${opt} in
+	v)
+		VERBOSE=1
+		;;
+	A)
+		accel=${OPTARG};
+		;;
+	C)
+		card=${OPTARG};
+		rc=0
+		if [[ $card -gt 3 ]]; then
+			echo "Invalid option for -C -$OPTARG" >&2
+			usage
+			exit 0
+		fi
+		detect_card_name $card  "0x0632" "0x0605" "ADKU3"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060a" "N250S"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0607" "S121B_v16.1_BPIx16"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0664" "S121B_v16.2_SPIx4"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060c" "RCXVUP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060d" "N250SP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0661" "FX609"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0660" "S241"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0608" "AD8K5"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x04dd" "N250SP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060f" "AD9V3"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0665" "U200"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0602" "" "GZIP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_oc_card_name $card  "0x062b" "0x060f" "OC-AD9V3"
+                if [ $? == 1 ]; then
+                        rc=1
+                fi
+		exit $rc
+		;;
+	V)
+		echo "${version}" >&2
+		exit 0
+		;;
+	h)
+		usage;
+		exit 0;
+		;;
+	\?)
+		printf "${bold}ERROR:${normal} Invalid option: -${OPTARG}\n" >&2
+		exit 1
+		;;
+	:)
+		printf "${bold}ERROR:${normal} Option -$OPTARG requires an argument.\n" >&2
+		exit 1
+		;;
+	esac
+done
+
+shift $((OPTIND-1))
+# now do something with $@
+RC=0
+
+case ${accel} in
+	# KU3 Card from AlphaData
+	"ADKU3")
+		detect_snap_cards "0x0632" "0x0605" "ADKU3"
+		RC=$?
+		;;
+	# NSA121B Card from Semptian BPIx16
+	"S121B_BPIx16")
+		detect_snap_cards "0x0632" "0x0607" "S121B_v16.1_BPIx16"
+		RC=$?
+		;;
+	# NSA121B Card from Semptian SPIx4
+	"S121B_SPIx4")
+		detect_snap_cards "0x0632" "0x0664" "S121B_v16.2_SPIx4"
+		RC=$?
+		;;
+	# 250s Card from Nallatech
+	"N250S")
+		detect_snap_cards "0x0632" "0x060a" "N250S"
+		RC=$?
+		;;
+	# AD8K5 Card from AlphaData
+	"AD8K5")
+		detect_snap_cards "0x0632" "0x0608" "AD8K5"
+		RC=$?
+		;;
+	# RCXVUP CAPI 2.0 card from ReflexCES
+	"RCXVUP")
+		detect_snap_cards "0x0632" "0x060c" "RCXVUP"
+		RC=$?
+		;;
+	# N250SP CAPI 2.0 card from Nallatech (SNAP mode)
+	"N250SP")
+		detect_snap_cards "0x0632" "0x060d" "N250SP"
+		RC=$?
+		;;
+	# S241 CAPI 2.0 card from Semptian
+	"S241")
+		detect_snap_cards "0x0632" "0x0660" "S241"
+		RC=$?
+		;;
+	# FX609 CAPI 2.0 card from Flyslice
+	"FX609")
+		detect_snap_cards "0x0632" "0x0661" "FX609"
+		RC=$?
+		;;
+	# N250SP CAPI 2.0 card from Nallatech (FlashGT+ mode)
+	"N250SP")
+		detect_snap_cards "0x0632" "0x04dd" "N250SP"
+		RC=$?
+		;;
+	# AD9V3 CAPI 3.0 card from Alphadata
+	"OC-AD9V3")
+		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
+		RC=$?
+		;;
+	# U200 CAPI 2.0 card from Xilinx
+	"U200")
+		detect_snap_cards "0x0632" "0x0665" "U200"
+		RC=$?
+		;;
+	# AD9V3 CAPI 2.0 card from Alphadata
+        "AD9V3")
+                detect_snap_cards "0x0632" "0x060f" "AD9V3"
+                RC=$?
+                ;;
+	"ALL")
+		# detect all cards and add Number of Cards
+		detect_snap_cards "0x0632" "0x0605" "ADKU3"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x0607" "S121B_v16.1_BPIx16"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x0664" "S121B_v16.2_SPIx4"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x060a" "N250S"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x0608" "AD8K5"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x060c" "RCXVUP"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x060d" "N250SP"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x0661" "FX609"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x0660" "S241"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x04dd" "N250SP"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x060f" "AD9V3"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x0665" "U200"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
+		RC=$((RC + $?))
+		echo -e "\nTotal $RC cards detected \n"
+ 		;;
+	*)
+		usage
+		exit 0
+		;;
+esac
+exit $RC

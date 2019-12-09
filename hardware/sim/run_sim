@@ -419,6 +419,7 @@
        fi
      elif [ "$TST_NAME" == "LIST" ];then
        filename="${LISTNAME%.*}"; parfilename="${LISTNAME%.*}${i}";echo "listname=${LISTNAME}"|tee -a stim.log
+        echo "filename=$filename, parfilename=$parfilename"
         if [ -f "${parfilename}.sh" ];then
 #        sh  ${parfilename}.sh 2>&1|tee -a ${parfilename}.log &
          ./${parfilename}.sh 2>&1|tee -a ${parfilename}.log &

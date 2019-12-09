@@ -2,17 +2,17 @@
 # Automatically generated file; DO NOT EDIT.
 # Kernel Configuration
 #
-# AD9V3 is not set
+AD9V3=y
 # AD9H3 is not set
-AD9H7=y
-FPGACARD="AD9H7"
+# AD9H7 is not set
+FPGACARD="AD9V3"
 FLASH_INTERFACE="SPIx8"
-FLASH_SIZE="128"
+FLASH_SIZE="64"
 FLASH_FACTORYADDR="0x00000000"
 FLASH_USERADDR="0x08000000"
 OPENCAPI30=y
 CAPI_VER="opencapi30"
-FPGACHIP="xcvu37p-fsvh2892-2-e"
+FPGACHIP="xcvu3p-ffvc1517-2-e"
 NUM_OF_ACTIONS=1
 # HLS_ACTION is not set
 # HDL_ACTION is not set
@@ -29,6 +29,7 @@ HLS_SUPPORT="TRUE"
 DISABLE_SDRAM_AND_BRAM=y
 # FORCE_SDRAM_OR_BRAM is not set
 SDRAM_USED="FALSE"
+HBM_USED="FALSE"
 BRAM_USED="FALSE"
 DDR3_USED="FALSE"
 DDR4_USED="FALSE"
@@ -54,9 +55,9 @@ OCSE_PATH="../ocse"
 SPEED_25G=y
 # SPEED_20G is not set
 PHY_SPEED="25.78125"
-AXI_IDW_1=y
+# AXI_IDW_1 is not set
 # AXI_IDW_2 is not set
-# AXI_IDW_3 is not set
+AXI_IDW_3=y
 # AXI_IDW_4 is not set
 # AXI_IDW_5 is not set
 # ENABLE_ILA is not set
@@ -66,5 +67,5 @@ CLOUD_BUILD_BITFILE="FALSE"
 UNIT_SIM_USED="FALSE"
 # ENABLE_ODMA is not set
 ODMA_USED="FALSE"
-ENABLE_FLASH=y
-FLASH_USED="TRUE"
+# ENABLE_FLASH is not set
+FLASH_USED="FALSE"

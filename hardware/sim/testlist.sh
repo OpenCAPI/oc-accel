@@ -1,6 +1,6 @@
 #!/bin/bash
  #
- # Copyright 2017 International Business Machines
+ # Copyright 2019 International Business Machines
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -100,23 +100,14 @@
       t="snap_peek 0x100       ";   r=$($t|grep ']'|awk '{print $2}');echo -e "$t result=$r # action0 type 0.0.0.shrt.4B_long"
       t0s=${r:7:1};t0l=${r:8:8};
       case $t0l in
-        "10140000") a0="hdl_example"
+        "10142000") a0="hdl_example"
                     if (( dram > 1 ));then  # assume BRAM, if DRAM=1MB
                       echo -e "write FPGA memory to prevent reading unwritten adr 0"        # see Xilinx AR65732
                       step "snap_example_set -h"
                       step "snap_example_set -F -b0x0 -s0x100 -p0x5 -t150"
                     fi;;
-        "10140001") a0="hdl_nvme_example";;
-        "10141000") a0="hls_memcopy";;
-        "10141001") a0="hls_sponge";;
-        "10141002") a0="hls_hashjoin";;
-        "10141003") a0="hls_search";;
-        "10141004") a0="hls_bfs";;
-        "10141005") a0="hls_intersect_h";;
-        "10141006") a0="hls_intersect_s";;
-        "00000108") a0="hls_blowfish";;
-        "10141007") a0="hls_nvme_memcopy";;
-        "10141008") a0="hls_helloworld";;
+        "1014300B") a0="hls_memcopy_1024";;
+        "10143008") a0="hls_helloworld";;
         *) echo "unknown action0 type=$t0l, exiting";exit 1;;
       esac; echo "action0 type0s=$t0s type0l=$t0l $a0"
       t="snap_peek 0x180       ";   r=$($t|grep ']'|awk '{print $2}');echo -e "$t result=$r # action0 counter reg"
@@ -129,17 +120,9 @@
       t="snap_peek 0x108       ";   r=$($t|grep ']'|awk '{print $2}');echo -e "$t result=$r # action1 type 0.0.0.shrt.4B_long"
       t1s=${r:7:1};t1l=${r:8:8};
       case $t1l in
-        "10140000") a1="hdl_example";;
-        "10141000") a1="hls_memcopy";;
-        "10141001") a1="hls_sponge";;
-        "10141002") a1="hls_hashjoin";;
-        "10141003") a1="hls_search";;
-        "10141004") a1="hls_bfs";;
-        "10141005") a1="hls_intersect_h";;
-        "10141006") a1="hls_intersect_s";;
-        "00000108") a1="hls_blowfish";;
-        "10141007") a1="hls_nvme_memcopy";;
-        "10141008") a1="hls_helloworld";;
+        "10142000") a1="hdl_example";;
+        "1014300B") a1="hls_memcopy_1024";;
+        "10143008") a1="hls_helloworld";;
         *) echo "unknown action1 type=$t1l, exiting";exit 1;;
       esac; echo "action0 type1s=$t1s type1l=$t1l $a1"
       t="snap_peek 0x188       ";   r=$($t|grep ']'|awk '{print $2}');echo -e "$t result=$r # action1 counter reg"
@@ -160,7 +143,7 @@
 #   t="snap_peek 0xE800      ";     r=$($t|grep ']'|awk '{print $2}');echo -e "$t result=$r # MMIO   ErrInj"
 #   t="snap_peek 0xE800      ";     r=$($t|grep ']'|awk '{print $2}');echo -e "$t result=$r # DMA    ErrInj"
  #
-    if [[ "$t0l" == "10140000" || "${env_action}" == "hdl_example" ]];then echo -e "$del\ntesting hdl_example"
+    if [[ "$t0l" == "10142000" || "${env_action}" == "hdl_example" ]];then echo -e "$del\ntesting hdl_example"
     if [[ "$nvme" == "1" ]];then echo -e "\nskipped due to NVMe"
     else
 #     step "snap_example -h"
@@ -289,43 +272,8 @@
       step "snap_example_nvme -d0 -b${rnd20} -t5000 -v "
     fi # nvme
  #
-    if [[ "$t0l" == "10140001" || "${env_action}" == "hdl_nvme_example" ]];then echo -e "$del\ntesting hdl_nvme_example"
-      step "snap_cblk -h"                                            # write max 2blk, read max 32blk a 512B
-      options="-n"${rndeven20}" -t1"                                 # 512B blocks, one thread
-      export CBLK_BUSYTIMEOUT=3500 # used for threads waiting for free slot
-      export CBLK_REQTIMEOUT=3000 # should be smaller than busytimeout
-#     export SNAP_TRACE=0xFFF
-      for blk in 1 2;do p8=$((blk*8)); p4k=$((blk*4096)); # no of 512B blocks and pagesize in 4kB blocks
-        echo "generate data for $blk blocks, $p8 pages, $p4k bytes"
-        dd if=/dev/urandom of=rnd.in count=${p8} bs=512 2>/dev/null  # random data any char, no echo due to unprintable char
-        head -c $p4k </dev/zero|tr '\0' 'x' >asc.in;head asc.in;echo # same char mult times
-        case $ENABLE_DENALI in
-          y|Y) echo "ENABLE_DENALI=$ENABLE_DENALI init flash" # init needed, if DENALI is used.
-               step "snap_nvme_init -d0 -v"
-               ;;
-          *) echo "ENABLE_DENALI=$ENABLE_DENALI no flash init";;
-        esac
-        echo "CBLK_BUSYTIMEOUT=$CBLK_BUSYTIMEOUT CBLK_REQTIMEOUT=$CBLK_REQTIMEOUT"
-        step "snap_cblk $options -b${blk} --read ${p8}.out       -v"
-        step "snap_cblk $options -b${blk} --write asc.in         -v"
-        step "snap_cblk $options -b${blk} --format --pattern INC"
-        step "snap_cblk $options -b${blk} --format --pattern ${blk}"
-#       echo "Please manually inspect if pattern is really ${blk}"
-#       diff asc.in ${p8}.out
-      done
-      step "snap_cblk $options -b2 --format --pattern INC"
-      step "snap_cblk $options -b1 --read cblk_read1.bin"
-      step "snap_cblk $options -b2 --read cblk_read2.bin"
-      diff cblk_read1.bin cblk_read2.bin
-      for blk in 1 ${rndeven20};do byte=$((blk*512))
-        step "snap_cblk $options -b2      --write cblk_read2.bin"
-        step "snap_cblk $options -b${blk} --read  cblk_read3.bin"
-        diff cblk_read2.bin cblk_read3.bin
-        rm cblk_read3.bin
-      done
-    fi # hdl_nvme_example
  #
-    if [[ "$t0l" == "10141000" || "${env_action}" == "hls_memcopy"* ]];then echo -e "$del\ntesting snap_memcopy"
+    if [[ "$t0l" == "1014300B" || "${env_action}" == "hls_memcopy"* ]];then echo -e "$del\ntesting snap_memcopy"
       step "snap_memcopy -h"
 #     for size in 1 64 80 85 128 240 $rnd1k $rnd1k4k;do to=$((size*50+10))   # 64B aligned       01/20/2017: error 128B issues 120, CR968181, wait for Vivado 2017.1
       for i in 1 2 3 $rnd10 $rnd32;do size=$((i*$xfer));to=$((size*50+10))   # 64B aligned       01/20/2017: error 128B issues 120, CR968181, wait for Vivado 2017.1
@@ -348,7 +296,7 @@
       done
     fi # hls_memcopy
  #
-    if [[ "$t0l" == "10141001" || "${env_action}" == "hls_sponge"* ]];then echo -e "$del\ntesting sponge"
+    if [[ "$t0l" == "10143001" || "${env_action}" == "hls_sponge"* ]];then echo -e "$del\ntesting sponge"
       step "snap_checksum -h"
       step "snap_checksum -N -v -t200 -mSPONGE  -cSHA3                 " # 23s
       step "snap_checksum -N -v -t200 -mSPONGE  -cSHA3_SHAKE           " # 44s
@@ -469,7 +417,7 @@
       done
     fi # hls_nvme_memcopy
  #
-    if [[ "$t0l" == "10141008" || "${env_action}" == "hls_helloworld"* ]];then echo -e "$del\ntesting helloworld"
+    if [[ "$t0l" == "10143008" || "${env_action}" == "hls_helloworld"* ]];then echo -e "$del\ntesting helloworld"
       step "snap_helloworld -h"
       echo "Hello world. This is my first CAPI SNAP experience. It's real fun." >tin
       cat tin |tr '[:lower:]' '[:upper:]' >tCAP
@@ -477,16 +425,6 @@
       cat tin tout tCAP
       if diff tout tCAP >/dev/null;then echo -e "file_diff ok$del";else echo -e "file_diff is wrong$del";exit 1;fi
     fi # hls_helloworld
- #
-    if [[ "$t0l" == "00000108" || "${env_action}" == "hls_blowfish" ]];then echo -e "$del\ntesting blowfish"
-      for blocks in 1 16 32 128 1024 4096 ;do  # blocks of 64B
-        dd if=/dev/urandom of=in.bin  count=${blocks} bs=64 2>/dev/null
-        dd if=/dev/urandom of=key.bin count=1         bs=16 2>/dev/null
-        step "snap_blowfish -t${timeout} -k key.bin    -i in.bin  -o enc.bin"
-        step "snap_blowfish -t${timeout} -k key.bin -d -i enc.bin -o dec.bin"
-        if diff in.in decr.out>/dev/null;then echo -e "RC=$rc file_diff ok$del";rm ${size}.*;else echo -e "$t RC=$rc file_diff is wrong$del";exit 1;fi
-      done
-    fi # blowfish
  #
     ts2=$(date +%s); looptime=`expr $ts2 - $ts1`; echo "looptime=$looptime"  # end of loop
   done; l=""; ts3=$(date +%s); totaltime=`expr $ts3 - $ts0`; echo "loops=$loops tests=$n total_time=$totaltime" # end of test

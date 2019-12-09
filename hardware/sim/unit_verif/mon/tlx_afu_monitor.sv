@@ -1,8 +1,18 @@
-// ****************************************************************
-// (C) Copyright International Business Machines Corporation 2018
-//              All Rights Reserved -- Property of IBM
-//                     *** IBM Confidential ***
-// ****************************************************************
+/*
+ * Copyright 2019 International Business Machines
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 //------------------------------------------------------------------------------
 //
 // CLASS: tlx_afu_monitor
@@ -42,6 +52,476 @@ class tlx_afu_monitor extends uvm_monitor;
     afu_tlx_transaction      afu_tlx_resp_trans_q[$];
     tlx_afu_transaction      tlx_afu_cmd_trans_q[$];
     tlx_afu_transaction      tlx_afu_resp_trans_q[$];
+
+    //------------------------FUNCTIONAL COVERAGE--------------------------------
+    //
+    afu_tlx_transaction      pre_afu_tlx_cmd_trans;
+    tlx_afu_transaction      pre_tlx_afu_resp_trans;
+
+    covergroup c_tlx_afu_resp_packet;
+        option.per_instance = 1;
+        packet_type: coverpoint tlx_afu_resp_trans_q[0].tlx_afu_type {
+            bins read_response        = {tlx_afu_transaction::READ_RESPONSE};
+            bins read_failed          = {tlx_afu_transaction::READ_FAILED};
+            bins write_response       = {tlx_afu_transaction::WRITE_RESPONSE};
+            bins write_failed         = {tlx_afu_transaction::WRITE_FAILED};
+            bins xlate_done           = {tlx_afu_transaction::XLATE_DONE};
+            bins intrp_resp           = {tlx_afu_transaction::INTRP_RESP};
+            bins intrp_rdy            = {tlx_afu_transaction::INTRP_RDY};
+        }
+        pre_packet_type: coverpoint pre_tlx_afu_resp_trans.tlx_afu_type {
+            option.weight=0;
+            bins read_response        = {tlx_afu_transaction::READ_RESPONSE};
+            bins read_failed          = {tlx_afu_transaction::READ_FAILED};
+            bins write_response       = {tlx_afu_transaction::WRITE_RESPONSE};
+            bins write_failed         = {tlx_afu_transaction::WRITE_FAILED};
+            bins xlate_done           = {tlx_afu_transaction::XLATE_DONE};
+            bins intrp_resp           = {tlx_afu_transaction::INTRP_RESP};
+            bins intrp_rdy            = {tlx_afu_transaction::INTRP_RDY};
+        }
+        resp_code: coverpoint tlx_afu_resp_trans_q[0].tlx_afu_resp_code {
+            option.weight=0;
+            bins resp_code_0          ={4'h0};
+            bins resp_code_2          ={4'h2};
+            bins resp_code_4          ={4'h4};
+        }
+        data_length: coverpoint tlx_afu_resp_trans_q[0].tlx_afu_dl {
+            option.weight=0;
+            bins data_length_64       ={2'h1};
+            bins data_length_128      ={2'h2};
+        }
+        data_part: coverpoint tlx_afu_resp_trans_q[0].tlx_afu_dp {
+            option.weight=0;
+            bins data_part_0          ={2'h0};
+            bins data_part_1          ={2'h1};
+        }
+        tlx_afu_two_packet_type: cross packet_type, pre_packet_type;
+        read_resp_packet: cross packet_type, data_length, data_part {
+            bins rd_resp_dlength64_dpart0=binsof(packet_type.read_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_0);
+            bins rd_resp_dlength64_dpart1=binsof(packet_type.read_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_1);
+            bins rd_resp_dlength128_dpart0=binsof(packet_type.read_response) && binsof(data_length.data_length_128) && binsof(data_part.data_part_0);
+        }
+        write_resp_packet: cross packet_type, data_length, data_part {
+            bins wr_resp_dlength64_dpart0=binsof(packet_type.write_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_0);
+            bins wr_resp_dlength64_dpart1=binsof(packet_type.write_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_1);
+            bins wr_resp_dlength128_dpart0=binsof(packet_type.write_response) && binsof(data_length.data_length_128) && binsof(data_part.data_part_0);
+        }
+        read_failed_packet: cross packet_type, resp_code, data_length, data_part {
+            bins rd_failed_code2_dlength64_dpart0=binsof(packet_type.read_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_2);
+            bins rd_failed_code2_dlength64_dpart1=binsof(packet_type.read_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_1) && binsof(resp_code.resp_code_2);
+            bins rd_failed_code2_dlength128_dpart0=binsof(packet_type.read_response) && binsof(data_length.data_length_128) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_2);
+            bins rd_failed_code4_dlength64_dpart0=binsof(packet_type.read_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_4);
+            bins rd_failed_code4_dlength64_dpart1=binsof(packet_type.read_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_1) && binsof(resp_code.resp_code_4);
+            bins rd_failed_code4_dlength128_dpart0=binsof(packet_type.read_response) && binsof(data_length.data_length_128) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_4);
+        }
+        write_failed_packet: cross packet_type, resp_code, data_length, data_part {
+            bins wr_failed_code2_dlength64_dpart0=binsof(packet_type.write_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_2);
+            bins wr_failed_code2_dlength64_dpart1=binsof(packet_type.write_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_1) && binsof(resp_code.resp_code_2);
+            bins wr_failed_code2_dlength128_dpart0=binsof(packet_type.write_response) && binsof(data_length.data_length_128) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_2);
+            bins wr_failed_code4_dlength64_dpart0=binsof(packet_type.write_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_4);
+            bins wr_failed_code4_dlength64_dpart1=binsof(packet_type.write_response) && binsof(data_length.data_length_64) && binsof(data_part.data_part_1) && binsof(resp_code.resp_code_4);
+            bins wr_failed_code4_dlength128_dpart0=binsof(packet_type.write_response) && binsof(data_length.data_length_128) && binsof(data_part.data_part_0) && binsof(resp_code.resp_code_4);
+        }
+        xlate_done_packet: cross packet_type, resp_code, data_length, data_part {
+            bins xlate_done_code0=binsof(packet_type.xlate_done) && binsof(resp_code.resp_code_0);
+            bins xlate_done_code2=binsof(packet_type.xlate_done) && binsof(resp_code.resp_code_2);
+        }
+        intrp_resp_packet: cross packet_type, resp_code {
+            bins intrp_resp_code0=binsof(packet_type.intrp_resp) && binsof(resp_code.resp_code_0);
+            bins intrp_resp_code2=binsof(packet_type.intrp_resp) && binsof(resp_code.resp_code_2);
+            bins intrp_resp_code4=binsof(packet_type.intrp_resp) && binsof(resp_code.resp_code_4);
+            bins intrp_rdy_code0=binsof(packet_type.intrp_rdy) && binsof(resp_code.resp_code_0);
+            bins intrp_rdy_code2=binsof(packet_type.intrp_rdy) && binsof(resp_code.resp_code_2);        
+        }
+        intrp_rdy_packet: cross packet_type, resp_code {
+            bins intrp_rdy_code0=binsof(packet_type.intrp_rdy) && binsof(resp_code.resp_code_0);
+            bins intrp_rdy_code2=binsof(packet_type.intrp_rdy) && binsof(resp_code.resp_code_2);
+        }
+    endgroup : c_tlx_afu_resp_packet
+
+    covergroup c_afu_tlx_cmd_packet;
+        option.per_instance = 1;
+        packet_type: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_type {
+            bins assign_actag         = {afu_tlx_transaction::ASSIGN_ACTAG};
+            bins dma_pr_w             = {afu_tlx_transaction::DMA_PR_W};
+            bins dma_w                = {afu_tlx_transaction::DMA_W};
+            //bins dma_w_be             = {afu_tlx_transaction::DMA_W_BE};
+            bins pr_rd_wnitc          = {afu_tlx_transaction::PR_RD_WNITC};
+            bins rd_wnitc             = {afu_tlx_transaction::RD_WNITC};
+            bins intrp_req            = {afu_tlx_transaction::INTRP_REQ};
+        }
+        pre_packet_type: coverpoint pre_afu_tlx_cmd_trans.afu_tlx_type {
+            option.weight=0;
+            bins assign_actag         = {afu_tlx_transaction::ASSIGN_ACTAG};
+            bins dma_pr_w             = {afu_tlx_transaction::DMA_PR_W};
+            bins dma_w                = {afu_tlx_transaction::DMA_W};
+            //bins dma_w_be             = {afu_tlx_transaction::DMA_W_BE};
+            bins pr_rd_wnitc          = {afu_tlx_transaction::PR_RD_WNITC};
+            bins rd_wnitc             = {afu_tlx_transaction::RD_WNITC};
+            bins intrp_req            = {afu_tlx_transaction::INTRP_REQ};
+        }
+        data_length: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_dl {
+            option.weight=0;
+            bins data_length_64       ={2'h1};
+            bins data_length_128      ={2'h2};
+        }
+        partial_length: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_pl {
+            option.weight=0;
+            bins partial_length_1     ={3'h0};
+            bins partial_length_2     ={3'h1};
+            bins partial_length_4     ={3'h2};
+            bins partial_length_8     ={3'h3};
+            bins partial_length_16    ={3'h4};
+            bins partial_length_32    ={3'h5};
+        }
+        afu_tlx_two_packet_type: cross packet_type, pre_packet_type;
+        rd_wnitc_packet: cross packet_type, data_length {
+            bins rd_wnitc_dlength64=binsof(packet_type.rd_wnitc) && binsof(data_length.data_length_64);
+            bins rd_wnitc_dlength128=binsof(packet_type.rd_wnitc) && binsof(data_length.data_length_128);
+        }
+        dma_w_packet: cross packet_type, data_length {
+            bins dma_w_dlength64=binsof(packet_type.dma_w) && binsof(data_length.data_length_64);
+            bins dma_w_dlength128=binsof(packet_type.dma_w) && binsof(data_length.data_length_128);
+        }
+        pr_rd_wnitc_packet: cross packet_type, partial_length {
+            bins pr_rd_wnitc_plength1=binsof(packet_type.pr_rd_wnitc) && binsof(partial_length.partial_length_1);
+            bins pr_rd_wnitc_plength2=binsof(packet_type.pr_rd_wnitc) && binsof(partial_length.partial_length_2);
+            bins pr_rd_wnitc_plength4=binsof(packet_type.pr_rd_wnitc) && binsof(partial_length.partial_length_4);
+            bins pr_rd_wnitc_plength8=binsof(packet_type.pr_rd_wnitc) && binsof(partial_length.partial_length_8);
+            bins pr_rd_wnitc_plength16=binsof(packet_type.pr_rd_wnitc) && binsof(partial_length.partial_length_16);
+            bins pr_rd_wnitc_plength32=binsof(packet_type.pr_rd_wnitc) && binsof(partial_length.partial_length_32);
+        }
+        dma_pr_w_packet: cross packet_type, partial_length {
+            bins dma_pr_w_plength1=binsof(packet_type.dma_pr_w) && binsof(partial_length.partial_length_1);
+            bins dma_pr_w_plength2=binsof(packet_type.dma_pr_w) && binsof(partial_length.partial_length_2);
+            bins dma_pr_w_plength4=binsof(packet_type.dma_pr_w) && binsof(partial_length.partial_length_4);
+            bins dma_pr_w_plength8=binsof(packet_type.dma_pr_w) && binsof(partial_length.partial_length_8);
+            bins dma_pr_w_plength16=binsof(packet_type.dma_pr_w) && binsof(partial_length.partial_length_16);
+            bins dma_pr_w_plength32=binsof(packet_type.dma_pr_w) && binsof(partial_length.partial_length_32);
+        }
+        rd_addr_bit00: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[0]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit01: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[1]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit02: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[2]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit03: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[3]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit04: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[4]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit05: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[5]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit06: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[6]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit07: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[7]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit08: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[8]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit09: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[9]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit10: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[10]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit11: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[11]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit12: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[12]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit13: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[13]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit14: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[14]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit15: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[15]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit16: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[16]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit17: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[17]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit18: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[18]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit19: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[19]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit20: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[20]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit21: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[21]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit22: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[22]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit23: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[23]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit24: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[24]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit25: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[25]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit26: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[26]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit27: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[27]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit28: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[28]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit29: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[29]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit30: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[30]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit31: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[31]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit32: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[32]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit33: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[33]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit34: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[34]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit35: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[35]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit36: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[36]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit37: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[37]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit38: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[38]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit39: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[39]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit40: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[40]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit41: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[41]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit42: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[42]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit43: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[43]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit44: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[44]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit45: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[45]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit46: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[46]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit47: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[47]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit48: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[48]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit49: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[49]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit50: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[50]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit51: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[51]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit52: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[52]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit53: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[53]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit54: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[54]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit55: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[55]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit56: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[56]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit57: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[57]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit58: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[58]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit59: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[59]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit60: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[60]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit61: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[61]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit62: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[62]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+        rd_addr_bit63: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[63]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC);
+
+        wr_addr_bit00: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[0]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit01: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[1]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit02: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[2]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit03: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[3]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit04: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[4]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit05: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[5]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit06: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[6]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit07: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[7]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit08: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[8]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit09: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[9]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit10: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[10]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit11: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[11]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit12: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[12]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit13: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[13]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit14: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[14]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit15: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[15]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit16: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[16]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit17: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[17]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit18: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[18]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit19: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[19]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit20: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[20]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit21: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[21]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit22: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[22]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit23: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[23]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit24: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[24]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit25: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[25]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit26: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[26]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit27: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[27]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit28: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[28]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit29: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[29]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit30: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[30]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit31: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[31]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit32: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[32]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit33: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[33]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit34: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[34]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit35: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[35]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit36: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[36]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit37: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[37]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit38: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[38]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit39: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[39]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit40: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[40]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit41: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[41]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit42: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[42]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit43: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[43]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit44: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[44]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit45: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[45]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit46: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[46]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit47: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[47]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit48: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[48]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit49: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[49]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit50: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[50]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit51: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[51]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit52: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[52]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit53: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[53]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit54: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[54]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit55: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[55]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit56: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[56]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit57: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[57]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit58: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[58]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit59: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[59]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit60: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[60]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit61: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[61]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit62: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[62]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+        wr_addr_bit63: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[63]
+            iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::DMA_PR_W);
+
+        obj_ea_bit00: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[0] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit01: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[1] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit02: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[2] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit03: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[3] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit04: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[4] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit05: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[5] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit06: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[6] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit07: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[7] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit08: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[8] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit09: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[9] iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit10: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[10]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit11: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[11]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit12: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[12]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit13: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[13]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit14: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[14]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit15: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[15]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit16: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[16]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit17: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[17]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit18: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[18]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit19: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[19]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit20: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[20]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit21: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[21]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit22: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[22]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit23: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[23]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit24: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[24]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit25: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[25]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit26: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[26]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit27: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[27]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit28: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[28]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit29: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[29]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit30: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[30]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit31: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[31]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit32: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[32]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit33: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[33]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit34: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[34]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit35: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[35]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit36: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[36]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit37: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[37]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit38: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[38]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit39: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[39]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit40: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[40]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit41: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[41]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit42: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[42]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit43: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[43]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit44: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[44]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit45: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[45]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit46: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[46]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit47: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[47]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit48: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[48]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit49: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[49]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit50: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[50]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit51: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[51]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit52: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[52]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit53: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[53]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit54: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[54]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit55: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[55]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit56: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[56]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit57: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[57]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit58: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[58]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit59: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[59]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit60: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[60]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit61: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[61]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit62: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[62]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+        obj_ea_bit63: coverpoint afu_tlx_cmd_trans_q[0].afu_tlx_addr[63]iff(afu_tlx_cmd_trans_q[0].afu_tlx_type == afu_tlx_transaction::INTRP_REQ);
+    endgroup : c_afu_tlx_cmd_packet
 
     //------------------------CONFIGURATION PARAMETERS--------------------------------
     // TLX_AFU_MONITOR Configuration Parameters. These parameters can be controlled through
@@ -109,6 +589,12 @@ function tlx_afu_monitor::new(string name = "tlx_afu_monitor", uvm_component par
     afu_tlx_resp_num = 0;
     tlx_afu_cmd_num = 0;
     tlx_afu_resp_num = 0;
+    c_tlx_afu_resp_packet = new();
+    c_tlx_afu_resp_packet.set_inst_name({get_full_name(),".c_tlx_afu_resp_packet"});
+    c_afu_tlx_cmd_packet = new();
+    c_afu_tlx_cmd_packet.set_inst_name({get_full_name(),".c_afu_tlx_cmd_packet"});
+    pre_afu_tlx_cmd_trans = new();
+    pre_tlx_afu_resp_trans = new();
 endfunction : new
 
 // Function: build_phase
@@ -341,6 +827,8 @@ function void tlx_afu_monitor::pack_afu_tlx_cmd();
                 afu_tlx_cmd_data_q.pop_front();
             end
             `uvm_info(tID, $sformatf("Collect an afu-tlx command and data.\n%s", afu_tlx_cmd_trans_q[0].sprint()), UVM_MEDIUM);
+            c_afu_tlx_cmd_packet.sample();
+            $cast(pre_afu_tlx_cmd_trans, afu_tlx_cmd_trans_q[0].clone()); 
             afu_tlx_tran_port.write(afu_tlx_cmd_trans_q.pop_front());
         end
     end
@@ -350,11 +838,15 @@ function void tlx_afu_monitor::pack_afu_tlx_cmd();
             afu_tlx_cmd_trans_q[0].afu_tlx_data_bus[0] = afu_tlx_cmd_data_q[0][511:0];
             afu_tlx_cmd_trans_q[0].afu_tlx_data_bdi[0] = afu_tlx_cmd_data_q[0][512];
             afu_tlx_cmd_data_q.pop_front();                        
+            c_afu_tlx_cmd_packet.sample();
+            $cast(pre_afu_tlx_cmd_trans, afu_tlx_cmd_trans_q[0].clone());
             `uvm_info(tID, $sformatf("Collect an afu-tlx command and data.\n%s", afu_tlx_cmd_trans_q[0].sprint()), UVM_MEDIUM);
             afu_tlx_tran_port.write(afu_tlx_cmd_trans_q.pop_front());
         end
     end
     else begin
+        c_afu_tlx_cmd_packet.sample();
+        $cast(pre_afu_tlx_cmd_trans, afu_tlx_cmd_trans_q[0].clone()); 
         `uvm_info(tID, $sformatf("Collect an afu-tlx command.\n%s", afu_tlx_cmd_trans_q[0].sprint()), UVM_MEDIUM);
         afu_tlx_tran_port.write(afu_tlx_cmd_trans_q.pop_front());
     end
@@ -426,11 +918,15 @@ function void tlx_afu_monitor::pack_tlx_afu_resp();
                 tlx_afu_resp_data_q.pop_front();
             end
             `uvm_info(tID, $sformatf("Collect a tlx-afu response and data.\n%s", tlx_afu_resp_trans_q[0].sprint()), UVM_MEDIUM);
+            c_tlx_afu_resp_packet.sample();
+            $cast(pre_tlx_afu_resp_trans, tlx_afu_resp_trans_q[0].clone());            
             tlx_afu_tran_port.write(tlx_afu_resp_trans_q.pop_front());
         end
     end
     else begin
         `uvm_info(tID, $sformatf("Collect a tlx-afu response.\n%s", tlx_afu_resp_trans_q[0].sprint()), UVM_MEDIUM);
+        c_tlx_afu_resp_packet.sample();            
+        $cast(pre_tlx_afu_resp_trans, tlx_afu_resp_trans_q[0].clone());            
         tlx_afu_tran_port.write(tlx_afu_resp_trans_q.pop_front());
     end
 endfunction : pack_tlx_afu_resp

@@ -446,6 +446,7 @@ sim: check_simulator
 	@echo "                        SIMULATOR is set to $(SIMULATOR)"
 	@if [ "$(SIMULATOR)" != "nosim" ]; then cd sim; ./run_sim; fi
 	@echo -e "[SIMULATION........] done  `date +"%T %a %b %d %Y"`"
+	@echo " To display traces, execute: ./display_traces"
 
 sim_tmux:
 	@tmux new-session "$(MAKE) -s sim"

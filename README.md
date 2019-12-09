@@ -1,14 +1,13 @@
 # OC-Accel Framework
 
-OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that helps you implement your FPGA acceleration solution on Power9 and OpenCAPI.
+OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that helps you implement your FPGA acceleration solutions with OpenCAPI technology.
 
-As an open-source infrastructure, it also embraces FPGA card vendors to enable their cards to get all advantages of OpenCAPI.
-
-Check <https://opencapi.github.io/oc-accel/> for more information.
+# Documentation
+ <https://opencapi.github.io/oc-accel/>
 
 
 # Contributing
-This is an open-source project. We greatly appreciate your contributions and collaboration. 
+This is an open-source project. We greatly appreciate your contributions and collaboration.
 Before contributing to this project, please read and agree to the rules in
 * [CONTRIBUTING.md](CONTRIBUTING.md)
 

@@ -18,7 +18,8 @@
 
 verbose=0
 snap_card=0
-duration="NORMAL"
+duration="SHORT"
+size=10
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
@@ -31,31 +32,36 @@ echo "ACTION_ROOT : ${ACTION_ROOT}"
 
 function usage() {
     echo "Usage:"
-    echo "  test_<action_type>.sh"
+    echo "  sudo ./hw_test.sh"
+    echo "  For basic memcopy functions. Use hw_throughput_test.sh for bandwidth."
     echo "    [-C <card>] card to be used for the test"
     echo "    [-t <trace_level>]"
-    echo "    [-duration SHORT/NORMAL/LONG] run tests"
+    echo "    [-N ] not use interrupt"
+    echo "    [-duration SHORT/NORMAL] run tests (default is SHORT, which is also good for simulation)"
     echo
 }
 
-while getopts ":C:t:d:h" opt; do
+while getopts ":C:t:d:Nh" opt; do
     case $opt in
-	C)
-	snap_card=$OPTARG;
-	;;
-	t)
-	export SNAP_TRACE=$OPTARG;
-	;;
-	d)
-	duration=$OPTARG;
-	;;
-	h)
-	usage;
-	exit 0;
-	;;
-	\?)
-	echo "Invalid option: -$OPTARG" >&2
-	;;
+    C)
+    snap_card=$OPTARG;
+    ;;
+    t)
+    export SNAP_TRACE=$OPTARG;
+    ;;
+    d)
+    duration=$OPTARG;
+    ;;
+    N)
+    noirq=" -N ";
+    ;;
+    h)
+    usage;
+    exit 0;
+    ;;
+    \?)
+    echo "Invalid option: -$OPTARG" >&2
+    ;;
     esac
 done
 
@@ -66,212 +72,134 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 # [ -z "$STATE" ] && echo "Need to set STATE" && exit 1;
 
 if [ -z "$SNAP_CONFIG" ]; then
-	echo "Get CARD VERSION"
-	snap_maint -C ${snap_card} -v || exit 1;
-	snap_peek -C ${snap_card} 0x0 || exit 1;
-	snap_peek -C ${snap_card} 0x8 || exit 1;
-	echo
+    echo "Get CARD VERSION"
+    oc_maint -C ${snap_card} -v || exit 1;
+    snap_peek -C ${snap_card} 0x0 || exit 1;
+    snap_peek -C ${snap_card} 0x8 || exit 1;
+    echo
 fi
 
 #### MEMCOPY ##########################################################
 
 function test_memcopy {
     local size=$1
+    local noirq=$2
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card} -X	\
-		-i ${size}_A.bin	\
-		-o ${size}_A.out >>	\
-		snap_memcopy.log 2>&1"
+    echo -n "Doing snap_memcopy ${size} bytes ... "
+    cmd="snap_memcopy -C${snap_card} ${noirq} -X    \
+        -i ${size}_A.bin    \
+        -o ${size}_A.out >>    \
+        snap_memcopy.log 2>&1"
+    echo ${cmd} >> snap_memcopy.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_memcopy.log
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
+        echo "cmd: ${cmd}"
+        echo "failed, please check snap_memcopy.log"
+        exit 1
     fi
     echo "ok"
 
     echo -n "Check results ... "
     diff ${size}_A.bin ${size}_A.out 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
-	echo "failed"
-	echo "  ${size}_A.bin ${size}_A.out are different!"
-	exit 1
+        echo "failed"
+        echo "  ${size}_A.bin ${size}_A.out are different!"
+        exit 1
     fi
     echo "ok"
 
 }
 
+
+
+################  Test Begins #####################
 rm -f snap_memcopy.log
 touch snap_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<10000; size*=2 )); do
-	test_memcopy ${size}
+
+    for (( size=64; size<=512; size*=2 )); do
+    test_memcopy ${size}
     done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
-    for (( size=64; size<100000; size*=2 )); do
-	test_memcopy ${size}
-    done
-fi
-
-if [ "$duration" = "LONG" ]; then
-    for (( size=64; size<100000000; size*=2 )); do
-	test_memcopy ${size}
+    for (( size=64; size<65536; size*=2 )); do
+    test_memcopy ${size}
     done
 fi
 
 echo
-echo "READ/WRITE Performance Results"
+echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy.log
 echo
 
-#### MEMCOPY to CARD DDR ##############################################
+#### MEMCOPY to and from CARD DDR #############
 
-function test_memcopy_to_ddr {
+function test_memcopy_with_ddr {
     local size=$1
 
-    dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
+    dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card} -X	\
-		-i ${size}_A.bin	\
-                -d 0x0 -D CARD_DRAM >>  \
-		snap_memcopy_to_ddr.log 2>&1"
+    echo -n "Doing snap_memcopy to ddr (aligned) ${size} bytes ... "
+    cmd="snap_memcopy -C${snap_card}  ${noirq}  \
+        -i ${size}_B.bin    \
+        -d 0x0 -D CARD_DRAM >>  \
+        snap_memcopy_with_ddr.log 2>&1"
+    echo ${cmd} >> snap_memcopy_with_ddr.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_memcopy_to_ddr.log
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
+        echo "cmd: ${cmd}"
+        echo "failed, check snap_memcopy_with_ddr.log"
+        exit 1
+    fi
+    
+    echo -n "Doing snap_memcopy from ddr (aligned) ${size} bytes ... "
+    cmd="snap_memcopy -C${snap_card}   ${noirq} \
+        -o ${size}_B.out    \
+        -a 0x0 -A CARD_DRAM -s ${size} >>  \
+        snap_memcopy_with_ddr.log 2>&1"
+    echo ${cmd} >> snap_memcopy_with_ddr.log
+    eval ${cmd}
+    if [ $? -ne 0 ]; then
+        echo "cmd: ${cmd}"
+        echo "failedi, check snap_memcopy_with_ddr.log"
+        exit 1
     fi
     echo "ok"
+    
+    echo -n "Check results ... "
+    diff ${size}_B.bin ${size}_B.out 2>&1 > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "failed"
+        echo "  ${size}_B.bin ${size}_B.out are different!"
+        exit 1
+    fi
+    echo "ok"
+
 }
 
-rm -f snap_memcopy_to_ddr.log
-touch snap_memcopy_to_ddr.log
+
+################ TEST Begins ##################
+rm -f snap_memcopy_with_ddr.log
+touch snap_memcopy_with_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<10000; size*=2 )); do
-	test_memcopy_to_ddr ${size}
+    for (( size=64; size<512; size*=2 )); do
+    test_memcopy_with_ddr ${size}
     done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
-    for (( size=64; size<100000; size*=2 )); do
-	test_memcopy_to_ddr ${size}
-    done
-fi
-
-if [ "$duration" = "LONG" ]; then
-    for (( size=64; size<100000000; size*=2 )); do
-	test_memcopy_to_ddr ${size}
+    for (( size=64; size<65536; size*=2 )); do
+    test_memcopy_with_ddr ${size}
     done
 fi
 
 echo
-echo "WRITE to Card-DDR Performance Results"
-grep "memcopy of" snap_memcopy_to_ddr.log
+echo "Print time: (small size doesn't represent performance)"
+grep "memcopy of" snap_memcopy_with_ddr.log
 echo
 
-#### MEMCOPY from CARD DDR ############################################
-
-function test_memcopy_from_ddr {
-    local size=$1
-
-    dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
-
-    echo -n "Doing snap_memcopy (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card} -X	\
-		-o ${size}_A.out	\
-                -a 0x0 -A CARD_DRAM -s ${size} >>  \
-		snap_memcopy_from_ddr.log 2>&1"
-    eval ${cmd}
-    if [ $? -ne 0 ]; then
-	cat snap_memcopy_from_ddr.log
-	echo "cmd: ${cmd}"
-	echo "failed"
-	exit 1
-    fi
-    echo "ok"
-}
-
-rm -f snap_memcopy_from_ddr.log
-touch snap_memcopy_from_ddr.log
-
-if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<10000; size*=2 )); do
-	test_memcopy_from_ddr ${size}
-    done
-fi
-
-if [ "$duration" = "NORMAL" ]; then
-    for (( size=64; size<100000; size*=2 )); do
-	test_memcopy_from_ddr ${size}
-    done
-fi
-
-if [ "$duration" = "LONG" ]; then
-    for (( size=64; size<100000000; size*=2 )); do
-	test_memcopy_from_ddr ${size}
-    done
-fi
-
-echo
-echo "READ from Card-DDR Performance Results"
-grep "memcopy of" snap_memcopy_from_ddr.log
-echo
-
-#### MEMCOPY CARD #####################################################
-
-### Trying DRAM on card ...
-test_data=LARGE_A.bin
-python3 -c 'print("A" * (1 * 1024 * 1024), end="")' > $test_data
-# snap_search.txt
-
-size=`ls -l $test_data | cut -d' ' -f5`
-
-echo -n "Doing snap_memcopy (CARD_DRAM) ${size} bytes to card ... "
-cmd="snap_memcopy -C${snap_card}		\
-		-i $test_data -D CARD_DRAM -d 0x00000000 >	\
-		snap_memcopy_card.log 2>&1"
-eval ${cmd}
-if [ $? -ne 0 ]; then
-    cat snap_memcopy_card.log
-    echo "cmd: ${cmd}"
-    echo "failed"
-    exit 1
-fi
-echo "ok"
-
-echo -n "Doing snap_memcopy (CARD_DRAM) ${size} bytes from card... "
-cmd="snap_memcopy -C${snap_card}	\
-		-A CARD_DRAM -a 0x00000000 -s ${size}	\
-		-o snap_search.out >>		\
-		snap_memcopy_card.log 2>&1"
-eval ${cmd}
-if [ $? -ne 0 ]; then
-    cat snap_memcopy_card.log
-    echo "cmd: ${cmd}"
-    echo "failed"
-    exit 1
-fi
-echo "ok"
-
-echo -n "Check results ... "
-diff $test_data snap_search.out 2>&1 > /dev/null
-if [ $? -ne 0 ]; then
-    echo "failed"
-    echo "  snap_search.txt snap_search.out are different!"
-    exit 1
-fi
-echo "ok"
-
-rm -f *.bin *.bin *.out
-echo "Test OK"
-exit 0
