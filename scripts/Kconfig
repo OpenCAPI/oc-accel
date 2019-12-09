@@ -141,6 +141,7 @@ choice
                   Learning Accelerator engine on OpenCAPI
                   - Accelerate
                 select DISABLE_SDRAM_AND_BRAM
+
 	config HDL_DATABASE
 		bool "HDL Database"
 		help
@@ -402,7 +403,6 @@ config NUM_OF_MULTI_PROCESS_ENGINES
 	help
 	  Number of engines in multi-process example.
 
-<<<<<<< HEAD
 config NUM_OF_NVDLA_KERNELS
         depends on HDL_NVDLA
 	prompt "Number of nvdla kernels"
@@ -441,7 +441,7 @@ config NVDLA_CONFIG
 	default "nv_small"     if NV_SMALL
 	default "nv_large"     if NV_LARGE
 	default "nv_full"      if NV_FULL
-=======
+
 config NUM_OF_DATABASE_KERNELS
         depends on HDL_DATABASE
 	prompt "Number of database kernels"
@@ -483,7 +483,6 @@ config DATABASE_REGEX_CONFIG
 	default "8X1"  if REGEX_8X1
 	help
 	  Number of kernels (engines) in database acceleration.
->>>>>>> upstream/dev_1
 
 config SIMULATOR
 	string
