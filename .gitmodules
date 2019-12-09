@@ -1,6 +1,6 @@
 [submodule "hardware/oc-bip"]
 	path = hardware/oc-bip
-        url = https://github.com/collinqian/OpenCAPI3.0_Client_RefDesign.git
+	url = https://github.com/collinqian/OpenCAPI3.0_Client_RefDesign.git
 [submodule "actions/hdl_nvdla/sw/nvdla-sw"]
 	path = actions/hdl_nvdla/sw/nvdla-sw
 	url = https://github.com/shgoupf/nvdla-sw.git
