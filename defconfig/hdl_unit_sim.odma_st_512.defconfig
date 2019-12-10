@@ -54,17 +54,11 @@ OCSE_PATH="../ocse"
 SPEED_25G=y
 # SPEED_20G is not set
 PHY_SPEED="25.78125"
-AXI_ID_WIDTH=5
-# Action_clock_50MHz is not set
-# Action_clock_100MHz is not set
-# Action_clock_150MHz is not set
-Action_clock_200MHz=y
-# Action_clock_250MHz is not set
-# Action_clock_300MHz is not set
-# Action_clock_350MHz is not set
-# Action_clock_400MHz is not set
-USER_CLOCK_FREQ=200
-HLS_CLOCK_PERIOD_CONSTRAINT="4ns"
+# AXI_IDW_1 is not set
+# AXI_IDW_2 is not set
+# AXI_IDW_3 is not set
+# AXI_IDW_4 is not set
+AXI_IDW_5=y
 # ENABLE_ILA is not set
 ILA_DEBUG="FALSE"
 CLOUD_USER_FLOW="FALSE"
@@ -73,9 +67,9 @@ ENABLE_UNIT_VERIF=y
 UNIT_SIM_USED="TRUE"
 ENABLE_ODMA=y
 ODMA_USED="TRUE"
-# ENABLE_ODMA_ST_MODE is not set
-ODMA_ST_MODE_USED="FALSE"
-# ENABLE_ODMA_512 is not set
-ODMA_512_USED="FALSE"
+ENABLE_ODMA_ST_MODE=y
+ODMA_ST_MODE_USED="TRUE"
+ENABLE_ODMA_512=y
+ODMA_512_USED="TRUE"
 ENABLE_FLASH=y
 FLASH_USED="TRUE"
