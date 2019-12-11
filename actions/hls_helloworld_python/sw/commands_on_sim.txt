@@ -1,0 +1,12 @@
+oc_maint -vvv
+
+LD_LIBRARY_PATH=/tools/projects/ocse/libocxl/ python3
+
+import sys
+
+sys.path.append("/tools/projects/oc-accel_did/actions/hls_helloworld_python/sw")
+
+import snap_helloworld_python
+ 
+snap_helloworld_python.mymain("Hello world. This is my first CAPI SNAP experience with Python. It's extremely fun", "y")
+

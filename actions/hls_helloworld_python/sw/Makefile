@@ -45,7 +45,7 @@ projs += snap_helloworld_python
 
 
 PyCFLAGS=$(shell python3-config --includes)
-PyCFLAGS+=-fPIC -O2
+PyCFLAGS+=-fPIC -O2 -DPY_WRAP
 VERSION:=$(GIT_BRANCH)
 PyCFLAGS += -DGIT_VERSION=\"$(VERSION)\" \
 

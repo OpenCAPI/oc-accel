@@ -4,7 +4,7 @@
 %module snap_helloworld_python
 %{
  /* Put header files here or function declarations like below */
- extern int mymain(int argc, char *argv[]);
+ extern int mymain(char *input_str, char *output_str);
 %}
-extern int mymain(int argc, char *argv[]);
+extern int mymain(char *input_str, char *output_str);
 

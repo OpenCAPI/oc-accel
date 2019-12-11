@@ -85,7 +85,7 @@ static void usage(const char *prog)
         prog);
 }
 
-// Function that fills the MMIO registers / data structure 
+// Function that fills the MMIO registers / data structure
 // these are all data exchanged between the application and the action
 static void snap_prepare_helloworld(struct snap_job *cjob,
 				 struct helloworldp_job *mjob,
@@ -115,20 +115,24 @@ static void snap_prepare_helloworld(struct snap_job *cjob,
 /* main program of the application for the hls_helloworld example        */
 /* This application will always be run on CPU and will call either       */
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
-int mymain(int argc, char *argv[])
+#ifdef PY_WRAP
+int mymain(char *input_str, char *output_str)
 {
-	// Init of all the default values used 
-	int ch, rc = 0;
+#else
+int main(int argc, char *argv[])
+{
+	char *input_str  = argv[1]; 
+	char *output_str = argv[2];
+#endif
+	// Init of all the default values used
+	int rc = 0;
 	int card_no = 0;
 	struct snap_card *card = NULL;
 	struct snap_action *action = NULL;
 	char device[128];
 	struct snap_job cjob;
 	struct helloworldp_job mjob;
-	const char *input = NULL;
-	const char *output = NULL;
 	unsigned long timeout = 600;
-	const char *space = "CARD_RAM";
 	struct timeval etime, stime;
 	ssize_t size = 1024 * 1024;
 	uint8_t *ibuff = NULL, *obuff = NULL;
@@ -143,114 +147,17 @@ int mymain(int argc, char *argv[])
 	//snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
 	snap_action_flag_t action_irq = SNAP_ACTION_DONE_IRQ;
 
-	// collecting the command line arguments
-	while (1) {
-		int option_index = 0;
-		static struct option long_options[] = {
-			{ "card",	 required_argument, NULL, 'C' },
-			{ "input",	 required_argument, NULL, 'i' },
-			{ "output",	 required_argument, NULL, 'o' },
-			{ "src-type",	 required_argument, NULL, 'A' },
-			{ "src-addr",	 required_argument, NULL, 'a' },
-			{ "dst-type",	 required_argument, NULL, 'D' },
-			{ "dst-addr",	 required_argument, NULL, 'd' },
-			{ "size",	 required_argument, NULL, 's' },
-			{ "timeout",	 required_argument, NULL, 't' },
-			{ "verify",	 no_argument,	    NULL, 'X' },
-			{ "no-irq",	 no_argument,	    NULL, 'N' },
-			{ "version",	 no_argument,	    NULL, 'V' },
-			{ "verbose",	 no_argument,	    NULL, 'v' },
-			{ "help",	 no_argument,	    NULL, 'h' },
-			{ 0,		 no_argument,	    NULL, 0   },
-		};
 
-		ch = getopt_long(argc, argv,
-                                 "C:i:o:A:a:D:d:s:t:XNVvh",
-				 long_options, &option_index);
-		if (ch == -1)
-			break;
 
-		switch (ch) {
-		case 'C':
-			card_no = strtol(optarg, (char **)NULL, 0);
-			break;
-		case 'i':
-			input = optarg;
-			break;
-		case 'o':
-			output = optarg;
-			break;
-			/* input data */
-		case 'A':
-			space = optarg;
-			if (strcmp(space, "CARD_DRAM") == 0)
-				type_in = SNAP_ADDRTYPE_CARD_DRAM;
-			else if (strcmp(space, "HOST_DRAM") == 0)
-				type_in = SNAP_ADDRTYPE_HOST_DRAM;
-			else {
-				usage(argv[0]);
-				exit(EXIT_FAILURE);
-			}
-			break;
-		case 'a':
-			addr_in = strtol(optarg, (char **)NULL, 0);
-			break;
-			/* output data */
-		case 'D':
-			space = optarg;
-			if (strcmp(space, "CARD_DRAM") == 0)
-				type_out = SNAP_ADDRTYPE_CARD_DRAM;
-			else if (strcmp(space, "HOST_DRAM") == 0)
-				type_out = SNAP_ADDRTYPE_HOST_DRAM;
-			else {
-				usage(argv[0]);
-				exit(EXIT_FAILURE);
-			}
-			break;
-		case 'd':
-			addr_out = strtol(optarg, (char **)NULL, 0);
-			break;
-                case 's':
-                        size = __str_to_num(optarg);
-                        break;
-                case 't':
-                        timeout = strtol(optarg, (char **)NULL, 0);
-                        break;		
-                case 'X':
-			verify++;
-			break;
-                case 'N':
-                        action_irq = 0;
-                        break;
-			/* service */
-		case 'V':
-			printf("%s\n", version);
-			exit(EXIT_SUCCESS);
-		case 'v':
-			verbose_flag = 1;
-			break;
-		case 'h':
-			usage(argv[0]);
-			exit(EXIT_SUCCESS);
-			break;
-		default:
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
-		}
-	}
+	/* if input string is defined, use that as input */
+	if (input_str != NULL) {
 
-	if (optind != argc) {
-		usage(argv[0]);
-		exit(EXIT_FAILURE);
-	}
-	if (argc == 1) {       // to provide help when program is called without argument
-          usage(argv[0]);
-          exit(EXIT_FAILURE);
-        }
+		int input_str_len;
+		for (input_str_len = 0; input_str[input_str_len] != '\0'; ++input_str_len);
+    		
+		printf("Length of the input string: %d", input_str_len);
 
-	/* if input file is defined, use that as input */
-	if (input != NULL) {
-		size = __file_size(input);
+		size = input_str_len * 2; //FIXME: its not that
 		if (size < 0)
 			goto out_error;
 
@@ -260,21 +167,20 @@ int mymain(int argc, char *argv[])
 			goto out_error;
 		memset(ibuff, 0, size);
 
-		fprintf(stdout, "reading input data %d bytes from %s\n",
-			(int)size, input);
+		fprintf(stdout, "reading input data %d bytes from input string %s\n",
+			(int)size, input_str);
 
-		// copy text from file to host memory
-		rc = __file_read(input, ibuff, size);
-		if (rc < 0)
-			goto out_error;
+		// copy text from string to host memory FIXME: we don't need copy
+		
+		memcpy (ibuff, input_str, size);
 
 		// prepare params to be written in MMIO registers for action
 		type_in = SNAP_ADDRTYPE_HOST_DRAM;
 		addr_in = (unsigned long)ibuff;
 	}
 
-	/* if output file is defined, use that as output */
-	if (output != NULL) {
+	/* if output string is defined, use that as output */
+	if (output_str != NULL) {
 		size_t set_size = size + (verify ? sizeof(trailing_zeros) : 0);
 
 		/* Allocate in host memory the place to put the text processed */
@@ -291,14 +197,14 @@ int mymain(int argc, char *argv[])
 
 	/* Display the parameters that will be used for the example */
 	printf("PARAMETERS:\n"
-	       "  input:       %s\n"
-	       "  output:      %s\n"
+	       "  input_str:   %s\n"
+	       "  output_str:  %s\n"
 	       "  type_in:     %x %s\n"
 	       "  addr_in:     %016llx\n"
 	       "  type_out:    %x %s\n"
 	       "  addr_out:    %016llx\n"
 	       "  size_in/out: %08lx\n",
-	       input  ? input  : "unknown", output ? output : "unknown",
+	       input_str  ? input_str  : "unknown", output_str ? output_str : "unknown",
 	       type_in,  mem_tab[type_in],  (long long)addr_in,
 	       type_out, mem_tab[type_out], (long long)addr_out,
 	       size);
@@ -344,10 +250,10 @@ int mymain(int argc, char *argv[])
 	gettimeofday(&stime, NULL);
 
 	// Call the action will:
-	//    write all the registers to the action (MMIO) 
-	//  + start the action 
+	//    write all the registers to the action (MMIO)
+	//  + start the action
 	//  + wait for completion
-	//  + read all the registers from the action (MMIO) 
+	//  + read all the registers from the action (MMIO)
 	rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
 	// Collect the timestamp AFTER the call of the action
@@ -359,13 +265,13 @@ int mymain(int argc, char *argv[])
 	}
 
 	/* If the output buffer is in host DRAM we can write it to a file */
-	if (output != NULL) {
-		fprintf(stdout, "writing output data %p %d bytes to %s\n",
-			obuff, (int)size, output);
+	if (output_str != NULL) {
+		fprintf(stdout, "writing output data %p %d bytes to output_str\n",
+			obuff, (int)size);
 
-		rc = __file_write(output, obuff, size);
-		if (rc < 0)
-			goto out_error2;
+		memcpy (output_str, obuff, size);
+	
+	fprintf(stdout, "output_str is %s\n", output_str);
 	}
 
 	// test return code
@@ -416,3 +322,4 @@ int mymain(int argc, char *argv[])
 	__free(ibuff);
 	exit(EXIT_FAILURE);
 }
+
