@@ -115,7 +115,7 @@ static void snap_prepare_helloworld(struct snap_job *cjob,
 /* main program of the application for the hls_helloworld example        */
 /* This application will always be run on CPU and will call either       */
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
-int main(int argc, char *argv[])
+int mymain(int argc, char *argv[])
 {
 	// Init of all the default values used 
 	int ch, rc = 0;
