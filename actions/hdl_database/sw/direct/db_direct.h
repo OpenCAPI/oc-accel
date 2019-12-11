@@ -42,7 +42,7 @@
 
 #include <libosnap.h>
 #include <osnap_tools.h>
-#include <osnap_action_regs.h>
+#include <osnap_global_regs.h>
 
 
 /*  defaults */

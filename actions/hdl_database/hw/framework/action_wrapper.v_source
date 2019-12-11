@@ -203,6 +203,7 @@
     assign num_patt_pipes = NUM_OF_PU;
     assign version = 8'h01;
     assign m_axi_host_mem_arid[C_M_AXI_HOST_MEM_ID_WIDTH-1:4] = 0;
+    assign m_axi_host_mem_awid[C_M_AXI_HOST_MEM_ID_WIDTH-1:4] = 0;
 
     assign action_version = {num_patt_pipes, num_pkt_pipes, num_kernels, version};
 

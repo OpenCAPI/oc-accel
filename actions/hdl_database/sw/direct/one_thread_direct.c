@@ -1171,7 +1171,7 @@ int main (int argc, char* argv[])
 
     VERBOSE0 ("Finish get action.\n");
 
-    hw_version = action_read (dn, SNAP_ACTION_VERS_REG);
+    hw_version = action_read (dn, ACTION_RELEASE_REG);
     VERBOSE0 ("hw_version: %#x\n", hw_version);
 
     num_patt_pipes = (int) ((hw_version & 0xFF000000) >> 24);
