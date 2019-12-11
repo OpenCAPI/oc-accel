@@ -1,0 +1,25 @@
+SET client_min_messages = warning;
+\set ECHO none
+\set ECHO all
+\set max_parallel_workers_per_gather 8
+\set max_parallel_maintenance_workers 8
+RESET client_min_messages;
+
+CREATE TABLE IF NOT EXISTS sm_test_4(pkt text, id SERIAL);
+
+CREATE OR REPLACE FUNCTION copy_if_not_exists_test_4 ()
+RETURNS void AS
+$_$
+BEGIN
+    IF NOT EXISTS (select * from sm_test_4) THEN
+        COPY sm_test_4 (pkt) FROM '/home/pengfei/capi/db/snap/actions/hdl_stringmatch/tests/packets/packet.1024.251M.full_match.txt' DELIMITER ' ' ;
+    END IF;
+END;
+$_$ LANGUAGE plpgsql;
+
+SELECT copy_if_not_exists_test_4();
+
+explain analyze SELECT * FROM (SELECT psql_regex_capi(pkt, 'abc.*xyz') over(), pkt, id from sm_test_4) s WHERE psql_regex_capi = 1;
+--explain analyze SELECT psql_regex_capi(pkt, 'abc.*xyz') over(), pkt from sm_test_4;
+explain analyze SELECT pkt, (regexp_matches(pkt, 'abc.*xyz'))[0] from sm_test_4;
+explain analyze SELECT * FROM sm_test_4 WHERE pkt ~ 'abc.*xyz';

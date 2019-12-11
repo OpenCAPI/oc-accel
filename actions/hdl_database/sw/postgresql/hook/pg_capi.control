@@ -1,0 +1,5 @@
+# pg_capi extension
+comment = 'CAPI implementation for custom-plan interface'
+default_version = '1.0'
+module_pathname = '$libdir/pg_capi'
+relocatable = true
