@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module multi_process_control #(
+module mp_control #(
     parameter KERNEL_NUM = 8,
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
@@ -34,15 +34,15 @@ module multi_process_control #(
                       input                             s_axi_rready    ,
                       output    reg                     s_axi_rvalid    ,
                       //---- local control ----
-                      output        [87:0]              process_info    ,
-                      output    reg                     process_start   ,
-                      input                             process_accept  ,
-                      output                            new_dsc         ,
-                      input                             engine_start    ,
-                      output    reg [KERNEL_NUM-1:0]    kernel_start    ,
+                      output        [8:0]               cmpl_ram_addr_o ,
+                      output                            cmpl_ram_hi_o   ,
+                      output                            cmpl_ram_lo_o   ,
+                      output        [31:0]              cmpl_ram_data_o ,
+                      output        [87:0]              process_info_o  ,
+                      output    reg                     process_start_o ,
+                      input                             process_ready_i ,
                       input         [31:0]              i_action_type   ,
-                      input         [31:0]              i_action_version,
-                      input         [KERNEL_NUM-1:0]    kernel_complete
+                      input         [31:0]              i_action_version
                       );
 
 
@@ -50,9 +50,6 @@ module multi_process_control #(
 // For 32bit write data.
  reg    [31:0]              write_address;
  wire   [31:0]              wr_mask;
- reg    [KERNEL_NUM-1:0]    kernel_complete_prev;
- reg    [KERNEL_NUM-1:0]    kernel_busy;
- wire   [KERNEL_NUM-1:0]    kernel_complete_posedge;
  reg    [31:0]              REG_global_control;
  reg    [8:0]               process_id;
  wire                       ram_read;
@@ -65,25 +62,16 @@ module multi_process_control #(
 
 //---- parameters ----
  // Register addresses arrangement
- parameter ADDR_GLOBAL_CONTROL               = 32'h24,
-           ADDR_INIT_ADDR_LO                 = 32'h28,
-           ADDR_INIT_ADDR_HI                 = 32'h2C;
+ parameter ADDR_GLOBAL_CONTROL               = 'h24,
+           ADDR_INIT_ADDR_LO                 = 'h28,
+           ADDR_INIT_ADDR_HI                 = 'h2C,
+           ADDR_CMPL_ADDR_LO                 = 'h30,
+           ADDR_CMPL_ADDR_HI                 = 'h34;
 
-/***********************************************************************
-*                          interrupt generation                        *
-***********************************************************************/
-genvar i;
-generate
-  for (i = 0; i < KERNEL_NUM; i = i + 1) begin:kernel_complete_posedge_gen
-    assign kernel_complete_posedge[i] = (kernel_complete_prev[i] == 0) & (kernel_complete[i] == 1);
-  end
-endgenerate
-
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
-     kernel_complete_prev <= {KERNEL_NUM{1'b1}};
-   else
-     kernel_complete_prev <= kernel_complete;
+assign cmpl_ram_hi_o = s_axi_wvalid & s_axi_wready & (write_address[20:0] == ADDR_CMPL_ADDR_HI);
+assign cmpl_ram_lo_o = s_axi_wvalid & s_axi_wready & (write_address[20:0] == ADDR_CMPL_ADDR_LO);
+assign cmpl_ram_addr_o = write_address[30:22];
+assign cmpl_ram_data_o = s_axi_wdata;
 
 /***********************************************************************
 *                          writing registers                           *
@@ -109,7 +97,7 @@ endgenerate
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      s_axi_wready <= 1'b0;
-   else if(process_start & !process_accept)
+   else if(process_start_o & !process_ready_i)
      s_axi_wready <= 1'b0;
    else if(s_axi_awvalid & s_axi_awready)
      s_axi_wready <= 1'b1;
@@ -174,7 +162,7 @@ endgenerate
 *                        control                                       *
 ***********************************************************************/
 
-addr_ram_lo addr_ram_low(
+addr_ram addr_ram_low(
     .clk    (clk            ),
     .d      (ram_write_data ),
     .dpra   (ram_read_addr  ),
@@ -183,7 +171,7 @@ addr_ram_lo addr_ram_low(
     .dpo    (ram_read_data[31:0]  )
 );
 
-addr_ram_hi addr_ram_high(
+addr_ram addr_ram_high(
     .clk    (clk            ),
     .d      (ram_write_data ),
     .dpra   (ram_read_addr  ),
@@ -204,51 +192,16 @@ assign ram_write0 = s_axi_wvalid & s_axi_wready & (write_address[20:0] == ADDR_I
 assign ram_write1 = s_axi_wvalid & s_axi_wready & (write_address[20:0] == ADDR_INIT_ADDR_LO);
 assign ram_write_addr = write_address[30:22];
 assign ram_write_data = s_axi_wdata;
-assign process_info = {7'b0,REG_global_control[15:8],process_id,ram_read_data};
+assign process_info_o = {7'b0,REG_global_control[15:8],process_id,ram_read_data};
 
 always@(posedge clk) process_id <= write_address[30:22];
 
 always@(posedge clk or negedge rst_n)
     if(!rst_n)
-        process_start <= 1'b0;
+        process_start_o <= 1'b0;
     else if(ram_read)
-        process_start <= 1'b1;
-    else if(process_accept)
-        process_start <= 1'b0;
-
-assign new_dsc = !(&kernel_busy);
-//assign job_done = !(|kernel_busy);
-
-genvar j;
-generate
-  for (j = 0; j < KERNEL_NUM; j = j + 1) begin:kernel_busy_gen
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
-            kernel_busy[j] <= 1'b0;
-        else if(kernel_start[j] == 1'b1)
-            kernel_busy[j] <= 1'b1;
-        else if(kernel_complete_posedge[j] == 1'b1)
-            kernel_busy[j] <= 1'b0;
-  end
-endgenerate
-
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
-        kernel_start <= 8'b0;
-    else if(engine_start) begin
-        casex(kernel_busy)
-            8'b0xxxxxxx: kernel_start <= 8'b10000000;
-            8'b10xxxxxx: kernel_start <= 8'b01000000;
-            8'b110xxxxx: kernel_start <= 8'b00100000;
-            8'b1110xxxx: kernel_start <= 8'b00010000;
-            8'b11110xxx: kernel_start <= 8'b00001000;
-            8'b111110xx: kernel_start <= 8'b00000100;
-            8'b1111110x: kernel_start <= 8'b00000010;
-            8'b11111110: kernel_start <= 8'b00000001;
-            default:     kernel_start <= 8'b00000000;
-        endcase
-        end
-    else
-        kernel_start <= 8'b00000000;
+        process_start_o <= 1'b1;
+    else if(process_ready_i)
+        process_start_o <= 1'b0;
 
 endmodule

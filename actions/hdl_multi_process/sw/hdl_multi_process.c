@@ -177,6 +177,7 @@ static uint64_t mem_check (uint8_t* src, uint8_t* dest, uint64_t len)
 
 static int run_single_engine (struct snap_card* h,
                               void* dsc_base,
+                              void* cmpl_base,
                               FILE* log
                              )
 {
@@ -191,6 +192,8 @@ static int run_single_engine (struct snap_card* h,
     VERBOSE0 (log, "Descriptor address = %p\n", dsc_base);
     action_write (log, h, REG_MP_INIT_ADDR_LO, (uint32_t) (((uint64_t) dsc_base) & 0xffffffff));
     action_write (log, h, REG_MP_INIT_ADDR_HI, (uint32_t) ((((uint64_t) dsc_base) >> 32) & 0xffffffff));
+    action_write (log, h, REG_MP_CMPL_ADDR_LO, (uint32_t) (((uint64_t) cmpl_base) & 0xffffffff));
+    action_write (log, h, REG_MP_CMPL_ADDR_HI, (uint32_t) ((((uint64_t) cmpl_base) >> 32) & 0xffffffff));
 
     VERBOSE0 (log, " ----- Tell AFU to kick off AXI transactions ----- \n");
     action_write (log, h, REG_MP_CONTROL, 0x00000001);
@@ -254,6 +257,7 @@ static int memcopy (int argc, char* argv[], int id)
     struct snap_action* act = NULL;
     void* src_base = NULL;
     int * dsc_base;
+    void* cmpl_base = NULL;
     void* tgt_base = NULL;
     void* exp_buff = NULL;
     uint32_t wrap_pattern;
@@ -446,15 +450,18 @@ static int memcopy (int argc, char* argv[], int id)
     //tgt_base = alloc_mem (wwidth, wtotal_bytes);
     src_base  = alloc_mem (4096, rtotal_bytes); // src address must be 4KB alignment
     tgt_base = alloc_mem (4096, wtotal_bytes); // targer address must be 4KB alignment
-    dsc_base = alloc_mem (4096, 4096); // src address must be 4KB alignment
+    dsc_base = alloc_mem (4096, 4096);
+    cmpl_base = alloc_mem (4096, 4096);
     exp_buff  = alloc_mem (4096, wtotal_bytes);
 
     VERBOSE0 (log, "Source address is: %p\n", src_base);
     VERBOSE0 (log, "Target address is: %p\n", tgt_base);
+    VERBOSE0 (log, "Completion address is: %p\n", cmpl_base);
 
     mem_init (src_base, init_rdata, rtotal_bytes);
     mem_init (exp_buff, init_wdata, wtotal_bytes);
     memset (dsc_base, 0, 4096);
+    memset (cmpl_base, 0, 4096);
     memset (tgt_base, 0, wtotal_bytes);
 
     *dsc_base = 0x12345678;
@@ -475,7 +482,7 @@ static int memcopy (int argc, char* argv[], int id)
     //-------------------------------------------------
     VERBOSE0 (log, "Start AFU.\n");
     rc = run_single_engine (dn,
-                            dsc_base,
+                            dsc_base,cmpl_base,
                             log
                            );
     uint32_t check1 = 1;
@@ -565,7 +572,7 @@ __exit1:
 
 int main (int argc, char* argv[])
 {
-    int num_processes = 512;
+    int num_processes = 32;
     int rc = 0;
     int failing = -1;
     pid_t pid;
