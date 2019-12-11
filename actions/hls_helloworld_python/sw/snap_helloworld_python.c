@@ -116,7 +116,7 @@ static void snap_prepare_helloworld(struct snap_job *cjob,
 /* This application will always be run on CPU and will call either       */
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
 #ifdef PY_WRAP
-int mymain(char *input_str, char *output_str)
+int uppercase(char *input_str, char *output_str)
 {
 #else
 int main(int argc, char *argv[])
@@ -180,20 +180,19 @@ int main(int argc, char *argv[])
 	}
 
 	/* if output string is defined, use that as output */
-	if (output_str != NULL) {
-		size_t set_size = size + (verify ? sizeof(trailing_zeros) : 0);
 
-		/* Allocate in host memory the place to put the text processed */
-		obuff = snap_malloc(set_size); //64Bytes aligned malloc
-		if (obuff == NULL)
-			goto out_error;
-		memset(obuff, 0x0, set_size);
+	size_t set_size = size + (verify ? sizeof(trailing_zeros) : 0);
 
-		// prepare params to be written in MMIO registers for action
-		type_out = SNAP_ADDRTYPE_HOST_DRAM;
-		addr_out = (unsigned long)obuff;
-	}
+	/* Allocate in host memory the place to put the text processed */
+	obuff = snap_malloc(set_size); //64Bytes aligned malloc
+	if (obuff == NULL)
+		goto out_error;
+	memset(obuff, 0x0, set_size);
 
+	// prepare params to be written in MMIO registers for action
+	type_out = SNAP_ADDRTYPE_HOST_DRAM;
+	addr_out = (unsigned long)obuff;
+	
 
 	/* Display the parameters that will be used for the example */
 	printf("PARAMETERS:\n"
@@ -265,14 +264,14 @@ int main(int argc, char *argv[])
 	}
 
 	/* If the output buffer is in host DRAM we can write it to a file */
-	if (output_str != NULL) {
-		fprintf(stdout, "writing output data %p %d bytes to output_str\n",
-			obuff, (int)size);
 
-		memcpy (output_str, obuff, size);
+	fprintf(stdout, "writing output data %p %d bytes to output_str\n",
+		obuff, (int)size);
+
+	memcpy (output_str, obuff, size);
 	
 	fprintf(stdout, "output_str is %s\n", output_str);
-	}
+	
 
 	// test return code
 	(cjob.retc == SNAP_RETC_SUCCESS) ? fprintf(stdout, "SUCCESS\n") : fprintf(stdout, "FAILED\n");
@@ -311,7 +310,10 @@ int main(int argc, char *argv[])
 
 	__free(obuff);
 	__free(ibuff);
+
+#ifndef PY_WRAP
 	exit(exit_code);
+#endif
 
  out_error2:
 	snap_detach_action(action);

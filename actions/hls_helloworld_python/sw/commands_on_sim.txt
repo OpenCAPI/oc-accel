@@ -8,5 +8,8 @@ sys.path.append("/tools/projects/oc-accel_did/actions/hls_helloworld_python/sw")
 
 import snap_helloworld_python
  
-snap_helloworld_python.mymain("Hello world. This is my first CAPI SNAP experience with Python. It's extremely fun", "y")
+input = "Hello world. This is my first CAPI SNAP experience with Python. It's extremely fun"
+output = "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+snap_helloworld_python.uppercase(input, output)
+print(output)
 
