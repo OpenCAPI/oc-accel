@@ -44,47 +44,6 @@ static const char *version = GIT_VERSION;
 
 static const char *mem_tab[] = { "HOST_DRAM", "CARD_DRAM", "TYPE_NVME" };
 
-/**
- * @brief	prints valid command line options
- *
- * @param prog	current program's name
- */
-static void usage(const char *prog)
-{
-	printf("Usage: %s [-h] [-v, --verbose] [-V, --version]\n"
-	"  -C, --card <cardno>       can be (0...3)\n"
-	"  -i, --input <file.bin>    input file.\n"
-	"  -o, --output <file.bin>   output file.\n"
-	"  -A, --type-in <CARD_DRAM, HOST_DRAM, ...>.\n"
-	"  -a, --addr-in <addr>      address e.g. in CARD_RAM.\n"
-	"  -D, --type-out <CARD_DRAM,HOST_DRAM, ...>.\n"
-	"  -d, --addr-out <addr>     address e.g. in CARD_RAM.\n"
-	"  -s, --size <size>         size of data.\n"
-	"  -t, --timeout             timeout in sec to wait for done.\n"
-	"  -X, --verify              verify result if possible\n"
-	"  -N, --no-irq              disable Interrupts\n"
-	"\n"
-	"Useful parameters (to be placed before the command):\n"
-	"----------------------------------------------------\n"
-	"SNAP_TRACE=0x0   no debug trace  (default mode)\n"
-	"SNAP_TRACE=0xF   full debug trace\n"
-	"\n"
-        "Example\n"
-        "------------------------\n"
-        "echo Clean possible temporary old files \n"
-	"echo Prepare the text to process\n"
-	"echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\""
-	" > /tmp/t1\n"
-	"\n"
-	"echo Run the application + hardware action\n"
-	"snap_helloworld_python -i /tmp/t1 -o /tmp/t2\n"
-	"echo Display input file: && cat /tmp/t1\n"
-	"echo Display output file from FPGA executed action -UPPER CASE expected-:"
-	" && cat /tmp/t2\n"
-	"\n",
-        prog);
-}
-
 // Function that fills the MMIO registers / data structure
 // these are all data exchanged between the application and the action
 static void snap_prepare_helloworld(struct snap_job *cjob,
@@ -121,8 +80,9 @@ int uppercase(char *input_str, char *output_str)
 #else
 int main(int argc, char *argv[])
 {
-	char *input_str  = argv[1]; 
+	char *input_str  = argv[1];
 	char *output_str = argv[2];
+	assert(argc == 3);
 #endif
 	// Init of all the default values used
 	int rc = 0;
@@ -154,7 +114,7 @@ int main(int argc, char *argv[])
 
 		int input_str_len;
 		for (input_str_len = 0; input_str[input_str_len] != '\0'; ++input_str_len);
-    		
+
 		printf("Length of the input string: %d", input_str_len);
 
 		size = input_str_len * 2; //FIXME: its not that
@@ -171,7 +131,7 @@ int main(int argc, char *argv[])
 			(int)size, input_str);
 
 		// copy text from string to host memory FIXME: we don't need copy
-		
+
 		memcpy (ibuff, input_str, size);
 
 		// prepare params to be written in MMIO registers for action
@@ -192,7 +152,7 @@ int main(int argc, char *argv[])
 	// prepare params to be written in MMIO registers for action
 	type_out = SNAP_ADDRTYPE_HOST_DRAM;
 	addr_out = (unsigned long)obuff;
-	
+
 
 	/* Display the parameters that will be used for the example */
 	printf("PARAMETERS:\n"
@@ -269,9 +229,9 @@ int main(int argc, char *argv[])
 		obuff, (int)size);
 
 	memcpy (output_str, obuff, size);
-	
+
 	fprintf(stdout, "output_str is %s\n", output_str);
-	
+
 
 	// test return code
 	(cjob.retc == SNAP_RETC_SUCCESS) ? fprintf(stdout, "SUCCESS\n") : fprintf(stdout, "FAILED\n");
@@ -311,7 +271,9 @@ int main(int argc, char *argv[])
 	__free(obuff);
 	__free(ibuff);
 
-#ifndef PY_WRAP
+#ifdef PY_WRAP
+	return(exit_code);
+#else
 	exit(exit_code);
 #endif
 
@@ -324,4 +286,3 @@ int main(int argc, char *argv[])
 	__free(ibuff);
 	exit(EXIT_FAILURE);
 }
-
