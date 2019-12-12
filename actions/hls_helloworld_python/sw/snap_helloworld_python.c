@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 		int input_str_len;
 		for (input_str_len = 0; input_str[input_str_len] != '\0'; ++input_str_len);
 
-		printf("Length of the input string: %d", input_str_len);
+		printf("Length of the input string: %d\n", input_str_len);
 
 		size = input_str_len * 2; //FIXME: its not that
 		if (size < 0)
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 			goto out_error;
 		memset(ibuff, 0, size);
 
-		fprintf(stdout, "reading input data %d bytes from input string %s\n",
+		fprintf(stdout, "reading input data %d bytes from input string: %s\n",
 			(int)size, input_str);
 
 		// copy text from string to host memory FIXME: we don't need copy
@@ -137,6 +137,7 @@ int main(int argc, char *argv[])
 		// prepare params to be written in MMIO registers for action
 		type_in = SNAP_ADDRTYPE_HOST_DRAM;
 		addr_in = (unsigned long)ibuff;
+		//addr_in = (unsigned long)input_str;
 	}
 
 	/* if output string is defined, use that as output */
