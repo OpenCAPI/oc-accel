@@ -897,6 +897,7 @@ function void tlx_afu_monitor::pack_tlx_afu_cmd();
         if(tlx_afu_cmd_data_q.size > 0) begin
             tlx_afu_cmd_trans_q[0].tlx_afu_data_bus[0] = tlx_afu_cmd_data_q[0][511:0];
             tlx_afu_cmd_trans_q[0].tlx_afu_data_bdi[0] = tlx_afu_cmd_data_q[0][512];
+            tlx_afu_cmd_data_q.pop_front();
             `uvm_info(tID, $sformatf("Collect an tlx-afu command and data.\n%s", tlx_afu_cmd_trans_q[0].sprint()), UVM_MEDIUM);
             tlx_afu_tran_port.write(tlx_afu_cmd_trans_q.pop_front());
         end

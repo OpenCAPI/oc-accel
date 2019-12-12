@@ -94,6 +94,8 @@ parser.add_option("--odma",
                   action="store_true", dest="odma", default=False,
                   help="Use ODMA instead of TLX-AXI bridge. This flag only works in unit_sim mode, i.e., running odma in unit sim env. For general ODMA"
                   "enablement, please specify it in the configuration window. default: %default")
+parser.add_option("--odma_mode", dest="odma_mode", default="mm_1024",
+                  help="ODMA data path transfer type. default: %default.", metavar="<mm_1024, mm_512, st_1024, st_512>")
 parser.add_option("--sv_seed", dest="sv_seed", default=str(random.randint(0, 0xffffffff)),
                   help="Seed used for system verilog, default: random", metavar="STRING")
 parser.add_option("--unit_test", dest="unit_test", default="bfm_test_read_4k_write_4k",
@@ -115,10 +117,21 @@ if options.action_root is not None:
     options.action_root = os.path.abspath(options.action_root)
 if options.simulator is not None:
     options.simulator = options.simulator.lower()
+if options.odma_mode is not None:
+    options.odma_mode = options.odma_mode.lower()
 # Unit sim has a dedicated config file, not configurable by user
 if options.unit_sim == True:
     if options.odma == True:
-        options.predefined_config = "hdl_unit_sim.odma.defconfig"
+        if options.odma_mode.lower() == "mm_1024":
+            options.predefined_config = "hdl_unit_sim.odma.defconfig"
+        elif options.odma_mode.lower() == "mm_512":
+            options.predefined_config = "hdl_unit_sim.odma_mm_512.defconfig"
+        elif options.odma_mode.lower() == "st_512":
+            options.predefined_config = "hdl_unit_sim.odma_st_512.defconfig"
+        elif options.odma_mode.lower() == "st_1024":
+            options.predefined_config = "hdl_unit_sim.odma_st_1024.defconfig"
+        else:
+            options.predefined_config = "hdl_unit_sim.odma.defconfig"
     else:
         options.predefined_config = "hdl_unit_sim.bridge.defconfig"
 

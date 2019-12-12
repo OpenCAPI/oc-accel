@@ -27,9 +27,9 @@ class odma_desp_templ;
     rand  bit [7:0]  control;
     rand  bit [27:0] length;
     rand  int nxt_adr_var;
-	rand  int src_adr_var;
-	rand  int dst_adr_var;
-	bit [63:0] src_adr = 64'hbeef_0000_0000_0000;
+    rand  int src_adr_var;
+    rand  int dst_adr_var;
+    bit [63:0] src_adr = 64'hbeef_0000_0000_0000;
     bit [63:0] dst_adr = 64'h0bad_0000_0000_0000;
     bit [63:0] nxt_adr = 64'h0bee_0000_0000_0000;
     bit [63:0] src_adr_q[$];
@@ -37,16 +37,26 @@ class odma_desp_templ;
     bit [63:0] nxt_adr_q[$];
 
     constraint addr_align{
-    length > 0; length[6:0] == 7'h0; //128B align
-	src_adr_var%128 == 0;
-	dst_adr_var%128 == 0;
+    length[6:0] == 7'h0; //128B align
+    src_adr_var%128 == 0;
+    dst_adr_var%128 == 0;
     }
 
     constraint base_set{
     magic == 16'had4b;
     nxt_adr_var%128 == 0; nxt_adr_var >= 2048; nxt_adr_var <= 4096;
-    src_adr_var >= 0   ; src_adr_var <= 4096;
-    dst_adr_var >= 0   ; dst_adr_var <= 4096;
+    src_adr_var%128 == dst_adr_var%128;
+    length > 0;
+    }
+
+    constraint adr_var_range{
+    src_adr_var >= 64'h10000; src_adr_var <= 64'h20000;
+    dst_adr_var >= 64'h10000; dst_adr_var <= 64'h20000;
+    }
+
+    constraint adr_var_hardlen{
+    src_adr_var >= 64'h104000; src_adr_var <= 64'h110000;
+    dst_adr_var >= 64'h104000; dst_adr_var <= 64'h110000;
     }
 
 	function new();
@@ -66,8 +76,8 @@ class odma_desp_multi_chnl;
     rand  bit [5:0]  nxt_adj[3:0];
     rand  bit [7:0]  control[3:0];
     rand  bit [27:0] length[3:0];
-    rand  int nxt_adr_var[3:0];
-    rand  int src_adr_var[3:0];
+    rand  bit [63:0] nxt_adr_var[3:0];
+    rand  bit [63:0] src_adr_var[3:0];
     rand  int dst_adr_var[3:0];
     bit [63:0] src_adr[3:0];
     bit [63:0] dst_adr[3:0];
@@ -262,6 +272,7 @@ class odma_seq_block1_dsc1_h2a_4k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         write_mmio_patt[64'h0000_0008_8000_4080]=32'h0000_0000;                         //host memory address low 32-bit for descriptor
         write_mmio_patt[64'h0000_0008_8000_4084]=32'h0bee_0000;                         //host memory address high 32-bit for descriptor
@@ -279,6 +290,8 @@ class odma_seq_block1_dsc1_h2a_4k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_4084], write_mmio_patt[64'h0000_0008_8000_4080]};
 		//Set destination address
@@ -306,7 +319,7 @@ class odma_seq_block1_dsc1_h2a_4k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
 		while(curr_desp_num < desp_count && to_break < 10) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -372,6 +385,7 @@ class odma_seq_block1_dsc1_a2h_4k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         write_mmio_patt[64'h0000_0008_8000_5080]=32'h0000_0000;                         //host memory address low 32-bit for descriptor
         write_mmio_patt[64'h0000_0008_8000_5084]=32'h0bee_0000;                         //host memory address high 32-bit for descriptor
@@ -389,6 +403,8 @@ class odma_seq_block1_dsc1_a2h_4k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]};
 		//Set destination address
@@ -414,7 +430,7 @@ class odma_seq_block1_dsc1_a2h_4k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 													
 		while(curr_desp_num < desp_count && to_break < 10) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -480,6 +496,7 @@ class odma_seq_block1_dsc4_h2a_4k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         write_mmio_patt[64'h0000_0008_8000_4080]=32'h0000_0000;                         //host memory address low 32-bit for descriptor
         write_mmio_patt[64'h0000_0008_8000_4084]=32'h0bee_0000;                         //host memory address high 32-bit for descriptor
@@ -497,6 +514,8 @@ class odma_seq_block1_dsc4_h2a_4k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_4084], write_mmio_patt[64'h0000_0008_8000_4080]};
 		//Set destination address
@@ -508,8 +527,8 @@ class odma_seq_block1_dsc4_h2a_4k extends bfm_sequence_base;
             `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: 0, Descriptor: %d.", i), UVM_LOW)
             if(i<3)begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == (2-i); control == 8'h00; length == 28'h1000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag source address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.src_adr_q.push_back(odma_desp_templ_item.src_adr+i);
@@ -526,8 +545,8 @@ class odma_seq_block1_dsc4_h2a_4k extends bfm_sequence_base;
             end
             else begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length == 28'h1000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag source address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.src_adr_q.push_back(odma_desp_templ_item.src_adr+i);
@@ -553,7 +572,7 @@ class odma_seq_block1_dsc4_h2a_4k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 		
 		while(curr_desp_num < desp_count && to_break < 10) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -619,6 +638,7 @@ class odma_seq_block1_dsc4_a2h_4k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         write_mmio_patt[64'h0000_0008_8000_5080]=32'h0000_0000;                         //host memory address low 32-bit for descriptor
         write_mmio_patt[64'h0000_0008_8000_5084]=32'h0bee_0000;                         //host memory address high 32-bit for descriptor
@@ -636,6 +656,8 @@ class odma_seq_block1_dsc4_a2h_4k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]};
 		//Set destination address
@@ -647,8 +669,8 @@ class odma_seq_block1_dsc4_a2h_4k extends bfm_sequence_base;
             `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: 0, Descriptor: %d.", i), UVM_LOW)
             if(i<3)begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == (2-i); control == 8'h00; length == 28'h1000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag target address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -665,8 +687,8 @@ class odma_seq_block1_dsc4_a2h_4k extends bfm_sequence_base;
             end
             else begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length == 28'h1000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag target address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -692,7 +714,7 @@ class odma_seq_block1_dsc4_a2h_4k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
 		while(curr_desp_num < desp_count && to_break < 10) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -758,6 +780,7 @@ class odma_seq_block1_dsc4_h2a_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         write_mmio_patt[64'h0000_0008_8000_4080]=32'h0000_0000;                         //host memory address low 32-bit for descriptor
         write_mmio_patt[64'h0000_0008_8000_4084]=32'h0bee_0000;                         //host memory address high 32-bit for descriptor
@@ -775,6 +798,8 @@ class odma_seq_block1_dsc4_h2a_less64k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_4084], write_mmio_patt[64'h0000_0008_8000_4080]};
 		//Set destination address
@@ -786,8 +811,8 @@ class odma_seq_block1_dsc4_h2a_less64k extends bfm_sequence_base;
             `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: 0, Descriptor: %d.", i), UVM_LOW)
             if(i<3)begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == (2-i); control == 8'h00; length <= 28'h10000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag source address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.src_adr_q.push_back(odma_desp_templ_item.src_adr+i);
@@ -804,8 +829,8 @@ class odma_seq_block1_dsc4_h2a_less64k extends bfm_sequence_base;
             end
             else begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag source address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.src_adr_q.push_back(odma_desp_templ_item.src_adr+i);
@@ -831,7 +856,7 @@ class odma_seq_block1_dsc4_h2a_less64k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
 		while(curr_desp_num < desp_count && to_break < 10) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -897,6 +922,7 @@ class odma_seq_block1_dsc4_a2h_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         write_mmio_patt[64'h0000_0008_8000_5080]=32'h0000_0000;                         //host memory address low 32-bit for descriptor
         write_mmio_patt[64'h0000_0008_8000_5084]=32'h0bee_0000;                         //host memory address high 32-bit for descriptor
@@ -914,6 +940,8 @@ class odma_seq_block1_dsc4_a2h_less64k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]};
 		//Set destination address
@@ -925,8 +953,8 @@ class odma_seq_block1_dsc4_a2h_less64k extends bfm_sequence_base;
             `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: 0, Descriptor: %d.", i), UVM_LOW)
             if(i<3)begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == (2-i); control == 8'h00; length <= 28'h10000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag target address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -943,8 +971,8 @@ class odma_seq_block1_dsc4_a2h_less64k extends bfm_sequence_base;
             end
             else begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-				odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+				odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+				odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                 //Tag target address
                 for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -970,7 +998,7 @@ class odma_seq_block1_dsc4_a2h_less64k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
 		while(curr_desp_num < desp_count && to_break < 10) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -1036,6 +1064,7 @@ class odma_seq_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         //Randomize an array for block_num and desp_num
         randomize(block_desp_q) with {block_desp_q.size inside {[2:4]};};
@@ -1064,6 +1093,8 @@ class odma_seq_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]};
 		//Set destination address
@@ -1077,8 +1108,8 @@ class odma_seq_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
                 `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: %d, Descriptor: %d.", n, i), UVM_LOW)
                 if(i<block_desp_q[n]-1)begin
                     void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-					odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+					odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     //Tag target address
                     for(int j=0; j<odma_desp_templ_item.length; j++)begin
                         odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -1096,13 +1127,13 @@ class odma_seq_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
                 else begin
                     if(n == block_desp_q.size -1)begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     end
                     else begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     end
                     //Tag target address
                     for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -1135,7 +1166,7 @@ class odma_seq_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
 		while(curr_desp_num < desp_count && to_break < 10) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -1201,6 +1232,7 @@ class odma_seq_block2to4_dsc1to8_a2h_hardlen extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         //Randomize an array for block_num and desp_num
         randomize(block_desp_q) with {block_desp_q.size inside {[2:4]};};
@@ -1229,6 +1261,8 @@ class odma_seq_block2to4_dsc1to8_a2h_hardlen extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var not hardlen constrain
+        odma_desp_templ_item.adr_var_range.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]};
 		//Set destination address
@@ -1242,8 +1276,8 @@ class odma_seq_block2to4_dsc1to8_a2h_hardlen extends bfm_sequence_base;
                 `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: %d, Descriptor: %d.", n, i), UVM_LOW)
                 if(i<block_desp_q[n]-1)begin
                     void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-					odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+					odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     //Print a descriptor
                     odma_desp_templ_item.desp_info_print(odma_desp_templ_item);
                     //Write a descriptor to memory
@@ -1257,13 +1291,13 @@ class odma_seq_block2to4_dsc1to8_a2h_hardlen extends bfm_sequence_base;
                 else begin
                     if(n == block_desp_q.size -1)begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     end
                     else begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);						
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);						
                     end
                     //Generate descriptor address                    
                     odma_desp_templ_item.nxt_adr += odma_desp_templ_item.nxt_adr_var;
@@ -1292,7 +1326,7 @@ class odma_seq_block2to4_dsc1to8_a2h_hardlen extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
 		while(curr_desp_num < desp_count && to_break < 1000) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -1358,6 +1392,7 @@ class odma_seq_block1to32_randdsc_a2h_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         //Randomize an array for block_num and desp_num
         randomize(block_desp_q) with {block_desp_q.size inside {[1:32]};};
@@ -1386,6 +1421,8 @@ class odma_seq_block1to32_randdsc_a2h_less64k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]};
 		//Set destination address
@@ -1399,8 +1436,8 @@ class odma_seq_block1to32_randdsc_a2h_less64k extends bfm_sequence_base;
                 `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: %d, Descriptor: %d.", n, i), UVM_LOW)
                 if(i<block_desp_q[n]-1)begin
                     void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-					odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+					odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     //Tag target address
                     for(int j=0; j<odma_desp_templ_item.length; j++)begin
                         odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -1418,13 +1455,13 @@ class odma_seq_block1to32_randdsc_a2h_less64k extends bfm_sequence_base;
                 else begin
                     if(n == block_desp_q.size -1)begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     end
                     else begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);						
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);						
                     end
                     //Tag target address
                     for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -1457,7 +1494,7 @@ class odma_seq_block1to32_randdsc_a2h_less64k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
 		while(curr_desp_num < desp_count && to_break < 100) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -1524,6 +1561,7 @@ class odma_seq_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         //Randomize an array for block_num and desp_num
         randomize(block_desp_q) with {block_desp_q.size inside {[2:4]};};
@@ -1552,6 +1590,8 @@ class odma_seq_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_4084], write_mmio_patt[64'h0000_0008_8000_4080]};
 		//Set destination address
@@ -1565,8 +1605,8 @@ class odma_seq_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
                 `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: %d, Descriptor: %d.", n, i), UVM_LOW)
                 if(i<block_desp_q[n]-1)begin
                     void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-					odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+					odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     //Tag target address
                     //for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     //    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -1584,13 +1624,13 @@ class odma_seq_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
                 else begin
                     if(n == block_desp_q.size -1)begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     end
                     else begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);						
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);						
                     end
                     //Generate descriptor address                    
                     odma_desp_templ_item.nxt_adr += odma_desp_templ_item.nxt_adr_var;
@@ -1620,7 +1660,7 @@ class odma_seq_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
 
         
 		while(curr_desp_num < desp_count && to_break < 100) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -1686,6 +1726,7 @@ class odma_seq_block2to4_dsc1to8_h2a_hardlen extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         //Randomize an array for block_num and desp_num
         randomize(block_desp_q) with {block_desp_q.size inside {[2:4]};};
@@ -1714,6 +1755,8 @@ class odma_seq_block2to4_dsc1to8_h2a_hardlen extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var not hardlen constrain
+        odma_desp_templ_item.adr_var_range.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_4084], write_mmio_patt[64'h0000_0008_8000_4080]};
 		//Set destination address
@@ -1727,8 +1770,8 @@ class odma_seq_block2to4_dsc1to8_h2a_hardlen extends bfm_sequence_base;
                 `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: %d, Descriptor: %d.", n, i), UVM_LOW)
                 if(i<block_desp_q[n]-1)begin
                     void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-					odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+					odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     //Tag target address
                     //for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     //    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -1746,13 +1789,13 @@ class odma_seq_block2to4_dsc1to8_h2a_hardlen extends bfm_sequence_base;
                 else begin
                     if(n == block_desp_q.size -1)begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     end
                     else begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);						
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);						
                     end
                     //Generate descriptor address                    
                     odma_desp_templ_item.nxt_adr += odma_desp_templ_item.nxt_adr_var;
@@ -1781,7 +1824,7 @@ class odma_seq_block2to4_dsc1to8_h2a_hardlen extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         while(curr_desp_num < desp_count && to_break < 1000) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -1848,6 +1891,7 @@ class odma_seq_block1to32_randdsc_h2a_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
         //Randomize an array for block_num and desp_num
         randomize(block_desp_q) with {block_desp_q.size inside {[1:32]};};
@@ -1877,6 +1921,8 @@ class odma_seq_block1to32_randdsc_h2a_less64k extends bfm_sequence_base;
             `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
                                                         trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
         end
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
         //Set descriptor address
         odma_desp_templ_item.nxt_adr = {write_mmio_patt[64'h0000_0008_8000_4084], write_mmio_patt[64'h0000_0008_8000_4080]};
 		//Set destination address
@@ -1890,8 +1936,8 @@ class odma_seq_block1to32_randdsc_h2a_less64k extends bfm_sequence_base;
                 `uvm_info("odma_seq_lib", $sformatf("List: 0, Block: %d, Descriptor: %d.", n, i), UVM_LOW)
                 if(i<block_desp_q[n]-1)begin
                     void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-					odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+					odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+					odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     //Tag target address
                     //for(int j=0; j<odma_desp_templ_item.length; j++)begin
                     //    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -1909,13 +1955,13 @@ class odma_seq_block1to32_randdsc_h2a_less64k extends bfm_sequence_base;
                 else begin
                     if(n == block_desp_q.size -1)begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
                     end
                     else begin
                         void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);						
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);						
                     end
                     //Generate descriptor address                    
                     odma_desp_templ_item.nxt_adr += odma_desp_templ_item.nxt_adr_var;
@@ -1944,7 +1990,7 @@ class odma_seq_block1to32_randdsc_h2a_less64k extends bfm_sequence_base;
                                                     trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         while(curr_desp_num < desp_count && to_break < 100) begin
-			#1000ns;
+			#2000ns;
 			curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 			if(last_desp_num < curr_desp_num)begin
 				last_desp_num = curr_desp_num;
@@ -2013,7 +2059,10 @@ class odma_seq_list2to4_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = 64'h0bee_0000_0000_0000;
 		//Set destination address
@@ -2063,8 +2112,8 @@ class odma_seq_list2to4_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
 					`uvm_info("odma_seq_lib", $sformatf("List: %d, Block: %d, Descriptor: %d.", k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -2082,13 +2131,13 @@ class odma_seq_list2to4_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -2124,7 +2173,7 @@ class odma_seq_list2to4_block2to4_randdsc_h2a_less64k extends bfm_sequence_base;
 			last_desp_num = 0;
 			curr_desp_num = 0;
 			while(curr_desp_num < desp_count && to_break < 10) begin
-				#1000ns;
+				#2000ns;
 				curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 				if(last_desp_num < curr_desp_num)begin
 					last_desp_num = curr_desp_num;
@@ -2197,7 +2246,10 @@ class odma_seq_list2to4_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 		
+        //Turn off adr_var hardlen constrain
+        odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = 64'h0bee_0000_0000_0000;
 		//Set destination address
@@ -2247,8 +2299,8 @@ class odma_seq_list2to4_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
 					`uvm_info("odma_seq_lib", $sformatf("List: %d, Block: %d, Descriptor: %d.", k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 							odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -2266,13 +2318,13 @@ class odma_seq_list2to4_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);                            
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);                            
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -2308,7 +2360,7 @@ class odma_seq_list2to4_block2to4_randdsc_a2h_less64k extends bfm_sequence_base;
 			last_desp_num = 0;
 			curr_desp_num = 0;
 			while(curr_desp_num < desp_count && to_break < 10) begin
-				#1000ns;
+				#2000ns;
 				curr_desp_num = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0001), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000)}; 
 				if(last_desp_num < curr_desp_num)begin
 					last_desp_num = curr_desp_num;
@@ -2387,6 +2439,8 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence_base;
 		//int list_num = 1;
 		int k = 0;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -2434,8 +2488,8 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence_base;
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -2453,13 +2507,13 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence_base;
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -2497,7 +2551,7 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence_base;
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 20) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -2539,8 +2593,10 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -2620,6 +2676,8 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence_base;
 		int k = 0;
 		//int list_num = 1;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -2667,8 +2725,8 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence_base;
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -2686,13 +2744,13 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence_base;
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -2730,7 +2788,7 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence_base;
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 20) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -2772,8 +2830,10 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence_base;
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
 		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -2851,6 +2911,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence
 		bit[2:0]  temp_plength;
 		int list_num = 1;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -2900,8 +2962,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -2919,13 +2981,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -2963,7 +3025,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 20) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -3005,8 +3067,9 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_h2a_less64k extends bfm_sequence
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
-		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 		
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -3084,6 +3147,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence
 		bit[2:0]  temp_plength;
 		int list_num = 1;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -3133,8 +3198,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -3152,13 +3217,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -3196,7 +3261,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 20) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -3238,8 +3303,9 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k extends bfm_sequence
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
-		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 		
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -3321,6 +3387,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k extends bfm_seque
 		bit direction;
 		string dir_claim;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -3383,8 +3451,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k extends bfm_seque
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.\n", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h10000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -3402,13 +3470,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k extends bfm_seque
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h10000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -3447,7 +3515,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k extends bfm_seque
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 100) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -3489,8 +3557,9 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k extends bfm_seque
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
-		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 		
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -3571,6 +3640,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen extends bfm_seque
 		bit direction;
 		string dir_claim;
 		
+                //Turn off adr_var not hardlen constrain
+                odma_desp_templ_item.adr_var_range.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -3631,8 +3702,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen extends bfm_seque
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.\n", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -3650,13 +3721,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen extends bfm_seque
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h4000 || (length >= 28'h0100000 && length <= 28'h0104000);});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -3694,7 +3765,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen extends bfm_seque
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 1000) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -3736,8 +3807,9 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen extends bfm_seque
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
-		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 		
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -3818,6 +3890,8 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k extends bfm_sequence
 		bit direction;
 		string dir_claim;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -3880,8 +3954,8 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k extends bfm_sequence
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.\n", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h1000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -3899,13 +3973,13 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k extends bfm_sequence
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h1000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h1000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -3944,7 +4018,7 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k extends bfm_sequence
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 100) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -3986,8 +4060,9 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k extends bfm_sequence
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
-		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 		
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -4068,6 +4143,8 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B extends bfm_sequence_
 		bit direction;
 		string dir_claim;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -4130,8 +4207,8 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B extends bfm_sequence_
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.\n", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length == 28'h0000080;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -4149,13 +4226,13 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B extends bfm_sequence_
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h1000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h1000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -4194,7 +4271,7 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B extends bfm_sequence_
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 100) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -4236,8 +4313,9 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B extends bfm_sequence_
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
-		
-        randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
+        randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 		
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
@@ -4319,6 +4397,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k extends bfm_seque
 		bit direction;
 		string dir_claim;
 		
+                //Turn off adr_var hardlen constrain
+                odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
 		//Set descriptor address
 		odma_desp_templ_item.nxt_adr = {x, 60'hbee_0000_0000_0000};
 		//Set destination address
@@ -4381,8 +4461,8 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k extends bfm_seque
 					`uvm_info("odma_seq_lib", $sformatf("Channel %d List: %d, Block: %d, Descriptor: %d.\n", x, k, n, i), UVM_LOW)
 					if(i<block_desp_q[n]-1)begin
 						void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n]-2-i); control == 8'h00; length <= 28'h1000;});
-						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-						odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+						odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+						odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
 						    odma_desp_templ_item.dst_adr_q.push_back(odma_desp_templ_item.dst_adr+i);
@@ -4400,13 +4480,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k extends bfm_seque
 					else begin
 						if(n == block_desp_q.size -1)begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h01; length <= 28'h1000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						else begin
 							void'(odma_desp_templ_item.randomize()with{nxt_adj == (block_desp_q[n+1]-1); control == 8'h00; length <= 28'h1000;});
-							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.length + odma_desp_templ_item.dst_adr_var);
-							odma_desp_templ_item.src_adr += (odma_desp_templ_item.length + odma_desp_templ_item.src_adr_var);
+							odma_desp_templ_item.dst_adr += (odma_desp_templ_item.dst_adr_var);
+							odma_desp_templ_item.src_adr += (odma_desp_templ_item.src_adr_var);
 						end
 						//Tag target address
 						for(int j=0; j<odma_desp_templ_item.length; j++)begin
@@ -4445,7 +4525,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k extends bfm_seque
 			end
 			curr_desp_num[x] = 0;
 			while(curr_desp_num[x] < desp_count && to_break < 100) begin
-				#1000ns;
+				#2000ns;
 				for(int y = 0; y < 4; y++)begin
 					curr_desp_num[y] = {p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_000 + 48'h1000_0000_0000 * y), p_sequencer.host_mem.read_byte(64'h0000_0bac_0000_0000 + 48'h1000_0000_0000 * y)};
 				end
@@ -4487,10 +4567,9 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k extends bfm_seque
         p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
         p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
         p_sequencer.brdg_cfg.enable_brdg_scoreboard = 0; //Disable bridge scoreboard
-		
-        //randomize(start_time) with {!((start_time[7:0] == start_time[15:8]) || (start_time[15:8] == start_time[23:16]) || (start_time[23:16] == start_time[31:24]));};
+        p_sequencer.brdg_cfg.enable_odma_scoreboard = 1; //Enable odma scoreboard
         randomize(start_time) with {(start_time[7:0] != start_time[15:8]) && (start_time[7:0] != start_time[23:16]) && (start_time[7:0] != start_time[31:24])
-        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);};
+        && (start_time[15:8] != start_time[23:16]) && (start_time[15:8] != start_time[31:24]) && (start_time[23:16] != start_time[31:24]);}; 		
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 		fork
 			begin
