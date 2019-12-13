@@ -35,6 +35,7 @@ static const struct actions_tab snap_actions[] = {
 /* recommended Usage OC HLS examples use 0x10143xxx IDs */
     { "IBM", 0x10143008, "HLS_Helloworld      (512b)"                            },
     { "IBM", 0x10143004, "HLS_Helloworld_Python (512b)"                          },
+    { "IBM", 0x10143005, "HLS_Mmult_Python (512b)"                               },
     { "IBM", 0x1014300B, "HLS_Memcopy_1024     (1024b)"                          },
 };
 

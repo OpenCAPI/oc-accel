@@ -1,0 +1,20 @@
+oc_maint -vvv
+
+LD_LIBRARY_PATH=/tools/projects/ocse/libocxl/ python3
+LD_LIBRARY_PATH=/home/did/projects/ocse/libocxl/ python3
+
+import sys
+
+sys.path.append("/tools/projects/oc-accel_did/actions/hls_helloworld_python/sw")
+sys.path.append("/home/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
+
+import snap_helloworld_python
+ 
+input = "Hello world. This is my first CAPI SNAP experience with Python. It's extremely fun"
+output = "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+
+snap_helloworld_python.uppercase(input, output)
+out, output = snap_helloworld_python.uppercase(input)
+
+print(output)
+
