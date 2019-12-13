@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __ACTION_MMULT_H__
-#define __ACTION_MMULT_H__
+#ifndef __ACTION_MMULTP_H__
+#define __ACTION_MMULTP_H__
 
 /*
  * Copyright 2017 International Business Machines
@@ -56,10 +56,14 @@ extern "C" {
 typedef struct mmult_job {
 	struct snap_addr in;	/* input data */
 	struct snap_addr out;   /* offset table */
-} helloworldp_job_t;
+        uint32_t a_row;         /* Matrix A Row Size */
+        uint32_t a_col;         /* Matrix A Col Size */
+        uint32_t b_col;         /* Matrix B Col Size */
+	uint32_t offset_to_point_b; /* Offset of b in gmem */
+} mmult_job_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif	/* __ACTION_MMULT_H__ */
+#endif	/* __ACTION_MMULTP_H__ */

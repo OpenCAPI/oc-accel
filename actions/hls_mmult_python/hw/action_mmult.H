@@ -1,5 +1,5 @@
-#ifndef __ACTION_UPPERCASE_H__
-#define __ACTION_UPPERCASE_H__
+#ifndef __ACTION_MMULT_H__
+#define __ACTION_MMULT_H__
 
 /*
  * Copyright 2017 International Business Machines
@@ -25,15 +25,25 @@
 #include <action_mmult_python.h> /* Mmult Job definition */
 
 
+//Array Size to access
+#define DATA_SIZE 16
+
+//Maximum Array Size
+#define MAX_SIZE 16
+
+
+//TRIPCOUNT identifier
+const unsigned int c_size = MAX_SIZE;
+
 typedef char word_t[BPERDW];
 //---------------------------------------------------------------------
 // This is generic. Just adapt names for a new action
 // CONTROL is defined and handled by SNAP 
-// helloworld_job_t is user defined in hls_helloworld/include/action_change_case.h
+// mmult_job_t is user defined in hls_mmult_python/include/action_mmult_python.h
 typedef struct {
 	CONTROL Control;	/*  16 bytes */
 	mmult_job_t Data;	/* up to 108 bytes */
 	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(mmult_job_t)];
 } action_reg;
 
-#endif  /* __ACTION_UPPERCASE_H__*/
+#endif  /* __ACTION_MMULT_H__*/
