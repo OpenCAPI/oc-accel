@@ -196,6 +196,9 @@
             <li><a href="#included-headers">Included headers</a></li>
             <li><a href="#api-changes">API changes</a></li>
             <li><a href="#snap_configcpu-discarded">SNAP_CONFIG=CPU discarded</a></li>
+            <li><a href="#open-the-card">Open the card</a></li>
+            <li><a href="#use-interrupt">Use interrupt</a></li>
+            <li><a href="#action_type-and-release-level">ACTION_TYPE and RELEASE LEVEL</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -229,6 +232,7 @@
 </tbody>
 </table>
 <h2 id="included-headers">Included headers</h2>
+<p>Many headers have changed from "snap" to "osnap" to avoid conflicts.</p>
 <table>
 <thead>
 <tr>
@@ -281,32 +285,13 @@
 <li><a href="../../deep-dive/registers/">OC-Accel Register map</a></li>
 </ul>
 <h2 id="api-changes">API changes</h2>
-<table>
-<thead>
-<tr>
-<th>SNAP (CAPI1.0/2.0)</th>
-<th>OC-Accel (OpenCAPI3.0)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>snap_mmio_read32()</td>
-<td>snap_action_read32()</td>
-</tr>
-<tr>
-<td>snap_mmio_write32()</td>
-<td>snap_action_write32()</td>
-</tr>
-<tr>
-<td>snap_mmio_read64()</td>
-<td>snap_global_read64()</td>
-</tr>
-<tr>
-<td>snap_mmio_write64()</td>
-<td>snap_global_write64()</td>
-</tr>
-</tbody>
-</table>
+<p>The APIs to operate registers have been renamed to clarify it is action region or global region.
+| SNAP (CAPI1.0/2.0) | OC-Accel (OpenCAPI3.0) |
+| --- | --- |
+| snap_mmio_read32() | snap_action_read32() |
+| snap_mmio_write32() | snap_action_write32() |
+| snap_mmio_read64() | snap_global_read64()|
+| snap_mmio_write64()| snap_global_write64() |</p>
 <p>The API changes also reflect the Register map changes. </p>
 <h2 id="snap_configcpu-discarded">SNAP_CONFIG=CPU discarded</h2>
 <p>In SNAP (CAPI1.0/2.0), it has implemented a group of function pointers for CPU to emulate the FPGA action, aka "software action". It is enabled when setting <code>SNAP_CONFIG=CPU</code>: </p>
@@ -325,12 +310,86 @@ static struct snap_funcs software_funcs = {
 </code></pre>
 
 <p><strong>These functions have been deleted.</strong> The original purpose of <code>SNAP_CONFIG=CPU</code> is to provide a way to fall back to software execution when FPGA is not available. However, this actually can be easily done by higher level of application control, for example: </p>
-<pre><code>if (!snap_card_alloc_dev()) //Failed to open FPGA card
+<pre><code class="C">if (!snap_card_alloc_dev()) //Failed to open FPGA card
     call_original_software_function
 </code></pre>
 
 <p>So there is no need to rewrite the original software function at all.</p>
-<p>The corresponding concept is <code>SNAP_CONFIG=FPGA</code> and it becomes the ONLY working mode in OC-Accel. So the variable <code>SNAP_CONFIG</code> has been deleted.</p></div>
+<p>The corresponding concept is <code>SNAP_CONFIG=FPGA</code> and it becomes the ONLY working mode in OC-Accel. So the variable <code>SNAP_CONFIG</code> has been deleted.</p>
+<h2 id="open-the-card">Open the card</h2>
+<p>OpenCAPI device name has a slight difference to SNAP1/2.</p>
+<pre><code class="C">// Allocate the card that will be used
+if(card_no == 0)
+    snprintf(device, sizeof(device)-1, &quot;IBM,oc-snap&quot;);
+else
+    snprintf(device, sizeof(device)-1, &quot;/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0&quot;, card_no);
+
+card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+</code></pre>
+
+<h2 id="use-interrupt">Use interrupt</h2>
+<p>When action_irq=1, please pay attention to following: </p>
+<ul>
+<li><code>snap_action_flag_t action_irq = SNAP_ACTION_DONE_IRQ;</code></li>
+<li>Add a step to set irq handle:</li>
+</ul>
+<pre><code class="C">if(action_irq)
+    snap_action_assign_irq(action, ACTION_IRQ_SRC_LO);
+</code></pre>
+
+<h2 id="action_type-and-release-level">ACTION_TYPE and RELEASE LEVEL</h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These changes are only for HLS Actions</p>
+</div>
+<p>In <code>actions/&lt;hls_xxx&gt;/include/xxx.h</code>, define your ACTION_TYPE and RELEASE_LEVEL as following:</p>
+<pre><code class="C">// ------------ MUST READ -----------
+// ACTION_TYPE and RELEASE_LEVEL are automatically handled. 
+// 1. Define them in header file (here), use HEX 32bits numbers
+// 2. They will be extracted by hardware/setup/patch_version.sh
+// 3. And put into snap_global_vars.v
+// 4. Used by hardware/hls/action_wrapper.v
+#define ACTION_TYPE               0x10141008
+#define RELEASE_LEVEL             0x00000022
+// For snap_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
+// Please modify this file so snap_maint can recognize this action.
+// ------------ MUST READ -----------
+</code></pre>
+
+<p>In <code>snap_attach_action</code>, just use <code>ACTION_TYPE</code>: </p>
+<pre><code>action = snap_attach_action(card, ACTION_TYPE, action_irq, 60);
+</code></pre>
+
+<p>And in <code>actions/&lt;hls_xxx&gt;/hw/xxx.cpp</code>:</p>
+<ul>
+<li>Remove <code>action_RO_config_reg *Action_Config</code>. It was only used to handle ACTION_TYPE and RELEASE_LEVEL and they are not needed anymore.</li>
+<li>Remove following:</li>
+</ul>
+<pre><code>#pragma HLS DATA_PACK variable=Action_Config
+#pragma HLS INTERFACE s_axilite port=Action_Config bundle=ctrl_reg      offset=0x010
+</code></pre>
+
+<ul>
+<li>Replace following: </li>
+</ul>
+<pre><code class="C">        switch (Action_Register-&gt;Control.flags) {
+        case 0:
+            Action_Config-&gt;action_type   = (snapu32_t) CHECKSUM_ACTION_TYPE;
+            Action_Config-&gt;release_level = (snapu32_t) RELEASE_LEVEL;
+            Action_Register-&gt;Control.Retc = (snapu32_t)0xe00f;
+            return;
+            break;
+        default:
+            Action_Register-&gt;Control.Retc = (snapu32_t)0x0;
+            process_action(Action_Register);
+            break;
+        }
+
+</code></pre>
+
+<p>to simply call</p>
+<pre><code class="C">process_action(Action_Register);
+</code></pre></div>
         </div>
 
         <footer class="col-md-12">

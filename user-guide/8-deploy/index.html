@@ -206,9 +206,9 @@
 <h3 id="program-flash">Program Flash</h3>
 <p>This is the default way to program FPGA. </p>
 <ul>
-<li>Log on to Power9 server,  <strong>TODO</strong>: link to update</li>
+<li>Log on to Power9 server, </li>
 </ul>
-<pre><code>$ git clone https://github.ibm.com/OC-Enablement/oc-utils/
+<pre><code>$ git clone https://github.com/OpenCAPI/oc-utils/
 $ make
 $ sudo make install
 </code></pre>
@@ -216,47 +216,46 @@ $ sudo make install
 <ul>
 <li>Copy the generated <code>hardware/build/Images/*.bin</code> from the development machine to Power9 server, and execute: </li>
 </ul>
-<pre><code>sudo oc-flash-script &lt;file.bin&gt;
+<pre><code>sudo ./oc-flash-script.sh &lt;file.bin&gt;
 </code></pre>
 
-<p>or for SPIx8 flash interface:</p>
-<pre><code>$ sudo oc-flash-script &lt;file_primary.bin&gt; &lt;file_secondary.bin&gt;
+<p>or for SPIx8 flash interface, two bin files should be provided. Usually it takes about 5 minutes.</p>
+<pre><code>$ sudo ./oc-flash-script.sh &lt;file_primary.bin&gt; &lt;file_secondary.bin&gt;
 </code></pre>
 
 <ul>
-<li>If the previous flashing is not done correctly, you may need to delete the lock file manually.</li>
+<li>If the script hints that the card is in use, that may mean the previous flashing wasn't done properly, and at this time the lock file is needed to be deleted manually.</li>
 </ul>
 <pre><code>$ rm -rf &quot;/var/cxl/capi-flash-script.lock&quot;
 </code></pre>
 
 <ul>
-<li>Reboot system. Check if the device is valid by </li>
+<li>Reload the Image. Then the new image should take effect.</li>
 </ul>
+<pre><code>sudo ./oc-reload.sh
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For some systems when the firmware hasn't been upgraded well, it may requires a reboot. </p>
+</div>
+<pre><code>sudo reboot now
+</code></pre>
+
+<p>At any time, you can check the card status by:</p>
 <pre><code>$ ls /dev/ocxl
 IBM,oc-snap.0007:00:00.1.0
 </code></pre>
 
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>oc-reset hasn't been verified. </p>
-</div>
 <h3 id="program-fpga-chip">Program FPGA chip</h3>
 <p>Not like "programming flash" which permanently stores FPGA image into the flash on the FPGA board, programming FPGA chip is a temporal method and mainly used for debugging purpose. It uses <strong>*.bit</strong> file and the programmed image will be lost if the server is powered off. </p>
-<p>Prepare a laptop/desktop machine and install <strong>Vivado Lab</strong>. Use USB cable to connect it to the FPGA board's USB-JTAG debugging port. Then in Vivado Lab, right click the FPGA device name and select "program device..."</p>
-<ul>
-<li>For ZZ systems:</li>
-</ul>
-<pre><code>$ sudo su
-$ echo 1 &gt; /sys/class/ocxl/IBM\,oc-snap.0007\:00\:00.1.0/reset_adapter
+<p>Prepare a laptop/desktop machine and install <strong>Vivado Lab</strong>. Use USB cable to connect it to the FPGA board's USB-JTAG debugging port. Then in Vivado Lab, right click the FPGA device name and select "program device..." and provide the <strong>*.bit</strong> file. It only takes 10~20 seconds to complete.</p>
+<p>Then Reset the card by:</p>
+<pre><code>cd oc-utils
+sudo ./oc-reset.sh
 </code></pre>
 
-<ul>
-<li>For Mihawk/AC922 systems:</li>
-</ul>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p><strong>TODO</strong></p>
-</div>
+<p>Then the new image should show up. Note, this is a temporal programming. You still need to program the flash to permanently store your image.  </p>
 <h2 id="install-libocxl">Install libocxl</h2>
 <p>See <a href="https://github.com/OpenCAPI/libocxl/">https://github.com/OpenCAPI/libocxl/</a></p>
 <h2 id="compile-oc-accel-software-and-actions">Compile OC-Accel software and actions</h2>
@@ -266,7 +265,7 @@ $ make apps
 
 <p>You can check the FPGA image version, name and build date/time by </p>
 <pre><code>$ cd software/tools
-$ sudo ./snap_maint -vvv
+$ sudo ./oc_maint -vvv
 </code></pre>
 
 <pre><code>[main] Enter

@@ -261,8 +261,10 @@
 <p>And for 512b-wide action with the same clock frequency only half of the possible bandwidth is utilized. And increasing clock frequency may bring difficulties to get timing closure. </p>
 <h2 id="action-clock">Action Clock</h2>
 <p>The default clock ap_clk (<strong>clock_act</strong>) frequency is 200MHz, same as the clock feeding snap_core (<strong>clock_afu</strong>). </p>
+<p>Currently, <code>snap_config</code> menu provides several Action clock choices. </p>
+<p><img alt="4-config_clk" src="../pictures/4-config_clock.png" /></p>
 <p>If a different Action Clock is required, please modify <code>hardware/hdl/oc_functions.vhd_source</code> to add a clock generator. The script for this clock generator should be added into <code>hardware/setup/create_snap_ip.tcl</code>.</p>
-<p>For more information, please read <a href="../../deep-dive/hardware-logic/#diagram-and-clock-domain">Clock Domain</a>. </p>
+<p>For the clock domain diagram, please read <a href="../../deep-dive/hardware-logic/#diagram-and-clock-domain">Clock Domain</a>. </p>
 <h2 id="action-ips">Action IPs</h2>
 <p>Take hdl_single_engine as an example, <code>actions/hdl_single_engine/hw/Makefile</code> calls a script <code>action_config.sh</code>. </p>
 <p>Many additional steps can be added in this way to construct the Action hw design, for example, create some IPs:</p>
@@ -320,8 +322,7 @@ if { [file exists $action_tcl] == 1 } {
 <li>snap_action_read32()</li>
 <li>snap_action_write32()</li>
 </ul>
-<p>Interrupt is supported (<strong>TODO</strong>: not fully done yet.)</p>
-<p>Multiple-process access is also supported. (<strong>TODO</strong>: read Examples: hdl_multple_engine)</p></div>
+<p>Multiple-process <strong>TODO</strong>: read Examples: hdl_multple_engine</p></div>
         </div>
 
         <footer class="col-md-12">
