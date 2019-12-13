@@ -2,7 +2,7 @@
 
 ## snap_config
 ```
-cd oc-snap
+cd oc-accel
 ./ocaccel_workflow.py
 ```
 Then a KConfig window will popped up. If it doesn't, check [Required tools] and search 'kconfig' on the homepage.
@@ -38,7 +38,7 @@ export OCSE_ROOT=<path_to_ocse>/ocse
 ```
 SNAP Configured
 You've got configuration like:
-	ACTION_ROOT	/afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/luyong/p9nd2/oc_dev/oc-snap/actions/hls_helloworld
+	ACTION_ROOT	/afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/luyong/p9nd2/oc_dev/oc-accel/actions/hls_helloworld
 	FPGACARD	AD9V3
 	FPGACHIP	xcvu3p-ffvc1517-2-e
 	SIMULATOR	xsim
@@ -49,7 +49,7 @@ vivado	 installed as	/afs/bb/proj/fpga/xilinx/Vivado/2018.3/bin/vivado
 gcc	 installed as	/bin/gcc
 xterm	 installed as	/bin/xterm
 OCSE path /afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/luyong/p9nd2/oc_dev/ocse is valid
-SNAP ROOT /afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/luyong/p9nd2/oc_dev/oc-snap is valid
+SNAP ROOT /afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/luyong/p9nd2/oc_dev/oc-accel is valid
 Environment check PASSED
 --------> Make the simulation model
 Runnig ... check ./snap_workflow.make_model.log for details of full progress
@@ -87,7 +87,7 @@ Type 'exit' in xterm window.
 
 All the output logs, waveforms are in `hardware/sim/<simulator>/latest`.
 ```
-hdclf154: luyong /afs/bb/u/luyong/p9/nd2/oc_dev/oc-snap/hardware/sim/xsim/latest $ ls
+hdclf154: luyong /afs/bb/u/luyong/p9/nd2/oc_dev/oc-accel/hardware/sim/xsim/latest $ ls
 debug.log   ocse_server.dat  snap_helloworld.log  tin      webtalk.jou  xsim.dir  xsrun.tcl
 ocse.log    shim_host.dat    tCAP                 top.wdb  webtalk.log  xsim.jou
 ocse.parms  sim.log          terminal.log         tout     xsaet.tcl    xsim.log

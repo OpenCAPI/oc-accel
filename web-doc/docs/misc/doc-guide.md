@@ -178,7 +178,7 @@ It will be shown as:
 
 ## Deploy to Github Pages
 
-When most of the edition work is done, and it's time to commit your documents to oc-snap github.
+When most of the edition work is done, and it's time to commit your documents to oc-accel github.
 
 First, you should commit and push your changes of source files (in `web-doc`) to git repository. Create pull request, ask someone to review the documents, merge them into master branch after getting approvements.
 

@@ -1,3 +1,41 @@
+# HLS Action Header (Include)
+
+## Job structure
+
+Under `$ACTION_ROOT/include`, the hardware and software interfaces are defined here by a `job_t` data structure. For example: 
+
+``` C
+/* Data structure used to exchange information between action and application */
+/* Size limit is 108 Bytes */
+typedef struct helloworld_job {
+	struct snap_addr in;	/* input data */
+	struct snap_addr out;   /* offset table */
+} helloworld_job_t;
+```
+!!!Warning
+    You may have to set `__attribute__((packed))` to the above job_t structure. If the complier adds "gaps" in between the structure variables, it may cause errors.
+
+## Action Type and Version
+
+And the `ACTION_TYPE` and `RELEASE_LEVEL`:
+
+``` C
+// ------------ MUST READ -----------
+// ACTION_TYPE and RELEASE_LEVEL are automatically handled. 
+// 1. Define them in header file (here), use HEX 32bits numbers
+// 2. They will be extracted by hardware/setup/patch_version.sh
+// 3. And put into snap_global_vars.v
+// 4. Used by hardware/hls/action_wrapper.v
+
+#define ACTION_TYPE               0x10143008
+#define RELEASE_LEVEL             0x00000022
+
+// For oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
+// Please modify this file so oc_maint can recognize this action.
+// ------------ MUST READ -----------
+```
+
+
 # HLS Action HW Design
 
 Take hls_memcopy_1024 as an example, the top design is `hardware/hdl/hls/action_wrapper.vhd_source` but the HLS developer doesn't need to modify it. That is a common wrapper. 
@@ -5,7 +43,7 @@ Take hls_memcopy_1024 as an example, the top design is `hardware/hdl/hls/action_
 ## hls_action()
 HLS developer needs to modify `$ACTION_ROOT/hw/xxx.CPP`, starting from `hls_action()`:
 
-```
+``` C
 //--- TOP LEVEL MODULE -------------------------------------------------
 void hls_action(snap_membus_1024_t *din_gmem,
 		snap_membus_1024_t *dout_gmem,
@@ -57,14 +95,14 @@ They represent the whole `2^64` Host memory space. But this memory space is shap
 
 You will see this shape from the definition of "snap_membus_1024_t".
 
-```
+``` C
 snap_membus_1024_t *din_gmem,
 snap_membus_1024_t *dout_gmem,
 ``` 
 
 Because din_gmem and dout_gmem are shaped as 128B width, the EA address needs to be right-shifted by `log2(128) = 7` before being used as din_gmem/dout_gmem's array index. 
 
-```
+``` C
 // byte address received need to be aligned with port width
 InputIndex = (act_reg->Data.in.addr)   >> ADDR_RIGHT_SHIFT_1024;
 OutputIndex = (act_reg->Data.out.addr) >> ADDR_RIGHT_SHIFT_1024;
@@ -93,18 +131,10 @@ Please be aware of the address range you can use for a single DDR channel. d_ddr
 
 * The first 16bytes **(0x00 to 0x0F)** are pre-defined by `software/include/osnap_hls_if.h`, the user is not supposed to change that. It controls the **start**, **stop** and **interrupt** of the HLS Action.
 
-* The following 8bytes **(0x10 to 0x17)** is action_RO_config_reg (Action_Config), defined in `actions/include/hls_snap*.H`, the user should set **action_type** and **release_level** information in above two fields.
-
-```
-typedef struct {
-        snapu32_t action_type;   // 4 bytes
-        snapu32_t release_level; // 4 bytes
-} action_RO_config_reg;
-```
 
 * The action_reg has 128bytes **(0x100 to 0x180)**, composed of two segments **Control** and **job Data**, defined in `$ACTION_ROOT/hw/*.H`
 
-```
+``` C
 typedef struct {
 	CONTROL Control;	/*  16 bytes */
 	memcopy_job_t Data;	/* up to 108 bytes */
@@ -114,7 +144,7 @@ typedef struct {
 
 * Struct CONTROL is also defined in `actions/include/hls_snap*.H`, it defines the **flags** and **return code**.
 
-```
+``` C
 typedef struct {
         snapu8_t sat;
         snapu8_t flags;
@@ -126,7 +156,7 @@ typedef struct {
 
 * At last, what the developer can really freely define is just **job Data**: 
 
-```
+``` C
 memcopy_job_t Data;	/* up to 108 bytes */
 ```
 
@@ -163,7 +193,7 @@ The steps include:
 * snap_card_free()
 
 
-
+The definition of these function calls can be found in `software/lib/osnap.c`. 
 
 
 
