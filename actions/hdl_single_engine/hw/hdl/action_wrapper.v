@@ -232,7 +232,7 @@ module action_wrapper #(
         .s_axi_snap_rresp      (s_axi_ctrl_reg_rresp),
         .s_axi_snap_rready     (s_axi_ctrl_reg_rready),
         .s_axi_snap_rvalid     (s_axi_ctrl_reg_rvalid),
-        .i_action_type         (32'h10140002), //Should match ACTION_TYPE_HDL_SINGLE_ENGINE with sw
+        .i_action_type         (32'h10142002), //Should match ACTION_TYPE_HDL_SINGLE_ENGINE with sw
         .i_action_version      (32'h00000002)  //Hardware Version
     );
     

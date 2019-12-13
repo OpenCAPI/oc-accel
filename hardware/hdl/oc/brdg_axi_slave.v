@@ -172,6 +172,7 @@ parameter AXI_OKAY=2'b00,
 
  wire ar_cf_empty;
  wire ar_cf_almost_full;
+ wire ar_cf_full;
  wire  ar_cf_rd_en;
 
  wire [`IDW-1:0]  ar_cf_id;
@@ -213,6 +214,7 @@ brdg_axi_slave_cmd_fifo  ar_cf(
 
         .cf_wr_en       (rd_addr_present ),
 
+        .cf_full        (ar_cf_full      ),
         .cf_almost_full (ar_cf_almost_full),
         .cf_empty       (ar_cf_empty     ),
         .cf_rd_en       (ar_cf_rd_en     )
@@ -221,7 +223,7 @@ brdg_axi_slave_cmd_fifo  ar_cf(
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      s_axi_arready <= 1'b1;
-   else if (ar_cf_almost_full)
+   else if (ar_cf_almost_full || ar_cf_full)
      s_axi_arready <= 1'b0;
    else
      s_axi_arready <= 1'b1;
