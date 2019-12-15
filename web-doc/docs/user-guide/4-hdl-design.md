@@ -69,9 +69,13 @@ And for 512b-wide action with the same clock frequency only half of the possible
 
 The default clock ap_clk (**clock_act**) frequency is 200MHz, same as the clock feeding snap_core (**clock_afu**). 
 
+Currently, `snap_config` menu provides several Action clock choices. 
+
+![4-config_clk](pictures/4-config_clock.png)
+
 If a different Action Clock is required, please modify `hardware/hdl/oc_functions.vhd_source` to add a clock generator. The script for this clock generator should be added into `hardware/setup/create_snap_ip.tcl`.
 
-For more information, please read [Clock Domain]. 
+For the clock domain diagram, please read [Clock Domain]. 
 
 [Clock Domain]: ../../deep-dive/hardware-logic/#diagram-and-clock-domain
 
@@ -151,9 +155,8 @@ About "main body" there are a lot of area to explore here. Two APIs are used to 
 * snap_action_read32()
 * snap_action_write32()
 
-Interrupt is supported (**TODO**: not fully done yet.)
 
-Multiple-process access is also supported. (**TODO**: read Examples: hdl_multple_engine)
+Multiple-process **TODO**: read Examples: hdl_multple_engine
 
 
 
