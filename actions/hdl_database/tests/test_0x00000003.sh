@@ -16,4 +16,4 @@ fi
 
 cp $ROOT/actions/hdl_database/tests/pattern.txt pattern.txt
 #$ROOT/actions/hdl_database/sw/direct/db_direct -f -t 10 $*
-$ROOT/actions/hdl_database/sw/direct/one_thread_direct -f -t 10 $*
+$ROOT/actions/hdl_database/sw/direct/multi_process_test -f -t 10 $*

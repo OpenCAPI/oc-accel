@@ -71,8 +71,11 @@ MT_COMPILEFLAGS := -W -Wall -Wno-multichar -Wno-unused-parameter -Wno-unused-fun
 MT_OPTFLAGS := -O3
 CPPFLAGS += $(MT_INCLUDES)
 
-DBDIRECT_CSRCS := one_thread_direct.c
-DBDIRECT_COBJS := $(call TOBUILDDIR,$(patsubst %.c,%.o,$(DBDIRECT_CSRCS)))
+#DBDIRECT_CSRCS := one_thread_direct.c
+#DBDIRECT_COBJS := $(call TOBUILDDIR,$(patsubst %.c,%.o,$(DBDIRECT_CSRCS)))
+
+MPDIRECT_CSRCS := multi_process_test.c
+MPDIRECT_COBJS := $(call TOBUILDDIR,$(patsubst %.c,%.o,$(MPDIRECT_CSRCS)))
 
 UTILS_CPPLINKS := fregex.cpp regex_config.cpp
 UTILS_CPPOBJS := $(call TOBUILDDIR,$(patsubst %.cpp,%.o,$(UTILS_CPPLINKS)))
@@ -87,6 +90,7 @@ REGEXREF_CPPOBJS := $(call TOBUILDDIR,$(patsubst %.cpp,%.o,$(REGEXREF_CPPSRCS)))
 
 OBJS += $(MT_CPPOBJS)
 OBJS += $(DBDIRECT_COBJS) 
+OBJS += $(MPDIRECT_COBJS) 
 OBJS += $(UTILS_CPPOBJS) 
 OBJS += $(UTILS_COBJS)
 OBJS += $(REGEXREF_CPPOBJS)
@@ -129,13 +133,20 @@ $(REGEXREF_CPPOBJS): $(BUILDDIR)/%.o: %.cpp
 	$(CXX) -c $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
 # Build CAPI related C objs
+$(MPDIRECT_COBJS): $(BUILDDIR)/%.o: %.c
+	@$(MKDIR)
+	$(CC) -c -std=c99 $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $< -MD -MT $@ -MF $(@:%o=%d) -o $@ 
+
 $(DBDIRECT_COBJS): $(BUILDDIR)/%.o: %.c
 	@$(MKDIR)
 	$(CC) -c -std=c99 $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $< -MD -MT $@ -MF $(@:%o=%d) -o $@ 
 
-projs += one_thread_direct
+projs += multi_process_test #one_thread_direct
 
 # Link all together
+multi_process_test: $(OBJS)
+	$(CXX) $(LDFLAGS) $($(@)_LDFLAGS) $($(@)_objs) $($(@)_libs) $^ -o $@ $(LDLIBS) 
+
 one_thread_direct: $(OBJS)
 	$(CXX) $(LDFLAGS) $($(@)_LDFLAGS) $($(@)_objs) $($(@)_libs) $^ -o $@ $(LDLIBS) 
 
