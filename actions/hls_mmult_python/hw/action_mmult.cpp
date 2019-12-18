@@ -15,7 +15,7 @@
  */
 
 /*
- * SNAP HLS_HELLOWORLD EXAMPLE
+ * SNAP HLS_MMULT_PYTHON EXAMPLE
  *
  * Tasks for the user:
  *   1. Explore HLS pragmas to get better timing behavior.
@@ -27,25 +27,52 @@
 #include "action_mmult.H"
 
 
+
+// Cast data read from AXI input port to decimal values
+static void mbus_to_mat_elmt_t(snap_membus_t *data_read, mat_elmt_t *table_decimal_in)
+{
+	union {
+		uint64_t     value_u;
+		mat_elmt_t   value_d;
+	};
+
+	loop_m2d1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
+#pragma HLS PIPELINE
+	   loop_m2d2: for(int j = 0; j < MAX_NB_OF_DECIMAL_PERDW; j++)
+	   {
+		value_u = (uint64_t)data_read[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j));
+		table_decimal_in[i*MAX_NB_OF_DECIMAL_PERDW + j] = value_d;
+		//printf("DEBUG mbus_to_mat_elmt_t: i=%d, j=%d, value_u=%u, value_d=%d\n", i, j, value_u, value_d);
+	   }
+
+}
+
+// Cast decimal values to AXI output port format (64 Bytes)
+static void  mat_elmt_t_to_mbus(mat_elmt_t *table_decimal_out, snap_membus_t *data_to_be_written)
+{
+	union {
+		mat_elmt_t   value_d;
+		uint64_t     value_u;
+	};
+	loop_d2m1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
+#pragma HLS PIPELINE
+	   loop_d2m2: for(int j = 0; j < MAX_NB_OF_DECIMAL_PERDW; j++)
+	   {
+		value_d = table_decimal_out[i*MAX_NB_OF_DECIMAL_PERDW + j];
+		data_to_be_written[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j)) = (uint64_t)value_u;
+	   }
+}
+
+
+
 void mmult(int *a, // Read-Only Matrix A
-		   int *b, // Read-Only Matrix B
-		   int *c,       // Output Result
+	   int *b, // Read-Only Matrix B
+	   int *c, // Output Result
            uint32_t a_row,    // Matrix A Row Size
            uint32_t a_col,    // Matrix A Col Size
            uint32_t b_col     // Matrix B Col Size
 ) {
-/*   #pragma HLS INTERFACE m_axi port=a offset=slave bundle=gmem
-   #pragma HLS INTERFACE m_axi port=b offset=slave bundle=gmem
-   #pragma HLS INTERFACE m_axi port=c offset=slave bundle=gmem
 
-   #pragma HLS INTERFACE s_axilite port=a bundle=control
-   #pragma HLS INTERFACE s_axilite port=b bundle=control
-   #pragma HLS INTERFACE s_axilite port=c bundle=control
-   #pragma HLS INTERFACE s_axilite port=a_row bundle=control
-   #pragma HLS INTERFACE s_axilite port=a_col bundle=control
-   #pragma HLS INTERFACE s_axilite port=b_col bundle=control
-   #pragma HLS INTERFACE s_axilite port=return bundle=control
-*/
     uint32_t b_row = a_col;
     uint32_t c_row = a_row;
     uint32_t c_col = b_col;
@@ -190,14 +217,11 @@ static int process_action(snap_membus_t *din_gmem,
 	bytes_to_transfer = MIN(size, BPERDW);
 
         /* Read in one word_t */
-	memcpy((int*) a, din_gmem + i_idx, MAX_SIZE * MAX_SIZE * sizeof(int));
-	memcpy((int*) b, din_gmem + i_idx, MAX_SIZE * MAX_SIZE * sizeof(int));
+	//memcpy((int*) a, din_gmem + i_idx, MAX_SIZE * MAX_SIZE * sizeof(int));
+	//memcpy((int*) b, din_gmem + i_idx + act_reg->Data.offset_to_point_b, MAX_SIZE * MAX_SIZE * sizeof(int));
 
-
-    //for (unsigned j = 0; j < 16; ++j) { // FIXME: set 16 dynamic
-    //    #pragma HLS UNROLL
-    //	value_u = pack((8*sizeof(int)*(j+1))-1, (8*sizeof(int)*j));
-    //}
+	mbus_to_mat_elmt_t(din_gmem + i_idx, a);
+	mbus_to_mat_elmt_t(din_gmem + i_idx + act_reg->Data.offset_to_point_b, b);
 
 	mmult(	a, // Read-Only Matrix A
         	b, // Read-Only Matrix B
@@ -207,7 +231,8 @@ static int process_action(snap_membus_t *din_gmem,
           	act_reg->Data.b_col); // Matrix B Col Size
 
 	/* Write out one word_t */
-	memcpy(dout_gmem + o_idx, (int*) c, MAX_SIZE * MAX_SIZE * sizeof(int));
+	//memcpy(dout_gmem + o_idx, (int*) c, MAX_SIZE * MAX_SIZE * sizeof(int));
+	mat_elmt_t_to_mbus(c, dout_gmem + o_idx);
 
 	size -= bytes_to_transfer;
 	i_idx++;
@@ -327,7 +352,7 @@ int main(void)
     // Create the test data and Software Result
     for (size_t i = 0; i < matrix_size; i++) {
         source_in1[i] = i % 10;
-        source_in2[i] = i % 10;
+        source_in2[i] = i % 5;
         source_sw_results[i] = 0;
         source_hw_results[i] = 0;
     }
@@ -337,8 +362,8 @@ int main(void)
     act_reg.Data.b_col = DATA_SIZE;
     act_reg.Data.offset_to_point_b = offset_b;
 
-    memcpy(din_gmem,   source_in1, MAX_SIZE * MAX_SIZE * sizeof(int));
-    //memcpy(din_gmem+2, source_in2, MAX_SIZE * MAX_SIZE * sizeof(int));
+    memcpy(din_gmem, source_in1, matrix_size_bytes);
+    memcpy(din_gmem+offset_b, source_in2, matrix_size_bytes);
 
     // Processing Phase .....
 
@@ -346,11 +371,11 @@ int main(void)
     act_reg.Control.flags = 0x1; /* just not 0x0 */
 
     act_reg.Data.in.addr = 0;
-    act_reg.Data.in.size = DATA_SIZE * DATA_SIZE * 2;
+    act_reg.Data.in.size = matrix_size * 2;
     act_reg.Data.in.type = SNAP_ADDRTYPE_HOST_DRAM;
 
     act_reg.Data.out.addr = 0;
-    act_reg.Data.out.size = DATA_SIZE * DATA_SIZE * 2;
+    act_reg.Data.out.size = matrix_size;
     act_reg.Data.out.type = SNAP_ADDRTYPE_HOST_DRAM;
 
     printf("Action call \n");
@@ -360,7 +385,7 @@ int main(void)
 	return 1;
     }
 
-    memcpy(source_hw_results, dout_gmem, MAX_SIZE * MAX_SIZE * sizeof(int));
+    memcpy(source_hw_results, dout_gmem, matrix_size_bytes);
 
     // Compute Software Results
     m_softwareGold(source_in1, source_in2, source_sw_results);
@@ -368,7 +393,7 @@ int main(void)
 
     // Compare the results of the Device to the simulation
     int match = 0;
-    for (int i = 0; i < DATA_SIZE * DATA_SIZE; i++) {
+    for (int i = 0; i < matrix_size; i++) {
         if (source_hw_results[i] != source_sw_results[i]) {
             printf("Error: Result mismatch\n");
             printf("i = %d, CPU result = %d, Device result = %d\n", i, source_sw_results[i], source_hw_results[i]);
@@ -384,9 +409,8 @@ int main(void)
     free(source_hw_results);
     free(source_sw_results);
 
-    return (match ? EXIT_FAILURE : EXIT_SUCCESS);
+    return (match);
 
-    return 0;
 }
 
 #endif

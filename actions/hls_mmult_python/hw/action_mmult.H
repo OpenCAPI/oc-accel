@@ -25,11 +25,12 @@
 #include <action_mmult_python.h> /* Mmult Job definition */
 
 
-//Array Size to access
-#define DATA_SIZE 16
 
-//Maximum Array Size
-#define MAX_SIZE 16
+#define MAX_NB_OF_DECIMAL_READ DATA_SIZE * DATA_SIZE
+typedef int mat_elmt_t; // change to float or double depending on your needs
+
+#define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_DECIMAL_READ*sizeof(mat_elmt_t)/BPERDW) // =2 if double =1 if float
+#define MAX_NB_OF_DECIMAL_PERDW	(BPERDW/sizeof(mat_elmt_t)) // =8 if double =16 if float
 
 
 //TRIPCOUNT identifier

@@ -51,6 +51,12 @@ extern "C" {
 // ------------ MUST READ -----------
 
 
+//Array Size to access
+#define DATA_SIZE 16
+
+//Maximum Array Size
+#define MAX_SIZE 16
+
 /* Data structure used to exchange information between action and application */
 /* Size limit is 108 Bytes */
 typedef struct mmult_job {
