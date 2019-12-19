@@ -37,6 +37,7 @@ endif
 endif
 
 # This is solution specific. Check if we can replace this by generics too.
+LDFLAGS+=-lm
 
 snap_mmult_python: ${snap_mmult_python_objs}
 

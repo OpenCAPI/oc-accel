@@ -136,7 +136,7 @@ int main(int argc)
         uint32_t a_col;	// Matrix A Col Size
         uint32_t b_col;	// Matrix B Col Size
 	a_row = a_col = b_col = DATA_SIZE;
-	uint64_t offset_b = ((uint64_t)ceil((float)(a_col * a_row * sizeof(int)) / 64)); //FIXME: can be 128 for 1k AXI I/F
+	int64_t offset_b;
 
 	// default is interrupt mode enabled (vs polling)
 	//snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
@@ -158,7 +158,7 @@ int main(int argc)
 
 	int *source_in1 = snap_malloc(matrix_size_bytes);
 	int *source_in2 = snap_malloc(matrix_size_bytes);
-	printf("DEBUG pointers: source_in1=%p, source_in1=%p, offset=%p\n", source_in1, source_in2, source_in2 - source_in1);
+	printf("DEBUG pointers: source_in1=%p, source_in1=%p, offset=%lu\n", source_in1, source_in2, source_in2 - source_in1);
 	int *source_hw_results = snap_malloc(matrix_size_bytes);
 	int *source_sw_results = snap_malloc(matrix_size_bytes);
 
@@ -170,7 +170,7 @@ int main(int argc)
 	// Create the test data and Software Result
 	for (size_t i = 0; i < matrix_size; i++) {
 		source_in1[i] = i % 10;
-	        source_in2[i] = i % 5;
+	        source_in2[i] = i;
 	        source_sw_results[i] = 0;
 	        source_hw_results[i] = 0;
     	}
@@ -184,16 +184,15 @@ int main(int argc)
 
 
 	// copy array to host memory FIXME: we don't need copy
-
-	memcpy (ibuff, source_in1, isize/2);
-	memcpy (ibuff+matrix_size, source_in2, isize/2);
+	// memcpy (ibuff, source_in1, isize/2);
+	// memcpy (ibuff+matrix_size, source_in2, isize/2);
 
 
 	// prepare params to be written in MMIO registers for action
 	type_in = SNAP_ADDRTYPE_HOST_DRAM;
 	//addr_in = (unsigned long)ibuff;
 	addr_in = (unsigned long)source_in1;
-	offset_b = 20480;//(long long)source_in2 - (long long)source_in1;
+	offset_b = (int64_t)ceil((float)((source_in2-source_in1) * sizeof(int)) / 64);  //FIXME: can be 128 for 1k AXI I/F
 
 	/* Allocate in host memory the place to put the text processed */
 	obuff = snap_malloc(osize); //64Bytes aligned malloc

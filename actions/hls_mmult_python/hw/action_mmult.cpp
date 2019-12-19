@@ -312,7 +312,7 @@ int main(void)
     unsigned memory_lines_c = ((unsigned int)ceil((float)(size_n * size_m * sizeof(int)) / (float)sizeof(snap_membus_t)));
     unsigned memory_lines_in = (memory_lines_a + memory_lines_b);
     unsigned memory_lines_out = memory_lines_c;
-    uint64_t offset_b = memory_lines_a;
+    int64_t offset_b = memory_lines_a;
 
     snap_membus_t * din_gmem = (snap_membus_t *)malloc(memory_lines_in*sizeof(snap_membus_t));
     snap_membus_t * dout_gmem = (snap_membus_t *)malloc(memory_lines_out*sizeof(snap_membus_t));
@@ -321,13 +321,15 @@ int main(void)
     	return 1;
     }
 
+    printf("INFO: Elements/Bytes  for a  : %u/%u\n", size_n * size_k, size_n * size_k * sizeof(int));
+    printf("INFO: Elements/Bytes  for b  : %u/%u\n", size_k * size_m, size_k * size_m * sizeof(int));
+    printf("INFO: Elements/Bytes  for c  : %u/%u\n", size_n * size_m, size_n * size_m * sizeof(int));
     printf("INFO: AXI/Cache lines for a  : %u/%u\n", memory_lines_a, memory_lines_a/2);
     printf("INFO: AXI/Cache lines for b  : %u/%u\n", memory_lines_b, memory_lines_b/2 );
     printf("INFO: AXI/Cache lines for IN : %u/%u\n", memory_lines_in, memory_lines_in/2);
     printf("INFO: AXI/Cache lines for OUT: %u/%u\n", memory_lines_out, memory_lines_out/2);
     printf("INFO: size_n=%u, size_k=%u, size_m=%u\n", size_n, size_k, size_m);
-
-
+    printf("INFO: offset_b=%d\n", offset_b);
 
     //Allocate Memory in Host Memory
     if (DATA_SIZE > MAX_SIZE) {
@@ -343,6 +345,14 @@ int main(void)
     int *source_in2 = (int*)malloc(matrix_size_bytes);
     int *source_hw_results = (int*)malloc(matrix_size_bytes);
     int *source_sw_results = (int*)malloc(matrix_size_bytes);
+
+    printf("INFO: Addresses for a : source_in1=%p\n", source_in1);
+    printf("INFO: Addresses for b : source_in2=%p\n", source_in2);
+    printf("INFO: Addresses for a[1]-a[0] : %llu\n", &source_in1[1]-&source_in1[0]);
+    printf("INFO: Addresses for b-a : source_in2-source_in1=%llu\n", source_in2-source_in1);
+    printf("INFO: AXI lines for b-a : source_in2-source_in1=%d\n", (unsigned int)ceil((float)((source_in2-source_in1) * sizeof(int)) / (float)sizeof(snap_membus_t)));
+
+
 
     if ((source_in1 == NULL) || (source_in2 == NULL) || (source_hw_results == NULL) || (source_sw_results == NULL)) {
         printf( "Failed to allocate memory. Aborting...\n");
