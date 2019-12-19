@@ -387,29 +387,12 @@ void config_single_regex  (struct snap_card* h,
 {
     uint32_t reg_data;
     int* dsc_base;
+    int* dsc1_base;
     int* cmpl_base;
-    dsc_base = alloc_mem (128, 1024); //1024b aligned, 1KB space for up to 8 jobs
-    cmpl_base = alloc_mem (128, 1024); //1024b aligned, 1KB space for up to 8 jobs
-
-    *dsc_base = 0x12345678;
-    *(dsc_base + 1) = (uint32_t) job_id;
-    *(dsc_base + 2) = (uint32_t) (((uint64_t) pkt_src_base) & 0xffffffff);
-    *(dsc_base + 3) = (uint32_t) ((((uint64_t) pkt_src_base) >> 32) & 0xffffffff);
-    *(dsc_base + 4) = (uint32_t) (((uint64_t) patt_src_base) & 0xffffffff);
-    *(dsc_base + 5) = (uint32_t) ((((uint64_t) patt_src_base) >> 32) & 0xffffffff);
-    *(dsc_base + 6) = 0;//(uint32_t) (((uint64_t) src_base) & 0xffffffff);0
-    *(dsc_base + 7) = 0;//(uint32_t) ((((uint64_t) src_base) >> 32) & 0xffffffff);
-    *(dsc_base + 8) = (uint32_t) (((uint64_t) stat_dest_base) & 0xffffffff);
-    *(dsc_base + 9) = (uint32_t) ((((uint64_t) stat_dest_base) >> 32) & 0xffffffff);
-    *(dsc_base + 10) = pkt_size;
-    *(dsc_base + 11) = patt_size;
-    *(dsc_base + 12) = stat_size;
-    *(dsc_base + 13) = (uint32_t) (((uint64_t) final_output_info_addr) & 0xffffffff);
-    *(dsc_base + 14) = (uint32_t) ((((uint64_t) final_output_info_addr) >> 32) & 0xffffffff);
-    *(dsc_base + 15) = 0x1;
-    *(dsc_base + 31) = 0x0;
-    *cmpl_base       = 0x0;
-    *(cmpl_base + 1) = 0x0;
+    uint32_t pasid;
+    dsc_base = alloc_mem (128, 4096);
+    cmpl_base = alloc_mem (128, 4096);
+    dsc1_base = alloc_mem (128, 4096);
 
     VERBOSE2 (" ------ Regular Expression Start -------- \n");
     VERBOSE2 (" PATTERN SOURCE ADDR: %p -- SIZE: %d\n", patt_src_base, (int)patt_size);
@@ -425,15 +408,63 @@ void config_single_regex  (struct snap_card* h,
     action_write (h, REG_MP_CMPL_ADDR_LO, (uint32_t) (((uint64_t) cmpl_base) & 0xffffffff));
     action_write (h, REG_MP_CMPL_ADDR_HI, (uint32_t) ((((uint64_t) cmpl_base) >> 32) & 0xffffffff));
 
-    VERBOSE0 (" ----- Tell AFU to kick off AXI transactions ----- \n");
-    action_write (h, REG_MP_CONTROL, 0x00000001);
+    int i;
+    for( i=0 ; i<job_id; i++){
+    *(dsc_base + 32*i) = 0x20F80941;
+    *(dsc_base + 32*i + 1) = (uint32_t) i+1;
+    *(dsc_base + 32*i + 2) = (uint32_t) (((uint64_t) pkt_src_base) & 0xffffffff);
+    *(dsc_base + 32*i + 3) = (uint32_t) ((((uint64_t) pkt_src_base) >> 32) & 0xffffffff);
+    *(dsc_base + 32*i + 4) = (uint32_t) (((uint64_t) patt_src_base) & 0xffffffff);
+    *(dsc_base + 32*i + 5) = (uint32_t) ((((uint64_t) patt_src_base) >> 32) & 0xffffffff);
+    *(dsc_base + 32*i + 6) = 0;//(uint32_t) (((uint64_t) src_base) & 0xffffffff);0
+    *(dsc_base + 32*i + 7) = 0;//(uint32_t) ((((uint64_t) src_base) >> 32) & 0xffffffff);
+    *(dsc_base + 32*i + 8) = (uint32_t) (((uint64_t) stat_dest_base) & 0xffffffff);
+    *(dsc_base + 32*i + 9) = (uint32_t) ((((uint64_t) stat_dest_base) >> 32) & 0xffffffff);
+    *(dsc_base + 32*i + 10) = pkt_size;
+    *(dsc_base + 32*i + 11) = patt_size;
+    *(dsc_base + 32*i + 12) = stat_size;
+    *(dsc_base + 32*i + 13) = (uint32_t) (((uint64_t) final_output_info_addr) & 0xffffffff);
+    *(dsc_base + 32*i + 14) = (uint32_t) ((((uint64_t) final_output_info_addr) >> 32) & 0xffffffff);
+    *(dsc_base + 32*i + 15) = 0x1;
+    *(dsc_base + 32*i + 30) = (uint32_t) (((uint64_t) dsc1_base) & 0xffffffff);
+    *(dsc_base + 32*i + 31) = (uint32_t) ((((uint64_t) dsc1_base) >> 32) & 0xffffffff);
+    }
 
-    while (*cmpl_base == 0) {
-        sleep(10);
-        VERBOSE0 ("id = %d\n", *cmpl_base);
+    for( i=0 ; i<job_id; i++){
+    *(dsc1_base + 32*i) = 0x20F80041;
+    *(dsc1_base + 32*i + 1) = (uint32_t) i+11;
+    *(dsc1_base + 32*i + 2) = (uint32_t) (((uint64_t) pkt_src_base) & 0xffffffff);
+    *(dsc1_base + 32*i + 3) = (uint32_t) ((((uint64_t) pkt_src_base) >> 32) & 0xffffffff);
+    *(dsc1_base + 32*i + 4) = (uint32_t) (((uint64_t) patt_src_base) & 0xffffffff);
+    *(dsc1_base + 32*i + 5) = (uint32_t) ((((uint64_t) patt_src_base) >> 32) & 0xffffffff);
+    *(dsc1_base + 32*i + 6) = 0;//(uint32_t) (((uint64_t) src_base) & 0xffffffff);0
+    *(dsc1_base + 32*i + 7) = 0;//(uint32_t) ((((uint64_t) src_base) >> 32) & 0xffffffff);
+    *(dsc1_base + 32*i + 8) = (uint32_t) (((uint64_t) stat_dest_base) & 0xffffffff);
+    *(dsc1_base + 32*i + 9) = (uint32_t) ((((uint64_t) stat_dest_base) >> 32) & 0xffffffff);
+    *(dsc1_base + 32*i + 10) = pkt_size;
+    *(dsc1_base + 32*i + 11) = patt_size;
+    *(dsc1_base + 32*i + 12) = stat_size;
+    *(dsc1_base + 32*i + 13) = (uint32_t) (((uint64_t) final_output_info_addr) & 0xffffffff);
+    *(dsc1_base + 32*i + 14) = (uint32_t) ((((uint64_t) final_output_info_addr) >> 32) & 0xffffffff);
+    *(dsc1_base + 32*i + 15) = 0x1;
+    *(dsc1_base + 32*i + 31) = 0x0;
+    }
+
+    VERBOSE0 (" ----- Tell AFU to kick off AXI transactions ----- \n");
+    action_write (h, REG_MP_CONTROL, 0x00000901);
+    pasid = snap_action_get_pasid (h);
+
+    for(i=0; i<job_id*2; i++){
+    while (*(cmpl_base + i*32) == 0) {
+        sleep(20);
+    }
+    VERBOSE0 ("pasid = %d\t num = %d\t id = %d\n", pasid, i, *(cmpl_base + i*32));
     }
 
     sleep(10);
+    free_mem(cmpl_base);
+    free_mem(dsc_base);
+    free_mem(dsc1_base);
 
     return;
 }
@@ -504,7 +535,7 @@ int regex_scan (struct snap_card* dnc,
 {
     int rc;
     uint64_t td;
-    int job_id = 1;
+    int job_id = 10;
     rc = 0;
 
     uint32_t* final_output_info=NULL;
@@ -989,7 +1020,7 @@ fail:
 
 int main (int argc, char* argv[])
 {
-    int num_processes = 64;
+    int num_processes = 4;
     int rc = 0;
     int failing = -1;
     pid_t pid;

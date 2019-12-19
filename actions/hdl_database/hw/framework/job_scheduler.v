@@ -33,11 +33,11 @@ module job_scheduler #(
  reg    [40:0]              kernel5_info; //40:32 pid 31:0 jobid
  reg    [40:0]              kernel6_info; //40:32 pid 31:0 jobid
  reg    [40:0]              kernel7_info; //40:32 pid 31:0 jobid
- reg    [31:0]              process_cnt0[511:0];
- reg    [31:0]              process_cnt1[511:0];
  reg    [40:0]              completion_info;
 
-genvar m;
+/*genvar m;
+ reg    [31:0]              process_cnt0[511:0];
+ reg    [31:0]              process_cnt1[511:0];
 generate
   for (m = 0; m < 512; m = m + 1) begin: process_job_run
     always@(posedge clk or negedge rst_n)
@@ -52,7 +52,7 @@ generate
         else if(complete_push_o & (completion_info[40:32] == m))
             process_cnt1[m] <= process_cnt1[m] + 1'b1;
     end
-endgenerate
+endgenerate*/
 
 genvar i;
 generate

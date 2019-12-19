@@ -94,7 +94,7 @@ process_fifo fifo_process (
     assign process_fifo_push = (read_done & (m_axi_rdata[1023:960] != 'd0)) | process_start_i;
     assign process_fifo_in = (read_done & (m_axi_rdata[1023:960] != 'd0)) ? {10'b0,m_axi_rdata[12:8],process_num,m_axi_rdata[1023:960]} : process_info_i;
     assign read_done = m_axi_rvalid & m_axi_rlast & (m_axi_rresp == 2'b0) & (m_axi_rid == 5'b00000);
-    assign read_request = ((dsc_fifo_cnt + m_axi_arlen) <'d63) & !in_read;
+    assign read_request = ((dsc_fifo_cnt + m_axi_arlen) <'d31) & !in_read;
 
     always@(posedge clk) if(m_axi_arready & m_axi_arvalid) process_num <= m_axi_aruser;
 
