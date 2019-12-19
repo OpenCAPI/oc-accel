@@ -58,14 +58,16 @@ extern "C" {
 #define MAX_SIZE 16
 
 /* Data structure used to exchange information between action and application */
-/* Size limit is 108 Bytes */
+/* Size limit is 108 Bytes. snap_addr is a struct of 128b=16B*/
 typedef struct mmult_job {
 	struct snap_addr in;	/* input data */
 	struct snap_addr out;   /* offset table */
         uint32_t a_row;         /* Matrix A Row Size */
         uint32_t a_col;         /* Matrix A Col Size */
         uint32_t b_col;         /* Matrix B Col Size */
-	uint32_t offset_to_point_b; /* Offset of b in gmem */
+        uint32_t pad0;
+	uint64_t offset_to_point_b; /* Offset of b in gmem */
+        uint64_t pad1;
 } mmult_job_t;
 
 #ifdef __cplusplus

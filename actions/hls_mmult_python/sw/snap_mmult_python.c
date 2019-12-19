@@ -53,7 +53,7 @@ static void snap_prepare_mmult(struct snap_job *cjob,
 			         uint32_t a_row,
 			         uint32_t a_col,
 			         uint32_t b_col,
-				 uint32_t offset_b,
+				 uint64_t offset_b,
 				 void *addr_in,
 				 uint32_t size_in,
 				 uint8_t type_in,
@@ -136,7 +136,7 @@ int main(int argc)
         uint32_t a_col;	// Matrix A Col Size
         uint32_t b_col;	// Matrix B Col Size
 	a_row = a_col = b_col = DATA_SIZE;
-	uint32_t offset_b = ((uint32_t)ceil((float)(a_col * a_row * sizeof(int)) / 64)); //FIXME: can be 128 for 1k AXI I/F
+	uint64_t offset_b = ((uint64_t)ceil((float)(a_col * a_row * sizeof(int)) / 64)); //FIXME: can be 128 for 1k AXI I/F
 
 	// default is interrupt mode enabled (vs polling)
 	//snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
@@ -158,6 +158,7 @@ int main(int argc)
 
 	int *source_in1 = snap_malloc(matrix_size_bytes);
 	int *source_in2 = snap_malloc(matrix_size_bytes);
+	printf("DEBUG pointers: source_in1=%p, source_in1=%p, offset=%p\n", source_in1, source_in2, source_in2 - source_in1);
 	int *source_hw_results = snap_malloc(matrix_size_bytes);
 	int *source_sw_results = snap_malloc(matrix_size_bytes);
 
@@ -190,8 +191,9 @@ int main(int argc)
 
 	// prepare params to be written in MMIO registers for action
 	type_in = SNAP_ADDRTYPE_HOST_DRAM;
-	addr_in = (unsigned long)ibuff;
-
+	//addr_in = (unsigned long)ibuff;
+	addr_in = (unsigned long)source_in1;
+	offset_b = 20480;//(long long)source_in2 - (long long)source_in1;
 
 	/* Allocate in host memory the place to put the text processed */
 	obuff = snap_malloc(osize); //64Bytes aligned malloc
@@ -211,10 +213,11 @@ int main(int argc)
 	       "  type_out:    %x %s\n"
 	       "  addr_out:    %016llx\n"
 	       "  size_in :    %08lx\n"
-	       "  size_out:    %08lx\n",
+	       "  size_out:    %08lx\n"
+	       "  offset_b:    %016llx\n",
 	       type_in,  mem_tab[type_in],  (long long)addr_in,
 	       type_out, mem_tab[type_out], (long long)addr_out,
-	       isize, osize);
+	       isize, osize, (long long)offset_b);
 
 
 	// Allocate the card that will be used

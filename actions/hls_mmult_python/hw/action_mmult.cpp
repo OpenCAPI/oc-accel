@@ -250,7 +250,7 @@ void hls_action(snap_membus_t *din_gmem,
 	action_reg *act_reg)
 {
     // Host Memory AXI Interface - CANNOT BE REMOVED - NO CHANGE BELOW
-#pragma HLS INTERFACE m_axi port=din_gmem bundle=host_mem offset=slave depth=512 \
+#pragma HLS INTERFACE m_axi port=din_gmem bundle=host_mem offset=slave depth=131072 \
   max_read_burst_length=64  max_write_burst_length=64
 #pragma HLS INTERFACE s_axilite port=din_gmem bundle=ctrl_reg offset=0x030
 
@@ -312,7 +312,7 @@ int main(void)
     unsigned memory_lines_c = ((unsigned int)ceil((float)(size_n * size_m * sizeof(int)) / (float)sizeof(snap_membus_t)));
     unsigned memory_lines_in = (memory_lines_a + memory_lines_b);
     unsigned memory_lines_out = memory_lines_c;
-    unsigned offset_b = memory_lines_a;
+    uint64_t offset_b = memory_lines_a;
 
     snap_membus_t * din_gmem = (snap_membus_t *)malloc(memory_lines_in*sizeof(snap_membus_t));
     snap_membus_t * dout_gmem = (snap_membus_t *)malloc(memory_lines_out*sizeof(snap_membus_t));
