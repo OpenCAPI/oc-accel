@@ -109,18 +109,14 @@ void m_softwareGold(
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
 #ifdef PY_WRAP
 int mmult(int * input_arr_a, int size_in_a, int * input_arr_b, int size_in_b, int * output_arr_c, int size_out) {
+	assert(size_in_a == DATA_SIZE*DATA_SIZE);
+	assert(size_in_b == DATA_SIZE*DATA_SIZE);
+	assert(size_out  == DATA_SIZE*DATA_SIZE);
 #else
 int main(int argc)
 {
 	assert(argc == 1);
 #endif
-
-
-	printf("Came to mmult!\n");
-	output_arr_c[0] = input_arr_a[0] + input_arr_b[0];
-	return (input_arr_a[0] + input_arr_b[0]);
-
-
 	// Init of all the default values used
 	int rc = 0;
 	int card_no = 0;
@@ -145,6 +141,7 @@ int main(int argc)
         uint32_t b_col;	// Matrix B Col Size
 	a_row = a_col = b_col = DATA_SIZE;
 	int64_t offset_b;
+	size_t i;
 
 	// default is interrupt mode enabled (vs polling)
 	//snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
@@ -178,7 +175,7 @@ int main(int argc)
 	}
 
 	// Create the test data and Software Result
-	for (size_t i = 0; i < matrix_size; i++) {
+	for (i = 0; i < matrix_size; i++) {
 		source_in1[i] = i % 10;
 	        source_in2[i] = i;
     	}
@@ -211,7 +208,11 @@ int main(int argc)
 	type_in = SNAP_ADDRTYPE_HOST_DRAM;
 	//addr_in = (unsigned long)ibuff;
 	addr_in = (unsigned long)source_in1;
-	offset_b = (int64_t)ceil((float)((source_in2-source_in1) * sizeof(int)) / 64);  //FIXME: can be 128 for 1k AXI I/F
+	float offset_b_f = (float)((source_in2-source_in1) * sizeof(int)) / 64;
+	offset_b = (int64_t)ceil(offset_b_f);  //FIXME: can be 128 for 1k AXI I/F
+
+	float source_in1_align_f = (float)((source_sw_results-source_in1) * sizeof(int)) / 64;
+	float source_in2_align_f = (float)((source_sw_results-source_in2) * sizeof(int)) / 64;
 
 
 #ifdef PY_WRAP
@@ -234,14 +235,21 @@ int main(int argc)
 	printf("PARAMETERS:\n"
 	       "  type_in:     %x %s\n"
 	       "  addr_in:     %016llx\n"
+	       "  source_in1:  %016llx\n"
+	       "  source_in2:  %016llx\n"
+	       "  source_sw_results:  %016llx\n"
 	       "  type_out:    %x %s\n"
 	       "  addr_out:    %016llx\n"
 	       "  size_in :    %08lx\n"
 	       "  size_out:    %08lx\n"
-	       "  offset_b:    %016llx\n",
+	       "  offset_b:    %016llx\n"
+	       "  offset_b_f:  %f\n"
+	       "  source_in1_align_f:  %f\n"
+	       "  source_in2_align_f:  %f\n",
 	       type_in,  mem_tab[type_in],  (long long)addr_in,
+	       source_in1, source_in2, source_sw_results,
 	       type_out, mem_tab[type_out], (long long)addr_out,
-	       isize, osize, (long long)offset_b);
+	       isize, osize, (long long)offset_b, offset_b_f, source_in1_align_f, source_in2_align_f);
 
 
 	// Allocate the card that will be used
@@ -314,7 +322,7 @@ int main(int argc)
 	m_softwareGold(source_in1, source_in2, source_sw_results);
 
 	// Compare the results of the Device to the simulation
-	int match = 0, i;
+	int match = 0;
 	for (i = 0; i < DATA_SIZE * DATA_SIZE; i++) {
 		if (source_hw_results[i] != source_sw_results[i]) {
 			printf("Error: Result mismatch\n");
@@ -322,6 +330,8 @@ int main(int argc)
 			match = 1;
 			//break;
 		}
+		//else
+		//	printf("i = %d, CPU result = Device result = %d\n", i, source_hw_results[i]);
 	}
 
 	printf("TEST %s\n", (match ? "FAILED" : "PASSED"));

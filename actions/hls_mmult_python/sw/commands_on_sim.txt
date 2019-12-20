@@ -5,8 +5,8 @@ LD_LIBRARY_PATH=/home/did/projects/ocse/libocxl/ python3
 
 import sys
 
-sys.path.append("/tools/projects/oc-accel_did/actions/hls_helloworld_python/sw")
-sys.path.append("/home/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
+sys.path.append("/tools/projects/oc-accel_did/actions/hls_mmult_python/sw")
+sys.path.append("/home/did/projects/oc-accel_did/actions/hls_mmult_python/sw")
 
 import dieres
 import numpy as np
