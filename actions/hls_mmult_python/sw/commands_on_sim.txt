@@ -8,13 +8,19 @@ import sys
 sys.path.append("/tools/projects/oc-accel_did/actions/hls_helloworld_python/sw")
 sys.path.append("/home/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
 
-import snap_helloworld_python
+import dieres
+import numpy as np
  
-input = "Hello world. This is my first CAPI SNAP experience with Python. It's extremely fun"
-output = "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+a = np.ones(16*16, np.int32)
+print(a)
 
-snap_helloworld_python.uppercase(input, output)
-out, output = snap_helloworld_python.uppercase(input)
+b = np.ones(16*16, np.int32)*2
+print(b)
 
-print(output)
+c = np.zeros(16*16, np.int32)
+print(c)
+
+dieres.mmult(a,b,c)
+print(c)
+
 

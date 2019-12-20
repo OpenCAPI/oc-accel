@@ -64,10 +64,13 @@ K := $(foreach exec,$(PREREQ_EXECUTABLES),\
 # 4. c++ -shared XXX.o XXX_wrap.o -o XXX.so
 
 pywrap:
-	swig -python snap_mmult_python.i
+	[ -f ./numpy.i ] && echo "numpy.i already here, good" || wget https://raw.githubusercontent.com/numpy/numpy/master/tools/swig/numpy.i
+	swig -python -o snap_mmult_python_wrap.c  dieres.i
 	$(CC) -c -fpic snap_mmult_python.c snap_mmult_python_wrap.c $(PyCFLAGS) -I$(SNAP_ROOT)/software/include/ -I$(SNAP_ROOT)/actions/hls_mmult_python/include
-	$(CC) -shared snap_mmult_python.o snap_mmult_python_wrap.o $(SNAP_ROOT)/software/lib/libosnap.a $(OCSE_ROOT)/libocxl/libocxl.a -o _snap_mmult_python.so
+	$(CC) -shared snap_mmult_python.o snap_mmult_python_wrap.o $(SNAP_ROOT)/software/lib/libosnap.a $(OCSE_ROOT)/libocxl/libocxl.a -o _dieres.so
 
+pywrap_clean:
+	$(RM) -rf ./*_wrap* ./*.so ./*.o
 #LD_LIBRARY_PATH=/tools/projects/ocse/libocxl/ python3 -c "import snap_mmult_python"
 
 # If you have the host code outside of the default snap directory structure, 

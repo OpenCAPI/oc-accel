@@ -92,10 +92,11 @@ void m_softwareGold(
 	int* in2, //Input Matrix 2
 	int* out  //Output Matrix
 ) {
+    int i, j, k;
     //Perform Matrix multiply Out = In1 x In2
-    for (int i = 0; i < DATA_SIZE; i++) {
-        for (int j = 0; j < DATA_SIZE; j++) {
-            for (int k = 0; k < DATA_SIZE; k++) {
+    for (i = 0; i < DATA_SIZE; i++) {
+        for (j = 0; j < DATA_SIZE; j++) {
+            for (k = 0; k < DATA_SIZE; k++) {
                 out[i * DATA_SIZE + j] +=
                     in1[i * DATA_SIZE + k] * in2[k * DATA_SIZE + j];
             }
@@ -107,13 +108,19 @@ void m_softwareGold(
 /* This application will always be run on CPU and will call either       */
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
 #ifdef PY_WRAP
-int mmult(int *input_arr_a, int *input_arr_b, int *output_arr_c)
-{
+int mmult(int * input_arr_a, int size_in_a, int * input_arr_b, int size_in_b, int * output_arr_c, int size_out) {
 #else
 int main(int argc)
 {
 	assert(argc == 1);
 #endif
+
+
+	printf("Came to mmult!\n");
+	output_arr_c[0] = input_arr_a[0] + input_arr_b[0];
+	return (input_arr_a[0] + input_arr_b[0]);
+
+
 	// Init of all the default values used
 	int rc = 0;
 	int card_no = 0;
@@ -125,7 +132,8 @@ int main(int argc)
 	unsigned long timeout = 600;
 	struct timeval etime, stime;
 
-	int *ibuff = NULL, *obuff = NULL;
+	//int *ibuff = NULL, 
+	int *obuff = NULL;
 	uint8_t type_in = SNAP_ADDRTYPE_HOST_DRAM;
 	uint64_t addr_in = 0x0ull;
 	uint8_t type_out = SNAP_ADDRTYPE_HOST_DRAM;
@@ -156,13 +164,15 @@ int main(int argc)
 	ssize_t isize = matrix_size_bytes * 2;
 	ssize_t osize = matrix_size_bytes;
 
+
+#ifdef PY_WRAP
+	int *source_in1 = input_arr_a;
+	int *source_in2 = input_arr_b;
+#else	
 	int *source_in1 = snap_malloc(matrix_size_bytes);
 	int *source_in2 = snap_malloc(matrix_size_bytes);
-	printf("DEBUG pointers: source_in1=%p, source_in1=%p, offset=%lu\n", source_in1, source_in2, source_in2 - source_in1);
-	int *source_hw_results = snap_malloc(matrix_size_bytes);
-	int *source_sw_results = snap_malloc(matrix_size_bytes);
 
-	if ((source_in1 == NULL) || (source_in2 == NULL) || (source_hw_results == NULL) || (source_sw_results == NULL)) {
+	if ((source_in1 == NULL) || (source_in2 == NULL)) {
         	printf( "Failed to allocate memory. Aborting...\n");
 		return EXIT_FAILURE;
 	}
@@ -171,16 +181,25 @@ int main(int argc)
 	for (size_t i = 0; i < matrix_size; i++) {
 		source_in1[i] = i % 10;
 	        source_in2[i] = i;
-	        source_sw_results[i] = 0;
-	        source_hw_results[i] = 0;
     	}
+#endif
 
+	int *source_sw_results = snap_malloc(matrix_size_bytes);
+	int *source_hw_results = snap_malloc(matrix_size_bytes);
+	if ((source_hw_results == NULL) || (source_sw_results == NULL)) {
+        	printf( "Failed to allocate memory. Aborting...\n");
+		return EXIT_FAILURE;
+	}
+	memset(source_sw_results, 0x0, matrix_size_bytes);
+	memset(source_hw_results, 0x0, matrix_size_bytes);
+
+	printf("DEBUG pointers: source_in1=%p, source_in1=%p, offset=%lu\n", source_in1, source_in2, source_in2 - source_in1);
 
 	/* Allocate in host memory the place to put the text to process */
-	ibuff = snap_malloc(isize); //64Bytes aligned malloc
-	if (ibuff == NULL)
-		goto out_error;
-	memset(ibuff, 0, isize);
+	//ibuff = snap_malloc(isize); //64Bytes aligned malloc
+	//if (ibuff == NULL)
+	//	goto out_error;
+	//memset(ibuff, 0, isize);
 
 
 	// copy array to host memory FIXME: we don't need copy
@@ -194,15 +213,21 @@ int main(int argc)
 	addr_in = (unsigned long)source_in1;
 	offset_b = (int64_t)ceil((float)((source_in2-source_in1) * sizeof(int)) / 64);  //FIXME: can be 128 for 1k AXI I/F
 
+
+#ifdef PY_WRAP
+	obuff = output_arr_c;
+#else
 	/* Allocate in host memory the place to put the text processed */
 	obuff = snap_malloc(osize); //64Bytes aligned malloc
 	if (obuff == NULL)
 		goto out_error;
 	memset(obuff, 0x0, osize);
+#endif
 
 	// prepare params to be written in MMIO registers for action
 	type_out = SNAP_ADDRTYPE_HOST_DRAM;
 	addr_out = (unsigned long)obuff;
+
 
 	printf("Git version: %s\n", version);
 	/* Display the parameters that will be used for the example */
@@ -289,8 +314,8 @@ int main(int argc)
 	m_softwareGold(source_in1, source_in2, source_sw_results);
 
 	// Compare the results of the Device to the simulation
-	int match = 0;
-	for (int i = 0; i < DATA_SIZE * DATA_SIZE; i++) {
+	int match = 0, i;
+	for (i = 0; i < DATA_SIZE * DATA_SIZE; i++) {
 		if (source_hw_results[i] != source_sw_results[i]) {
 			printf("Error: Result mismatch\n");
 			printf("i = %d, CPU result = %d, Device result = %d\n", i, source_sw_results[i], source_hw_results[i]);
@@ -301,8 +326,10 @@ int main(int argc)
 
 	printf("TEST %s\n", (match ? "FAILED" : "PASSED"));
 
+#ifndef PY_WRAP
 	__free(source_in1);
 	__free(source_in2);
+#endif
 	__free(source_hw_results);
 	__free(source_sw_results);
 
@@ -316,8 +343,10 @@ int main(int argc)
 	snap_detach_action(action);
 	snap_card_free(card);
 
+#ifndef PY_WRAP
 	__free(obuff);
-	__free(ibuff);
+	//__free(ibuff);
+#endif
 
 #ifdef PY_WRAP
 	return(exit_code);
@@ -330,7 +359,9 @@ int main(int argc)
  out_error1:
 	snap_card_free(card);
  out_error:
+#ifndef PY_WRAP
 	__free(obuff);
-	__free(ibuff);
+	//__free(ibuff);
+#endif
 	exit(EXIT_FAILURE);
 }
