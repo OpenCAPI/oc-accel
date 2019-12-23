@@ -39,6 +39,11 @@ set log_dir       $::env(LOGS_DIR)
 set log_file      $log_dir/create_snap_ip.log
 set ila_debug     [string toupper $::env(ILA_DEBUG)]
 set odma_used     [string toupper $::env(ODMA_USED)]
+set odma_512_used [string toupper $::env(ODMA_512_USED)]
+set odma_st_mode_used [string toupper $::env(ODMA_ST_MODE_USED)]
+
+set user_clk_freq $::env(USER_CLOCK_FREQ)
+set axi_id_width  $::env(AXI_ID_WIDTH)
 
 ## Create a new Vivado IP Project
 puts "\[CREATE_SNAP_IPs.....\] start [clock format [clock seconds] -format {%T %a %b %d %Y}]"
@@ -116,7 +121,7 @@ if { $odma_used == "TRUE" }  {
   export_ip_user_files -of_objects             [get_files $ip_dir/channel_fifo/channel_fifo.xci] -no_script -force >> $log_file
   export_simulation -of_objects [get_files $ip_dir/channel_fifo/channel_fifo.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 
-# Create LCL rdata_fifo for h2a_mm_engine
+# Create LCL rdata_fifo for h2a_mm_engine & h2a_st_engine
   puts "                        generating IP fifo_sync_32_1024i1024o for h2a_mm_engine rdata fifos"
   create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_32_1024i1024o -dir $ip_dir >> $log_file
   set_property -dict [list                                        \
@@ -140,8 +145,8 @@ if { $odma_used == "TRUE" }  {
   export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_32_1024i1024o/fifo_sync_32_1024i1024o.xci] -no_script -force >> $log_file
   export_simulation -of_objects [get_files $ip_dir/fifo_sync_32_1024i1024o/fifo_sync_32_1024i1024o.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 
-# Create AXI read data fifo for a2h_mm_engine
-  puts "                        generating IP fifo_sync_1024x8 for a2h_mm_engine AXI rdata fifos"
+# Create AXI read data fifo for a2h_mm_engine & ah2_st_engine
+  puts "                        generating IP fifo_sync_1024x8 for a2h_mm_engine&a2h_st_engine AXI rdata fifos"
   create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_1024x8 -dir $ip_dir >> $log_file
   set_property -dict [list                                        \
                       CONFIG.Fifo_Implementation {Common_Clock_Distributed_RAM} \
@@ -233,6 +238,119 @@ if { $odma_used == "TRUE" }  {
   generate_target all                          [get_files $ip_dir/fifo_sync_256x8/fifo_sync_256x8.xci] >> $log_file
   export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_256x8/fifo_sync_256x8.xci] -no_script -force >> $log_file
   export_simulation -of_objects [get_files $ip_dir/fifo_sync_256x8/fifo_sync_256x8.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+# Create Stream data descriptor fifo for a2h_st_engine
+  puts "                        generating IP fifo_sync_123x4 for a2h_st_engine stream data descriptor fifos"
+  create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_123x4 -dir $ip_dir >> $log_file
+  set_property -dict [list                                        \
+                      CONFIG.Fifo_Implementation {Common_Clock_Distributed_RAM} \
+                      CONFIG.Performance_Options {First_Word_Fall_Through}    \
+                      CONFIG.Input_Data_Width {123}                 \
+                      CONFIG.Input_Depth {16}                    \
+                      CONFIG.Output_Data_Width {123}                \
+                      CONFIG.Output_Depth {16}                   \
+                      CONFIG.Use_Embedded_Registers {false}     \
+                      CONFIG.Programmable_Full_Type {Single_Programmable_Full_Threshold_Constant}       \
+                      CONFIG.Valid_Flag {true}                             \
+                      CONFIG.Data_Count_Width {3}                 \
+                      CONFIG.Write_Data_Count_Width {3}           \
+                      CONFIG.Read_Data_Count_Width {3}           \
+                     ] [get_ips fifo_sync_123x4]
+  set_property generate_synth_checkpoint false [get_files $ip_dir/fifo_sync_123x4/fifo_sync_123x4.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/fifo_sync_123x4/fifo_sync_123x4.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/fifo_sync_123x4/fifo_sync_123x4.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_123x4/fifo_sync_123x4.xci] -no_script -force >> $log_file
+  export_simulation -of_objects [get_files $ip_dir/fifo_sync_123x4/fifo_sync_123x4.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+  puts "                        generating IP fifo_sync_70x8 for a2h_st_engine AXI rtag fifos"
+  create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_70x8 -dir $ip_dir >> $log_file
+  set_property -dict [list                                        \
+                      CONFIG.Fifo_Implementation {Common_Clock_Distributed_RAM} \
+                      CONFIG.Performance_Options {First_Word_Fall_Through}    \
+                      CONFIG.Input_Data_Width {70}                 \
+                      CONFIG.Input_Depth {16}                    \
+                      CONFIG.Output_Data_Width {70}                \
+                      CONFIG.Output_Depth {16}                   \
+                      CONFIG.Programmable_Full_Type {Single_Programmable_Full_Threshold_Constant}       \
+                      CONFIG.Valid_Flag {true}                             \
+                      CONFIG.Data_Count_Width {5}                 \
+                      CONFIG.Write_Data_Count_Width {5}           \
+                      CONFIG.Read_Data_Count_Width {5}           \
+                      CONFIG.Full_Threshold_Assert_Value {7}    \
+                      CONFIG.Full_Threshold_Negate_Value {6}    \
+                     ] [get_ips fifo_sync_70x8]
+  set_property generate_synth_checkpoint false [get_files $ip_dir/fifo_sync_70x8/fifo_sync_70x8.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/fifo_sync_70x8/fifo_sync_70x8.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/fifo_sync_70x8/fifo_sync_70x8.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_70x8/fifo_sync_70x8.xci] -no_script -force >> $log_file
+  export_simulation -of_objects [get_files $ip_dir/fifo_sync_70x8/fifo_sync_70x8.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+ puts "                        generating IP fifo_sync_134x8 for a2h_mm_engine AXI rdata fifos"
+  create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_134x8 -dir $ip_dir >> $log_file
+  set_property -dict [list                                        \
+                      CONFIG.Fifo_Implementation {Common_Clock_Distributed_RAM} \
+                      CONFIG.Performance_Options {First_Word_Fall_Through}    \
+                      CONFIG.Input_Data_Width {134}                 \
+                      CONFIG.Input_Depth {16}                    \
+                      CONFIG.Output_Data_Width {134}                \
+                      CONFIG.Output_Depth {16}                   \
+                      CONFIG.Programmable_Full_Type {Single_Programmable_Full_Threshold_Constant}       \
+                      CONFIG.Valid_Flag {true}                             \
+                      CONFIG.Data_Count_Width {5}                 \
+                      CONFIG.Write_Data_Count_Width {5}           \
+                      CONFIG.Read_Data_Count_Width {5}           \
+                      CONFIG.Full_Threshold_Assert_Value {7}    \
+                      CONFIG.Full_Threshold_Negate_Value {6}    \
+                     ] [get_ips fifo_sync_134x8]
+  set_property generate_synth_checkpoint false [get_files $ip_dir/fifo_sync_134x8/fifo_sync_134x8.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/fifo_sync_134x8/fifo_sync_134x8.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/fifo_sync_134x8/fifo_sync_134x8.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_134x8/fifo_sync_134x8.xci] -no_script -force >> $log_file
+  export_simulation -of_objects [get_files $ip_dir/fifo_sync_134x8/fifo_sync_134x8.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+  
+  puts "                        generating IP fifo_sync_1x4 for a2h_st_engine stream data descriptor fifos"
+  create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_1x4 -dir $ip_dir >> $log_file
+  set_property -dict [list                                        \
+                      CONFIG.Fifo_Implementation {Common_Clock_Distributed_RAM} \
+                      CONFIG.Performance_Options {First_Word_Fall_Through}    \
+                      CONFIG.Input_Data_Width {1}                 \
+                      CONFIG.Input_Depth {16}                    \
+                      CONFIG.Output_Data_Width {1}                \
+                      CONFIG.Output_Depth {16}                   \
+                      CONFIG.Use_Embedded_Registers {false}     \
+                      CONFIG.Programmable_Full_Type {Single_Programmable_Full_Threshold_Constant}       \
+                      CONFIG.Valid_Flag {true}                             \
+                      CONFIG.Data_Count_Width {3}                 \
+                      CONFIG.Write_Data_Count_Width {3}           \
+                      CONFIG.Read_Data_Count_Width {3}           \
+                     ] [get_ips fifo_sync_1x4]
+  set_property generate_synth_checkpoint false [get_files $ip_dir/fifo_sync_1x4/fifo_sync_1x4.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/fifo_sync_1x4/fifo_sync_1x4.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/fifo_sync_1x4/fifo_sync_1x4.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_1x4/fifo_sync_1x4.xci] -no_script -force >> $log_file
+  export_simulation -of_objects [get_files $ip_dir/fifo_sync_1x4/fifo_sync_1x4.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+  puts "                        generating IP fifo_sync_128x4 for a2h_st_engine stream data descriptor fifos"
+  create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_128x4 -dir $ip_dir >> $log_file
+  set_property -dict [list                                        \
+                      CONFIG.Fifo_Implementation {Common_Clock_Distributed_RAM} \
+                      CONFIG.Performance_Options {First_Word_Fall_Through}    \
+                      CONFIG.Input_Data_Width {128}                 \
+                      CONFIG.Input_Depth {16}                    \
+                      CONFIG.Output_Data_Width {128}                \
+                      CONFIG.Output_Depth {16}                   \
+                      CONFIG.Use_Embedded_Registers {false}     \
+                      CONFIG.Programmable_Full_Type {Single_Programmable_Full_Threshold_Constant}       \
+                      CONFIG.Valid_Flag {true}                             \
+                      CONFIG.Data_Count_Width {3}                 \
+                      CONFIG.Write_Data_Count_Width {3}           \
+                      CONFIG.Read_Data_Count_Width {3}           \
+                     ] [get_ips fifo_sync_128x4]
+  set_property generate_synth_checkpoint false [get_files $ip_dir/fifo_sync_128x4/fifo_sync_128x4.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/fifo_sync_128x4/fifo_sync_128x4.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/fifo_sync_128x4/fifo_sync_128x4.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_128x4/fifo_sync_128x4.xci] -no_script -force >> $log_file
+  export_simulation -of_objects [get_files $ip_dir/fifo_sync_128x4/fifo_sync_128x4.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 }
 
 #create BlockRAM
@@ -270,28 +388,79 @@ if { $create_bram == "TRUE" } {
 
 #AXI_VIP create axi_vip_mm_check
 if { $unit_sim_used == "TRUE" } {
-  create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_check -dir $ip_dir >> $log_file
-  set_property -dict [list                                    \
-                      CONFIG.ADDR_WIDTH {64}                  \
-                      CONFIG.DATA_WIDTH {1024}                \
-                      CONFIG.ID_WIDTH {5}                     \
-                      CONFIG.AWUSER_WIDTH {9}                 \
-                      CONFIG.ARUSER_WIDTH {9}                 \
-                      CONFIG.RUSER_WIDTH {1}                  \
-                      CONFIG.WUSER_WIDTH {1}                  \
-                      CONFIG.BUSER_WIDTH {1}                  \
-                     ] [get_ips axi_vip_mm_check] >> $log_file
-  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-  generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-  generate_target all                          [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-  export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -no_script -sync -force -quiet  >> $log_file
-  export_simulation -of_objects [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+  if { $odma_512_used == "TRUE" } {
+    if { $odma_st_mode_used == "TRUE" } {
+      create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_st_passthrough_h2a -dir $ip_dir >> $log_file
+      set_property -dict [list                                   \
+                          CONFIG.TDATA_NUM_BYTES {64}           \
+                          CONFIG.TID_WIDTH {5}                   \
+                          CONFIG.TUSER_WIDTH {9}                 \
+                          CONFIG.HAS_TKEEP {1}                   \
+                          CONFIG.HAS_TLAST {1}                   \
+                         ] [get_ips axi_st_passthrough_h2a] >> $log_file
+      generate_target {instantiation_template}     [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
+      set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
+      generate_target all                          [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
+      export_ip_user_files -of_objects             [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -no_script -sync -force -quiet >> $log_file
+      export_simulation -of_objects                [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+    } else {
+    create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_check -dir $ip_dir >> $log_file
+      set_property -dict [list                                    \
+                          CONFIG.ADDR_WIDTH {64}                  \
+                          CONFIG.DATA_WIDTH {512}                 \
+                          CONFIG.ID_WIDTH {5}                     \
+                          CONFIG.AWUSER_WIDTH {9}                 \
+                          CONFIG.ARUSER_WIDTH {9}                 \
+                          CONFIG.RUSER_WIDTH {1}                  \
+                          CONFIG.WUSER_WIDTH {1}                  \
+                          CONFIG.BUSER_WIDTH {1}                  \
+                         ] [get_ips axi_vip_mm_check] >> $log_file
+      set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
+      generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
+      generate_target all                          [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
+      export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -no_script -sync -force -quiet  >> $log_file
+      export_simulation -of_objects [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+    }
+  } else {
+    if { $odma_st_mode_used == "TRUE" } {
+      create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_st_passthrough_h2a -dir $ip_dir >> $log_file
+      set_property -dict [list                                   \
+                          CONFIG.TDATA_NUM_BYTES {128}           \
+                          CONFIG.TID_WIDTH {5}                   \
+                          CONFIG.TUSER_WIDTH {9}                 \
+                          CONFIG.HAS_TKEEP {1}                   \
+                          CONFIG.HAS_TLAST {1}                   \
+                         ] [get_ips axi_st_passthrough_h2a] >> $log_file
+      generate_target {instantiation_template}     [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
+      set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
+      generate_target all                          [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
+      export_ip_user_files -of_objects             [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -no_script -sync -force -quiet >> $log_file
+      export_simulation -of_objects                [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+      } else {
+      create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_check -dir $ip_dir >> $log_file
+      set_property -dict [list                                    \
+                          CONFIG.ADDR_WIDTH {64}                  \
+                          CONFIG.DATA_WIDTH {1024}                \
+                          CONFIG.ID_WIDTH {5}                     \
+                          CONFIG.AWUSER_WIDTH {9}                 \
+                          CONFIG.ARUSER_WIDTH {9}                 \
+                          CONFIG.RUSER_WIDTH {1}                  \
+                          CONFIG.WUSER_WIDTH {1}                  \
+                          CONFIG.BUSER_WIDTH {1}                  \
+                         ] [get_ips axi_vip_mm_check] >> $log_file
+      set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
+      generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
+      generate_target all                          [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
+      export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -no_script -sync -force -quiet  >> $log_file
+      export_simulation -of_objects [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+    }
+  }
 
   puts "                        generating IP axi_lite_passthrough"
   create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_lite_passthrough -dir $ip_dir >> $log_file
   set_property -dict [list 										   \
-					  CONFIG.PROTOCOL {AXI4LITE} 				   \
-					  CONFIG.SUPPORTS_NARROW {0} 				   \
+					  CONFIG.PROTOCOL {AXI4LITE} 				           \
+					  CONFIG.SUPPORTS_NARROW {0} 				           \
 					  CONFIG.HAS_BURST {0}						   \
 					  CONFIG.HAS_LOCK {0}						   \
 					  CONFIG.HAS_CACHE {0} 						   \
@@ -325,8 +494,18 @@ if { $create_clkconv_snap == "TRUE" } {
   puts "                        generating IP axi_clock_converter_act2snap"
   create_ip -name axi_clock_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_clock_converter_act2snap -dir $ip_dir  >> $log_file
 
-  set_property -dict [list CONFIG.ADDR_WIDTH {64} CONFIG.DATA_WIDTH {1024} CONFIG.ID_WIDTH {5}] [get_ips axi_clock_converter_act2snap]
- 
+  set_property -dict [list                               \
+                      CONFIG.ADDR_WIDTH {64}             \
+                      CONFIG.DATA_WIDTH {1024}           \
+                      CONFIG.ID_WIDTH $axi_id_width      \
+                      CONFIG.AWUSER_WIDTH {9}            \
+                      CONFIG.ARUSER_WIDTH {9}            \
+                      CONFIG.RUSER_WIDTH {1}             \
+                      CONFIG.WUSER_WIDTH {1}             \
+                      CONFIG.BUSER_WIDTH {1}             \
+                      CONFIG.ACLK_ASYNC {1}              \
+                      ] [get_ips axi_clock_converter_act2snap]
+	 
   set_property generate_synth_checkpoint false [get_files $ip_dir/axi_clock_converter_act2snap/axi_clock_converter_act2snap.xci]
   generate_target {instantiation_template}     [get_files $ip_dir/axi_clock_converter_act2snap/axi_clock_converter_act2snap.xci] >> $log_file
   generate_target all                          [get_files $ip_dir/axi_clock_converter_act2snap/axi_clock_converter_act2snap.xci] >> $log_file
@@ -401,6 +580,7 @@ if { $create_dwidth_conv == "TRUE" } {
                            CONFIG.ACLK_ASYNC {1}               \
                            CONFIG.SI_DATA_WIDTH {512}          \
                            CONFIG.MI_DATA_WIDTH {1024}         \
+                           CONFIG.SI_ID_WIDTH $axi_id_width    \
                            ] [get_ips axi_dwidth_converter]
   set_property generate_synth_checkpoint false [get_files $ip_dir/axi_dwidth_converter/axi_dwidth_converter.xci] >> $log_file
   generate_target {instantiation_template}     [get_files $ip_dir/axi_dwidth_converter/axi_dwidth_converter.xci] >> $log_file
@@ -421,6 +601,7 @@ if { $create_clkconv_lite == "TRUE" } {
                                   CONFIG.RUSER_WIDTH {0}     \
                                   CONFIG.WUSER_WIDTH {0}     \
                                   CONFIG.BUSER_WIDTH {0}     \
+                                  CONFIG.ACLK_ASYNC {1}      \
                                   ] [get_ips axi_lite_clock_converter]
   set_property generate_synth_checkpoint false [get_files $ip_dir/axi_lite_clock_converter/axi_lite_clock_converter.xci]
   generate_target {instantiation_template}     [get_files $ip_dir/axi_lite_clock_converter/axi_lite_clock_converter.xci] >> $log_file
@@ -428,6 +609,105 @@ if { $create_clkconv_lite == "TRUE" } {
   export_ip_user_files -of_objects             [get_files $ip_dir/axi_lite_clock_converter/axi_lite_clock_converter.xci] -no_script -sync -force  >> $log_file
   export_simulation    -of_objects             [get_files $ip_dir/axi_lite_clock_converter/axi_lite_clock_converter.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 }
+
+if { $user_clock == "TRUE" } {
+  puts "                        generating clk_wiz ......"
+  create_ip -name clk_wiz -vendor xilinx.com -library ip -version 6.0 -module_name user_clock_gen -dir $ip_dir  >> $log_file
+  if { $user_clk_freq == "50" } {
+    set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
+                                    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {50.355}  \
+                                    CONFIG.CLKIN1_JITTER_PS {49.64}             \
+                                    CONFIG.MMCM_DIVCLK_DIVIDE {4}               \
+                                    CONFIG.MMCM_CLKFBOUT_MULT_F {23.875}        \
+                                    CONFIG.MMCM_CLKIN1_PERIOD {4.965}           \
+                                    CONFIG.MMCM_CLKIN2_PERIOD {10.0}            \
+                                    CONFIG.MMCM_CLKOUT0_DIVIDE_F {23.875}       \
+                                    CONFIG.CLKOUT1_JITTER {150.988}             \
+                                    CONFIG.CLKOUT1_PHASE_ERROR {151.043}        \
+    ] [get_ips user_clock_gen] 
+  } elseif { $user_clk_freq == "100" } {
+    set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
+                                    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {100.710} \
+                                    CONFIG.CLKIN1_JITTER_PS {49.64}             \
+                                    CONFIG.MMCM_DIVCLK_DIVIDE {2}               \
+                                    CONFIG.MMCM_CLKFBOUT_MULT_F {11.875}        \
+                                    CONFIG.MMCM_CLKIN1_PERIOD {4.965}           \
+                                    CONFIG.MMCM_CLKIN2_PERIOD {10.0}            \
+                                    CONFIG.MMCM_CLKOUT0_DIVIDE_F {11.875}       \
+                                    CONFIG.CLKOUT1_JITTER {114.802}             \
+                                    CONFIG.CLKOUT1_PHASE_ERROR {87.006}         \
+    ] [get_ips user_clock_gen] 
+  } elseif { $user_clk_freq == "150" } {
+    set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
+                                    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {151.065} \
+                                    CONFIG.CLKIN1_JITTER_PS {49.64}             \
+                                    CONFIG.MMCM_DIVCLK_DIVIDE {1}               \
+                                    CONFIG.MMCM_CLKFBOUT_MULT_F {6.000}         \
+                                    CONFIG.MMCM_CLKIN1_PERIOD {4.965}           \
+                                    CONFIG.MMCM_CLKIN2_PERIOD {10.0}            \
+                                    CONFIG.MMCM_CLKOUT0_DIVIDE_F {8.000}        \
+                                    CONFIG.CLKOUT1_JITTER {97.589}              \
+                                    CONFIG.CLKOUT1_PHASE_ERROR {82.304}         \
+    ] [get_ips user_clock_gen] 
+  } elseif { $user_clk_freq == "250" } {
+    set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
+                                    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {251.775} \
+                                    CONFIG.CLKIN1_JITTER_PS {49.64}             \
+                                    CONFIG.MMCM_DIVCLK_DIVIDE {2}               \
+                                    CONFIG.MMCM_CLKFBOUT_MULT_F {11.875}        \
+                                    CONFIG.MMCM_CLKIN1_PERIOD {4.965}           \
+                                    CONFIG.MMCM_CLKIN2_PERIOD {10.0}            \
+                                    CONFIG.MMCM_CLKOUT0_DIVIDE_F {4.750}        \
+                                    CONFIG.CLKOUT1_JITTER {96.816}              \
+                                    CONFIG.CLKOUT1_PHASE_ERROR {87.006}         \
+    ] [get_ips user_clock_gen] 
+  } elseif { $user_clk_freq == "300" } {
+    set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
+                                    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {302.130} \
+                                    CONFIG.CLKIN1_JITTER_PS {49.64}             \
+                                    CONFIG.MMCM_DIVCLK_DIVIDE {1}               \
+                                    CONFIG.MMCM_CLKFBOUT_MULT_F {6.000}         \
+                                    CONFIG.MMCM_CLKIN1_PERIOD {4.965}           \
+                                    CONFIG.MMCM_CLKIN2_PERIOD {10.0}            \
+                                    CONFIG.MMCM_CLKOUT0_DIVIDE_F {4.000}        \
+                                    CONFIG.CLKOUT1_JITTER {85.433}              \
+                                    CONFIG.CLKOUT1_PHASE_ERROR {82.304}         \
+    ] [get_ips user_clock_gen] 
+  } elseif { $user_clk_freq == "350" } {
+    set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
+                                    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {352.485} \
+                                    CONFIG.CLKIN1_JITTER_PS {49.64}             \
+                                    CONFIG.MMCM_DIVCLK_DIVIDE {4}               \
+                                    CONFIG.MMCM_CLKFBOUT_MULT_F {23.625}        \
+                                    CONFIG.MMCM_CLKIN1_PERIOD {4.965}           \
+                                    CONFIG.MMCM_CLKIN2_PERIOD {10.0}            \
+                                    CONFIG.MMCM_CLKOUT0_DIVIDE_F {3.375}        \
+                                    CONFIG.CLKOUT1_JITTER {108.174}             \
+                                    CONFIG.CLKOUT1_PHASE_ERROR {152.728}        \
+    ] [get_ips user_clock_gen] 
+  } elseif { $user_clk_freq == "400" } {
+    set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
+                                    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {402.840} \
+                                    CONFIG.CLKIN1_JITTER_PS {49.64}             \
+                                    CONFIG.MMCM_DIVCLK_DIVIDE {1}               \
+                                    CONFIG.MMCM_CLKFBOUT_MULT_F {6.000}         \
+                                    CONFIG.MMCM_CLKIN1_PERIOD {4.965}           \
+                                    CONFIG.MMCM_CLKIN2_PERIOD {10.0}            \
+                                    CONFIG.MMCM_CLKOUT0_DIVIDE_F {3.000}        \
+                                    CONFIG.CLKOUT1_JITTER {80.853}              \
+                                    CONFIG.CLKOUT1_PHASE_ERROR {82.304}         \
+    ] [get_ips user_clock_gen] 
+  } else {
+    puts "                        ERROR: Unexpected clock frequency for action"
+    exit
+  }
+  set_property generate_synth_checkpoint false [get_files $ip_dir/user_clock_gen/user_clock_gen.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/user_clock_gen/user_clock_gen.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/user_clock_gen/user_clock_gen.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/user_clock_gen/user_clock_gen.xci] -no_script -sync -force  >> $log_file
+  export_simulation    -of_objects             [get_files $ip_dir/user_clock_gen/user_clock_gen.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+}
+
 
 #DDR4 create ddr4sdramm with ECC (AD9V3)
 if { $create_ddr4_ad9v3 == "TRUE" } {

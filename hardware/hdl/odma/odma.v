@@ -41,12 +41,21 @@ module odma #(
                 parameter    AXI_MM_ARUSER = 9,
                 parameter    AXI_MM_WUSER = 1,
                 parameter    AXI_MM_RUSER = 1,
-                parameter    AXI_MM_BUSER = 1
+                parameter    AXI_MM_BUSER = 1,
+                parameter    AXI_ST_USER = 8
 )
 (
                 //------ synchronous clock and reset signals -----// 
                 input                           clk               ,
                 input                           rst_n             ,
+                input                           action_interrupt  ,
+                output                          action_interrupt_ack,
+                input  [0008:0]                 action_interrupt_ctx,
+                input  [0063:0]                 action_interrupt_src,
+                output                          odma_interrupt    ,
+                input                           odma_interrupt_ack,
+                output [0008:0]                 odma_interrupt_ctx,
+                output [0063:0]                 odma_interrupt_src,
 
                 //-------------- LCL Read Interface --------------//
                 //-------------- Read Addr/Req Channel -----------//
@@ -84,6 +93,7 @@ module odma #(
                 input  [IDW - 1:0]              lcl_wr_rsp_axi_id ,
                 input                           lcl_wr_rsp_code   ,
                 output [0031:0]                 lcl_wr_rsp_ready  ,
+`ifndef ENABLE_ODMA_ST_MODE
                 //--------------- AXI4-MM Interface --------------//
                 //---------- Write Addr/Req Channel --------------//
                 output [AXI_MM_AW - 1:0]        axi_mm_awaddr     ,
@@ -134,55 +144,25 @@ module odma #(
                 input  [0001:0]                 axi_mm_rresp      ,         
                 input  [AXI_MM_RUSER - 1:0]     axi_mm_ruser      ,         
                 input                           axi_mm_rvalid     ,         
+`else
                 //--------------- AXI4-ST Interface --------------//
                 //---------- H2C AXI4-ST Channel 0 ---------------//
-                input                           axi_st_h2c_tready_0,
-                output                          axi_st_h2c_tlast_0 ,
-                output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_0 ,
-                output                          axi_st_h2c_tvalid_0,
-                output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_0 ,
-                //---------- H2C AXI4-ST Channel 1 ---------------//
-                input                           axi_st_h2c_tready_1,
-                output                          axi_st_h2c_tlast_1 ,
-                output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_1 ,
-                output                          axi_st_h2c_tvalid_1,
-                output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_1 ,
-                //---------- H2C AXI4-ST Channel 2 ---------------//
-                input                           axi_st_h2c_tready_2,
-                output                          axi_st_h2c_tlast_2 ,
-                output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_2 ,
-                output                          axi_st_h2c_tvalid_2,
-                output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_2 ,
-                //---------- H2C AXI4-ST Channel 3 ---------------//
-                input                           axi_st_h2c_tready_3,
-                output                          axi_st_h2c_tlast_3 ,
-                output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_3 ,
-                output                          axi_st_h2c_tvalid_3,
-                output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_3 ,
+                input                           m_axis_tready     ,
+                output                          m_axis_tlast      ,
+                output [AXI_ST_DW - 1:0]        m_axis_tdata      ,
+                output [AXI_ST_DW/8 - 1:0]      m_axis_tkeep      ,
+                output                          m_axis_tvalid     ,
+                output [IDW - 1:0]              m_axis_tid        ,
+                output [AXI_ST_USER - 1:0]      m_axis_tuser      ,
                 //---------- C2H AXI4-ST Channel 0 ---------------//
-                output                          axi_st_c2h_tready_0,
-                input                           axi_st_c2h_tlast_0 ,
-                input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_0 ,
-                input                           axi_st_c2h_tvalid_0,
-                input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_0 ,
-                //---------- C2H AXI4-ST Channel 1 ---------------//
-                output                          axi_st_c2h_tready_1,
-                input                           axi_st_c2h_tlast_1 ,
-                input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_1 ,
-                input                           axi_st_c2h_tvalid_1,
-                input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_1 ,
-                //---------- C2H AXI4-ST Channel 2 ---------------//
-                output                          axi_st_c2h_tready_2,
-                input                           axi_st_c2h_tlast_2 ,
-                input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_2 ,
-                input                           axi_st_c2h_tvalid_2,
-                input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_2 ,
-                //---------- C2H AXI4-ST Channel 3 ---------------//
-                output                          axi_st_c2h_tready_3,
-                input                           axi_st_c2h_tlast_3 ,
-                input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_3 ,
-                input                           axi_st_c2h_tvalid_3,
-                input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_3 ,
+                output                          s_axis_tready     ,
+                input                           s_axis_tlast      ,
+                input  [AXI_ST_DW - 1:0]        s_axis_tdata      ,
+                input  [AXI_ST_DW/8 - 1:0]      s_axis_tkeep      ,
+                input                           s_axis_tvalid     ,
+                input  [IDW - 1:0]              s_axis_tid        ,
+                input  [AXI_ST_USER - 1:0]      s_axis_tuser      ,
+`endif
                 //-------- Host AXI-Lite slave Interface ---------//
                 input                           h_s_axi_arvalid   ,        
                 input  [AXI_LITE_AW - 1:0]      h_s_axi_araddr    ,        
@@ -293,6 +273,10 @@ wire [0031:0]    cmp_ch0_dsc_cnt;
 wire [0031:0]    cmp_ch1_dsc_cnt;     
 wire [0031:0]    cmp_ch2_dsc_cnt;     
 wire [0031:0]    cmp_ch3_dsc_cnt;     
+wire [0063:0]    cmp_ch0_obj_handle;
+wire [0063:0]    cmp_ch1_obj_handle;
+wire [0063:0]    cmp_ch2_obj_handle;
+wire [0063:0]    cmp_ch3_obj_handle;
 
 //TODO: Tie to 0s for the first version
 assign cmp_ch0_wr_err = 5'b0;
@@ -419,7 +403,11 @@ odma_registers #(
   /*input  [31: 0 ]                */      .cmp_ch0_dsc_cnt      ( cmp_ch0_dsc_cnt      ),
   /*input  [31: 0 ]                */      .cmp_ch1_dsc_cnt      ( cmp_ch1_dsc_cnt      ),
   /*input  [31: 0 ]                */      .cmp_ch2_dsc_cnt      ( cmp_ch2_dsc_cnt      ),
-  /*input  [31: 0 ]                */      .cmp_ch3_dsc_cnt      ( cmp_ch3_dsc_cnt      ) 
+  /*input  [31: 0 ]                */      .cmp_ch3_dsc_cnt      ( cmp_ch3_dsc_cnt      ), 
+  /*output [63: 0 ]                */      .cmp_ch0_obj_handle   ( cmp_ch0_obj_handle   ),
+  /*output [63: 0 ]                */      .cmp_ch1_obj_handle   ( cmp_ch1_obj_handle   ),
+  /*output [63: 0 ]                */      .cmp_ch2_obj_handle   ( cmp_ch2_obj_handle   ),
+  /*output [63: 0 ]                */      .cmp_ch3_obj_handle   ( cmp_ch3_obj_handle   )
                                            );
                
 // Interface between dsc_manager and lcl_rd_arbiter
@@ -473,9 +461,9 @@ wire [0255:0]       a2h_st_dsc_data;
 wire [0003:0]       eng_buf_full;  
 wire [0003:0]       eng_buf_write;
 
-assign eng_buf_full = {h2a_st_dsc_ready, !h2a_mm_dsc_ready, a2h_st_dsc_ready, !a2h_mm_dsc_ready};
-assign a2h_st_dsc_ready = 1'b0;
-assign h2a_st_dsc_ready = 1'b0;
+assign eng_buf_full = {!h2a_st_dsc_ready, !h2a_mm_dsc_ready, !a2h_st_dsc_ready, !a2h_mm_dsc_ready};
+//assign a2h_st_dsc_ready = 1'b0;
+//assign h2a_st_dsc_ready = 1'b0;
 
 odma_descriptor_manager descriptor_manager (
          /*input                */         .clk                ( clk                    ),
@@ -590,23 +578,23 @@ wire                 a2h_st_cmp_resp_3;
 wire [0015:0]        eng_cmp_done;
 wire [0015:0]        eng_cmp_okay;
 
-assign h2a_st_cmp_valid_0 = 1'b0;
-assign h2a_st_cmp_valid_1 = 1'b0;
-assign h2a_st_cmp_valid_2 = 1'b0;
-assign h2a_st_cmp_valid_3 = 1'b0;
-assign a2h_st_cmp_valid_0 = 1'b0;
-assign a2h_st_cmp_valid_1 = 1'b0;
-assign a2h_st_cmp_valid_2 = 1'b0;
-assign a2h_st_cmp_valid_3 = 1'b0;
+//assign h2a_st_cmp_valid_0 = 1'b0;
+//assign h2a_st_cmp_valid_1 = 1'b0;
+//assign h2a_st_cmp_valid_2 = 1'b0;
+//assign h2a_st_cmp_valid_3 = 1'b0;
+//assign a2h_st_cmp_valid_0 = 1'b0;
+//assign a2h_st_cmp_valid_1 = 1'b0;
+//assign a2h_st_cmp_valid_2 = 1'b0;
+//assign a2h_st_cmp_valid_3 = 1'b0;
 
-assign h2a_st_cmp_data_0 = 64'b0;
-assign h2a_st_cmp_data_1 = 64'b0;
-assign h2a_st_cmp_data_2 = 64'b0;
-assign h2a_st_cmp_data_3 = 64'b0;
-assign a2h_st_cmp_data_0 = 64'b0;
-assign a2h_st_cmp_data_1 = 64'b0;
-assign a2h_st_cmp_data_2 = 64'b0;
-assign a2h_st_cmp_data_3 = 64'b0;
+//assign h2a_st_cmp_data_0 = 64'b0;
+//assign h2a_st_cmp_data_1 = 64'b0;
+//assign h2a_st_cmp_data_2 = 64'b0;
+//assign h2a_st_cmp_data_3 = 64'b0;
+//assign a2h_st_cmp_data_0 = 64'b0;
+//assign a2h_st_cmp_data_1 = 64'b0;
+//assign a2h_st_cmp_data_2 = 64'b0;
+//assign a2h_st_cmp_data_3 = 64'b0;
 
 assign eng_cmp_done = {
                        h2a_st_cmp_valid_3, 
@@ -662,6 +650,15 @@ wire [0031:0]        cmp_lcl_wr_rsp_ready;
 odma_completion_manager completion_manager (
          /*input                */          .clk               ( clk                  ),
          /*input                */          .rst_n             ( rst_n                ),
+         /*interrupt            */
+         /*input                */          .action_interrupt         ( action_interrupt    ),
+         /*input [0008:0]        */         .action_interrupt_ctx     ( action_interrupt_ctx),
+         /*input [0063:0]        */         .action_interrupt_src     ( action_interrupt_src),
+         /*output                */         .action_interrupt_ack     ( action_interrupt_ack),
+         /*output                */         .odma_interrupt           ( odma_interrupt      ),
+         /*output [0008:0]       */         .odma_interrupt_ctx       ( odma_interrupt_ctx  ),
+         /*output [0063:0]       */         .odma_interrupt_src       ( odma_interrupt_src  ),
+         /*input                 */         .odma_interrupt_ack       ( odma_interrupt_ack  ),
          /*configuration        */
          /*input      [0063:0]  */          .completion_addr0  ( cmp_ch0_poll_wb_addr ),
          /*input      [0031:0]  */          .completion_size0  ( cmp_ch0_poll_wb_size ),
@@ -673,6 +670,10 @@ odma_completion_manager completion_manager (
          /*input      [0031:0]  */          .completion_size3  ( cmp_ch3_poll_wb_size ),
          /*output     [0063:0]  */          .completion_error  (                      ),
          /*output     [0003:0]  */          .completion_done   (                      ),
+         /*input      [0063:0]  */          .cmp_ch0_obj_handle( cmp_ch0_obj_handle   ),
+         /*input      [0063:0]  */          .cmp_ch1_obj_handle( cmp_ch1_obj_handle   ),
+         /*input      [0063:0]  */          .cmp_ch2_obj_handle( cmp_ch2_obj_handle   ),
+         /*input      [0063:0]  */          .cmp_ch3_obj_handle( cmp_ch3_obj_handle   ),
          /*engine               */
          /*input      [0015:0]  */          .eng_cmp_done      ( eng_cmp_done         ),
          /*output     [0015:0]  */          .eng_cmp_okay      ( eng_cmp_okay         ),
@@ -732,82 +733,181 @@ wire                mm_lcl_rd_rsp_code;
 wire [0003:0]       mm_lcl_rd_rsp_ready;  
 wire [0003:0]       mm_lcl_rd_rsp_ready_hint;  
 
-odma_h2a_mm_engine #(
-                     .AXI_ID_WIDTH ( IDW ),
-                     .AXI_ADDR_WIDTH ( AXI_MM_AW ),
-                     .AXI_DATA_WIDTH ( AXI_MM_DW ),
-                     .AXI_WUSER_WIDTH ( AXI_MM_WUSER ),
-                     .AXI_BUSER_WIDTH ( AXI_MM_BUSER ),
-                     .AXI_AWUSER_WIDTH ( AXI_MM_AWUSER )
-                    )
-      h2a_mm_engine (
-         /*input                              */  .clk                ( clk                   ),
-         /*input                              */  .rst_n              ( rst_n                 ),
-         /* Descriptor Interface */
-         /*output                             */  .dsc_ready          ( h2a_mm_dsc_ready      ),
-         /*input                              */  .dsc_valid          ( eng_buf_write[2]      ),
-         /*input      [0255:0]                */  .dsc_data           ( h2a_mm_dsc_data       ),
-         /*Completion Interface */
-         /*output reg                         */  .cmp_valid_0        ( h2a_mm_cmp_valid_0    ),
-         /*output reg [0511:0]                */  .cmp_data_0         ( h2a_mm_cmp_data_0     ),
-         /*input                              */  .cmp_resp_0         ( h2a_mm_cmp_resp_0     ),
-         /*output reg                         */  .cmp_valid_1        ( h2a_mm_cmp_valid_1    ),
-         /*output reg [0511:0]                */  .cmp_data_1         ( h2a_mm_cmp_data_1     ),
-         /*input                              */  .cmp_resp_1         ( h2a_mm_cmp_resp_1     ),
-         /*output reg                         */  .cmp_valid_2        ( h2a_mm_cmp_valid_2    ),
-         /*output reg [0511:0]                */  .cmp_data_2         ( h2a_mm_cmp_data_2     ),
-         /*input                              */  .cmp_resp_2         ( h2a_mm_cmp_resp_2     ),
-         /*output reg                         */  .cmp_valid_3        ( h2a_mm_cmp_valid_3    ),
-         /*output reg [0511:0]                */  .cmp_data_3         ( h2a_mm_cmp_data_3     ),
-         /*input                              */  .cmp_resp_3         ( h2a_mm_cmp_resp_3     ),
-         /*LCL Read Interface */ 
-         /*Read Addr/Req Channel*/
-         /*output                             */  .lcl_rd_valid       ( mm_lcl_rd_valid       ),
-         /*output     [0063:0]                */  .lcl_rd_ea          ( mm_lcl_rd_ea          ),
-         /*output     [AXI_ID_WIDTH - 1:0]    */  .lcl_rd_axi_id      ( mm_lcl_rd_axi_id      ),
-         /*output                             */  .lcl_rd_first       ( mm_lcl_rd_first       ),
-         /*output                             */  .lcl_rd_last        ( mm_lcl_rd_last        ),
-         /*output     [0127:0]                */  .lcl_rd_be          ( mm_lcl_rd_be          ),
-         /*output     [0008:0]                */  .lcl_rd_ctx         ( mm_lcl_rd_ctx         ),
-         /*output                             */  .lcl_rd_ctx_valid   ( mm_lcl_rd_ctx_valid   ),
-         /*input                              */  .lcl_rd_ready       ( mm_lcl_rd_ready       ),
-         /*Read Data/Resp Channel*/                                                       
-         /*input                              */  .lcl_rd_data_valid  ( mm_lcl_rd_data_valid  ),
-         /*input      [1023:0]                */  .lcl_rd_data        ( mm_lcl_rd_data        ),
-         /*input      [AXI_ID_WIDTH - 1:0]    */  .lcl_rd_data_axi_id ( mm_lcl_rd_data_axi_id ),
-         /*input                              */  .lcl_rd_data_last   ( mm_lcl_rd_data_last   ),
-         /*input                              */  .lcl_rd_rsp_code    ( mm_lcl_rd_rsp_code    ),
-         /*output                             */  .lcl_rd_rsp_ready   ( mm_lcl_rd_rsp_ready   ),
-         /*output                             */  .lcl_rd_rsp_ready_hint   ( mm_lcl_rd_rsp_ready_hint   ),
-         /*AXI4-MM Write Interface */
-         /*Write Addr/Req Channel  */
-         /*output reg [AXI_ADDR_WIDTH - 1:0]  */  .m_axi_awaddr       ( axi_mm_awaddr         ),
-         /*output reg [AXI_ID_WIDTH - 1:0]    */  .m_axi_awid         ( axi_mm_awid           ),
-         /*output reg [0007:0]                */  .m_axi_awlen        ( axi_mm_awlen          ),
-         /*output     [0002:0]                */  .m_axi_awsize       ( axi_mm_awsize         ),
-         /*output     [0001:0]                */  .m_axi_awburst      ( axi_mm_awburst        ),
-         /*output     [0002:0]                */  .m_axi_awprot       ( axi_mm_awprot         ),
-         /*output     [0003:0]                */  .m_axi_awqos        ( axi_mm_awqos          ),
-         /*output     [0003:0]                */  .m_axi_awregion     ( axi_mm_awregion       ),
-         /*output     [AXI_WUSER_AWIDTH - 1:0] */ .m_axi_awuser       ( axi_mm_awuser         ),
-         /*output                             */  .m_axi_awvalid      ( axi_mm_awvalid        ),
-         /*output                             */  .m_axi_awlock       ( axi_mm_awlock         ),
-         /*output     [0003:0]                */  .m_axi_awcache      ( axi_mm_awcache        ),
-         /*input                              */  .m_axi_awready      ( axi_mm_awready        ),
-         /*Write Data Channel */                                                   
-         /*output reg [AXI_DATA_WIDTH - 1:0]  */  .m_axi_wdata        ( axi_mm_wdata          ),
-         /*output reg                         */  .m_axi_wlast        ( axi_mm_wlast          ),
-         /*output     [AXI_DATA_WIDTH/8 - 1:0]*/  .m_axi_wstrb        ( axi_mm_wstrb          ),
-         /*output reg                         */  .m_axi_wvalid       ( axi_mm_wvalid         ),
-         /*output     [AXI_WUSER_WIDTH - 1:0] */  .m_axi_wuser        ( axi_mm_wuser          ),
-         /*input                              */  .m_axi_wready       ( axi_mm_wready         ),
-         /*Write Response Channel */                                               
-         /*input                              */  .m_axi_bvalid       ( axi_mm_bvalid         ),
-         /*input      [0001:0]                */  .m_axi_bresp        ( axi_mm_bresp          ),
-         /*input      [AXI_ID_WIDTH - 1:0]    */  .m_axi_bid          ( axi_mm_bid            ),
-         /*input      [AXI_BUSER_WIDTH - 1:0] */  .m_axi_buser        ( axi_mm_buser          ),
-         /*output                             */  .m_axi_bready       ( axi_mm_bready         ) 
-      );
+// Interface between h2a_st_engine and lcl_rd_arbiter 
+wire                st_lcl_rd_valid;      
+wire [0063:0]       st_lcl_rd_ea;         
+wire [IDW - 1:0]    st_lcl_rd_axi_id;     
+wire                st_lcl_rd_first;      
+wire                st_lcl_rd_last;       
+wire [0127:0]       st_lcl_rd_be;         
+wire [0008:0]       st_lcl_rd_ctx;        
+wire                st_lcl_rd_ctx_valid;  
+wire                st_lcl_rd_ready;      
+wire                st_lcl_rd_data_valid; 
+wire [1023:0]       st_lcl_rd_data;       
+wire [IDW - 1:0]    st_lcl_rd_data_axi_id;
+wire                st_lcl_rd_data_last;  
+wire                st_lcl_rd_rsp_code;   
+wire                st_lcl_rd_rsp_ready;  
+wire                st_lcl_rd_rsp_ready_hint;  
+
+
+`ifndef ENABLE_ODMA_ST_MODE
+    assign st_lcl_rd_valid = 1'b0;    
+    assign st_lcl_rd_ea = 64'h0;      
+    assign st_lcl_rd_axi_id = 5'b0;  
+    assign st_lcl_rd_first = 1'b0;   
+    assign st_lcl_rd_last = 1'b0;    
+    assign st_lcl_rd_be = 128'h0;      
+    assign st_lcl_rd_ctx = 9'b0;     
+    assign st_lcl_rd_ctx_valid = 1'b0;
+    assign st_lcl_rd_rsp_ready = 1'b0;
+    assign st_lcl_rd_rsp_ready_hint = 1'b0;
+`else
+    assign mm_lcl_rd_valid = 1'b0;    
+    assign mm_lcl_rd_ea = 64'h0;      
+    assign mm_lcl_rd_axi_id = 5'b0;  
+    assign mm_lcl_rd_first = 1'b0;   
+    assign mm_lcl_rd_last = 1'b0;    
+    assign mm_lcl_rd_be = 128'h0;      
+    assign mm_lcl_rd_ctx = 9'b0;     
+    assign mm_lcl_rd_ctx_valid = 1'b0;
+    assign mm_lcl_rd_rsp_ready = 4'b0;
+    assign mm_lcl_rd_rsp_ready_hint = 4'b0;
+`endif
+
+`ifndef ENABLE_ODMA_ST_MODE
+    odma_h2a_mm_engine #(
+                         .AXI_ID_WIDTH ( IDW ),
+                         .AXI_ADDR_WIDTH ( AXI_MM_AW ),
+                         .AXI_DATA_WIDTH ( AXI_MM_DW ),
+                         .AXI_WUSER_WIDTH ( AXI_MM_WUSER ),
+                         .AXI_BUSER_WIDTH ( AXI_MM_BUSER ),
+                         .AXI_AWUSER_WIDTH ( AXI_MM_AWUSER )
+                        )
+          h2a_mm_engine (
+             /*input                              */  .clk                ( clk                   ),
+             /*input                              */  .rst_n              ( rst_n                 ),
+             /* Descriptor Interface */
+             /*output                             */  .dsc_ready          ( h2a_mm_dsc_ready      ),
+             /*input                              */  .dsc_valid          ( eng_buf_write[2]      ),
+             /*input      [0255:0]                */  .dsc_data           ( h2a_mm_dsc_data       ),
+             /*Completion Interface */
+             /*output reg                         */  .cmp_valid_0        ( h2a_mm_cmp_valid_0    ),
+             /*output reg [0511:0]                */  .cmp_data_0         ( h2a_mm_cmp_data_0     ),
+             /*input                              */  .cmp_resp_0         ( h2a_mm_cmp_resp_0     ),
+             /*output reg                         */  .cmp_valid_1        ( h2a_mm_cmp_valid_1    ),
+             /*output reg [0511:0]                */  .cmp_data_1         ( h2a_mm_cmp_data_1     ),
+             /*input                              */  .cmp_resp_1         ( h2a_mm_cmp_resp_1     ),
+             /*output reg                         */  .cmp_valid_2        ( h2a_mm_cmp_valid_2    ),
+             /*output reg [0511:0]                */  .cmp_data_2         ( h2a_mm_cmp_data_2     ),
+             /*input                              */  .cmp_resp_2         ( h2a_mm_cmp_resp_2     ),
+             /*output reg                         */  .cmp_valid_3        ( h2a_mm_cmp_valid_3    ),
+             /*output reg [0511:0]                */  .cmp_data_3         ( h2a_mm_cmp_data_3     ),
+             /*input                              */  .cmp_resp_3         ( h2a_mm_cmp_resp_3     ),
+             /*LCL Read Interface */ 
+             /*Read Addr/Req Channel*/
+             /*output                             */  .lcl_rd_valid       ( mm_lcl_rd_valid       ),
+             /*output     [0063:0]                */  .lcl_rd_ea          ( mm_lcl_rd_ea          ),
+             /*output     [AXI_ID_WIDTH - 1:0]    */  .lcl_rd_axi_id      ( mm_lcl_rd_axi_id      ),
+             /*output                             */  .lcl_rd_first       ( mm_lcl_rd_first       ),
+             /*output                             */  .lcl_rd_last        ( mm_lcl_rd_last        ),
+             /*output     [0127:0]                */  .lcl_rd_be          ( mm_lcl_rd_be          ),
+             /*output     [0008:0]                */  .lcl_rd_ctx         ( mm_lcl_rd_ctx         ),
+             /*output                             */  .lcl_rd_ctx_valid   ( mm_lcl_rd_ctx_valid   ),
+             /*input                              */  .lcl_rd_ready       ( mm_lcl_rd_ready       ),
+             /*Read Data/Resp Channel*/                                                       
+             /*input                              */  .lcl_rd_data_valid  ( mm_lcl_rd_data_valid  ),
+             /*input      [1023:0]                */  .lcl_rd_data        ( mm_lcl_rd_data        ),
+             /*input      [AXI_ID_WIDTH - 1:0]    */  .lcl_rd_data_axi_id ( mm_lcl_rd_data_axi_id ),
+             /*input                              */  .lcl_rd_data_last   ( mm_lcl_rd_data_last   ),
+             /*input                              */  .lcl_rd_rsp_code    ( mm_lcl_rd_rsp_code    ),
+             /*output                             */  .lcl_rd_rsp_ready   ( mm_lcl_rd_rsp_ready   ),
+             /*output                             */  .lcl_rd_rsp_ready_hint   ( mm_lcl_rd_rsp_ready_hint   ),
+             /*AXI4-MM Write Interface */
+             /*Write Addr/Req Channel  */
+             /*output reg [AXI_ADDR_WIDTH - 1:0]  */  .m_axi_awaddr       ( axi_mm_awaddr         ),
+             /*output reg [AXI_ID_WIDTH - 1:0]    */  .m_axi_awid         ( axi_mm_awid           ),
+             /*output reg [0007:0]                */  .m_axi_awlen        ( axi_mm_awlen          ),
+             /*output     [0002:0]                */  .m_axi_awsize       ( axi_mm_awsize         ),
+             /*output     [0001:0]                */  .m_axi_awburst      ( axi_mm_awburst        ),
+             /*output     [0002:0]                */  .m_axi_awprot       ( axi_mm_awprot         ),
+             /*output     [0003:0]                */  .m_axi_awqos        ( axi_mm_awqos          ),
+             /*output     [0003:0]                */  .m_axi_awregion     ( axi_mm_awregion       ),
+             /*output     [AXI_WUSER_AWIDTH - 1:0] */ .m_axi_awuser       ( axi_mm_awuser         ),
+             /*output                             */  .m_axi_awvalid      ( axi_mm_awvalid        ),
+             /*output                             */  .m_axi_awlock       ( axi_mm_awlock         ),
+             /*output     [0003:0]                */  .m_axi_awcache      ( axi_mm_awcache        ),
+             /*input                              */  .m_axi_awready      ( axi_mm_awready        ),
+             /*Write Data Channel */                                                   
+             /*output reg [AXI_DATA_WIDTH - 1:0]  */  .m_axi_wdata        ( axi_mm_wdata          ),
+             /*output reg                         */  .m_axi_wlast        ( axi_mm_wlast          ),
+             /*output     [AXI_DATA_WIDTH/8 - 1:0]*/  .m_axi_wstrb        ( axi_mm_wstrb          ),
+             /*output reg                         */  .m_axi_wvalid       ( axi_mm_wvalid         ),
+             /*output     [AXI_WUSER_WIDTH - 1:0] */  .m_axi_wuser        ( axi_mm_wuser          ),
+             /*input                              */  .m_axi_wready       ( axi_mm_wready         ),
+             /*Write Response Channel */                                               
+             /*input                              */  .m_axi_bvalid       ( axi_mm_bvalid         ),
+             /*input      [0001:0]                */  .m_axi_bresp        ( axi_mm_bresp          ),
+             /*input      [AXI_ID_WIDTH - 1:0]    */  .m_axi_bid          ( axi_mm_bid            ),
+             /*input      [AXI_BUSER_WIDTH - 1:0] */  .m_axi_buser        ( axi_mm_buser          ),
+             /*output                             */  .m_axi_bready       ( axi_mm_bready         ) 
+          );
+`else
+    odma_h2a_st_engine #(
+                         .AXIS_ID_WIDTH ( IDW ),
+                         .AXIS_DATA_WIDTH ( AXI_ST_DW ),
+                         .AXIS_USER_WIDTH ( AXI_ST_USER )
+                        )
+          h2a_st_engine (
+             /*input                              */  .clk                ( clk                   ),
+             /*input                              */  .rst_n              ( rst_n                 ),
+             /* Descriptor Interface */
+             /*output                             */  .dsc_ready          ( h2a_st_dsc_ready      ),
+             /*input                              */  .dsc_valid          ( eng_buf_write[3]      ),
+             /*input      [0255:0]                */  .dsc_data           ( h2a_st_dsc_data       ),
+             /*Completion Interface */
+             /*output reg                         */  .cmp_valid_0        ( h2a_st_cmp_valid_0    ),
+             /*output reg [0511:0]                */  .cmp_data_0         ( h2a_st_cmp_data_0     ),
+             /*input                              */  .cmp_resp_0         ( h2a_st_cmp_resp_0     ),
+             /*output reg                         */  .cmp_valid_1        ( h2a_st_cmp_valid_1    ),
+             /*output reg [0511:0]                */  .cmp_data_1         ( h2a_st_cmp_data_1     ),
+             /*input                              */  .cmp_resp_1         ( h2a_st_cmp_resp_1     ),
+             /*output reg                         */  .cmp_valid_2        ( h2a_st_cmp_valid_2    ),
+             /*output reg [0511:0]                */  .cmp_data_2         ( h2a_st_cmp_data_2     ),
+             /*input                              */  .cmp_resp_2         ( h2a_st_cmp_resp_2     ),
+             /*output reg                         */  .cmp_valid_3        ( h2a_st_cmp_valid_3    ),
+             /*output reg [0511:0]                */  .cmp_data_3         ( h2a_st_cmp_data_3     ),
+             /*input                              */  .cmp_resp_3         ( h2a_st_cmp_resp_3     ),
+             /*LCL Read Interface */ 
+             /*Read Addr/Req Channel*/
+             /*output                             */  .lcl_rd_valid       ( st_lcl_rd_valid       ),
+             /*output     [0063:0]                */  .lcl_rd_ea          ( st_lcl_rd_ea          ),
+             /*output     [AXI_ID_WIDTH - 1:0]    */  .lcl_rd_axi_id      ( st_lcl_rd_axi_id      ),
+             /*output                             */  .lcl_rd_first       ( st_lcl_rd_first       ),
+             /*output                             */  .lcl_rd_last        ( st_lcl_rd_last        ),
+             /*output     [0127:0]                */  .lcl_rd_be          ( st_lcl_rd_be          ),
+             /*output     [0008:0]                */  .lcl_rd_ctx         ( st_lcl_rd_ctx         ),
+             /*output                             */  .lcl_rd_ctx_valid   ( st_lcl_rd_ctx_valid   ),
+             /*input                              */  .lcl_rd_ready       ( st_lcl_rd_ready       ),
+             /*Read Data/Resp Channel*/                                                       
+             /*input                              */  .lcl_rd_data_valid  ( st_lcl_rd_data_valid  ),
+             /*input      [1023:0]                */  .lcl_rd_data        ( st_lcl_rd_data        ),
+             /*input      [AXI_ID_WIDTH - 1:0]    */  .lcl_rd_data_axi_id ( st_lcl_rd_data_axi_id ),
+             /*input                              */  .lcl_rd_data_last   ( st_lcl_rd_data_last   ),
+             /*input                              */  .lcl_rd_rsp_code    ( st_lcl_rd_rsp_code    ),
+             /*output                             */  .lcl_rd_rsp_ready   ( st_lcl_rd_rsp_ready   ),
+             /*output                             */  .lcl_rd_rsp_ready_hint  ( st_lcl_rd_rsp_ready_hint   ),
+             /*AXI4-ST Write Interface */
+             /*output                             */  .m_axis_tvalid      ( m_axis_tvalid         ), 
+             /*input                              */  .m_axis_tready      ( m_axis_tready         ), 
+             /*output    [AXIS_DATA_WIDTH - 1:0]  */  .m_axis_tdata       ( m_axis_tdata          ),
+             /*output    [AXIS_DATA_WIDTH/8 - 1:0]*/  .m_axis_tkeep       ( m_axis_tkeep          ),
+             /*output                             */  .m_axis_tlast       ( m_axis_tlast          ), 
+             /*output    [AXIS_ID_WIDTH - 1:0]    */  .m_axis_tid         ( m_axis_tid            ),
+             /*output    [AXIS_USER_WIDTH - 1:0]  */  .m_axis_tuser       ( m_axis_tuser          )
+          );
+`endif
 
 // Interface between a2h_mm_engine and lcl_wr_arbiter 
 wire                 mm_lcl_wr_valid;     
@@ -823,99 +923,6 @@ wire [IDW - 1:0]     mm_lcl_wr_rsp_axi_id;
 wire                 mm_lcl_wr_rsp_code;  
 wire                 mm_lcl_wr_rsp_ready; 
 
-odma_a2h_mm_engine #(
-                    .AXI_ID_WIDTH     ( IDW ),
-                    .AXI_ADDR_WIDTH   ( AXI_MM_AW ),
-                    .AXI_DATA_WIDTH   ( AXI_MM_DW ),
-                    .AXI_AWUSER_WIDTH ( AXI_MM_AWUSER ),
-                    .AXI_ARUSER_WIDTH ( AXI_MM_ARUSER ),
-                    .AXI_WUSER_WIDTH  ( AXI_MM_WUSER ),
-                    .AXI_RUSER_WIDTH  ( AXI_MM_RUSER ),
-                    .AXI_BUSER_WIDTH  ( AXI_MM_BUSER )
-                    )
-      a2h_mm_engine (
-         /*input                              */  .clk               ( clk                ),
-         /*input                              */  .rst_n             ( rst_n              ),
-         /* dsc engine interface              */
-         /*input                              */  .dsc_valid         ( eng_buf_write[0]   ),
-         /*input  [255 : 0]                   */  .dsc_data          ( a2h_mm_dsc_data    ),
-         /*output                             */  .dsc_ready         ( a2h_mm_dsc_ready   ),
-         /* AXI4 read addr interface          */
-         /*output [AXI_ADDR_WIDTH-1 : 0]      */  .axi_araddr        ( axi_mm_araddr      ),
-         /*output [1 : 0]                     */  .axi_arburst       ( axi_mm_arburst     ),
-         /*output [3 : 0]                     */  .axi_arcache       ( axi_mm_arcache     ),
-         /*output [AXI_ID_WIDTH-1 : 0]        */  .axi_arid          ( axi_mm_arid        ),
-         /*output [7 : 0]                     */  .axi_arlen         ( axi_mm_arlen       ),
-         /*output [1 : 0]                     */  .axi_arlock        ( axi_mm_arlock      ),
-         /*output [2 : 0]                     */  .axi_arprot        ( axi_mm_arprot      ),
-         /*output [3 : 0]                     */  .axi_arqos         ( axi_mm_arqos       ),
-         /*input                              */  .axi_arready       ( axi_mm_arready     ),
-         /*output [3 : 0]                     */  .axi_arregion      ( axi_mm_arregion    ),
-         /*output [2 : 0]                     */  .axi_arsize        ( axi_mm_arsize      ),
-         /*output [AXI_ARUSER_WIDTH-1 : 0]    */  .axi_aruser        ( axi_mm_aruser      ),
-         /*output                             */  .axi_arvalid       ( axi_mm_arvalid     ),
-         /* AXI4 read data interface          */                                          
-         /*input  [AXI_DATA_WIDTH-1 : 0 ]     */  .axi_rdata         ( axi_mm_rdata       ),
-         /*input  [AXI_ID_WIDTH-1 : 0 ]       */  .axi_rid           ( axi_mm_rid         ),
-         /*input                              */  .axi_rlast         ( axi_mm_rlast       ),
-         /*output                             */  .axi_rready        ( axi_mm_rready      ),
-         /*input  [1 : 0 ]                    */  .axi_rresp         ( axi_mm_rresp       ),
-         /*input  [AXI_RUSER_WIDTH-1 : 0 ]    */  .axi_ruser         ( axi_mm_ruser       ),
-         /*input                              */  .axi_rvalid        ( axi_mm_rvalid      ),
-         /* local write interface             */
-         /*output                             */  .lcl_wr_valid      ( mm_lcl_wr_valid       ),
-         /*output [63 : 0]                    */  .lcl_wr_ea         ( mm_lcl_wr_ea          ),
-         /*output [AXI_ID_WIDTH-1 : 0]        */  .lcl_wr_axi_id     ( mm_lcl_wr_axi_id      ),
-         /*output [127 : 0]                   */  .lcl_wr_be         ( mm_lcl_wr_be          ),
-         /*output                             */  .lcl_wr_first      ( mm_lcl_wr_first       ),
-         /*output                             */  .lcl_wr_last       ( mm_lcl_wr_last        ),
-         /*output [1023 : 0]                  */  .lcl_wr_data       ( mm_lcl_wr_data        ),
-         /*input                              */  .lcl_wr_ready      ( mm_lcl_wr_ready       ),
-         /* local write context interface     */                                        
-         /*output                             */  .lcl_wr_ctx_valid  ( mm_lcl_wr_ctx_valid   ),
-         /*output [8 : 0]                     */  .lcl_wr_ctx        ( mm_lcl_wr_ctx         ),
-         /* local write rsp interface         */                                        
-         /*input                              */  .lcl_wr_rsp_valid  ( mm_lcl_wr_rsp_valid   ),
-         /*input  [AXI_ID_WIDTH-1 : 0]        */  .lcl_wr_rsp_axi_id ( mm_lcl_wr_rsp_axi_id  ),
-         /*input                              */  .lcl_wr_rsp_code   ( mm_lcl_wr_rsp_code    ),
-         /*output                             */  .lcl_wr_rsp_ready  ( mm_lcl_wr_rsp_ready   ),
-         /* cmp engine interface              */ 
-         /*output                             */  .dsc_ch0_cmp_valid ( a2h_mm_cmp_valid_0 ),
-         /*output [511 : 0]                   */  .dsc_ch0_cmp_data  ( a2h_mm_cmp_data_0  ),
-         /*input                              */  .dsc_ch0_cmp_ready ( a2h_mm_cmp_resp_0  ),
-         /*output                             */  .dsc_ch1_cmp_valid ( a2h_mm_cmp_valid_1 ),
-         /*output [511 : 0]                   */  .dsc_ch1_cmp_data  ( a2h_mm_cmp_data_1  ),
-         /*input                              */  .dsc_ch1_cmp_ready ( a2h_mm_cmp_resp_1  ),
-         /*output                             */  .dsc_ch2_cmp_valid ( a2h_mm_cmp_valid_2 ),
-         /*output [511 : 0]                   */  .dsc_ch2_cmp_data  ( a2h_mm_cmp_data_2  ),
-         /*input                              */  .dsc_ch2_cmp_ready ( a2h_mm_cmp_resp_2  ),
-         /*output                             */  .dsc_ch3_cmp_valid ( a2h_mm_cmp_valid_3 ),
-         /*output [511 : 0]                   */  .dsc_ch3_cmp_data  ( a2h_mm_cmp_data_3  ),
-         /*input                              */  .dsc_ch3_cmp_ready ( a2h_mm_cmp_resp_3  ) 
-                                              );
-
-// Interface between h2a_st_engine and lcl_rd_arbiter 
-wire                st_lcl_rd_valid;      
-wire [0063:0]        st_lcl_rd_ea;         
-wire [IDW - 1:0]    st_lcl_rd_axi_id;     
-wire                st_lcl_rd_first;      
-wire                st_lcl_rd_last;       
-wire [0127:0]       st_lcl_rd_be;         
-wire [0008:0]        st_lcl_rd_ctx;        
-wire                st_lcl_rd_ctx_valid;  
-wire                st_lcl_rd_ready;      
-wire                st_lcl_rd_data_valid; 
-wire [1023:0]       st_lcl_rd_data;       
-wire [IDW - 1:0]    st_lcl_rd_data_axi_id;
-wire                st_lcl_rd_data_last;  
-wire                st_lcl_rd_rsp_code;   
-wire                st_lcl_rd_rsp_ready;  
-wire                st_lcl_rd_rsp_ready_hint;  
-
-// TODO
-// odma_h2a_st_engine h2a_st_engine (
-//                                   );
-
 // Interface between a2h_st_engine and lcl_wr_arbiter 
 wire                 st_lcl_wr_valid;     
 wire [0063:0]        st_lcl_wr_ea;        
@@ -930,20 +937,155 @@ wire [IDW - 1:0]     st_lcl_wr_rsp_axi_id;
 wire                 st_lcl_wr_rsp_code;  
 wire [0031:0]        st_lcl_wr_rsp_ready; 
 
-assign st_lcl_rd_valid = 1'b0;    
-assign st_lcl_rd_ea = 64'h0;      
-assign st_lcl_rd_axi_id = 5'b0;  
-assign st_lcl_rd_first = 1'b0;   
-assign st_lcl_rd_last = 1'b0;    
-assign st_lcl_rd_be = 128'h0;      
-assign st_lcl_rd_ctx = 9'b0;     
-assign st_lcl_rd_ctx_valid = 1'b0;
-assign st_lcl_rd_rsp_ready = 1'b0;
-assign st_lcl_rd_rsp_ready_hint = 1'b0;
+`ifndef ENABLE_ODMA_ST_MODE
+    assign st_lcl_wr_valid = 1'b0;   
+    assign st_lcl_wr_ea = 64'h0;      
+    assign st_lcl_wr_axi_id = 5'b0;  
+    assign st_lcl_wr_be = 128'h0;      
+    assign st_lcl_wr_first = 1'b0;   
+    assign st_lcl_wr_last = 1'b0;    
+    assign st_lcl_wr_data = 1024'b0;    
+    assign st_lcl_wr_ctx = 9'b0;     
+    assign st_lcl_wr_ctx_valid = 1'b0;
+    assign st_lcl_wr_rsp_ready = 1'b0;   
+`else
+    assign mm_lcl_wr_valid = 1'b0;   
+    assign mm_lcl_wr_ea = 64'h0;      
+    assign mm_lcl_wr_axi_id = 5'b0;  
+    assign mm_lcl_wr_be = 128'h0;      
+    assign mm_lcl_wr_first = 1'b0;   
+    assign mm_lcl_wr_last = 1'b0;    
+    assign mm_lcl_wr_data = 1024'b0;    
+    assign mm_lcl_wr_ctx = 9'b0;     
+    assign mm_lcl_wr_ctx_valid = 1'b0;
+    assign mm_lcl_wr_rsp_ready = 1'b0;   
+`endif
 
-// TODO
-// odma_a2h_st_engine a2h_st_engine (
-//                                   );
+`ifndef ENABLE_ODMA_ST_MODE
+    odma_a2h_mm_engine #(
+                        .AXI_ID_WIDTH     ( IDW ),
+                        .AXI_ADDR_WIDTH   ( AXI_MM_AW ),
+                        .AXI_DATA_WIDTH   ( AXI_MM_DW ),
+                        .AXI_AWUSER_WIDTH ( AXI_MM_AWUSER ),
+                        .AXI_ARUSER_WIDTH ( AXI_MM_ARUSER ),
+                        .AXI_WUSER_WIDTH  ( AXI_MM_WUSER ),
+                        .AXI_RUSER_WIDTH  ( AXI_MM_RUSER ),
+                        .AXI_BUSER_WIDTH  ( AXI_MM_BUSER )
+                        )
+          a2h_mm_engine (
+             /*input                              */  .clk               ( clk                ),
+             /*input                              */  .rst_n             ( rst_n              ),
+             /* dsc engine interface              */
+             /*input                              */  .dsc_valid         ( eng_buf_write[0]   ),
+             /*input  [255 : 0]                   */  .dsc_data          ( a2h_mm_dsc_data    ),
+             /*output                             */  .dsc_ready         ( a2h_mm_dsc_ready   ),
+             /* AXI4 read addr interface          */
+             /*output [AXI_ADDR_WIDTH-1 : 0]      */  .axi_araddr        ( axi_mm_araddr      ),
+             /*output [1 : 0]                     */  .axi_arburst       ( axi_mm_arburst     ),
+             /*output [3 : 0]                     */  .axi_arcache       ( axi_mm_arcache     ),
+             /*output [AXI_ID_WIDTH-1 : 0]        */  .axi_arid          ( axi_mm_arid        ),
+             /*output [7 : 0]                     */  .axi_arlen         ( axi_mm_arlen       ),
+             /*output [1 : 0]                     */  .axi_arlock        ( axi_mm_arlock      ),
+             /*output [2 : 0]                     */  .axi_arprot        ( axi_mm_arprot      ),
+             /*output [3 : 0]                     */  .axi_arqos         ( axi_mm_arqos       ),
+             /*input                              */  .axi_arready       ( axi_mm_arready     ),
+             /*output [3 : 0]                     */  .axi_arregion      ( axi_mm_arregion    ),
+             /*output [2 : 0]                     */  .axi_arsize        ( axi_mm_arsize      ),
+             /*output [AXI_ARUSER_WIDTH-1 : 0]    */  .axi_aruser        ( axi_mm_aruser      ),
+             /*output                             */  .axi_arvalid       ( axi_mm_arvalid     ),
+             /* AXI4 read data interface          */                                          
+             /*input  [AXI_DATA_WIDTH-1 : 0 ]     */  .axi_rdata         ( axi_mm_rdata       ),
+             /*input  [AXI_ID_WIDTH-1 : 0 ]       */  .axi_rid           ( axi_mm_rid         ),
+             /*input                              */  .axi_rlast         ( axi_mm_rlast       ),
+             /*output                             */  .axi_rready        ( axi_mm_rready      ),
+             /*input  [1 : 0 ]                    */  .axi_rresp         ( axi_mm_rresp       ),
+             /*input  [AXI_RUSER_WIDTH-1 : 0 ]    */  .axi_ruser         ( axi_mm_ruser       ),
+             /*input                              */  .axi_rvalid        ( axi_mm_rvalid      ),
+             /* local write interface             */
+             /*output                             */  .lcl_wr_valid      ( mm_lcl_wr_valid       ),
+             /*output [63 : 0]                    */  .lcl_wr_ea         ( mm_lcl_wr_ea          ),
+             /*output [AXI_ID_WIDTH-1 : 0]        */  .lcl_wr_axi_id     ( mm_lcl_wr_axi_id      ),
+             /*output [127 : 0]                   */  .lcl_wr_be         ( mm_lcl_wr_be          ),
+             /*output                             */  .lcl_wr_first      ( mm_lcl_wr_first       ),
+             /*output                             */  .lcl_wr_last       ( mm_lcl_wr_last        ),
+             /*output [1023 : 0]                  */  .lcl_wr_data       ( mm_lcl_wr_data        ),
+             /*input                              */  .lcl_wr_ready      ( mm_lcl_wr_ready       ),
+             /* local write context interface     */                                        
+             /*output                             */  .lcl_wr_ctx_valid  ( mm_lcl_wr_ctx_valid   ),
+             /*output [8 : 0]                     */  .lcl_wr_ctx        ( mm_lcl_wr_ctx         ),
+             /* local write rsp interface         */                                        
+             /*input                              */  .lcl_wr_rsp_valid  ( mm_lcl_wr_rsp_valid   ),
+             /*input  [AXI_ID_WIDTH-1 : 0]        */  .lcl_wr_rsp_axi_id ( mm_lcl_wr_rsp_axi_id  ),
+             /*input                              */  .lcl_wr_rsp_code   ( mm_lcl_wr_rsp_code    ),
+             /*output                             */  .lcl_wr_rsp_ready  ( mm_lcl_wr_rsp_ready   ),
+             /* cmp engine interface              */ 
+             /*output                             */  .dsc_ch0_cmp_valid ( a2h_mm_cmp_valid_0 ),
+             /*output [511 : 0]                   */  .dsc_ch0_cmp_data  ( a2h_mm_cmp_data_0  ),
+             /*input                              */  .dsc_ch0_cmp_ready ( a2h_mm_cmp_resp_0  ),
+             /*output                             */  .dsc_ch1_cmp_valid ( a2h_mm_cmp_valid_1 ),
+             /*output [511 : 0]                   */  .dsc_ch1_cmp_data  ( a2h_mm_cmp_data_1  ),
+             /*input                              */  .dsc_ch1_cmp_ready ( a2h_mm_cmp_resp_1  ),
+             /*output                             */  .dsc_ch2_cmp_valid ( a2h_mm_cmp_valid_2 ),
+             /*output [511 : 0]                   */  .dsc_ch2_cmp_data  ( a2h_mm_cmp_data_2  ),
+             /*input                              */  .dsc_ch2_cmp_ready ( a2h_mm_cmp_resp_2  ),
+             /*output                             */  .dsc_ch3_cmp_valid ( a2h_mm_cmp_valid_3 ),
+             /*output [511 : 0]                   */  .dsc_ch3_cmp_data  ( a2h_mm_cmp_data_3  ),
+             /*input                              */  .dsc_ch3_cmp_ready ( a2h_mm_cmp_resp_3  ) 
+                                              );
+`else
+    odma_a2h_st_engine #(
+                        .AXIS_ID_WIDTH     ( IDW ),
+                        .AXIS_DATA_WIDTH   ( AXI_ST_DW ),
+                        .AXIS_USER_WIDTH   ( AXI_ST_USER )
+                        )
+          a2h_st_engine (
+             /*input                              */  .clk               ( clk                ),
+             /*input                              */  .rst_n             ( rst_n              ),
+             /* dsc engine interface              */
+             /*input                              */  .dsc_valid         ( eng_buf_write[1]   ),
+             /*input  [255 : 0]                   */  .dsc_data          ( a2h_st_dsc_data    ),
+             /*output                             */  .dsc_ready         ( a2h_st_dsc_ready   ),
+             /* AXI4-ST read interface            */
+             /*input                              */  .axis_tvalid       ( s_axis_tvalid      ),
+             /*output                             */  .axis_tready       ( s_axis_tready      ),
+             /*input  [AXIS_DATA_WIDTH-1 : 0 ]    */  .axis_tdata        ( s_axis_tdata       ),
+             /*input  [AXIS_DATA_WIDTH/8-1 : 0 ]  */  .axis_tkeep        ( s_axis_tkeep       ),
+             /*input                              */  .axis_tlast        ( s_axis_tlast       ),
+             /*input  [AXIS_ID_WIDTH-1 : 0 ]      */  .axis_tid          ( s_axis_tid         ),
+             /*input  [AXIS_USER_WIDTH-1 : 0 ]    */  .axis_tuser        ( s_axis_tuser       ),
+             /* local write interface             */
+             /*output                             */  .lcl_wr_valid      ( st_lcl_wr_valid       ),
+             /*output [63 : 0]                    */  .lcl_wr_ea         ( st_lcl_wr_ea          ),
+             /*output [AXI_ID_WIDTH-1 : 0]        */  .lcl_wr_axi_id     ( st_lcl_wr_axi_id      ),
+             /*output [127 : 0]                   */  .lcl_wr_be         ( st_lcl_wr_be          ),
+             /*output                             */  .lcl_wr_first      ( st_lcl_wr_first       ),
+             /*output                             */  .lcl_wr_last       ( st_lcl_wr_last        ),
+             /*output [1023 : 0]                  */  .lcl_wr_data       ( st_lcl_wr_data        ),
+             /*input                              */  .lcl_wr_ready      ( st_lcl_wr_ready       ),
+             /* local write context interface     */                                        
+             /*output                             */  .lcl_wr_ctx_valid  ( st_lcl_wr_ctx_valid   ),
+             /*output [8 : 0]                     */  .lcl_wr_ctx        ( st_lcl_wr_ctx         ),
+             /* local write rsp interface         */                                        
+             /*input                              */  .lcl_wr_rsp_valid  ( st_lcl_wr_rsp_valid   ),
+             /*input  [AXI_ID_WIDTH-1 : 0]        */  .lcl_wr_rsp_axi_id ( st_lcl_wr_rsp_axi_id  ),
+             /*input                              */  .lcl_wr_rsp_code   ( st_lcl_wr_rsp_code    ),
+             /*output                             */  .lcl_wr_rsp_ready  ( st_lcl_wr_rsp_ready   ),
+             /* cmp engine interface              */ 
+             /*output                             */  .dsc_ch0_cmp_valid ( a2h_st_cmp_valid_0 ),
+             /*output [511 : 0]                   */  .dsc_ch0_cmp_data  ( a2h_st_cmp_data_0  ),
+             /*input                              */  .dsc_ch0_cmp_ready ( a2h_st_cmp_resp_0  ),
+             /*output                             */  .dsc_ch1_cmp_valid ( a2h_st_cmp_valid_1 ),
+             /*output [511 : 0]                   */  .dsc_ch1_cmp_data  ( a2h_st_cmp_data_1  ),
+             /*input                              */  .dsc_ch1_cmp_ready ( a2h_st_cmp_resp_1  ),
+             /*output                             */  .dsc_ch2_cmp_valid ( a2h_st_cmp_valid_2 ),
+             /*output [511 : 0]                   */  .dsc_ch2_cmp_data  ( a2h_st_cmp_data_2  ),
+             /*input                              */  .dsc_ch2_cmp_ready ( a2h_st_cmp_resp_2  ),
+             /*output                             */  .dsc_ch3_cmp_valid ( a2h_st_cmp_valid_3 ),
+             /*output [511 : 0]                   */  .dsc_ch3_cmp_data  ( a2h_st_cmp_data_3  ),
+             /*input                              */  .dsc_ch3_cmp_ready ( a2h_st_cmp_resp_3  ) 
+                                              );
+`endif
+
 
 odma_lcl_rd_arbiter  #(
                        .AXI_ID_WIDTH ( IDW )
@@ -1028,17 +1170,6 @@ odma_lcl_rd_arbiter  #(
          /*input                             */   .st_lcl_rd_rsp_ready   ( st_lcl_rd_rsp_ready     ), 
          /*input                             */   .st_lcl_rd_rsp_ready_hint   ( st_lcl_rd_rsp_ready_hint     ) 
                                               );
-
-assign st_lcl_wr_valid = 1'b0;   
-assign st_lcl_wr_ea = 64'h0;      
-assign st_lcl_wr_axi_id = 5'b0;  
-assign st_lcl_wr_be = 128'h0;      
-assign st_lcl_wr_first = 1'b0;   
-assign st_lcl_wr_last = 1'b0;    
-assign st_lcl_wr_data = 1024'b0;    
-assign st_lcl_wr_ctx = 9'b0;     
-assign st_lcl_wr_ctx_valid = 1'b0;
-assign st_lcl_wr_rsp_ready = 1'b0;   
 
 odma_lcl_wr_arbiter #(
                      .AXI_ID_WIDTH ( IDW )

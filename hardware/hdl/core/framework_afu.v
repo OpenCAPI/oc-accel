@@ -248,10 +248,12 @@ module framework_afu (
 
   wire                       mm_snap2conv_awready   ;
   wire                       mm_snap2conv_wready    ;
-  wire [`IDW-1:0]             mm_snap2conv_bid       ;
+  wire [`IDW-1:0]             mm_snap2conv_bid      ;
+  wire [`AXI_BUSER-1:0]       mm_snap2conv_buser    ;
   wire [1:0]                 mm_snap2conv_bresp     ;
   wire                       mm_snap2conv_bvalid    ;
-  wire [`IDW-1:0]             mm_snap2conv_rid       ;
+  wire [`IDW-1:0]             mm_snap2conv_rid      ;
+  wire [`AXI_RUSER-1:0]       mm_snap2conv_ruser    ;
   wire [`AXI_MM_DW-1:0]       mm_snap2conv_rdata     ;
   wire [1:0]                 mm_snap2conv_rresp     ;
   wire                       mm_snap2conv_rlast     ;
@@ -268,10 +270,11 @@ module framework_afu (
   wire [2:0]                 mm_conv2snap_awprot    ;
   wire [3:0]                 mm_conv2snap_awqos     ;
   wire [3:0]                 mm_conv2snap_awregion  ;
-  wire [`AXI_AWUSER-1:0]      mm_conv2snap_awuser    ;
+  wire [`AXI_AWUSER-1:0]      mm_conv2snap_awuser   ;
   wire                       mm_conv2snap_awvalid   ;
-  wire [`AXI_MM_DW-1:0]       mm_conv2snap_wdata     ;
-  wire [(`AXI_MM_DW/8)-1:0]   mm_conv2snap_wstrb     ;
+  wire [`AXI_MM_DW-1:0]       mm_conv2snap_wdata    ;
+  wire [`AXI_WUSER-1:0]       mm_conv2snap_wuser    ;
+  wire [(`AXI_MM_DW/8)-1:0]   mm_conv2snap_wstrb    ;
   wire                       mm_conv2snap_wlast     ;
   wire                       mm_conv2snap_wvalid    ;
   wire                       mm_conv2snap_bready    ;
@@ -296,50 +299,67 @@ module framework_afu (
   wire [`CTXW-1:0]            int_ctx         ;
 
 `ifdef ENABLE_ODMA
-  wire [`AXI_MM_AW-1:0]       axi_mm_awaddr   ;
-  wire [`IDW-1:0]             axi_mm_awid     ;
-  wire [7:0]                 axi_mm_awlen    ;
-  wire [2:0]                 axi_mm_awsize   ;
-  wire [1:0]                 axi_mm_awburst  ;
-  wire [2:0]                 axi_mm_awprot   ;
-  wire [3:0]                 axi_mm_awqos    ;
-  wire [3:0]                 axi_mm_awregion ;
-  wire [`AXI_AWUSER-1:0]      axi_mm_awuser   ;
-  wire                       axi_mm_awvalid  ;
-  wire [1:0]                 axi_mm_awlock   ;
-  wire [3:0]                 axi_mm_awcache  ;
-  wire                       axi_mm_awready  ;
-  wire [`AXI_MM_DW-1:0]       axi_mm_wdata    ;
-  wire                       axi_mm_wlast    ;
-  wire [`AXI_MM_DW/8-1:0]     axi_mm_wstrb    ;
-  wire                       axi_mm_wvalid   ;
-  wire [`AXI_WUSER-1:0]       axi_mm_wuser    ;
-  wire                       axi_mm_wready   ;
-  wire                       axi_mm_bvalid   ;
-  wire [1:0]                 axi_mm_bresp    ;
-  wire [`IDW-1:0]             axi_mm_bid      ;
-  wire [`AXI_BUSER-1:0]       axi_mm_buser    ;
-  wire                       axi_mm_bready   ;
-  wire [`AXI_MM_AW-1:0]       axi_mm_araddr   ;
-  wire [1:0]                 axi_mm_arburst  ;
-  wire [3:0]                 axi_mm_arcache  ;
-  wire [`IDW-1:0]             axi_mm_arid     ;
-  wire [7:0]                 axi_mm_arlen    ;
-  wire [1:0]                 axi_mm_arlock   ;
-  wire [2:0]                 axi_mm_arprot   ;
-  wire [3:0]                 axi_mm_arqos    ;
-  wire                       axi_mm_arready  ;
-  wire [3:0]                 axi_mm_arregion ;
-  wire [2:0]                 axi_mm_arsize   ;
-  wire [`AXI_ARUSER-1:0]      axi_mm_aruser   ;
-  wire                       axi_mm_arvalid  ;
-  wire [`AXI_MM_DW-1:0]       axi_mm_rdata    ;
-  wire [`IDW-1:0]             axi_mm_rid      ;
-  wire                       axi_mm_rlast    ;
-  wire                       axi_mm_rready   ;
-  wire [1:0]                 axi_mm_rresp    ;
-  wire [`AXI_RUSER-1:0]       axi_mm_ruser    ;
-  wire                       axi_mm_rvalid   ;
+    `ifndef ENABLE_ODMA_ST_MODE
+        wire [`AXI_MM_AW-1:0]       axi_mm_awaddr   ;
+        wire [`IDW-1:0]             axi_mm_awid     ;
+        wire [7:0]                 axi_mm_awlen    ;
+        wire [2:0]                 axi_mm_awsize   ;
+        wire [1:0]                 axi_mm_awburst  ;
+        wire [2:0]                 axi_mm_awprot   ;
+        wire [3:0]                 axi_mm_awqos    ;
+        wire [3:0]                 axi_mm_awregion ;
+        wire [`AXI_AWUSER-1:0]      axi_mm_awuser   ;
+        wire                       axi_mm_awvalid  ;
+        wire [1:0]                 axi_mm_awlock   ;
+        wire [3:0]                 axi_mm_awcache  ;
+        wire                       axi_mm_awready  ;
+        wire [`AXI_MM_DW-1:0]       axi_mm_wdata    ;
+        wire                       axi_mm_wlast    ;
+        wire [`AXI_MM_DW/8-1:0]     axi_mm_wstrb    ;
+        wire                       axi_mm_wvalid   ;
+        wire [`AXI_WUSER-1:0]       axi_mm_wuser    ;
+        wire                       axi_mm_wready   ;
+        wire                       axi_mm_bvalid   ;
+        wire [1:0]                 axi_mm_bresp    ;
+        wire [`IDW-1:0]             axi_mm_bid      ;
+        wire [`AXI_BUSER-1:0]       axi_mm_buser    ;
+        wire                       axi_mm_bready   ;
+        wire [`AXI_MM_AW-1:0]       axi_mm_araddr   ;
+        wire [1:0]                 axi_mm_arburst  ;
+        wire [3:0]                 axi_mm_arcache  ;
+        wire [`IDW-1:0]             axi_mm_arid     ;
+        wire [7:0]                 axi_mm_arlen    ;
+        wire [1:0]                 axi_mm_arlock   ;
+        wire [2:0]                 axi_mm_arprot   ;
+        wire [3:0]                 axi_mm_arqos    ;
+        wire                       axi_mm_arready  ;
+        wire [3:0]                 axi_mm_arregion ;
+        wire [2:0]                 axi_mm_arsize   ;
+        wire [`AXI_ARUSER-1:0]      axi_mm_aruser   ;
+        wire                       axi_mm_arvalid  ;
+        wire [`AXI_MM_DW-1:0]       axi_mm_rdata    ;
+        wire [`IDW-1:0]             axi_mm_rid      ;
+        wire                       axi_mm_rlast    ;
+        wire                       axi_mm_rready   ;
+        wire [1:0]                 axi_mm_rresp    ;
+        wire [`AXI_RUSER-1:0]       axi_mm_ruser    ;
+        wire                       axi_mm_rvalid   ;
+    `else
+        wire                        m_axis_tready    ; 
+        wire                        m_axis_tlast     ; 
+        wire [`AXI_ST_DW - 1:0]      m_axis_tdata     ; 
+        wire [`AXI_ST_DW/8 - 1:0]    m_axis_tkeep     ; 
+        wire                        m_axis_tvalid    ; 
+        wire [`IDW - 1:0]           m_axis_tid        ; 
+        wire [`AXI_ST_USER - 1:0]    m_axis_tuser     ; 
+        wire                        s_axis_tready    ; 
+        wire                        s_axis_tlast     ; 
+        wire [`AXI_ST_DW - 1:0]      s_axis_tdata     ; 
+        wire [`AXI_ST_DW/8 - 1:0]    s_axis_tkeep     ; 
+        wire                        s_axis_tvalid    ; 
+        wire [`IDW - 1:0]           s_axis_tid       ; 
+        wire [`AXI_ST_USER - 1:0]    s_axis_tuser     ; 
+    `endif
   //
   //ActionAXI-LiteslaveInterface
   wire                       a_s_axi_arvalid ;
@@ -361,18 +381,18 @@ module framework_afu (
   wire                       a_s_axi_bready  ;
   //ActionAXI-LitemasterInterface
   wire                       a_m_axi_arvalid ;
-  wire [`AXI_LITE_AW-1:0]     a_m_axi_araddr  ;
+  wire [`AXI_LITE_AW-1:0]    a_m_axi_araddr  ;
   wire                       a_m_axi_arready ;
   wire                       a_m_axi_rvalid  ;
-  wire [`AXI_LITE_DW-1:0]     a_m_axi_rdata   ;
+  wire [`AXI_LITE_DW-1:0]    a_m_axi_rdata   ;
   wire [1:0]                 a_m_axi_rresp   ;
   wire                       a_m_axi_rready  ;
   wire                       a_m_axi_awvalid ;
-  wire [`AXI_LITE_AW-1:0]     a_m_axi_awaddr  ;
+  wire [`AXI_LITE_AW-1:0]    a_m_axi_awaddr  ;
   wire                       a_m_axi_awready ;
   wire                       a_m_axi_wvalid  ;
-  wire [`AXI_LITE_DW-1:0]     a_m_axi_wdata   ;
-  wire [`AXI_LITE_DW/8-1:0]   a_m_axi_wstrb   ;
+  wire [`AXI_LITE_DW-1:0]    a_m_axi_wdata   ;
+  wire [`AXI_LITE_DW/8-1:0]  a_m_axi_wstrb   ;
   wire                       a_m_axi_wready  ;
   wire                       a_m_axi_bvalid  ;
   wire [1:0]                 a_m_axi_bresp   ;
@@ -380,14 +400,14 @@ module framework_afu (
 `endif
 
   // // Interface between action_wrapper and (clock/dwidth) converter
-  wire [`AXI_LITE_AW-1:0]     lite_conv2act_awaddr  ;
+  wire [`AXI_LITE_AW-1:0]    lite_conv2act_awaddr  ;
   wire [2:0]                 lite_conv2act_awprot  ;
   wire                       lite_conv2act_awvalid ;
-  wire [`AXI_LITE_DW-1:0]     lite_conv2act_wdata   ;
+  wire [`AXI_LITE_DW-1:0]    lite_conv2act_wdata   ;
   wire [3:0]                 lite_conv2act_wstrb   ;
   wire                       lite_conv2act_wvalid  ;
   wire                       lite_conv2act_bready  ;
-  wire [`AXI_LITE_AW-1:0]     lite_conv2act_araddr  ;
+  wire [`AXI_LITE_AW-1:0]    lite_conv2act_araddr  ;
   wire [2:0]                 lite_conv2act_arprot  ;
   wire                       lite_conv2act_arvalid ;
   wire                       lite_conv2act_rready  ;
@@ -397,24 +417,26 @@ module framework_afu (
   wire [1:0]                 lite_act2conv_bresp   ;
   wire                       lite_act2conv_bvalid  ;
   wire                       lite_act2conv_arready ;
-  wire [`AXI_LITE_DW-1:0]     lite_act2conv_rdata   ;
+  wire [`AXI_LITE_DW-1:0]    lite_act2conv_rdata   ;
   wire [1:0]                 lite_act2conv_rresp   ;
   wire                       lite_act2conv_rvalid  ;
 
   wire                       mm_conv2act_awready   ;
   wire                       mm_conv2act_wready    ;
-  wire [`IDW-1:0]             mm_conv2act_bid       ;
+  wire [`IDW-1:0]            mm_conv2act_bid       ;
+  wire [`AXI_BUSER-1:0]      mm_conv2act_buser     ;
   wire [1:0]                 mm_conv2act_bresp     ;
   wire                       mm_conv2act_bvalid    ;
-  wire [`IDW-1:0]             mm_conv2act_rid       ;
-  wire [`AXI_ACT_DW-1:0]      mm_conv2act_rdata     ;
+  wire [`IDW-1:0]            mm_conv2act_rid       ;
+  wire [`AXI_RUSER-1:0]      mm_conv2act_ruser     ;
+  wire [`AXI_ACT_DW-1:0]     mm_conv2act_rdata     ;
   wire [1:0]                 mm_conv2act_rresp     ;
   wire                       mm_conv2act_rlast     ;
   wire                       mm_conv2act_rvalid    ;
   wire                       mm_conv2act_arready   ;
 
-  wire [`IDW-1:0]             mm_act2conv_awid      ;
-  wire [`AXI_MM_AW-1:0]       mm_act2conv_awaddr    ;
+  wire [`IDW-1:0]            mm_act2conv_awid      ;
+  wire [`AXI_MM_AW-1:0]      mm_act2conv_awaddr    ;
   wire [7:0]                 mm_act2conv_awlen     ;
   wire [2:0]                 mm_act2conv_awsize    ;
   wire [1:0]                 mm_act2conv_awburst   ;
@@ -423,9 +445,10 @@ module framework_afu (
   wire [2:0]                 mm_act2conv_awprot    ;
   wire [3:0]                 mm_act2conv_awqos     ;
   wire [3:0]                 mm_act2conv_awregion  ;
-  wire [`AXI_AWUSER-1:0]      mm_act2conv_awuser    ;
+  wire [`AXI_AWUSER-1:0]     mm_act2conv_awuser    ;
   wire                       mm_act2conv_awvalid   ;
-  wire [`AXI_ACT_DW-1:0]      mm_act2conv_wdata     ;
+  wire [`AXI_ACT_DW-1:0]     mm_act2conv_wdata     ;
+  wire [`AXI_WUSER-1:0]      mm_act2conv_wuser     ;
   wire [(`AXI_ACT_DW/8)-1:0]  mm_act2conv_wstrb     ;
   wire                       mm_act2conv_wlast     ;
   wire                       mm_act2conv_wvalid    ;
@@ -642,7 +665,18 @@ module framework_afu (
   // // ********************************************************************************************************************************
   // // User clock
   // // ********************************************************************************************************************************
-  wire clock_usr; //Not in use.
+  `ifdef ACTION_USER_CLOCK
+  wire clock_usr;
+  wire user_clock_enabled;
+  
+  user_clock_gen muser_clock
+  (
+    .reset          ( reset    ),
+    .clk_in1        ( clock_afu),
+    .clk_out1       ( clock_usr),
+    .locked         ( user_clock_enabled)
+  );  
+  `endif
 
   wire clock_act;
   `ifdef ACTION_USER_CLOCK
@@ -693,10 +727,11 @@ module framework_afu (
   // To action_wrapper (sampled by clock_act)
   wire reset_action_d;
   assign reset_action_d = input_reset_q || vio_reset_action || soft_reset_action;
-  reg  reset_action_q;
-  always @ (posedge clock_act) 
-        reset_action_q <= reset_action_d;
-
+  reg  reset_action_tmp;
+  wire reset_action_q;
+  always @ (posedge clock_afu) 
+        reset_action_tmp <= reset_action_d;
+	
 
   // To mem controllers (sampled by clock_afu)
   // To Action attached converters
@@ -969,6 +1004,7 @@ module framework_afu (
 
 `else
       // ODMA mode: AXI4-MM Interface to action
+   `ifndef ENABLE_ODMA_ST_MODE
       .axi_mm_awaddr                      ( axi_mm_awaddr  ),
       .axi_mm_awid                        ( axi_mm_awid    ),
       .axi_mm_awlen                       ( axi_mm_awlen   ),
@@ -1013,6 +1049,22 @@ module framework_afu (
       .axi_mm_rresp                       ( axi_mm_rresp   ),
       .axi_mm_ruser                       ( axi_mm_ruser   ),
       .axi_mm_rvalid                      ( axi_mm_rvalid  ),
+   `else
+      .m_axis_tready                      ( m_axis_tready  ),
+      .m_axis_tlast                       ( m_axis_tlast   ),
+      .m_axis_tdata                       ( m_axis_tdata   ),
+      .m_axis_tkeep                       ( m_axis_tkeep   ),
+      .m_axis_tvalid                      ( m_axis_tvalid  ),
+      .m_axis_tid                         ( m_axis_tid     ),
+      .m_axis_tuser                       ( m_axis_tuser   ),
+      .s_axis_tready                      ( s_axis_tready  ),
+      .s_axis_tlast                       ( s_axis_tlast   ),
+      .s_axis_tdata                       ( s_axis_tdata   ),
+      .s_axis_tkeep                       ( s_axis_tkeep   ),
+      .s_axis_tvalid                      ( s_axis_tvalid  ),
+      .s_axis_tid                         ( s_axis_tid   ),
+      .s_axis_tuser                       ( s_axis_tuser   ),
+   `endif 
       // To Action: AXI_Lite Slave Interface
       .a_s_axi_arvalid                    ( a_s_axi_arvalid ),
       .a_s_axi_araddr                     ( a_s_axi_araddr  ),
@@ -1057,7 +1109,64 @@ module framework_afu (
   // // ********************************************************************************************************************************
   // // action_wrapper
   // // ********************************************************************************************************************************
+// async clock handle for reset and interrupt signals
+    wire                 action_int_req_ack;
+    wire                 action_int_req;
+    wire [`INT_BITS-1:0] action_int_src;
+    wire [`CTXW-1:0]     action_int_ctx;
+`ifdef ACTION_USER_CLOCK
+    assign reset_action_q = reset_action_tmp || (!user_clock_enabled);
 
+    reg                 action_int_req_level;
+    reg [`INT_BITS-1:0] action_int_src_level;
+    reg [`CTXW-1:0]     action_int_ctx_level;
+    reg                 int_req_q1;
+    reg                 int_req_q2;
+    reg [`INT_BITS-1:0] int_src_q1;
+    reg [`INT_BITS-1:0] int_src_q2;
+    reg [`CTXW-1:0]     int_ctx_q1;
+    reg [`CTXW-1:0]     int_ctx_q2;
+
+    always@(posedge clock_act or posedge reset_action_q)
+    begin
+        if(reset_action_q)
+            action_int_req_level <= 1'b0;
+        else if(action_int_req_ack)
+            action_int_req_level <= 1'b0;
+        else if(action_int_req)
+            action_int_req_level <= 1'b1;
+    end
+
+    always@(posedge clock_act)
+    begin
+        if(action_int_req)
+        begin
+            action_int_src_level <= action_int_src;
+            action_int_ctx_level <= action_int_ctx;
+        end
+    end
+
+    always@(posedge clock_afu)
+    begin
+        int_req_q1 <= action_int_req_level;
+        int_req_q2 <= int_req_q1;
+        int_src_q1 <= action_int_src_level;
+        int_src_q2 <= int_src_q1;
+        int_ctx_q1 <= action_int_ctx_level;
+        int_ctx_q2 <= int_ctx_q1;
+    end
+
+    assign int_req = int_req_q2;
+    assign int_src = int_src_q2;
+    assign int_ctx = int_ctx_q2;
+    assign action_int_req_ack = int_req_ack;
+`else
+    assign reset_action_q = reset_action_tmp;
+    assign int_req = action_int_req;
+    assign int_src = action_int_src;
+    assign int_ctx = action_int_ctx;
+    assign action_int_req_ack = int_req_ack;
+`endif
 
 `ifndef ENABLE_ODMA
 // Bridge Mode action_wrapper
@@ -1066,10 +1175,10 @@ module framework_afu (
      (
       .ap_clk                             ( clock_act                  ) ,
       .ap_rst_n                           ( ~reset_action_q            ) ,
-      .interrupt_ack                      ( int_req_ack                ) ,
-      .interrupt                          ( int_req                    ) ,
-      .interrupt_src                      ( int_src                    ) ,
-      .interrupt_ctx                      ( int_ctx                    ) ,
+      .interrupt_ack                      ( action_int_req_ack         ) ,
+      .interrupt                          ( action_int_req             ) ,
+      .interrupt_src                      ( action_int_src             ) ,
+      .interrupt_ctx                      ( action_int_ctx             ) ,
 
 `ifdef ENABLE_AXI_CARD_MEM
       //
@@ -1198,7 +1307,7 @@ module framework_afu (
       .interrupt                             ( int_req                 ) ,
       .interrupt_src                         ( int_src                 ) ,
       .interrupt_ctx                         ( int_ctx                 ) ,
-
+`ifndef ENABLE_ODMA_ST_MODE
       .axi_mm_araddr                         ( axi_mm_araddr           ) ,
       .axi_mm_arburst                        ( axi_mm_arburst          ) ,
       .axi_mm_arcache                        ( axi_mm_arcache          ) ,
@@ -1243,6 +1352,22 @@ module framework_afu (
       .axi_mm_buser                          ( axi_mm_buser            ) ,
       .axi_mm_bid                            ( axi_mm_bid              ) ,
       .axi_mm_bready                         ( axi_mm_bready           ) ,
+`else
+      .m_axis_tready                         ( m_axis_tready           ) ,
+      .m_axis_tlast                          ( m_axis_tlast            ) ,
+      .m_axis_tdata                          ( m_axis_tdata            ) ,
+      .m_axis_tkeep                          ( m_axis_tkeep            ) ,
+      .m_axis_tvalid                         ( m_axis_tvalid           ) ,
+      .m_axis_tid                            ( m_axis_tid              ) ,
+      .m_axis_tuser                          ( m_axis_tuser            ) ,
+      .s_axis_tready                         ( s_axis_tready           ) ,
+      .s_axis_tlast                          ( s_axis_tlast            ) ,
+      .s_axis_tdata                          ( s_axis_tdata            ) ,
+      .s_axis_tkeep                          ( s_axis_tkeep            ) ,
+      .s_axis_tvalid                         ( s_axis_tvalid           ) ,
+      .s_axis_tid                            ( s_axis_tid              ) ,
+      .s_axis_tuser                          ( s_axis_tuser            ) ,
+`endif
       .a_s_axi_arvalid                       ( a_m_axi_arvalid         ) ,
       .a_s_axi_araddr                        ( a_m_axi_araddr          ) ,
       .a_s_axi_arready                       ( a_m_axi_arready         ) ,
@@ -1374,6 +1499,7 @@ module framework_afu (
       .s_axi_aclk        ( clock_act             ) ,
       .s_axi_aresetn     ( ~reset_action_q       ) ,
       .s_axi_awaddr      ( mm_act2conv_awaddr    ) ,
+      .s_axi_awid        ( mm_act2conv_awid      ) ,
       .s_axi_awlen       ( mm_act2conv_awlen     ) ,
       .s_axi_awsize      ( mm_act2conv_awsize    ) ,
       .s_axi_awburst     ( mm_act2conv_awburst   ) ,
@@ -1391,8 +1517,10 @@ module framework_afu (
       .s_axi_wready      ( mm_conv2act_wready    ) ,
       .s_axi_bresp       ( mm_conv2act_bresp     ) ,
       .s_axi_bvalid      ( mm_conv2act_bvalid    ) ,
+      .s_axi_bid         ( mm_conv2act_bid       ) ,
       .s_axi_bready      ( mm_act2conv_bready    ) ,
       .s_axi_araddr      ( mm_act2conv_araddr    ) ,
+      .s_axi_arid        ( mm_act2conv_arid      ) ,
       .s_axi_arlen       ( mm_act2conv_arlen     ) ,
       .s_axi_arsize      ( mm_act2conv_arsize    ) ,
       .s_axi_arburst     ( mm_act2conv_arburst   ) ,
@@ -1404,6 +1532,7 @@ module framework_afu (
       .s_axi_arvalid     ( mm_act2conv_arvalid   ) ,
       .s_axi_arready     ( mm_conv2act_arready   ) ,
       .s_axi_rdata       ( mm_conv2act_rdata     ) ,
+      .s_axi_rid         ( mm_conv2act_rid       ) ,
       .s_axi_rresp       ( mm_conv2act_rresp     ) ,
       .s_axi_rlast       ( mm_conv2act_rlast     ) ,
       .s_axi_rvalid      ( mm_conv2act_rvalid    ) ,
@@ -1451,10 +1580,8 @@ module framework_afu (
 assign  mm_conv2snap_aruser = mm_act2conv_aruser;
 assign  mm_conv2snap_awuser = mm_act2conv_awuser;
 
-assign  mm_conv2snap_awid = mm_act2conv_awid;
-assign  mm_conv2snap_arid = mm_act2conv_arid;
-assign  mm_conv2act_bid = mm_snap2conv_bid;
-assign  mm_conv2act_rid = mm_snap2conv_rid;
+assign  mm_conv2snap_awid = {`IDW{1'b0}};
+assign  mm_conv2snap_arid = {`IDW{1'b0}};
 
 `else
   `ifdef ACTION_USER_CLOCK
@@ -1469,6 +1596,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       //
       // FROM ACTION
       .s_axi_araddr                       ( mm_act2conv_araddr    ) ,
+      .s_axi_aruser                       ( mm_act2conv_aruser    ) ,
       .s_axi_arburst                      ( mm_act2conv_arburst   ) ,
       .s_axi_arcache                      ( mm_act2conv_arcache   ) ,
       .s_axi_arid                         ( mm_act2conv_arid      ) ,
@@ -1481,6 +1609,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .s_axi_arsize                       ( mm_act2conv_arsize    ) ,
       .s_axi_arvalid                      ( mm_act2conv_arvalid   ) ,
       .s_axi_awaddr                       ( mm_act2conv_awaddr    ) ,
+      .s_axi_awuser                       ( mm_act2conv_awuser    ) ,
       .s_axi_awburst                      ( mm_act2conv_awburst   ) ,
       .s_axi_awcache                      ( mm_act2conv_awcache   ) ,
       .s_axi_awid                         ( mm_act2conv_awid      ) ,
@@ -1493,16 +1622,19 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .s_axi_awsize                       ( mm_act2conv_awsize    ) ,
       .s_axi_awvalid                      ( mm_act2conv_awvalid   ) ,
       .s_axi_bid                          ( mm_conv2act_bid       ) ,
+      .s_axi_buser                        ( mm_conv2act_buser     ) ,
       .s_axi_bready                       ( mm_act2conv_bready    ) ,
       .s_axi_bresp                        ( mm_conv2act_bresp     ) ,
       .s_axi_bvalid                       ( mm_conv2act_bvalid    ) ,
       .s_axi_rdata                        ( mm_conv2act_rdata     ) ,
       .s_axi_rid                          ( mm_conv2act_rid       ) ,
+      .s_axi_ruser                        ( mm_conv2act_ruser     ) ,
       .s_axi_rlast                        ( mm_conv2act_rlast     ) ,
       .s_axi_rready                       ( mm_act2conv_rready    ) ,
       .s_axi_rresp                        ( mm_conv2act_rresp     ) ,
       .s_axi_rvalid                       ( mm_conv2act_rvalid    ) ,
       .s_axi_wdata                        ( mm_act2conv_wdata     ) ,
+      .s_axi_wuser                        ( mm_act2conv_wuser     ) ,
       .s_axi_wlast                        ( mm_act2conv_wlast     ) ,
       .s_axi_wready                       ( mm_conv2act_wready    ) ,
       .s_axi_wstrb                        ( mm_act2conv_wstrb     ) ,
@@ -1510,6 +1642,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       //
       // TO SNAP
       .m_axi_araddr                       ( mm_conv2snap_araddr   ) ,
+      .m_axi_aruser                       ( mm_conv2snap_aruser   ) ,
       .m_axi_arburst                      ( mm_conv2snap_arburst  ) ,
       .m_axi_arcache                      ( mm_conv2snap_arcache  ) ,
       .m_axi_arid                         ( mm_conv2snap_arid     ) ,
@@ -1522,6 +1655,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .m_axi_arsize                       ( mm_conv2snap_arsize   ) ,
       .m_axi_arvalid                      ( mm_conv2snap_arvalid  ) ,
       .m_axi_awaddr                       ( mm_conv2snap_awaddr   ) ,
+      .m_axi_awuser                       ( mm_conv2snap_awuser   ) ,
       .m_axi_awburst                      ( mm_conv2snap_awburst  ) ,
       .m_axi_awcache                      ( mm_conv2snap_awcache  ) ,
       .m_axi_awid                         ( mm_conv2snap_awid     ) ,
@@ -1534,23 +1668,24 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .m_axi_awsize                       ( mm_conv2snap_awsize   ) ,
       .m_axi_awvalid                      ( mm_conv2snap_awvalid  ) ,
       .m_axi_bid                          ( mm_snap2conv_bid      ) ,
+      .m_axi_buser                        ( mm_snap2conv_buser    ) ,
       .m_axi_bready                       ( mm_conv2snap_bready   ) ,
       .m_axi_bresp                        ( mm_snap2conv_bresp    ) ,
       .m_axi_bvalid                       ( mm_snap2conv_bvalid   ) ,
       .m_axi_rdata                        ( mm_snap2conv_rdata    ) ,
       .m_axi_rid                          ( mm_snap2conv_rid      ) ,
+      .m_axi_ruser                        ( mm_snap2conv_ruser    ) ,
       .m_axi_rlast                        ( mm_snap2conv_rlast    ) ,
       .m_axi_rready                       ( mm_conv2snap_rready   ) ,
       .m_axi_rresp                        ( mm_snap2conv_rresp    ) ,
       .m_axi_rvalid                       ( mm_snap2conv_rvalid   ) ,
       .m_axi_wdata                        ( mm_conv2snap_wdata    ) ,
+      .m_axi_wuser                        ( mm_conv2snap_wuser    ) ,
       .m_axi_wlast                        ( mm_conv2snap_wlast    ) ,
       .m_axi_wready                       ( mm_snap2conv_wready   ) ,
       .m_axi_wstrb                        ( mm_conv2snap_wstrb    ) ,
       .m_axi_wvalid                       ( mm_conv2snap_wvalid   )
  ) ;
-    assign mm_conv2snap_aruser  = mm_act2conv_aruser;
-    assign  mm_conv2snap_awuser = mm = mm_act2conv_awuser;
 
   `else
   //No dwith converter, no clock convertor

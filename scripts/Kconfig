@@ -436,40 +436,99 @@ config PHY_SPEED
 	default "25.78125" if SPEED_25G
 	default "20.0" if SPEED_20G
 
+config AXI_ID_WIDTH
+	        prompt "axi id width on oc-accel&action interface, range 1-5"
+		int
+		default 1
+		range 1 5
+		help
+		  ID width on AXI interface
+                  There are five choices of axi id width (1,2,3,4,5) the framework supports. 
+	          Please select one of them.
+
 choice
-	bool "AXI ID width"
-	default AXI_IDW_3 
+	bool "Clock Frequency for Action  "
+	default Action_clock_200MHz
 	help
-	  ID width on AXI interface
-          There are five choices of axi id width the framework supports. Please select
-          one of them. Using less IDs can reduce the resource usage of snap_core.
+	  Clock frequency for action
+	  There are multiple frequencys the framework supports. Please select
+	  one of them.
 
-	config AXI_IDW_1
-		bool "1b: axi id width is 1b (2 IDs)"
+	config Action_clock_50MHz
+		bool "Action work on 50MHz  (50.355MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
 		help
-		  axi id width is 1b, snap interface supports up to 2 IDs.
+		  Action use 50MHz clock. A different clock with oc-accel bridge. 
 
-	config AXI_IDW_2
-		bool "2b: axi id width is 2b (4 IDs)"
+	config Action_clock_100MHz
+		bool "Action work on 100MHz (100.710MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
 		help
-		  axi id width is 2b, snap interface supports up to 4 IDs.
+		  Action use 100MHz clock. A different clock with oc-accel bridge. 
 
-	config AXI_IDW_3
-		bool "3b: axi id width is 3b (8 IDs)"
+	config Action_clock_150MHz
+		bool "Action work on 150MHz (151.065MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
 		help
-		  axi id width is 3b, snap interface supports up to 8 IDs.
+		  Action use 150MHz clock. A different clock with oc-accel bridge. 
 
-	config AXI_IDW_4
-		bool "4b: axi id width is 4b (16 IDs)"
+	config Action_clock_200MHz
+		bool "Action work on 200MHz (201.420MHz to be accurate) clock"
 		help
-		  axi id width is 4b, snap interface supports up to 16 IDs.
+		  Action use 200MHz clock. Same clock with oc-accel bridge. 
 
-	config AXI_IDW_5
-		bool "5b: axi id width is 5b (32 IDs)"
+	config Action_clock_250MHz
+		bool "Action work on 250MHz (251.775MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
 		help
-		  axi id width is 5b, snap interface supports up to 32 IDs.
-	
+		  Action use 250MHz clock. A different clock with oc-accel bridge. 
+
+	config Action_clock_300MHz
+		bool "Action work on 300MHz (302.130MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 300MHz clock. A different clock with oc-accel bridge. 
+
+	config Action_clock_350MHz
+		bool "Action work on 350MHz (352.485MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 350MHz clock. A different clock with oc-accel bridge. 
+
+	config Action_clock_400MHz
+		bool "Action work on 400MHz (402.840MHz to be accurate) clock"
+		select ACTION_USER_CLOCK
+		help
+		  Action use 400MHz clock. A different clock with oc-accel bridge. 
 endchoice
+
+config USER_CLOCK_FREQ
+	int
+	default 50   if Action_clock_50MHz
+	default 100  if Action_clock_100MHz
+	default 150  if Action_clock_150MHz
+	default 200  if Action_clock_200MHz
+	default 250  if Action_clock_250MHz
+	default 300  if Action_clock_300MHz
+	default 350  if Action_clock_350MHz
+	default 400  if Action_clock_400MHz
+
+config ACTION_USER_CLOCK
+	bool
+	default y
+        prompt "Action's clock frequency is 200MHz ('n', unchecked) or other clock frequency ('y', checked)"
+	depends on OPENCAPI30 && (HDL_ACTION || HLS_ACTION)
+	help
+	  Input 'Y' if your action's clock frequency is not 200MHz.
+	  Leave it unchecked if it is 200MHz.
+
+config HLS_CLOCK_PERIOD_CONSTRAINT
+	prompt "The clock period constrant used when hls is compiled to rtl, only used for hls action"
+	string
+	default "4ns"
+	range "1ns" "20ns"
+	help
+	  The clock period constrant in "ns" used when hls is compiled to rtl, 
 
 #config ENABLE_PRFLOW
 #	bool "Cloud build (enabling Partial Reconfiguration)"
@@ -561,6 +620,28 @@ config ODMA_USED
 	string
 	default "TRUE"  if ENABLE_ODMA
 	default "FALSE" if ! ENABLE_ODMA
+
+config ENABLE_ODMA_ST_MODE
+	bool "Enable ODMA AXI4-Stream data transfer mode."
+    default n
+	help
+	   Enable ODMA Stream mode.
+
+config ODMA_ST_MODE_USED
+	string
+	default "TRUE"  if ENABLE_ODMA_ST_MODE
+	default "FALSE" if ! ENABLE_ODMA_ST_MODE
+
+config ENABLE_ODMA_512
+	bool "Enable ODMA data transfer with 512b data width."
+    default n
+	help
+	   Enable ODMA data width with 512bits.
+
+config ODMA_512_USED
+	string
+	default "TRUE"  if ENABLE_ODMA_512
+	default "FALSE" if ! ENABLE_ODMA_512
 
 config ENABLE_FLASH
 	bool "Enable FLASH"

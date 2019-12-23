@@ -10,10 +10,10 @@ There are two ways to program FPGA:
 
 This is the default way to program FPGA. 
 
-* Log on to Power9 server,  **TODO**: link to update
+* Log on to Power9 server, 
 
 ``` 
-$ git clone https://github.ibm.com/OC-Enablement/oc-utils/
+$ git clone https://github.com/OpenCAPI/oc-utils/
 $ make
 $ sudo make install
 ```
@@ -21,48 +21,51 @@ $ sudo make install
 * Copy the generated `hardware/build/Images/*.bin` from the development machine to Power9 server, and execute: 
 
 ```
-sudo oc-flash-script <file.bin>
+sudo ./oc-flash-script.sh <file.bin>
 ```
- or for SPIx8 flash interface:
+ or for SPIx8 flash interface, two bin files should be provided. Usually it takes about 5 minutes.
 
 ```
-$ sudo oc-flash-script <file_primary.bin> <file_secondary.bin>
+$ sudo ./oc-flash-script.sh <file_primary.bin> <file_secondary.bin>
 ```
 
-* If the previous flashing is not done correctly, you may need to delete the lock file manually.
+* If the script hints that the card is in use, that may mean the previous flashing wasn't done properly, and at this time the lock file is needed to be deleted manually.
 
 ```
 $ rm -rf "/var/cxl/capi-flash-script.lock"
 ```
 
-* Reboot system. Check if the device is valid by 
+* Reload the Image. Then the new image should take effect.
+```
+sudo ./oc-reload.sh
+```
 
+!!!Note: 
+    For some systems when the firmware hasn't been upgraded well, it may requires a reboot. 
+```
+sudo reboot now
+```
+
+At any time, you can check the card status by:
 ```
 $ ls /dev/ocxl
 IBM,oc-snap.0007:00:00.1.0
 ```
 
 
-
-!!!Warning
-    oc-reset hasn't been verified. 
-
 ### Program FPGA chip
 
 Not like "programming flash" which permanently stores FPGA image into the flash on the FPGA board, programming FPGA chip is a temporal method and mainly used for debugging purpose. It uses ***.bit** file and the programmed image will be lost if the server is powered off. 
 
-Prepare a laptop/desktop machine and install **Vivado Lab**. Use USB cable to connect it to the FPGA board's USB-JTAG debugging port. Then in Vivado Lab, right click the FPGA device name and select "program device..."
+Prepare a laptop/desktop machine and install **Vivado Lab**. Use USB cable to connect it to the FPGA board's USB-JTAG debugging port. Then in Vivado Lab, right click the FPGA device name and select "program device..." and provide the ***.bit** file. It only takes 10~20 seconds to complete.
 
-* For ZZ systems:
+
+Then Reset the card by:
 ```
-$ sudo su
-$ echo 1 > /sys/class/ocxl/IBM\,oc-snap.0007\:00\:00.1.0/reset_adapter
+cd oc-utils
+sudo ./oc-reset.sh
 ```
-
-* For Mihawk/AC922 systems:
-
-!!!Warning
-    **TODO**
+Then the new image should show up. Note, this is a temporal programming. You still need to program the flash to permanently store your image.  
 
 ## Install libocxl
 
@@ -82,7 +85,7 @@ You can check the FPGA image version, name and build date/time by
 
 ```
 $ cd software/tools
-$ sudo ./snap_maint -vvv
+$ sudo ./oc_maint -vvv
 ```
 
 ```

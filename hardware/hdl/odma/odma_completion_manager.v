@@ -21,6 +21,15 @@
 module odma_completion_manager (
         input                           clk             ,
         input                           rst_n           ,
+        //interrupt
+        input                           action_interrupt    ,
+        input     [8:0]                 action_interrupt_ctx,
+        input     [63:0]                action_interrupt_src,
+        output                          action_interrupt_ack,
+        output reg                      odma_interrupt      ,
+        output     [8:0]                odma_interrupt_ctx  ,
+        output reg [63:0]               odma_interrupt_src  ,
+        input                           odma_interrupt_ack  ,
         //configuration
         input      [63:0]               completion_addr0,
         input      [31:0]               completion_size0,
@@ -32,6 +41,10 @@ module odma_completion_manager (
         input      [31:0]               completion_size3,
         output     [63:0]               completion_error,
         output     [3:0]                completion_done ,
+        input      [63:0]               cmp_ch0_obj_handle,
+        input      [63:0]               cmp_ch1_obj_handle,
+        input      [63:0]               cmp_ch2_obj_handle,
+        input      [63:0]               cmp_ch3_obj_handle,
         //engine
         input      [15:0]               eng_cmp_done    ,
         output     [15:0]               eng_cmp_okay    ,
@@ -100,6 +113,100 @@ module odma_completion_manager (
     reg     [511:0]     channel3_buf;
     reg     [29:0]      channel_cnt3;
 
+    reg                 interrupt_source; //0:odma 1:action
+    reg                 interrupt0_req;
+    reg                 interrupt1_req;
+    reg                 interrupt2_req;
+    reg                 interrupt3_req;
+    reg                 interrupt_req;
+    wire                interrupt_ack;
+    reg     [1:0]       interrupt_channel;
+
+//interrupt related
+    assign interrupt_ack = odma_interrupt_ack & !interrupt_source;
+    assign action_interrupt_ack = odma_interrupt_ack & interrupt_source;
+    assign odma_interrupt_ctx = interrupt_source ? action_interrupt_ctx : 9'b0;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            odma_interrupt <= 1'b0;
+        else if(odma_interrupt_ack)
+            odma_interrupt <= 1'b0;
+        else if(interrupt_req | action_interrupt)
+            odma_interrupt <= 1'b1;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            interrupt_source <= 1'b0;
+        else if(odma_interrupt_ack)
+            interrupt_source <= 1'b0;
+        else if(action_interrupt & !interrupt_req)
+            interrupt_source <= 1'b1;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            interrupt0_req <= 1'b0;
+        else if(interrupt_ack & (interrupt_channel == 2'b00))
+            interrupt0_req <= 1'b0;
+        else if(channel0_buf[34])
+            interrupt0_req <= 1'b1;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            interrupt1_req <= 1'b0;
+        else if(interrupt_ack & (interrupt_channel == 2'b01))
+            interrupt1_req <= 1'b0;
+        else if(channel1_buf[34])
+            interrupt1_req <= 1'b1;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            interrupt2_req <= 1'b0;
+        else if(interrupt_ack & (interrupt_channel == 2'b10))
+            interrupt2_req <= 1'b0;
+        else if(channel2_buf[34])
+            interrupt2_req <= 1'b1;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            interrupt3_req <= 1'b0;
+        else if(interrupt_ack & (interrupt_channel == 2'b11))
+            interrupt3_req <= 1'b0;
+        else if(channel3_buf[34])
+            interrupt3_req <= 1'b1;
+
+    always@(*)
+        if(!interrupt_source)
+            case(interrupt_channel)
+            2'b00: odma_interrupt_src = cmp_ch0_obj_handle;
+            2'b01: odma_interrupt_src = cmp_ch1_obj_handle;
+            2'b10: odma_interrupt_src = cmp_ch2_obj_handle;
+            2'b11: odma_interrupt_src = cmp_ch3_obj_handle;
+            endcase
+        else
+            odma_interrupt_src = action_interrupt_src;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            interrupt_channel <= 2'b00;
+        else if(interrupt_req)
+            interrupt_channel <= interrupt_channel;
+        else if(interrupt0_req)
+            interrupt_channel <= 2'b00;
+        else if(interrupt1_req)
+            interrupt_channel <= 2'b01;
+        else if(interrupt2_req)
+            interrupt_channel <= 2'b10;
+        else if(interrupt3_req)
+            interrupt_channel <= 2'b11;
+
+    always@(posedge clk or negedge rst_n)
+        if(!rst_n)
+            interrupt_req <= 1'b0;
+        else if(interrupt_ack)
+            interrupt_req <= 1'b0;
+        else if(interrupt0_req | interrupt1_req | interrupt2_req | interrupt3_req)
+            interrupt_req <= 1'b1;
 
 //lcl write
     assign lcl_wr_first = lcl_wr_valid;
@@ -192,8 +299,8 @@ module odma_completion_manager (
     always@(posedge clk or negedge rst_n)
     if(!rst_n)
         write_request0 <= 2'b0;
-	else if ((eng_cmp_okay[0] | eng_cmp_okay[4] | eng_cmp_okay[8] | eng_cmp_okay[12]) & (lcl_wr_valid & lcl_wr_ready & (write_channel == 2'b00)))
-	    write_request0 <= write_request0;
+    else if ((eng_cmp_okay[0] | eng_cmp_okay[4] | eng_cmp_okay[8] | eng_cmp_okay[12]) & (lcl_wr_valid & lcl_wr_ready & (write_channel == 2'b00)))
+        write_request0 <= write_request0;
     else if (eng_cmp_okay[0] | eng_cmp_okay[4] | eng_cmp_okay[8] | eng_cmp_okay[12])
         write_request0 <= write_request0 + 1'b1;
     else if (lcl_wr_valid & lcl_wr_ready & (write_channel == 2'b00))
@@ -242,7 +349,7 @@ module odma_completion_manager (
     if(!rst_n)
         write_request1 <= 2'b00;
     else if ((eng_cmp_okay[1] | eng_cmp_okay[5] | eng_cmp_okay[9] | eng_cmp_okay[13]) & (lcl_wr_valid & lcl_wr_ready & (write_channel == 2'b01)))
-	    write_request1 <= write_request1;
+        write_request1 <= write_request1;
     else if (eng_cmp_okay[1] | eng_cmp_okay[5] | eng_cmp_okay[9] | eng_cmp_okay[13])
         write_request1 <= write_request1 + 1'b1;
     else if (lcl_wr_valid & lcl_wr_ready & (write_channel == 2'b01))
@@ -291,7 +398,7 @@ module odma_completion_manager (
     if(!rst_n)
         write_request2 <= 2'b00;
     else if ((eng_cmp_okay[2] | eng_cmp_okay[6] | eng_cmp_okay[10] | eng_cmp_okay[14]) & (lcl_wr_valid & lcl_wr_ready & (write_channel == 2'b10)))
-	    write_request2 <= write_request2;
+        write_request2 <= write_request2;
     else if (eng_cmp_okay[2] | eng_cmp_okay[6] | eng_cmp_okay[10] | eng_cmp_okay[14])
         write_request2 <= write_request2 + 1'b1;
     else if (lcl_wr_valid & lcl_wr_ready & (write_channel == 2'b10))
