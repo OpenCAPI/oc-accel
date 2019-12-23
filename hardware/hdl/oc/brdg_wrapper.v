@@ -20,11 +20,9 @@
 //                                    bridge_wrapper
 //+------------------------------------------------------------------------------------------+
 //|                                                                                          |
-//| +--------+                                    +--------------------+                     |
-//| |        |<-----------------------------------|   context_surveil  |<------------        |
-//| |        |                                    +--------------------+            |        |
-//| |  tlx_  |   +---------------------+                                            |        |
-//| |  cmd_  |<--|    command_encode   |          +--------------------+            |        |
+//| +--------+                                                                               |
+//| |  tlx_  |   +---------------------+                                                     |
+//| |  cmd_  |<--|    command_encode   |          +--------------------+                     |
 //| | clock_ |   |     write_channel   |<---------+                    |     +------+------+ |
 //| |  conv  |   +---------------------+          |                    |<----|             | |
 //| |        |   +---------------------+  +------>|     data_bridge    |     |             | |
@@ -206,13 +204,7 @@ wire            lcl_rd_data_ready;
 //===============================================================================================================
 //         WIRES: context_surveil to tlx_cmd_conv
 //===============================================================================================================
-
-wire            tlx_a_cmd_valid  ;
-wire   [019:0]  tlx_a_cmd_pasid  ;
-wire   [011:0]  tlx_a_cmd_actag  ;
-wire   [007:0]  tlx_a_cmd_opcode ;
 wire   [063:0]  tlx_r_cmd_be     ;
-wire            context_suspend  ;
 
 wire wbuf_empty, rbuf_empty;
 
@@ -317,7 +309,7 @@ wire  [0001:0] fir_fifo_overflow_cmdencw ;
 wire  [0031:0] debug_tlx_cnt_cmd_r       ;
 wire  [0001:0] fir_fifo_overflow_cmdencr ;
 wire           debug_tlx_cmd_idle        ;
-wire  [0004:0] fir_fifo_overflow_cmdcnv  ;
+wire  [0003:0] fir_fifo_overflow_cmdcnv  ;
 wire  [0001:0] fir_tlx_cmd_credit        ;
 wire  [0031:0] debug_tlx_rsp_idle_lim   = debug_tlx_idle_lim[63:32];      
 wire  [0031:0] debug_tlx_cmd_idle_lim   = debug_tlx_idle_lim[31:00];
@@ -369,7 +361,7 @@ wire  [0001:0] fir_tlx_command_credit    ;
  assign debug_axi_cnt_rsp       = {debug_axi_cnt_rsp_r, debug_axi_cnt_rsp_w}; 
  assign debug_buf_cnt           = {24'd0, debug_buf_cnt_r, 24'd0, debug_buf_cnt_w}; 
  assign debug_traffic_idle      = {58'd0, debug_tlx_cmd_idle, debug_tlx_rsp_idle, debug_axi_cmd_idle_r, debug_axi_rsp_idle_r, debug_axi_cmd_idle_w, debug_axi_rsp_idle_w};
- assign fir_fifo_overflow       = {56'd0, fir_fifo_overflow_cmdencw, fir_fifo_overflow_cmdencr, fir_fifo_overflow_cmdcnv, fir_fifo_overflow_rspcnv, fir_fifo_overflow_rspdecw, fir_fifo_overflow_rspdecr, fir_fifo_overflow_dbw, fir_fifo_overflow_dbr};
+ assign fir_fifo_overflow       = {57'd0, fir_fifo_overflow_cmdencw, fir_fifo_overflow_cmdencr, fir_fifo_overflow_cmdcnv, fir_fifo_overflow_rspcnv, fir_fifo_overflow_rspdecw, fir_fifo_overflow_rspdecr, fir_fifo_overflow_dbw, fir_fifo_overflow_dbr};
  assign fir_tlx_interface       = {60'd0, fir_tlx_response_unsupport, fir_tlx_rsp_err, fir_tlx_command_credit};
 
 
@@ -486,12 +478,6 @@ brdg_tlx_cmd_converter tlx_cmd_conv (
                 /*output                */   .tlx_rd_cmd_ready                ( tlx_r_cmd_ready                ),
                 /*input      [0019:0]   */   .tlx_rd_cmd_pasid                ( tlx_r_cmd_pasid                ),
                 /*input      [0011:0]   */   .tlx_rd_cmd_actag                ( tlx_r_cmd_actag                ),
-
-                // assign ACTAG channel
-                /*input                 */   .tlx_ac_cmd_valid                ( tlx_a_cmd_valid                ),
-                /*input      [0019:0]   */   .tlx_ac_cmd_pasid                ( tlx_a_cmd_pasid                ),
-                /*input      [0011:0]   */   .tlx_ac_cmd_actag                ( tlx_a_cmd_actag                ),
-                /*input      [0007:0]   */   .tlx_ac_cmd_opcode               ( tlx_a_cmd_opcode               ),
 
                 // interrupt channel
                 /*input                 */   .tlx_in_cmd_valid                ( tlx_i_cmd_valid                ),
@@ -917,37 +903,6 @@ brdg_data_bridge
 
 //===============================================================================================================
 //
-//     Context surveil
-//
-//===============================================================================================================
-
-brdg_context_surveil ctx_surveil(
-                /*input                 */   .clk                    ( clk_afu                ),
-                /*input                 */   .rst_n                  ( rst_n                  ),
-
-                //---- configuration ---------------------------------
-                /*input      [011:0]    */   .cfg_actag_base         ( cfg_actag_base         ),
-                /*input      [019:0]    */   .cfg_pasid_base         ( cfg_pasid_base         ),
-                /*input      [019:0]    */   .cfg_pasid_mask         ( cfg_pasid_mask         ),
-
-                //---- AXI interface ---------------------------------
-                /*input      [008:0]    */   .lcl_wr_ctx             ( lcl_wr_ctx             ),
-                /*input      [008:0]    */   .lcl_rd_ctx             ( lcl_rd_ctx             ),
-                /*input                 */   .lcl_wr_ctx_valid       ( lcl_wr_ctx_valid       ),
-                /*input                 */   .lcl_rd_ctx_valid       ( lcl_rd_ctx_valid       ),
-                /*input              */      .interrupt              ( interrupt              ),
-                /*input      [008:0] */      .interrupt_ctx          ( interrupt_ctx          ),
-                /*output                */   .context_suspend        ( context_suspend        ),
-
-                //---- TLX interface ---------------------------------
-                /*output                */   .tlx_cmd_valid          ( tlx_a_cmd_valid        ),
-                /*output     [019:0]    */   .tlx_cmd_pasid          ( tlx_a_cmd_pasid        ),
-                /*output     [011:0]    */   .tlx_cmd_actag          ( tlx_a_cmd_actag        ),
-                /*output     [007:0]    */   .tlx_cmd_opcode         ( tlx_a_cmd_opcode       )
-                );
-
-//===============================================================================================================
-//
 //    Interrupt 
 //
 //===============================================================================================================
@@ -999,7 +954,7 @@ brdg_axi_slave       axi_slv (
                 /*output                */   .lcl_wr_last           ( lcl_wr_last           ),
                 /*output     [1023:0]   */   .lcl_wr_data           ( lcl_wr_data           ),
                 /*output                */   .lcl_wr_idle           ( lcl_wr_idle           ),
-                /*input                 */   .lcl_wr_ready          ( lcl_wr_ready & ~context_suspend),
+                /*input                 */   .lcl_wr_ready          ( lcl_wr_ready          ),
                   // write ctx channel
                 /*output                */   .lcl_wr_ctx_valid      ( lcl_wr_ctx_valid      ),
                 /*output reg [`CTXW-1:0] */  .lcl_wr_ctx            ( lcl_wr_ctx            ),
@@ -1019,7 +974,7 @@ brdg_axi_slave       axi_slv (
                 /*output                */   .lcl_rd_first          ( lcl_rd_first          ),
                 /*output                */   .lcl_rd_last           ( lcl_rd_last           ),
                 /*output                */   .lcl_rd_idle           ( lcl_rd_idle           ),
-                /*input                 */   .lcl_rd_ready          ( lcl_rd_ready & ~context_suspend),
+                /*input                 */   .lcl_rd_ready          ( lcl_rd_ready          ),
                   // read ctx channel
                 /*output                */   .lcl_rd_ctx_valid      ( lcl_rd_ctx_valid      ),
                 /*output reg [`CTXW-1:0] */  .lcl_rd_ctx            ( lcl_rd_ctx            ),
@@ -1085,9 +1040,6 @@ brdg_axi_slave       axi_slv (
     reg [`CTXW-1:0] lcl_wr_ctx_sync1;
     reg             lcl_rd_ctx_valid_sync1;
     reg [`CTXW-1:0] lcl_rd_ctx_sync1;
-    reg             tlx_a_cmd_valid_sync1;
-    reg [19:0]      tlx_a_cmd_pasid_sync1;
-    reg [11:0]      tlx_a_cmd_actag_sync1;
     reg             dma_w_cmd_ctx_valid_sync1;
     reg [`CTXW-1:0] dma_w_cmd_ctx_sync1;
     reg             dma_r_cmd_ctx_valid_sync1;
@@ -1119,9 +1071,6 @@ brdg_axi_slave       axi_slv (
     reg [`CTXW-1:0] lcl_wr_ctx_sync2;
     reg             lcl_rd_ctx_valid_sync2;
     reg [`CTXW-1:0] lcl_rd_ctx_sync2;
-    reg             tlx_a_cmd_valid_sync2;
-    reg [19:0]      tlx_a_cmd_pasid_sync2;
-    reg [11:0]      tlx_a_cmd_actag_sync2;
     reg             dma_w_cmd_ctx_valid_sync2;
     reg [`CTXW-1:0] dma_w_cmd_ctx_sync2;
     reg             dma_r_cmd_ctx_valid_sync2;
@@ -1153,9 +1102,6 @@ brdg_axi_slave       axi_slv (
     reg [`CTXW-1:0] lcl_wr_ctx_sync3;
     reg             lcl_rd_ctx_valid_sync3;
     reg [`CTXW-1:0] lcl_rd_ctx_sync3;
-    reg             tlx_a_cmd_valid_sync3;
-    reg [19:0]      tlx_a_cmd_pasid_sync3;
-    reg [11:0]      tlx_a_cmd_actag_sync3;
     reg             dma_w_cmd_ctx_valid_sync3;
     reg [`CTXW-1:0] dma_w_cmd_ctx_sync3;
     reg             dma_r_cmd_ctx_valid_sync3;
@@ -1187,9 +1133,6 @@ brdg_axi_slave       axi_slv (
     reg [`CTXW-1:0] lcl_wr_ctx_sync4;
     reg             lcl_rd_ctx_valid_sync4;
     reg [`CTXW-1:0] lcl_rd_ctx_sync4;
-    reg             tlx_a_cmd_valid_sync4;
-    reg [19:0]      tlx_a_cmd_pasid_sync4;
-    reg [11:0]      tlx_a_cmd_actag_sync4;
     reg             dma_w_cmd_ctx_valid_sync4;
     reg [`CTXW-1:0] dma_w_cmd_ctx_sync4;
     reg             dma_r_cmd_ctx_valid_sync4;
@@ -1225,9 +1168,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync1           <= 0;
             lcl_rd_ctx_valid_sync1     <= 0;
             lcl_rd_ctx_sync1           <= 0;
-            tlx_a_cmd_valid_sync1      <= 0;
-            tlx_a_cmd_pasid_sync1      <= 0;
-            tlx_a_cmd_actag_sync1      <= 0;
             dma_w_cmd_ctx_valid_sync1  <= 0;
             dma_w_cmd_ctx_sync1        <= 0;
             dma_r_cmd_ctx_valid_sync1  <= 0;
@@ -1259,9 +1199,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync2           <= 0;
             lcl_rd_ctx_valid_sync2     <= 0;
             lcl_rd_ctx_sync2           <= 0;
-            tlx_a_cmd_valid_sync2      <= 0;
-            tlx_a_cmd_pasid_sync2      <= 0;
-            tlx_a_cmd_actag_sync2      <= 0;
             dma_w_cmd_ctx_valid_sync2  <= 0;
             dma_w_cmd_ctx_sync2        <= 0;
             dma_r_cmd_ctx_valid_sync2  <= 0;
@@ -1293,9 +1230,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync3           <= 0;
             lcl_rd_ctx_valid_sync3     <= 0;
             lcl_rd_ctx_sync3           <= 0;
-            tlx_a_cmd_valid_sync3      <= 0;
-            tlx_a_cmd_pasid_sync3      <= 0;
-            tlx_a_cmd_actag_sync3      <= 0;
             dma_w_cmd_ctx_valid_sync3  <= 0;
             dma_w_cmd_ctx_sync3        <= 0;
             dma_r_cmd_ctx_valid_sync3  <= 0;
@@ -1327,9 +1261,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync4           <= 0;
             lcl_rd_ctx_valid_sync4     <= 0;
             lcl_rd_ctx_sync4           <= 0;
-            tlx_a_cmd_valid_sync4      <= 0;
-            tlx_a_cmd_pasid_sync4      <= 0;
-            tlx_a_cmd_actag_sync4      <= 0;
             dma_w_cmd_ctx_valid_sync4  <= 0;
             dma_w_cmd_ctx_sync4        <= 0;
             dma_r_cmd_ctx_valid_sync4  <= 0;
@@ -1363,9 +1294,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync1           <= lcl_wr_ctx;
             lcl_rd_ctx_valid_sync1     <= lcl_rd_ctx_valid;
             lcl_rd_ctx_sync1           <= lcl_rd_ctx;
-            tlx_a_cmd_valid_sync1      <= tlx_a_cmd_valid;
-            tlx_a_cmd_pasid_sync1      <= tlx_a_cmd_pasid;
-            tlx_a_cmd_actag_sync1      <= tlx_a_cmd_actag;
             dma_w_cmd_ctx_valid_sync1  <= dma_w_cmd_valid;
             dma_w_cmd_ctx_sync1        <= dma_w_cmd_ctx;
             dma_r_cmd_ctx_valid_sync1  <= dma_r_cmd_valid;
@@ -1397,9 +1325,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync2           <= lcl_wr_ctx_sync1         ;
             lcl_rd_ctx_valid_sync2     <= lcl_rd_ctx_valid_sync1   ;
             lcl_rd_ctx_sync2           <= lcl_rd_ctx_sync1         ;
-            tlx_a_cmd_valid_sync2      <= tlx_a_cmd_valid_sync1    ;
-            tlx_a_cmd_pasid_sync2      <= tlx_a_cmd_pasid_sync1    ;
-            tlx_a_cmd_actag_sync2      <= tlx_a_cmd_actag_sync1    ;
             dma_w_cmd_ctx_valid_sync2  <= dma_w_cmd_ctx_valid_sync1;
             dma_w_cmd_ctx_sync2        <= dma_w_cmd_ctx_sync1      ;
             dma_r_cmd_ctx_valid_sync2  <= dma_r_cmd_ctx_valid_sync1;
@@ -1431,9 +1356,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync3           <= lcl_wr_ctx_sync2         ;
             lcl_rd_ctx_valid_sync3     <= lcl_rd_ctx_valid_sync2   ;
             lcl_rd_ctx_sync3           <= lcl_rd_ctx_sync2         ;
-            tlx_a_cmd_valid_sync3      <= tlx_a_cmd_valid_sync2    ;
-            tlx_a_cmd_pasid_sync3      <= tlx_a_cmd_pasid_sync2    ;
-            tlx_a_cmd_actag_sync3      <= tlx_a_cmd_actag_sync2    ;
             dma_w_cmd_ctx_valid_sync3  <= dma_w_cmd_ctx_valid_sync2;
             dma_w_cmd_ctx_sync3        <= dma_w_cmd_ctx_sync2      ;
             dma_r_cmd_ctx_valid_sync3  <= dma_r_cmd_ctx_valid_sync2;
@@ -1465,9 +1387,6 @@ brdg_axi_slave       axi_slv (
             lcl_wr_ctx_sync4           <= lcl_wr_ctx_sync3         ;
             lcl_rd_ctx_valid_sync4     <= lcl_rd_ctx_valid_sync3   ;
             lcl_rd_ctx_sync4           <= lcl_rd_ctx_sync3         ;
-            tlx_a_cmd_valid_sync4      <= tlx_a_cmd_valid_sync3    ;
-            tlx_a_cmd_pasid_sync4      <= tlx_a_cmd_pasid_sync3    ;
-            tlx_a_cmd_actag_sync4      <= tlx_a_cmd_actag_sync3    ;
             dma_w_cmd_ctx_valid_sync4  <= dma_w_cmd_ctx_valid_sync3;
             dma_w_cmd_ctx_sync4        <= dma_w_cmd_ctx_sync3      ;
             dma_r_cmd_ctx_valid_sync4  <= dma_r_cmd_ctx_valid_sync3;
@@ -1493,7 +1412,7 @@ brdg_axi_slave       axi_slv (
         end
     end
 
- ila_p283 mila_for_multi_process
+ ila_p250 mila_for_multi_process
  (
   .clk(clk_tlx),
   .probe0(
@@ -1507,9 +1426,6 @@ brdg_axi_slave       axi_slv (
      lcl_wr_ctx_sync4            ,//9+
      lcl_rd_ctx_valid_sync4      ,//1+
      lcl_rd_ctx_sync4            ,//9+
-     tlx_a_cmd_valid_sync4       ,//1+
-     tlx_a_cmd_pasid_sync4       ,//20+
-     tlx_a_cmd_actag_sync4       ,//12+
      dma_w_cmd_ctx_valid_sync4   ,//1+
      dma_w_cmd_ctx_sync4         ,//9+
      dma_r_cmd_ctx_valid_sync4   ,//1+

@@ -17,7 +17,11 @@
 
 `include "snap_global_vars.v"
 
-module brdg_context_surveil ( 
+module brdg_context_surveil 
+                #(
+                   parameter DISTR = 0
+                  )
+( 
                              input                      clk                   ,
                              input                      rst_n                 ,
 
@@ -26,284 +30,194 @@ module brdg_context_surveil (
                              input      [019:0]         cfg_pasid_base        ,
                              input      [019:0]         cfg_pasid_mask        ,
 
-                             //---- local interface ------------------------------------
-                             input      [`CTXW-1:0]     lcl_wr_ctx            ,
-                             input      [`CTXW-1:0]     lcl_rd_ctx            ,
-                             input                      lcl_wr_ctx_valid      ,
-                             input                      lcl_rd_ctx_valid      ,
-                             input      [`CTXW-1:0]     interrupt_ctx         ,
-                             input                      interrupt             ,
-                             output                     context_suspend       ,
+                             output                     tlx_cmd_s1_ready     ,
+                             output                     tlx_wdata_rdrq       ,
 
-                             //---- TLX interface --------------------------------------
-                             output                     tlx_cmd_valid         ,
-                             output     [019:0]         tlx_cmd_pasid         ,
-                             output     [011:0]         tlx_cmd_actag         ,
-                             output     [007:0]         tlx_cmd_opcode
+                             input                      tlx_i_cmd_valid      ,
+                             input      [007:0]         tlx_i_cmd_opcode     ,
+                             input      [015:0]         tlx_i_cmd_afutag     ,
+                             input      [067:0]         tlx_i_cmd_ea_or_obj  ,
+                             input      [001:0]         tlx_i_cmd_dl         ,
+                             input      [002:0]         tlx_i_cmd_pl         ,
+                             input      [011:0]         tlx_i_cmd_actag      ,
+                             input      [019:0]         tlx_i_cmd_pasid      ,
+
+                             output                     tlx_o_cmd_valid      , 
+                             output     [007:0]         tlx_o_cmd_opcode     ,
+                             output     [015:0]         tlx_o_cmd_afutag     ,
+                             output     [067:0]         tlx_o_cmd_ea_or_obj  ,
+                             output     [001:0]         tlx_o_cmd_dl         ,
+                             output     [002:0]         tlx_o_cmd_pl         ,
+                             output     [011:0]         tlx_o_cmd_actag      ,
+                             output     [019:0]         tlx_o_cmd_pasid      ,
+
+                             input                      tlx_afu_cmd_ready    
                              );
 
-
-
  localparam [7:0] AFU_TLX_CMD_OPCODE_ASSIGN_ACTAG  = 8'b0101_0000;  // Assign acTag
+ localparam [7:0] AFU_TLX_CMD_OPCODE_DMA_W         = 8'b0010_0000;  // DMA Write
+ localparam [7:0] AFU_TLX_CMD_OPCODE_DMA_PR_W      = 8'b0011_0000;  // DMA Partial Write
 
- parameter CTX_DEPTH = 2**`CTXW;
+ reg                 s1_cmd_valid         ;    
+ reg [007:0]         s1_cmd_opcode        ;     
+ reg [011:0]         s1_cmd_actag         ;    
+ reg [067:0]         s1_cmd_ea_or_obj     ;        
+ reg [015:0]         s1_cmd_afutag        ;     
+ reg [001:0]         s1_cmd_dl            ; 
+ reg [002:0]         s1_cmd_pl            ; 
+ reg [019:0]         s1_cmd_pasid         ;    
+ wire                s1_ready             ;
 
- reg [019:0] cmd_pasid_aligned;
- reg [011:0] cmd_actag;
- reg         cmd_valid;
- reg [`CTXW-1:0] ctx_value_selected;
- reg [`CTXW-1:0] ctx_value;
- reg         ctx_valid;
+ reg                 s2_cmd_valid         ;    
+ reg [007:0]         s2_cmd_opcode        ;     
+ reg [011:0]         s2_cmd_actag         ;    
+ reg [067:0]         s2_cmd_ea_or_obj     ;        
+ reg [015:0]         s2_cmd_afutag        ;     
+ reg [001:0]         s2_cmd_dl            ; 
+ reg [002:0]         s2_cmd_pl            ; 
+ reg [019:0]         s2_cmd_pasid         ;    
+ wire                s2_ready             ;
+
+ wire                ram_wr_en            ;
+ wire [005:0]        ram_wr_addr          ;
+ wire [005:0]        ram_rd_addr          ;
+ wire [`CTXW-6:0]    ram_data_i           ;
+ wire [`CTXW-6:0]    ram_data_o           ;
+ wire                entry_valid          ;
+ wire [`CTXW-7:0]    pasid_stored_in_entry;
+ wire                send_assign_actag    ;
+ reg                 send_assign_actag_dly;
+ reg  [019:0]        cmd_pasid_aligned    ;
+ reg  [011:0]        cmd_actag            ;
 
 //-----------------------------------------------------------------------------------------------------------
-// CONTEXT UPDATE ARBITRARY
-//
-//   avoid coincidence of write, read and interrupt context valid 
-//                             --     --         ---    
-//   write context s0 ======> |s1|=> |s2|=====> |   |
-//                     ||      --     --        |   |   
-//                     ||      ||=============> | A |
-//                     ||=====================> | R |
-//                             --     --        | B |    
-//   read context s0  ======> |s1|=> |s2|=====> | I |                ---------------------------------------------
-//                     ||      --     --        | T |=> ctx_value => |  ctx_fifo (512 entries for used contexts) |
-//                     ||      ||=============> | R |       ||       ---------------------------------------------
-//                     ||=====================> | A |       ||         ||      ||====>  ---
-//                             --     --        | T |       ||         ||       ....   | C |
-//   interrupt context s0 ==> |s1|=> |s2|=====> | O |       ||         ==============> | M |-> ctx_unique-> tlx_cmd_valid
-//                     ||      --     --        | R |       ||                         | P |
-//                     ||      ||=============> |   |       =========================>  ---
-//                     ||=====================> |   |                             ||
-//                                               ---                              ||    -------------
-//                                                                                =====| CALCULATION |=> tlx_cmd_actag/pasid
-//                                                                                      -------------
-// 1. shift contexts from write, read and interrupt channels rightwards to S1 and S2;
-// 2. priority of selection for ctx_value: S2 > S1 > S0;
-// 3. priority in the same stage: write > read > interrupt;
-// 4. require context input to suspend when context reaches S2.  
+// stage 0: read pasid<->actag mapping ram, use input pasid[5:0](actag) as address
 //-----------------------------------------------------------------------------------------------------------
+ assign tlx_cmd_s1_ready = s1_ready;
 
- //---- valid signals for context shift-registers, with identical context screened out ----
- reg ctx_w_v1, ctx_w_v2;
- reg ctx_r_v1, ctx_r_v2;
- reg ctx_i_v1, ctx_i_v2;
- wire ctx_w_v0 = lcl_wr_ctx_valid;
- //wire ctx_r_v0 = (lcl_rd_ctx != lcl_wr_ctx)? lcl_rd_ctx_valid : 1'b0;
- //wire ctx_i_v0 = ((interrupt_ctx != lcl_rd_ctx) && (interrupt_ctx != lcl_wr_ctx))? interrupt : 1'b0;
- wire ctx_r_v0 = lcl_rd_ctx_valid;
- wire ctx_i_v0 = interrupt;
+ // pasid<->actag mapping ram.
+ // as actag should be less than 64 but pasid should be less than 512, use this ram to mapping the 6bit actag with 9bit pasid
+ // the mapping is handled in this way: actag is equal to pasid[5:0] and is used as rd/wr addr for this ram while pasid[8:6] is
+ // store in this ram. 
+ // in each entry of this ram, there is an extra valid bit to indicate whether actag<->pasid mapping relationship has been setup
+ // in this entry
+ ram_simple_dual #(`CTXW-5,6,DISTR) mram_simple_dual (
+     .clk   (clk        ),
+     .ena   (1'b1       ),
+     .enb   (1'b1       ),
+     .wea   (ram_wr_en  ),
+     .addra (ram_wr_addr),
+     .addrb (ram_rd_addr),
+     .dia   (ram_data_i ),
+     .dob   (ram_data_o ));
 
- //---- shift-registers for 3-channel contexts, push context rightward when there's valid context at S0 ----
- reg[`CTXW-1:0] ctx_w_s1, ctx_w_s2;
- reg[`CTXW-1:0] ctx_r_s1, ctx_r_s2;
- reg[`CTXW-1:0] ctx_i_s1, ctx_i_s2;
- wire[`CTXW-1:0] ctx_w_s0 = lcl_wr_ctx;
- wire[`CTXW-1:0] ctx_r_s0 = lcl_rd_ctx;
- wire[`CTXW-1:0] ctx_i_s0 = interrupt_ctx;
+ assign ram_rd_addr = tlx_i_cmd_actag[5:0]; 
 
- always@(posedge clk)
-   if(ctx_w_v0)
-     begin
-       ctx_w_s2 <= ctx_w_s1;
-       ctx_w_s1 <= ctx_w_s0;
-     end
-
- always@(posedge clk)
-   if(ctx_r_v0)
-     begin
-       ctx_r_s2 <= ctx_r_s1;
-       ctx_r_s1 <= ctx_r_s0;
-     end
-
- always@(posedge clk)
-   if(ctx_i_v0)
-     begin
-       ctx_i_s2 <= ctx_i_s1;
-       ctx_i_s1 <= ctx_i_s0;
-     end
-
-
- //---- prioritize contexts to be selected for downstream command converter ----
- wire[8:0] ctx_v_asm = {ctx_w_v2, ctx_r_v2, ctx_i_v2, ctx_w_v1, ctx_r_v1, ctx_i_v1, ctx_w_v0, ctx_r_v0, ctx_i_v0};
- reg [8:0] ctx_pos;
-
- always@*
-   casez(ctx_v_asm)
-     9'b1??_???_??? : ctx_pos = 9'b100_000_000;  //bit8 : w2
-     9'b01?_???_??? : ctx_pos = 9'b010_000_000;  //bit7 : r2
-     9'b001_???_??? : ctx_pos = 9'b001_000_000;  //bit6 : i2
-     9'b000_1??_??? : ctx_pos = 9'b000_100_000;  //bit5 : w1
-     9'b000_01?_??? : ctx_pos = 9'b000_010_000;  //bit4 : r1
-     9'b000_001_??? : ctx_pos = 9'b000_001_000;  //bit3 : i1
-     9'b0000_00_1?? : ctx_pos = 9'b000_000_100;  //bit2 : w0
-     9'b0000_00_01? : ctx_pos = 9'b000_000_010;  //bit1 : r0
-     9'b0000_00_001 : ctx_pos = 9'b000_000_001;  //bit0 : i0
-     default        : ctx_pos = 9'b0;
-   endcase
-
- //---- clear shift-register valid signals when corresponding context has been selected, otherwise keep shifting ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
-     begin
-       ctx_w_v2 <= 1'b0;
-       ctx_r_v2 <= 1'b0;
-       ctx_i_v2 <= 1'b0;
-       ctx_w_v1 <= 1'b0;
-       ctx_r_v1 <= 1'b0;
-       ctx_i_v1 <= 1'b0;
-     end
-   else 
-     begin
-       ctx_w_v2 <= (ctx_pos[8] || ctx_pos[5])? 1'b0 : ctx_w_v1;
-       ctx_r_v2 <= (ctx_pos[7] || ctx_pos[4])? 1'b0 : ctx_r_v1;
-       ctx_i_v2 <= (ctx_pos[6] || ctx_pos[3])? 1'b0 : ctx_i_v1;
-       ctx_w_v1 <= (ctx_pos[5] || ctx_pos[2])? 1'b0 : ctx_w_v0;
-       ctx_r_v1 <= (ctx_pos[4] || ctx_pos[1])? 1'b0 : ctx_r_v0;
-       ctx_i_v1 <= (ctx_pos[3] || ctx_pos[0])? 1'b0 : ctx_i_v0;
-     end
-
-//---- select out the context for further evaluation and output ----
- always@*
-   casez(ctx_v_asm)
-     9'b1??_???_??? : ctx_value_selected = ctx_w_s2;
-     9'b01?_???_??? : ctx_value_selected = ctx_r_s2;
-     9'b001_???_??? : ctx_value_selected = ctx_i_s2;
-     9'b000_1??_??? : ctx_value_selected = ctx_w_s1;
-     9'b000_01?_??? : ctx_value_selected = ctx_r_s1;
-     9'b000_001_??? : ctx_value_selected = ctx_i_s1;
-     9'b0000_00_1?? : ctx_value_selected = ctx_w_s0;
-     9'b0000_00_01? : ctx_value_selected = ctx_r_s0;
-     9'b0000_00_001 : ctx_value_selected = ctx_i_s0;
-     default        : ctx_value_selected = {`CTXW{1'b0}};
-   endcase
+//-----------------------------------------------------------------------------------------------------------
+// stage 1: check if pasid<->actag mapping ram need to be updated. if need update, update this ram and 
+// send assign_actag cmd to stage 2 at the same time, else pass tlx_cmd in stage 1 to stage 2 directly
+//-----------------------------------------------------------------------------------------------------------
+ assign s1_ready = (s2_ready && (!send_assign_actag));
 
  always@(posedge clk or negedge rst_n)
  begin
      if(~rst_n)
-         ctx_valid <= 1'b0;
+         s1_cmd_valid <= 1'b0;
+     else if(tlx_i_cmd_valid && s1_ready)
+         s1_cmd_valid <= 1'b1;
+     else if(s2_ready && (!send_assign_actag))
+         s1_cmd_valid <= 1'b0;
+ end
+
+ always@(posedge clk or negedge rst_n)
+ begin
+     if(~rst_n)
+     begin
+         s1_cmd_opcode    <= 0;     
+         s1_cmd_actag     <= 0;    
+         s1_cmd_ea_or_obj <= 0;        
+         s1_cmd_afutag    <= 0;     
+         s1_cmd_dl        <= 0; 
+         s1_cmd_pl        <= 0; 
+         s1_cmd_pasid     <= 0;    
+     end
+     else if(s1_ready && tlx_i_cmd_valid)
+     begin
+         s1_cmd_opcode    <= tlx_i_cmd_opcode   ;     
+         s1_cmd_actag     <= tlx_i_cmd_actag    ;    
+         s1_cmd_ea_or_obj <= tlx_i_cmd_ea_or_obj;        
+         s1_cmd_afutag    <= tlx_i_cmd_afutag   ;     
+         s1_cmd_dl        <= tlx_i_cmd_dl       ; 
+         s1_cmd_pl        <= tlx_i_cmd_pl       ; 
+         s1_cmd_pasid     <= tlx_i_cmd_pasid    ;    
+     end
+ end
+
+ assign entry_valid = ram_data_o[0];
+ assign pasid_stored_in_entry = ram_data_o[`CTXW-6:1]; 
+ assign send_assign_actag = s1_cmd_valid && s2_ready && !(send_assign_actag_dly) && (!entry_valid || (pasid_stored_in_entry != s1_cmd_pasid[`CTXW-1:6]));
+ assign ram_wr_en = send_assign_actag;
+ assign ram_wr_addr = s1_cmd_actag[5:0];
+ assign ram_data_i = {s1_cmd_pasid[`CTXW-1:6], 1'b1};
+
+ always@(posedge clk or negedge rst_n)
+ begin
+     if(~rst_n)
+         send_assign_actag_dly <= 1'b0;
+     else 
+         send_assign_actag_dly <= send_assign_actag;
+ end
+
+//-----------------------------------------------------------------------------------------------------------
+// stage 2: send command to afu_tlx interface
+//-----------------------------------------------------------------------------------------------------------
+ assign s2_ready = tlx_afu_cmd_ready; 
+
+ always@(posedge clk or negedge rst_n)
+ begin
+     if(~rst_n)
+         s2_cmd_valid <= 1'b0;
      else
-         ctx_valid <= |ctx_v_asm;
+         s2_cmd_valid <= s1_cmd_valid && s2_ready;
  end
 
  always@(posedge clk or negedge rst_n)
  begin
      if(~rst_n)
-         ctx_value <= {`CTXW{1'b0}};
-     else if(|ctx_v_asm)
-         ctx_value <= ctx_value_selected;
+         s2_cmd_opcode <= 0;
+     else if(s1_cmd_valid && s2_ready)
+         s2_cmd_opcode <= send_assign_actag ? AFU_TLX_CMD_OPCODE_ASSIGN_ACTAG : s1_cmd_opcode;
  end
 
-
-//-----------------------------------------------------------------------------------------------------------
-// CONTEXT FIFO 
-//
-//   * stores context values that's been sent to TLX with assign_actag command
-//   * updated when new context comes
-//   * cleared when updated
-//-----------------------------------------------------------------------------------------------------------
-
- wire[CTX_DEPTH-1 : 0] ctx_no_match;
- wire                  ctx_unique;
- reg [`CTXW-1 : 0] ctx_fifo [CTX_DEPTH-1:0];
- reg [0:0] ctx_sent[CTX_DEPTH-1 : 0];
-
- // compare new context value with all FIFO contents at once
- genvar i;
- generate 
-   for(i = 0; i < CTX_DEPTH; i = i+1)
-     begin : sent_ctx_match
-       assign ctx_no_match[i] = ctx_sent[i]? (ctx_valid && (ctx_fifo[i] != ctx_value)) : ctx_valid;
-     end
- endgenerate 
-
- assign ctx_unique = &ctx_no_match;
-
-// accepts new context only when it's not equal to any valid content in the FIFO
  always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
-     begin
-       ctx_fifo[0] <= 'd0;
-       ctx_sent[0] <= 1'b0;
-     end
-   else if(ctx_unique)
-     begin
-       ctx_fifo[0] <= ctx_value;
-       ctx_sent[0] <= 1'b1;
-     end
+   if(~rst_n)
+   begin
+       s2_cmd_actag     <= 0;    
+       s2_cmd_ea_or_obj <= 0;        
+       s2_cmd_afutag    <= 0;     
+       s2_cmd_dl        <= 0; 
+       s2_cmd_pl        <= 0; 
+       s2_cmd_pasid     <= 0;
+   end
+   else if(s1_cmd_valid && s2_ready)
+   begin
+       s2_cmd_actag     <= s1_cmd_actag    ;    
+       s2_cmd_ea_or_obj <= s1_cmd_ea_or_obj;        
+       s2_cmd_afutag    <= s1_cmd_afutag   ;     
+       s2_cmd_dl        <= s1_cmd_dl       ; 
+       s2_cmd_pl        <= s1_cmd_pl       ; 
+       s2_cmd_pasid     <= s1_cmd_pasid    ;
+   end
 
- genvar j;
- generate 
-   for(j = 1; j < CTX_DEPTH; j = j+1)
-     begin : sent_ctx_FIFO
-       always@(posedge clk or negedge rst_n)
-         if(~rst_n) 
-           begin
-             ctx_fifo[j] <= 'd0;
-             ctx_sent[j] <= 1'b0;
-           end
-         else if(ctx_unique)
-           begin
-             ctx_fifo[j] <= ctx_fifo[j-1];
-             ctx_sent[j] <= ctx_sent[j-1];
-           end
-     end
- endgenerate 
-
-
-//---- require context suspension whenever any context is shifted to S2 ----
- assign context_suspend = |{ctx_w_v2, ctx_r_v2, ctx_i_v2};
-
-
-
-//-----------------------------------------------------------------------------------------------------------
-// ASSIGN ACTAG COMMAND
-//-----------------------------------------------------------------------------------------------------------
-
-//---- the aligned pasid to be issued to TLX ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
-     cmd_pasid_aligned <= 20'd0;
-   else if(ctx_valid)
-     cmd_pasid_aligned <= ((cfg_pasid_base & cfg_pasid_mask) | ({{(20-`CTXW){1'd0}}, ctx_value} & ~cfg_pasid_mask));
-
-//---- the actag to be issued to TLX ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
-     cmd_actag <= 12'd0;
-   else if(ctx_valid)
-     cmd_actag <= cfg_actag_base + {{(12-`CTXW){1'd0}},ctx_value}; 
-
-//---- assign_actag command output ready ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
-     cmd_valid <= 1'b0;
-   else
-     cmd_valid <= ctx_unique;
-
-
-//---- outgoing info for TLX ----
- assign tlx_cmd_valid  = cmd_valid;
- assign tlx_cmd_pasid  = cmd_pasid_aligned; 
- assign tlx_cmd_actag  = cmd_actag; 
- assign tlx_cmd_opcode = AFU_TLX_CMD_OPCODE_ASSIGN_ACTAG;
-
-
-
- // psl default clock = (posedge clk);
-
-//==== PSL ASSERTION ==============================================================================
- // psl NEW_CONTEXT_CONGESTED : assert always onehot0({ctx_w_v2, ctx_r_v2, ctx_i_v2}) report "new contexts from write, read and interrupt channels are too many to be handled!";
-//==== PSL ASSERTION ==============================================================================
-
-//==== PSL COVERAGE ==============================================================================
- // psl WR_RD_CONTEXT_CONCUR : cover {(ctx_w_v0 && ctx_r_v0)};
- // psl WR_IN_CONTEXT_CONCUR : cover {(ctx_w_v0 && ctx_i_v0)};
- // psl RD_IN_CONTEXT_CONCUR : cover {(ctx_r_v0 && ctx_i_v0)};
- // psl WR_RD_IN_CONTEXT_CONCUR : cover {(ctx_w_v0 && ctx_r_v0 && ctx_i_v0)};
- 
- // psl ALL_CONTEXT_COMMITTED : cover {ctx_sent[CTX_DEPTH-1]};
-//==== PSL COVERAGE ==============================================================================
-
-
+//----ouptut signals----
+ assign tlx_wdata_rdrq      = s1_cmd_valid && s2_ready && (!send_assign_actag) && ((s1_cmd_opcode == AFU_TLX_CMD_OPCODE_DMA_W) || (s1_cmd_opcode == AFU_TLX_CMD_OPCODE_DMA_PR_W)); 
+ assign tlx_o_cmd_valid     = s2_cmd_valid    ;
+ assign tlx_o_cmd_opcode    = s2_cmd_opcode   ;
+ assign tlx_o_cmd_afutag    = s2_cmd_afutag   ;
+ assign tlx_o_cmd_ea_or_obj = s2_cmd_ea_or_obj;
+ assign tlx_o_cmd_dl        = s2_cmd_dl       ;
+ assign tlx_o_cmd_pl        = s2_cmd_pl       ;
+ assign tlx_o_cmd_actag     = {6'b0,s2_cmd_actag[5:0]};
+ assign tlx_o_cmd_pasid     = s2_cmd_pasid    ;
 
 endmodule
