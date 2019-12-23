@@ -21,6 +21,7 @@
 %apply (int* IN_ARRAY1, int DIM1) {(int * input_arr_b, int size_in_b)}
 %apply (int* INPLACE_ARRAY1, int DIM1) {(int * output_arr_c, int size_out)}
 
+
 %include "dieres.h"
 
 

@@ -11,10 +11,13 @@ sys.path.append("/home/did/projects/oc-accel_did/actions/hls_mmult_python/sw")
 import dieres
 import numpy as np
  
-a = np.ones(16*16, np.int32)
+#a = np.ones(16*16, np.int32)
+a = np.arange(0,16*16,1,np.int32)
 print(a)
 
-b = np.ones(16*16, np.int32)*2
+
+#b = np.ones(16*16, np.int32)*2
+b=np.arange(10,16*16+10,1,np.int32)
 print(b)
 
 c = np.zeros(16*16, np.int32)

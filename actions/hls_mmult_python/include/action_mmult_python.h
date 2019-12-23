@@ -65,9 +65,10 @@ typedef struct mmult_job {
         uint32_t a_row;         /* Matrix A Row Size */
         uint32_t a_col;         /* Matrix A Col Size */
         uint32_t b_col;         /* Matrix B Col Size */
-        uint32_t pad0;
+        uint32_t addr_in1_index;
 	int64_t  offset_to_point_b; /* Offset of b in gmem */
-        uint64_t pad1;
+        uint32_t addr_in2_index;
+        uint32_t addr_out_index;
 } mmult_job_t;
 
 #ifdef __cplusplus

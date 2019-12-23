@@ -29,37 +29,52 @@
 
 
 // Cast data read from AXI input port to decimal values
-static void mbus_to_mat_elmt_t(snap_membus_t *data_read, mat_elmt_t *table_decimal_in)
+static void mbus_to_mat_elmt_t(snap_membus_t *data_read, uint64_t addr_in_index, mat_elmt_t *table_decimal_in)
 {
 	union {
 		uint64_t     value_u;
 		mat_elmt_t   value_d;
 	};
+	unsigned int min_index = addr_in_index;
+	unsigned int max_index = MAX_NB_OF_WORDS_READ * MAX_NB_OF_DECIMAL_PERDW + addr_in_index;
+	unsigned int index_incr = 0;
 
-	loop_m2d1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
+	loop_m2d1: for(unsigned int i = 0; i < MAX_NB_OF_WORDS_READ+1; i++)
 #pragma HLS PIPELINE
-	   loop_m2d2: for(int j = 0; j < MAX_NB_OF_DECIMAL_PERDW; j++)
+	   loop_m2d2: for(unsigned int j = 0; j < MAX_NB_OF_DECIMAL_PERDW; j++)
 	   {
-		value_u = (uint64_t)data_read[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j));
-		table_decimal_in[i*MAX_NB_OF_DECIMAL_PERDW + j] = value_d;
+		unsigned int index = i*MAX_NB_OF_DECIMAL_PERDW + j;
+		if ((index >= min_index) && (index <= max_index)) {
+			value_u = (uint64_t)data_read[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j));	
+			table_decimal_in[index_incr++] = value_d;
+		}
 		//printf("DEBUG mbus_to_mat_elmt_t: i=%d, j=%d, value_u=%u, value_d=%d\n", i, j, value_u, value_d);
+		printf("DEBUG mbus_to_mat_elmt_t: index=%u, min_index=%u, max_index=%u\n", index, min_index, max_index);
 	   }
 
 }
 
 // Cast decimal values to AXI output port format (64 Bytes)
-static void  mat_elmt_t_to_mbus(mat_elmt_t *table_decimal_out, snap_membus_t *data_to_be_written)
+static void  mat_elmt_t_to_mbus(mat_elmt_t *table_decimal_out, uint64_t addr_out_index, snap_membus_t *data_to_be_written)
 {
 	union {
 		mat_elmt_t   value_d;
 		uint64_t     value_u;
 	};
-	loop_d2m1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
+	unsigned int min_index = addr_out_index;
+	unsigned int max_index = MAX_NB_OF_WORDS_READ * MAX_NB_OF_DECIMAL_PERDW + addr_out_index;
+	unsigned int index_incr = 0;
+
+	loop_d2m1: for(unsigned int i = 0; i < MAX_NB_OF_WORDS_READ+1; i++)
 #pragma HLS PIPELINE
-	   loop_d2m2: for(int j = 0; j < MAX_NB_OF_DECIMAL_PERDW; j++)
+	   loop_d2m2: for(unsigned int j = 0; j < MAX_NB_OF_DECIMAL_PERDW; j++)
 	   {
-		value_d = table_decimal_out[i*MAX_NB_OF_DECIMAL_PERDW + j];
-		data_to_be_written[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j)) = (uint64_t)value_u;
+		unsigned int index = i*MAX_NB_OF_DECIMAL_PERDW + j;
+		if ((index >= min_index) && (index <= max_index)) {
+			value_d = table_decimal_out[index_incr++];
+			data_to_be_written[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j)) = (uint64_t)value_u;
+		}
+		printf("DEBUG mat_elmt_t_to_mbus: index=%u, min_index=%u, max_index=%u\n", index, min_index, max_index);
 	   }
 }
 
@@ -220,8 +235,8 @@ static int process_action(snap_membus_t *din_gmem,
 	//memcpy((int*) a, din_gmem + i_idx, MAX_SIZE * MAX_SIZE * sizeof(int));
 	//memcpy((int*) b, din_gmem + i_idx + act_reg->Data.offset_to_point_b, MAX_SIZE * MAX_SIZE * sizeof(int));
 
-	mbus_to_mat_elmt_t(din_gmem + i_idx, a);
-	mbus_to_mat_elmt_t(din_gmem + i_idx + act_reg->Data.offset_to_point_b, b);
+	mbus_to_mat_elmt_t(din_gmem + i_idx, act_reg->Data.addr_in1_index, a);
+	mbus_to_mat_elmt_t(din_gmem + i_idx + act_reg->Data.offset_to_point_b, act_reg->Data.addr_in2_index, b);
 
 	mmult(	a, // Read-Only Matrix A
         	b, // Read-Only Matrix B
@@ -232,7 +247,7 @@ static int process_action(snap_membus_t *din_gmem,
 
 	/* Write out one word_t */
 	//memcpy(dout_gmem + o_idx, (int*) c, MAX_SIZE * MAX_SIZE * sizeof(int));
-	mat_elmt_t_to_mbus(c, dout_gmem + o_idx);
+	mat_elmt_t_to_mbus(c, act_reg->Data.addr_out_index, dout_gmem + o_idx);
 
 	size -= bytes_to_transfer;
 	i_idx++;
@@ -387,6 +402,10 @@ int main(void)
     act_reg.Data.out.addr = 0;
     act_reg.Data.out.size = matrix_size;
     act_reg.Data.out.type = SNAP_ADDRTYPE_HOST_DRAM;
+
+    act_reg.Data.addr_in1_index = 0;
+    act_reg.Data.addr_in2_index = 0;
+    act_reg.Data.addr_out_index = 0;
 
     printf("Action call \n");
     hls_action(din_gmem, dout_gmem, &act_reg);

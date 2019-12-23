@@ -54,10 +54,11 @@ static void snap_prepare_mmult(struct snap_job *cjob,
 			         uint32_t a_col,
 			         uint32_t b_col,
 				 uint64_t offset_b,
-				 void *addr_in,
+				 uint64_t addr_in1,
+				 uint64_t addr_in2,
 				 uint32_t size_in,
 				 uint8_t type_in,
-				 void *addr_out,
+				 uint64_t addr_out,
 				 uint32_t size_out,
 				 uint8_t type_out)
 {
@@ -71,11 +72,24 @@ static void snap_prepare_mmult(struct snap_job *cjob,
 	mjob->b_col = b_col;
 	mjob->offset_to_point_b = offset_b;
 
+
+	float source_in1_align_f = ceil((float)addr_in1/64.0) - (float)addr_in1 / 64.0;
+	mjob->addr_in1_index = (uint32_t)(source_in1_align_f*16);
+
+	float source_in2_align_f = ceil((float)addr_in2/64.0) - (float)addr_in2 / 64.0;
+	mjob->addr_in2_index = (uint32_t)(source_in2_align_f*16);
+
+	float source_out_align_f = ceil((float)addr_out/64.0) - (float)addr_out / 64.0;
+	mjob->addr_out_index = (uint32_t)(source_out_align_f*16);
+
+	printf("DEBUG snap_prepare_mmult: source_in1_align_f=%f, addr_in1_index=%u,  source_in2_align_f=%f, addr_in2_index=%u, source_out_align_f=%f, addr_out_index=%u\n", 
+		source_in1_align_f, mjob->addr_in1_index, source_in2_align_f, mjob->addr_in2_index, source_out_align_f, mjob->addr_out_index);
+
 	// Setting input params : where text is located in host memory
-	snap_addr_set(&mjob->in, addr_in, size_in, type_in,
+	snap_addr_set(&mjob->in, (void *)addr_in1, size_in, type_in,
 		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_SRC);
 	// Setting output params : where result will be written in host memory
-	snap_addr_set(&mjob->out, addr_out, size_out, type_out,
+	snap_addr_set(&mjob->out, (void *)addr_out, size_out, type_out,
 		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_DST |
 		      SNAP_ADDRFLAG_END);
 
@@ -104,6 +118,8 @@ void m_softwareGold(
   }
 }
 
+
+
 /* main program of the application for the hls_mmult example        */
 /* This application will always be run on CPU and will call either       */
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
@@ -131,7 +147,8 @@ int main(int argc)
 	//int *ibuff = NULL, 
 	int *obuff = NULL;
 	uint8_t type_in = SNAP_ADDRTYPE_HOST_DRAM;
-	uint64_t addr_in = 0x0ull;
+	uint64_t addr_in1 = 0x0ull;
+	uint64_t addr_in2 = 0x0ull;
 	uint8_t type_out = SNAP_ADDRTYPE_HOST_DRAM;
 	uint64_t addr_out = 0x0ull;
 	int exit_code = EXIT_SUCCESS;
@@ -206,13 +223,15 @@ int main(int argc)
 
 	// prepare params to be written in MMIO registers for action
 	type_in = SNAP_ADDRTYPE_HOST_DRAM;
-	//addr_in = (unsigned long)ibuff;
-	addr_in = (unsigned long)source_in1;
+	//addr_in1 = (unsigned long)ibuff;
+	addr_in1 = (unsigned long)source_in1;
+	addr_in2 = (unsigned long)source_in2;
+
 	float offset_b_f = (float)((source_in2-source_in1) * sizeof(int)) / 64;
 	offset_b = (int64_t)ceil(offset_b_f);  //FIXME: can be 128 for 1k AXI I/F
 
-	float source_in1_align_f = (float)((source_sw_results-source_in1) * sizeof(int)) / 64;
-	float source_in2_align_f = (float)((source_sw_results-source_in2) * sizeof(int)) / 64;
+	float source_in1_align_f = (float)addr_in1 / 64.0;
+	float source_in2_align_f = (float)addr_in2 / 64.0;
 
 
 #ifdef PY_WRAP
@@ -234,7 +253,8 @@ int main(int argc)
 	/* Display the parameters that will be used for the example */
 	printf("PARAMETERS:\n"
 	       "  type_in:     %x %s\n"
-	       "  addr_in:     %016llx\n"
+	       "  addr_in1:     %016llx (%llu)\n"
+	       "  addr_in2:     %016llx (%llu)\n"
 	       "  source_in1:  %016llx\n"
 	       "  source_in2:  %016llx\n"
 	       "  source_sw_results:  %016llx\n"
@@ -246,7 +266,7 @@ int main(int argc)
 	       "  offset_b_f:  %f\n"
 	       "  source_in1_align_f:  %f\n"
 	       "  source_in2_align_f:  %f\n",
-	       type_in,  mem_tab[type_in],  (long long)addr_in,
+	       type_in,  mem_tab[type_in],  (long long)addr_in1, (long long)addr_in1, (long long)addr_in2, (long long)addr_in2,
 	       source_in1, source_in2, source_sw_results,
 	       type_out, mem_tab[type_out], (long long)addr_out,
 	       isize, osize, (long long)offset_b, offset_b_f, source_in1_align_f, source_in2_align_f);
@@ -282,8 +302,8 @@ int main(int argc)
 	// Fill the stucture of data exchanged with the action
 	snap_prepare_mmult(&cjob, &mjob, 
 			     a_row, a_col, b_col, offset_b,
-			     (void *)addr_in,  isize, type_in,
-			     (void *)addr_out, osize, type_out);
+			     addr_in1, addr_in2, isize, type_in,
+			     addr_out, osize, type_out);
 
 	// uncomment to dump the job structure
 	//__hexdump(stderr, &mjob, sizeof(mjob));
