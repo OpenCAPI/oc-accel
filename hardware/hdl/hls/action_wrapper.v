@@ -340,15 +340,25 @@ assign  m_axi_host_mem_aruser = context_q;
 assign  m_axi_host_mem_awuser = context_q;
 
 // Driving the higher ID fields to 0.
-assign  m_axi_host_mem_arid  [ `IDW-1 : 1 ] = 'b0;
-assign  m_axi_host_mem_awid  [ `IDW-1 : 1 ] = 'b0;
+generate if(`IDW > 1)
+begin:high_hid_fields_driver
+    assign  m_axi_host_mem_arid  [ `IDW-1 : 1 ] = 'b0;
+    assign  m_axi_host_mem_awid  [ `IDW-1 : 1 ] = 'b0;
+end
+endgenerate
 //assign  m_axi_host_mem_wuser [ `AXI_WUSER-1 : 1 ] = 'b0;
 
 
 `ifdef ENABLE_AXI_CARD_MEM
 assign m_axi_card_mem0_araddr = temp_card_mem0_araddr[`AXI_CARD_MEM_ADDR_WIDTH-1:0];
 assign m_axi_card_mem0_awaddr = temp_card_mem0_awaddr[`AXI_CARD_MEM_ADDR_WIDTH-1:0];
-assign m_axi_card_mem0_arid  [ `AXI_CARD_MEM_ID_WIDTH-1 : 1 ] = 'b0;
-assign m_axi_card_mem0_awid  [ `AXI_CARD_MEM_ID_WIDTH-1 : 1 ] = 'b0;
+
+generate if(`AXI_CARD_MEM_ID_WIDTH > 1)
+begin:high_cid_fields_driver
+    assign m_axi_card_mem0_arid  [ `AXI_CARD_MEM_ID_WIDTH-1 : 1 ] = 'b0;
+    assign m_axi_card_mem0_awid  [ `AXI_CARD_MEM_ID_WIDTH-1 : 1 ] = 'b0;
+end
+endgenerate
+
 `endif
 endmodule
