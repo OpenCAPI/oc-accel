@@ -2000,22 +2000,22 @@ endclass: bfm_test_rd_wr_1024_size6_randlen_randid_rand_resp
 
 //----------------------------------------------------------------------
 //
-// TEST: bfm_test_read_4k_write_4k_mmio
+// TEST: bfm_test_read_write_mmio
 //
 //----------------------------------------------------------------------
 
-class bfm_test_read_4k_write_4k_mmio extends action_tb_base_test;
+class bfm_test_read_write_mmio extends action_tb_base_test;
 
-    `uvm_component_utils(bfm_test_read_4k_write_4k_mmio)
+    `uvm_component_utils(bfm_test_read_write_mmio)
 
-    function new(string name= "bfm_test_read_4k_write_4k_mmio", uvm_component parent);
+    function new(string name= "bfm_test_read_write_mmio", uvm_component parent);
         super.new(name, parent);
     endfunction: new
 
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        uvm_config_wrapper::set(this, "env.vsqr.main_phase", "default_sequence", bfm_seq_read_4k_write_4k_mmio::type_id::get());
+        uvm_config_wrapper::set(this, "env.vsqr.main_phase", "default_sequence", bfm_seq_read_write_mmio::type_id::get());
     endfunction : build_phase
     
 
@@ -2026,7 +2026,7 @@ class bfm_test_read_4k_write_4k_mmio extends action_tb_base_test;
         join_none
     endtask: main_phase
 
-endclass: bfm_test_read_4k_write_4k_mmio
+endclass: bfm_test_read_write_mmio
 
 //----------------------------------------------------------------------
 //

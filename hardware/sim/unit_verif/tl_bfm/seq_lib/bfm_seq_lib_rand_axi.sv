@@ -27,15 +27,13 @@ class bfm_seq_rd_10_size7_len31 extends bfm_sequence_base;
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_10_size7_len31 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_10_size7_len31");
         super.new(name);
     endfunction: new
@@ -47,52 +45,33 @@ class bfm_seq_rd_10_size7_len31 extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
-        p_sequencer.brdg_cfg.total_write_num = 0;
+        p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_10_size7_len31[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_10_size7_len31[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_10_size7_len31[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_10_size7_len31[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_10_size7_len31[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_10_size7_len31[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_10_size7_len31[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_10_size7_len31[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_10_size7_len31[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_10_size7_len31[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_10_size7_len31[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number 1
-        rd_10_size7_len31[64'h0000_0008_8000_0064]=32'h0000_007B;
-        rd_10_size7_len31[64'h0000_0008_8000_0068]=32'h0000_0000;                         //Write number 0
-        rd_10_size7_len31[64'h0000_0008_8000_006C]=32'h0000_0000;
-        rd_10_size7_len31[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_10_size7_len31[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize());
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = 0;
+            write_addr[11:0] = 0;
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
+                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_10_size7_len31[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_10_size7_len31[64'h0000_0008_8000_0048]));
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_10_size7_len31[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
-
         #100000ns;
     endtask: body
 endclass
@@ -108,15 +87,13 @@ class bfm_seq_wr_10_size7_len31 extends bfm_sequence_base;
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] wr_10_size7_len31 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_wr_10_size7_len31");
         super.new(name);
     endfunction: new
@@ -128,52 +105,33 @@ class bfm_seq_wr_10_size7_len31 extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
-        p_sequencer.brdg_cfg.total_read_num = 0;
+        p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        wr_10_size7_len31[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        wr_10_size7_len31[64'h0000_0008_8000_003c]=32'h0000_0000;
-        wr_10_size7_len31[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        wr_10_size7_len31[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        wr_10_size7_len31[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        wr_10_size7_len31[64'h0000_0008_8000_004C]=32'h0000_0000;
-        wr_10_size7_len31[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        wr_10_size7_len31[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        wr_10_size7_len31[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        wr_10_size7_len31[64'h0000_0008_8000_005C]=32'h0000_0000;
-        wr_10_size7_len31[64'h0000_0008_8000_0060]=32'h0000_0000;                         //Read number 0
-        wr_10_size7_len31[64'h0000_0008_8000_0064]=32'h0000_0000;
-        wr_10_size7_len31[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number 1
-        wr_10_size7_len31[64'h0000_0008_8000_006C]=32'h0000_007B;
-        wr_10_size7_len31[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, wr_10_size7_len31[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize());
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = 0;
+            write_addr[11:0] = 0;
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
+                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, wr_10_size7_len31[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(wr_10_size7_len31[64'h0000_0008_8000_0048]));
-													
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, wr_10_size7_len31[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -190,15 +148,13 @@ class bfm_seq_rd_wr_1_size7_len31 extends bfm_sequence_base;
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_1_size7_len31 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_1_size7_len31");
         super.new(name);
     endfunction: new
@@ -210,52 +166,35 @@ class bfm_seq_rd_wr_1_size7_len31 extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 1;
         p_sequencer.brdg_cfg.total_write_num = 1;
 
-        void'(test_item.randomize());
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_1_size7_len31[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_1_size7_len31[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_1_size7_len31[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0060]=32'h0000_0001;                         //Read number 1
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0064]=32'h0000_007B;                         //Read pattern
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0068]=32'h0000_0001;                         //Write number 1
-        rd_wr_1_size7_len31[64'h0000_0008_8000_006C]=32'h0000_007B;                         //Write pattern
-        rd_wr_1_size7_len31[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_1_size7_len31[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<1; num++)begin
+            void'(axi_item.randomize());
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = 0;
+            write_addr[11:0] = 0;
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
+                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
+                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-		
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_1_size7_len31[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_1_size7_len31[64'h0000_0008_8000_0048]));
-        
-		//Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_1_size7_len31[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -271,15 +210,13 @@ class bfm_seq_rd_wr_10_size7_len31 extends bfm_sequence_base; //Ten simple 4KB r
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size7_len31 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size7_len31");
         super.new(name);
     endfunction: new
@@ -291,52 +228,35 @@ class bfm_seq_rd_wr_10_size7_len31 extends bfm_sequence_base; //Ten simple 4KB r
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size7_len31[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size7_len31[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size7_len31[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0064]=32'h2000_007B;                         //Read pattern
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size7_len31[64'h0000_0008_8000_006C]=32'h2000_007B;                         //Write pattern
-        rd_wr_10_size7_len31[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size7_len31[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize());
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = 0;
+            write_addr[11:0] = 0;
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
+                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
+                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size7_len31[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size7_len31[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size7_len31[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -352,15 +272,13 @@ class bfm_seq_rd_wr_10_size7_len0 extends bfm_sequence_base; //Ten 128B read and
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size7_len0 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size7_len0");
         super.new(name);
     endfunction: new
@@ -372,52 +290,40 @@ class bfm_seq_rd_wr_10_size7_len0 extends bfm_sequence_base; //Ten 128B read and
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size7_len0[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size7_len0[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size7_len0[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0064]=32'h2000_0070;                         //Read pattern
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size7_len0[64'h0000_0008_8000_006C]=32'h2000_0070;                         //Write pattern
-        rd_wr_10_size7_len0[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size7_len0[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h0;wr_len==8'h0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size7_len0[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size7_len0[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size7_len0[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -433,15 +339,13 @@ class bfm_seq_rd_wr_10_size7_randlen extends bfm_sequence_base; //Ten 128B*? rea
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size7_randlen [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int unsigned rd_block_byte;
+    int unsigned wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size7_randlen");
         super.new(name);
     endfunction: new
@@ -453,52 +357,40 @@ class bfm_seq_rd_wr_10_size7_randlen extends bfm_sequence_base; //Ten 128B*? rea
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0064]=32'h2000_007F;                         //Read pattern
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_006C]=32'h2000_007F;                         //Write pattern
-        rd_wr_10_size7_randlen[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size7_randlen[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size7_randlen[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size7_randlen[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size7_randlen[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -514,15 +406,13 @@ class bfm_seq_rd_wr_10_size7_randlen_strobe extends bfm_sequence_base;
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size7_randlen_strobe [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size7_randlen_strobe");
         super.new(name);
     endfunction: new
@@ -534,52 +424,40 @@ class bfm_seq_rd_wr_10_size7_randlen_strobe extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0064]=32'h2000_007F;                         //Read pattern
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_006C]=32'h20F0_007F;                         //Write pattern
-        rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size7_randlen_strobe[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size7_randlen_strobe[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size7_randlen_strobe[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #1000000ns;
     endtask: body
@@ -596,15 +474,13 @@ class bfm_seq_rd_wr_10_size6_len0 extends bfm_sequence_base; //Ten 64B read and 
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size6_len0 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size6_len0");
         super.new(name);
     endfunction: new
@@ -616,52 +492,40 @@ class bfm_seq_rd_wr_10_size6_len0 extends bfm_sequence_base; //Ten 64B read and 
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size6_len0[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size6_len0[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size6_len0[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0064]=32'h2000_0060;                         //Read pattern
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size6_len0[64'h0000_0008_8000_006C]=32'h2000_0060;                         //Write pattern
-        rd_wr_10_size6_len0[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size6_len0[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h6;wr_size==3'h6;rd_len==8'h0;wr_len==8'h0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size6_len0[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size6_len0[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size6_len0[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -677,15 +541,13 @@ class bfm_seq_rd_wr_10_size5_len6 extends bfm_sequence_base; //Ten 32B*7 read an
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size5_len6 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size5_len6");
         super.new(name);
     endfunction: new
@@ -697,52 +559,40 @@ class bfm_seq_rd_wr_10_size5_len6 extends bfm_sequence_base; //Ten 32B*7 read an
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size5_len6[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size5_len6[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size5_len6[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0064]=32'h2000_0056;                         //Read pattern
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size5_len6[64'h0000_0008_8000_006C]=32'h2000_0056;                         //Write pattern
-        rd_wr_10_size5_len6[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size5_len6[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h5;wr_size==3'h5;rd_len==8'h6;wr_len==8'h6;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size5_len6[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size5_len6[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size5_len6[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -758,15 +608,13 @@ class bfm_seq_rd_wr_1_size5_len0 extends bfm_sequence_base;
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_1_size5_len0 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_1_size5_len0");
         super.new(name);
     endfunction: new
@@ -778,52 +626,40 @@ class bfm_seq_rd_wr_1_size5_len0 extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 1;
         p_sequencer.brdg_cfg.total_write_num = 1;
 
-        void'(test_item.randomize());
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_1_size5_len0[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_1_size5_len0[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_1_size5_len0[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0060]=32'h0000_0001;                         //Read number
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0064]=32'h2000_0050;                         //Read pattern
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0068]=32'h0000_0001;                         //Write number
-        rd_wr_1_size5_len0[64'h0000_0008_8000_006C]=32'h2000_0050;                         //Write pattern
-        rd_wr_1_size5_len0[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_1_size5_len0[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<1; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h5;wr_size==3'h5;rd_len==8'h0;wr_len==8'h0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_1_size5_len0[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_1_size5_len0[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_1_size5_len0[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000ns;
     endtask: body
@@ -840,15 +676,13 @@ class bfm_seq_rd_wr_10_randsize_randlen extends bfm_sequence_base; //Ten ?B*? re
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_randsize_randlen [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_randsize_randlen");
         super.new(name);
     endfunction: new
@@ -860,52 +694,40 @@ class bfm_seq_rd_wr_10_randsize_randlen extends bfm_sequence_base; //Ten ?B*? re
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0064]=32'h2000_00FF;                         //Read pattern
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_006C]=32'h2000_00FF;                         //Write pattern
-        rd_wr_10_randsize_randlen[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_randsize_randlen[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize());
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_randsize_randlen[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_randsize_randlen[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_randsize_randlen[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #2000us;
     endtask: body
@@ -921,15 +743,13 @@ class bfm_seq_rd_wr_10_size7_len6_unaligned extends bfm_sequence_base; //Ten 128
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size7_len6_unaligned [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size7_len6_unaligned");
         super.new(name);
     endfunction: new
@@ -941,52 +761,40 @@ class bfm_seq_rd_wr_10_size7_len6_unaligned extends bfm_sequence_base; //Ten 128
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0064]=32'h2000_0F76;                         //Read pattern
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_006C]=32'h2000_0F76;                         //Write pattern
-        rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size7_len6_unaligned[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h6;wr_len==8'h6;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size7_len6_unaligned[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size7_len6_unaligned[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #400000ns;
     endtask: body
@@ -1002,15 +810,13 @@ class bfm_seq_rd_wr_10_size6_len6_unaligned extends bfm_sequence_base; //Ten 64B
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_size6_len6_unaligned [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_size6_len6_unaligned");
         super.new(name);
     endfunction: new
@@ -1022,52 +828,40 @@ class bfm_seq_rd_wr_10_size6_len6_unaligned extends bfm_sequence_base; //Ten 64B
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0064]=32'h2000_0F66;                         //Read pattern
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_006C]=32'h2000_0F66;                         //Write pattern
-        rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_size6_len6_unaligned[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h6;wr_size==3'h6;rd_len==8'h6;wr_len==8'h6;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_size6_len6_unaligned[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_size6_len6_unaligned[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #200000ns;
     endtask: body
@@ -1083,15 +877,13 @@ class bfm_seq_rd_wr_10_randsize_randlen_unaligned extends bfm_sequence_base; //T
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_randsize_randlen_unaligned [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_randsize_randlen_unaligned");
         super.new(name);
     endfunction: new
@@ -1103,52 +895,40 @@ class bfm_seq_rd_wr_10_randsize_randlen_unaligned extends bfm_sequence_base; //T
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0064]=32'h2000_0FFF;                         //Read pattern
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_006C]=32'h2000_0FFF;                         //Write pattern
-        rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_unaligned[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize());
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_randsize_randlen_unaligned[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_unaligned[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #1500000ns;
     endtask: body
@@ -1164,15 +944,13 @@ class bfm_seq_rd_wr_20_size7_len0_id0to3 extends bfm_sequence_base; //Twenty ID:
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_20_size7_len0_id0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_20_size7_len0_id0to3");
         super.new(name);
     endfunction: new
@@ -1184,52 +962,40 @@ class bfm_seq_rd_wr_20_size7_len0_id0to3 extends bfm_sequence_base; //Twenty ID:
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 20;
         p_sequencer.brdg_cfg.total_write_num = 20;
 
-        void'(test_item.randomize());
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0060]=32'h0000_0014;                         //Read number
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0064]=32'h2000_4070;                         //Read pattern
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0068]=32'h0000_0014;                         //Write number
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_006C]=32'h2000_4070;                         //Write pattern
-        rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_20_size7_len0_id0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<20; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h0;wr_len==8'h0;rd_id<4;wr_id<4;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_20_size7_len0_id0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_20_size7_len0_id0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #250000ns;
     endtask: body
@@ -1245,15 +1011,13 @@ class bfm_seq_rd_wr_20_size7_randlen_id0to3 extends bfm_sequence_base; //Twenty 
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_20_size7_randlen_id0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_20_size7_randlen_id0to3");
         super.new(name);
     endfunction: new
@@ -1265,52 +1029,40 @@ class bfm_seq_rd_wr_20_size7_randlen_id0to3 extends bfm_sequence_base; //Twenty 
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 20;
         p_sequencer.brdg_cfg.total_write_num = 20;
 
-        void'(test_item.randomize());
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0060]=32'h0000_0014;                         //Read number
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0064]=32'h2000_407F;                         //Read pattern
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0068]=32'h0000_0014;                         //Write number
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_006C]=32'h2000_407F;                         //Write pattern
-        rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_20_size7_randlen_id0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<=20; num++)begin
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_id<4;wr_id<4;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_20_size7_randlen_id0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_20_size7_randlen_id0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #250000ns;
     endtask: body
@@ -1326,15 +1078,13 @@ class bfm_seq_rd_wr_20_randsize_randlen_id0to3 extends bfm_sequence_base; //Twen
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_20_randsize_randlen_id0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_20_randsize_randlen_id0to3");
         super.new(name);
     endfunction: new
@@ -1346,52 +1096,40 @@ class bfm_seq_rd_wr_20_randsize_randlen_id0to3 extends bfm_sequence_base; //Twen
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 20;
         p_sequencer.brdg_cfg.total_write_num = 20;
 
-        void'(test_item.randomize());
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0060]=32'h0000_0014;                         //Read number
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0064]=32'h2000_40FF;                         //Read pattern
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0068]=32'h0000_0014;                         //Write number
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_006C]=32'h2000_40FF;                         //Write pattern
-        rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_20_randsize_randlen_id0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<20; num++)begin
+            void'(axi_item.randomize()with{rd_id<4;wr_id<4;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_20_randsize_randlen_id0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_20_randsize_randlen_id0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #2500us;
     endtask: body
@@ -1407,15 +1145,13 @@ class bfm_seq_rd_wr_20_size7_len0_user0to3 extends bfm_sequence_base; //Twenty U
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_20_size7_len0_user0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_20_size7_len0_user0to3");
         super.new(name);
     endfunction: new
@@ -1427,52 +1163,40 @@ class bfm_seq_rd_wr_20_size7_len0_user0to3 extends bfm_sequence_base; //Twenty U
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 20;
         p_sequencer.brdg_cfg.total_write_num = 20;
 
-        void'(test_item.randomize());
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0060]=32'h0000_0014;                         //Read number
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0064]=32'h2004_0070;                         //Read pattern
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0068]=32'h0000_0014;                         //Write number
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_006C]=32'h2004_0070;                         //Write pattern
-        rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_20_size7_len0_user0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<20; num++)begin
+            void'(axi_item.randomize()with{rd_size==7;wr_size==7;rd_len==0;wr_len==0;rd_id==0;wr_id==0;rd_usr<4;wr_usr<4;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_20_size7_len0_user0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_20_size7_len0_user0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #250000ns;
     endtask: body
@@ -1488,15 +1212,13 @@ class bfm_seq_rd_wr_20_size7_len0_id0to3_user0to3 extends bfm_sequence_base; //T
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_20_size7_len0_id0to3_user0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_20_size7_len0_id0to3_user0to3");
         super.new(name);
     endfunction: new
@@ -1508,52 +1230,40 @@ class bfm_seq_rd_wr_20_size7_len0_id0to3_user0to3 extends bfm_sequence_base; //T
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 20;
         p_sequencer.brdg_cfg.total_write_num = 20;
 
-        void'(test_item.randomize());
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0060]=32'h0000_0014;                         //Read number
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0064]=32'h2004_4070;                         //Read pattern
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0068]=32'h0000_0014;                         //Write number
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_006C]=32'h2004_4070;                         //Write pattern
-        rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_20_size7_len0_id0to3_user0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<20; num++)begin
+            void'(axi_item.randomize()with{rd_size==7;wr_size==7;rd_len==0;wr_len==0;rd_id<4;wr_id<4;rd_usr<4;wr_usr<4;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_20_size7_len0_id0to3_user0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_20_size7_len0_id0to3_user0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #250000ns;
     endtask: body
@@ -1569,15 +1279,13 @@ class bfm_seq_rd_wr_20_randsize_randlen_id0to3_user0to3 extends bfm_sequence_bas
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_20_randsize_randlen_id0to3_user0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_20_randsize_randlen_id0to3_user0to3");
         super.new(name);
     endfunction: new
@@ -1589,52 +1297,40 @@ class bfm_seq_rd_wr_20_randsize_randlen_id0to3_user0to3 extends bfm_sequence_bas
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 20;
         p_sequencer.brdg_cfg.total_write_num = 20;
 
-        void'(test_item.randomize());
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0060]=32'h0000_0014;                         //Read number
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0064]=32'h2004_40FF;                         //Read pattern
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0068]=32'h0000_0014;                         //Write number
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_006C]=32'h2004_40FF;                         //Write pattern
-        rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_20_randsize_randlen_id0to3_user0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<20; num++)begin
+            void'(axi_item.randomize()with{rd_id<4;wr_id<4;rd_usr<4;wr_usr<4;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_20_randsize_randlen_id0to3_user0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_20_randsize_randlen_id0to3_user0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #250000ns;
     endtask: body
@@ -1650,15 +1346,13 @@ class bfm_seq_rd_wr_100_size7_len31_id0to3 extends bfm_sequence_base; //Observe 
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_100_size7_len31_id0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_100_size7_len31_id0to3");
         super.new(name);
     endfunction: new
@@ -1670,52 +1364,40 @@ class bfm_seq_rd_wr_100_size7_len31_id0to3 extends bfm_sequence_base; //Observe 
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 100;
         p_sequencer.brdg_cfg.total_write_num = 100;
 
-        void'(test_item.randomize());
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0048]=32'h0010_0000;                         //Source size 256*4k
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0058]=32'h0010_0000;                         //Target size 256*4k
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0060]=32'h0000_0064;                         //Read number
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0064]=32'h1000_407B;                         //Read pattern
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0068]=32'h0000_0064;                         //Write number
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_006C]=32'h1000_407B;                         //Write pattern
-        rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_100_size7_len31_id0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<100; num++)begin
+            void'(axi_item.randomize()with{rd_size==7;wr_size==7;rd_len==31;wr_len==31;rd_id<4;wr_id<4;rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_100_size7_len31_id0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_100_size7_len31_id0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #300000ns;
     endtask: body
@@ -1731,15 +1413,13 @@ class bfm_seq_rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3 extends bfm_s
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3");
         super.new(name);
     endfunction: new
@@ -1751,52 +1431,40 @@ class bfm_seq_rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3 extends bfm_s
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 100;
         p_sequencer.brdg_cfg.total_write_num = 100;
 
-        void'(test_item.randomize());
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0058]=32'h0032_0000;                         //Target size 50*4k
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0060]=32'h0000_0064;                         //Read number
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0064]=32'h2004_4FFF;                         //Read pattern
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0068]=32'h0000_0064;                         //Write number
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_006C]=32'h2004_4FFF;                         //Write pattern
-        rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<100; num++)begin
+            void'(axi_item.randomize()with{rd_id<4;wr_id<4;rd_usr<4;wr_usr<4;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #300000ns;
     endtask: body
@@ -1813,15 +1481,13 @@ class bfm_seq_rd_wr_1000_size6_randlen extends bfm_sequence_base; //Super
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_1000_size6_randlen [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_1000_size6_randlen");
         super.new(name);
     endfunction: new
@@ -1833,52 +1499,40 @@ class bfm_seq_rd_wr_1000_size6_randlen extends bfm_sequence_base; //Super
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 1000;
         p_sequencer.brdg_cfg.total_write_num = 1000;
 
-        void'(test_item.randomize());
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0048]=32'h0100_0000;                         //Source size 50*4k
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0058]=32'h0100_0000;                         //Target size 50*4k
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0060]=32'h0000_03E8;                         //Read number
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0064]=32'h2F00_006F;                         //Read pattern
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0068]=32'h0000_03E8;                         //Write number
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_006C]=32'h2F00_006F;                         //Write pattern
-        rd_wr_1000_size6_randlen[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_1000_size6_randlen[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<1000; num++)begin
+            void'(axi_item.randomize()with{rd_size==6;wr_size==6;rd_id==0;wr_id==0;rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_1000_size6_randlen[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_1000_size6_randlen[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_1000_size6_randlen[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #10000us;
     endtask: body
@@ -1890,20 +1544,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_rd_wr_1000_size6_randlen_randid extends bfm_sequence_base; //Super
-
     `uvm_object_utils(bfm_seq_rd_wr_1000_size6_randlen_randid)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_1000_size6_randlen_randid [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_1000_size6_randlen_randid");
         super.new(name);
     endfunction: new
@@ -1915,52 +1566,40 @@ class bfm_seq_rd_wr_1000_size6_randlen_randid extends bfm_sequence_base; //Super
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 1000;
         p_sequencer.brdg_cfg.total_write_num = 1000;
 
-        void'(test_item.randomize());
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0048]=32'h0100_0000;                         //Source size 50*4k
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0058]=32'h0100_0000;                         //Target size 50*4k
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0060]=32'h0000_03E8;                         //Read number
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0064]=32'h2F00_F06F;                         //Read pattern
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0068]=32'h0000_03E8;                         //Write number
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_006C]=32'h2F00_F06F;                         //Write pattern
-        rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_1000_size6_randlen_randid[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<1000; num++)begin
+            void'(axi_item.randomize()with{rd_size==6;wr_size==6;rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_1000_size6_randlen_randid[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_1000_size6_randlen_randid[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #10000us;
     endtask: body
@@ -1972,20 +1611,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid extends bfm_sequence_base; //Super
-
     `uvm_object_utils(bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_1000_randsize_randlen_unaligned_randid [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid");
         super.new(name);
     endfunction: new
@@ -1997,52 +1633,40 @@ class bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid extends bfm_sequence_
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
-        p_sequencer.brdg_cfg.total_read_num = 1000;
-        p_sequencer.brdg_cfg.total_write_num = 1000;
+        p_sequencer.brdg_cfg.total_read_num = 100;
+        p_sequencer.brdg_cfg.total_write_num = 100;
 
-        void'(test_item.randomize());
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0048]=32'h0100_0000;                         //Source size 50*4k
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0058]=32'h0100_0000;                         //Target size 50*4k
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0060]=32'h0000_03E8;                         //Read number
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0064]=32'h2F00_FFFF;                         //Read pattern
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0068]=32'h0000_03E8;                         //Write number
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_006C]=32'h2F00_FFFF;                         //Write pattern
-        rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_1000_randsize_randlen_unaligned_randid[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<1000; num++)begin
+            void'(axi_item.randomize()with{rd_size==7;wr_size==7;rd_len==31;wr_len==31;rd_id<4;wr_id<4;rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_1000_randsize_randlen_unaligned_randid[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_1000_randsize_randlen_unaligned_randid[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #40000us;
     endtask: body
@@ -2053,20 +1677,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid_randuser extends bfm_sequence_base; //Super
-
     `uvm_object_utils(bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid_randuser)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_1000_randsize_randlen_unaligned_randid_randuser [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid_randuser");
         super.new(name);
     endfunction: new
@@ -2078,52 +1699,40 @@ class bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid_randuser extends bfm_
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 1000;
         p_sequencer.brdg_cfg.total_write_num = 1000;
 
-        void'(test_item.randomize());
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0058]=32'h0100_0000;                         //Target size 50*4k
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0060]=32'h0000_03E8;                         //Read number
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0064]=32'h2F0F_FFFF;                         //Read pattern
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0068]=32'h0000_03E8;                         //Write number
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_006C]=32'h2F0F_FFFF;                         //Write pattern
-        rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_1000_randsize_randlen_unaligned_randid_randuser[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<1000; num++)begin
+            void'(axi_item.randomize());
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_1000_randsize_randlen_unaligned_randid_randuser[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_1000_randsize_randlen_unaligned_randid_randuser[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #3000000ns;
     endtask: body
@@ -2135,20 +1744,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_rd_wr_10_randsize_randlen_strobe extends bfm_sequence_base;
-
     `uvm_object_utils(bfm_seq_rd_wr_10_randsize_randlen_strobe)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_randsize_randlen_strobe [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_randsize_randlen_strobe");
         super.new(name);
     endfunction: new
@@ -2160,52 +1766,40 @@ class bfm_seq_rd_wr_10_randsize_randlen_strobe extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size 50*4k
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size 50*4k
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0064]=32'h2000_00FF;                         //Read pattern
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_006C]=32'h20F0_00FF;                         //Write pattern
-        rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_strobe[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_id==0;wr_id==0;rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_randsize_randlen_strobe[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_strobe[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #1000000ns;
     endtask: body
@@ -2217,20 +1811,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly extends bfm_sequence_base;
-
     `uvm_object_utils(bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_randsize_randlen_unaligned_dly [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly");
         super.new(name);
     endfunction: new
@@ -2242,52 +1833,40 @@ class bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0064]=32'hF000_0FFF;                         //Read pattern
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_006C]=32'hF000_0FFF;                         //Write pattern
-        rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_unaligned_dly[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_id==0;wr_id==0;rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_randsize_randlen_unaligned_dly[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_unaligned_dly[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #2000us;
     endtask: body
@@ -2299,20 +1878,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly0 extends bfm_sequence_base;
-
     `uvm_object_utils(bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly0)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_10_randsize_randlen_unaligned_dly0 [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly0");
         super.new(name);
     endfunction: new
@@ -2324,52 +1900,40 @@ class bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly0 extends bfm_sequence_base
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
-        void'(test_item.randomize());
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0058]=32'h0003_2000;                         //Target size
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0060]=32'h0000_000A;                         //Read number
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0064]=32'h1000_0FFF;                         //Read pattern
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0068]=32'h0000_000A;                         //Write number
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_006C]=32'h1000_0FFF;                         //Write pattern
-        rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_unaligned_dly0[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<10; num++)begin
+            void'(axi_item.randomize()with{rd_id==0;wr_id==0;rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_10_randsize_randlen_unaligned_dly0[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_10_randsize_randlen_unaligned_dly0[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #500000ns;
     endtask: body
@@ -2381,20 +1945,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_wr_64_randsize_randlen_strobe extends bfm_sequence_base;
-
     `uvm_object_utils(bfm_seq_wr_64_randsize_randlen_strobe)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] wr_64_randsize_randlen_strobe [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_wr_64_randsize_randlen_strobe");
         super.new(name);
     endfunction: new
@@ -2406,52 +1967,40 @@ class bfm_seq_wr_64_randsize_randlen_strobe extends bfm_sequence_base;
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 0;
         p_sequencer.brdg_cfg.total_write_num = 64;
 
-        void'(test_item.randomize());
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_003c]=32'h0000_0000;
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0048]=32'h0003_2000;                         //Source size
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_004C]=32'h0000_0000;
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0058]=32'h0008_0000;                         //Target size
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_005C]=32'h0000_0000;
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0060]=32'h0000_0000;                         //Read number
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0064]=32'h2000_00FF;                         //Read pattern
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0068]=32'h0000_0040;                         //Write number
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_006C]=32'h20F0_00FF;                         //Write pattern
-        wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, wr_64_randsize_randlen_strobe[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<64; num++)begin
+            void'(axi_item.randomize()with{wr_id==0;wr_usr==0;});
+            //read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            //rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            //read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            //p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            //`uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+            //                                                 act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(wr_64_randsize_randlen_strobe[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, wr_64_randsize_randlen_strobe[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #4000000ns;
     endtask: body
@@ -2463,20 +2012,17 @@ endclass
 //
 //------------------------------------------------------------------------------
 class bfm_seq_rd_wr_1000_randsize_randlen_strobe_unaligned_randid extends bfm_sequence_base;
-
     `uvm_object_utils(bfm_seq_rd_wr_1000_randsize_randlen_strobe_unaligned_randid)
     bfm_seq_return_initial_credits return_initial_credits;
     bfm_seq_initial_config initial_config;
 
-    tl_tx_trans trans;
-    temp_capp_tag capp_tag=new();
-    reg_addr reg_addr_list=new();
-    bridge_test_item test_item=new();
-    rand bit [63:0] temp_addr;
-    rand bit [2:0]  temp_plength;
-    bit [63:0] temp_data_carrier;
-    bit [31:0] rd_wr_1000_randsize_randlen_strobe_unaligned_randid [int unsigned];
-	init_host_mem init_host_mem_item;
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    init_host_mem init_host_mem_item;
     function new(string name= "bfm_seq_rd_wr_1000_randsize_randlen_strobe_unaligned_randid");
         super.new(name);
     endfunction: new
@@ -2488,52 +2034,40 @@ class bfm_seq_rd_wr_1000_randsize_randlen_strobe_unaligned_randid extends bfm_se
         `uvm_do(initial_config)
         #10000ns;
 
-        p_sequencer.cfg_obj.host_receive_resp_timer = 20000;
-        p_sequencer.cfg_obj.tl_transmit_template = {1,1,1,1,0,0,0,0,0,0,0,0}; //Use template 0,1,2,3.
-        p_sequencer.cfg_obj.tl_transmit_rate  = {0,3,7,2,0,0,0,0,0,0,0,0}; //Rate for each available template
-
-        //Set total number of transactions
+        //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 1000;
         p_sequencer.brdg_cfg.total_write_num = 1000;
 
-        void'(test_item.randomize());
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0038]=32'h0000_0000;                         //Without random
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_003c]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0040]={test_item.source_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0044]=test_item.source_addr[63:32];
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0048]=32'h0100_0000;                         //Source size
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_004C]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0050]={test_item.target_addr[63:12], 12'h0}; //Align 4k
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0054]=test_item.target_addr[63:32];
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0058]=32'h0100_0000;                         //Target size
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_005C]=32'h0000_0000;
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0060]=32'h0000_03E8;                         //Read number
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0064]=32'h2F00_FFFF;                         //Read pattern
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0068]=32'h0000_03E8;                         //Write number
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_006C]=32'h2FF0_FFFF;                         //Write pattern
-        rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0070]=test_item.seed; 
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
-        foreach(reg_addr_list.mmio_write_addr[i])begin
-            temp_addr=reg_addr_list.mmio_write_addr[i];
-            temp_data_carrier={32'h0, rd_wr_1000_randsize_randlen_strobe_unaligned_randid[temp_addr]};
-            temp_plength=2;
-            void'(capp_tag.randomize());
-            `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                        trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+
+        for(int num=0; num<1000; num++)begin
+            void'(axi_item.randomize()with{rd_usr==0;wr_usr==0;});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
         end
-
-		//Initial host memory data for read commands
-        p_sequencer.host_mem.set_memory_by_length(test_item.source_addr, rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0048], 
-													init_host_mem_item.init_data_queue(rd_wr_1000_randsize_randlen_strobe_unaligned_randid[64'h0000_0008_8000_0048]));
-		
-        //Action start
-        temp_addr={64'h0000_0008_8000_0038};
-        temp_data_carrier={32'h0, rd_wr_1000_randsize_randlen_strobe_unaligned_randid[temp_addr][31:1], 1'b1};
-        temp_plength=2;
-        void'(capp_tag.randomize());
-        `uvm_do_on_with(trans, p_sequencer.tx_sqr, {trans.packet_type==tl_tx_trans::PR_WR_MEM; trans.plength==temp_plength; 
-                                                    trans.capp_tag==capp_tag.capp; trans.physical_addr==temp_addr; trans.data_carrier[0]==temp_data_carrier;})
 
         #100000us;
     endtask: body

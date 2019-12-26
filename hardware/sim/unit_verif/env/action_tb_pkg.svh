@@ -24,17 +24,29 @@ import uvm_pkg::*;
 
 //AXI VIP PKG
 import axi_vip_pkg::*;
-import axi4stream_vip_pkg::*;
-`ifndef ENABLE_ODMA_ST_MODE
-    import axi_vip_mm_check_pkg::*;
+`ifndef ENABLE_ODMA
+    import axi_vip_mm_passthrough_pkg::*;
+    import axi_vip_mm_master_pkg::*;
 `else
-    import axi_st_passthrough_h2a_pkg::*;
+    `ifndef ENABLE_ODMA_ST_MODE
+        import axi_vip_mm_passthrough_pkg::*;
+        import axi_vip_mm_slave_pkg::*;
+    `else
+        import axi4stream_vip_pkg::*;
+        import axi_vip_st_passthrough_h2a_pkg::*;
+        import axi_vip_st_slave_pkg::*;
+    `endif
 `endif
-import axi_lite_passthrough_pkg::*;
+import axi_vip_lite_passthrough_pkg::*;
+import axi_vip_lite_slave_pkg::*;
 
-`define AXI_VIP_MM_CHECK_PARAMS  #(axi_vip_mm_check_VIP_PROTOCOL    , axi_vip_mm_check_VIP_ADDR_WIDTH    , axi_vip_mm_check_VIP_DATA_WIDTH    , axi_vip_mm_check_VIP_DATA_WIDTH    , axi_vip_mm_check_VIP_ID_WIDTH    , axi_vip_mm_check_VIP_ID_WIDTH    , axi_vip_mm_check_VIP_AWUSER_WIDTH    , axi_vip_mm_check_VIP_WUSER_WIDTH    , axi_vip_mm_check_VIP_BUSER_WIDTH    , axi_vip_mm_check_VIP_ARUSER_WIDTH    , axi_vip_mm_check_VIP_RUSER_WIDTH   , axi_vip_mm_check_VIP_SUPPORTS_NARROW    , axi_vip_mm_check_VIP_HAS_BURST    , axi_vip_mm_check_VIP_HAS_LOCK    , axi_vip_mm_check_VIP_HAS_CACHE    , axi_vip_mm_check_VIP_HAS_REGION    , axi_vip_mm_check_VIP_HAS_PROT    , axi_vip_mm_check_VIP_HAS_QOS    , axi_vip_mm_check_VIP_HAS_WSTRB    , axi_vip_mm_check_VIP_HAS_BRESP    , axi_vip_mm_check_VIP_HAS_RRESP    , axi_vip_mm_check_VIP_HAS_ARESETN   )
-`define AXI_LITE_PARAMS          #(axi_lite_passthrough_VIP_PROTOCOL, axi_lite_passthrough_VIP_ADDR_WIDTH, axi_lite_passthrough_VIP_DATA_WIDTH, axi_lite_passthrough_VIP_DATA_WIDTH, axi_lite_passthrough_VIP_ID_WIDTH, axi_lite_passthrough_VIP_ID_WIDTH, axi_lite_passthrough_VIP_AWUSER_WIDTH, axi_lite_passthrough_VIP_WUSER_WIDTH, axi_lite_passthrough_VIP_BUSER_WIDTH, axi_lite_passthrough_VIP_ARUSER_WIDTH,axi_lite_passthrough_VIP_RUSER_WIDTH, axi_lite_passthrough_VIP_SUPPORTS_NARROW, axi_lite_passthrough_VIP_HAS_BURST, axi_lite_passthrough_VIP_HAS_LOCK, axi_lite_passthrough_VIP_HAS_CACHE, axi_lite_passthrough_VIP_HAS_REGION, axi_lite_passthrough_VIP_HAS_PROT, axi_lite_passthrough_VIP_HAS_QOS, axi_lite_passthrough_VIP_HAS_WSTRB, axi_lite_passthrough_VIP_HAS_BRESP, axi_lite_passthrough_VIP_HAS_RRESP, axi_lite_passthrough_VIP_HAS_ARESETN)
-`define AXI_STREAM_H2A_PARAMS  #(axi_st_passthrough_h2a_VIP_SIGNAL_SET, axi_st_passthrough_h2a_VIP_DEST_WIDTH, axi_st_passthrough_h2a_VIP_DATA_WIDTH, axi_st_passthrough_h2a_VIP_ID_WIDTH, axi_st_passthrough_h2a_VIP_USER_WIDTH, axi_st_passthrough_h2a_VIP_USER_BITS_PER_BYTE, axi_st_passthrough_h2a_VIP_HAS_ARESETN)
+`define AXI_VIP_MM_PASSTHROUGH_PARAMS #(axi_vip_mm_passthrough_VIP_PROTOCOL    , axi_vip_mm_passthrough_VIP_ADDR_WIDTH    , axi_vip_mm_passthrough_VIP_DATA_WIDTH    , axi_vip_mm_passthrough_VIP_DATA_WIDTH    , axi_vip_mm_passthrough_VIP_ID_WIDTH    , axi_vip_mm_passthrough_VIP_ID_WIDTH    , axi_vip_mm_passthrough_VIP_AWUSER_WIDTH    , axi_vip_mm_passthrough_VIP_WUSER_WIDTH    , axi_vip_mm_passthrough_VIP_BUSER_WIDTH    , axi_vip_mm_passthrough_VIP_ARUSER_WIDTH    , axi_vip_mm_passthrough_VIP_RUSER_WIDTH   , axi_vip_mm_passthrough_VIP_SUPPORTS_NARROW    , axi_vip_mm_passthrough_VIP_HAS_BURST    , axi_vip_mm_passthrough_VIP_HAS_LOCK    , axi_vip_mm_passthrough_VIP_HAS_CACHE    , axi_vip_mm_passthrough_VIP_HAS_REGION    , axi_vip_mm_passthrough_VIP_HAS_PROT    , axi_vip_mm_passthrough_VIP_HAS_QOS    , axi_vip_mm_passthrough_VIP_HAS_WSTRB    , axi_vip_mm_passthrough_VIP_HAS_BRESP    , axi_vip_mm_passthrough_VIP_HAS_RRESP    , axi_vip_mm_passthrough_VIP_HAS_ARESETN   )
+`define AXI_VIP_MM_SLAVE_PARAMS #(axi_vip_mm_slave_VIP_PROTOCOL    , axi_vip_mm_slave_VIP_ADDR_WIDTH    , axi_vip_mm_slave_VIP_DATA_WIDTH    , axi_vip_mm_slave_VIP_DATA_WIDTH    , axi_vip_mm_slave_VIP_ID_WIDTH    , axi_vip_mm_slave_VIP_ID_WIDTH    , axi_vip_mm_slave_VIP_AWUSER_WIDTH    , axi_vip_mm_slave_VIP_WUSER_WIDTH    , axi_vip_mm_slave_VIP_BUSER_WIDTH    , axi_vip_mm_slave_VIP_ARUSER_WIDTH    , axi_vip_mm_slave_VIP_RUSER_WIDTH   , axi_vip_mm_slave_VIP_SUPPORTS_NARROW    , axi_vip_mm_slave_VIP_HAS_BURST    , axi_vip_mm_slave_VIP_HAS_LOCK    , axi_vip_mm_slave_VIP_HAS_CACHE    , axi_vip_mm_slave_VIP_HAS_REGION    , axi_vip_mm_slave_VIP_HAS_PROT    , axi_vip_mm_slave_VIP_HAS_QOS    , axi_vip_mm_slave_VIP_HAS_WSTRB    , axi_vip_mm_slave_VIP_HAS_BRESP    , axi_vip_mm_slave_VIP_HAS_RRESP    , axi_vip_mm_slave_VIP_HAS_ARESETN   )
+`define AXI_VIP_MM_MASTER_PARAMS #(axi_vip_mm_master_VIP_PROTOCOL    , axi_vip_mm_master_VIP_ADDR_WIDTH    , axi_vip_mm_master_VIP_DATA_WIDTH    , axi_vip_mm_master_VIP_DATA_WIDTH    , axi_vip_mm_master_VIP_ID_WIDTH    , axi_vip_mm_master_VIP_ID_WIDTH    , axi_vip_mm_master_VIP_AWUSER_WIDTH    , axi_vip_mm_master_VIP_WUSER_WIDTH    , axi_vip_mm_master_VIP_BUSER_WIDTH    , axi_vip_mm_master_VIP_ARUSER_WIDTH    , axi_vip_mm_master_VIP_RUSER_WIDTH   , axi_vip_mm_master_VIP_SUPPORTS_NARROW    , axi_vip_mm_master_VIP_HAS_BURST    , axi_vip_mm_master_VIP_HAS_LOCK    , axi_vip_mm_master_VIP_HAS_CACHE    , axi_vip_mm_master_VIP_HAS_REGION    , axi_vip_mm_master_VIP_HAS_PROT    , axi_vip_mm_master_VIP_HAS_QOS    , axi_vip_mm_master_VIP_HAS_WSTRB    , axi_vip_mm_master_VIP_HAS_BRESP    , axi_vip_mm_master_VIP_HAS_RRESP    , axi_vip_mm_master_VIP_HAS_ARESETN   )
+`define AXI_VIP_LITE_PASSTHROUGH_PARAMS #(axi_vip_lite_passthrough_VIP_PROTOCOL, axi_vip_lite_passthrough_VIP_ADDR_WIDTH, axi_vip_lite_passthrough_VIP_DATA_WIDTH, axi_vip_lite_passthrough_VIP_DATA_WIDTH, axi_vip_lite_passthrough_VIP_ID_WIDTH, axi_vip_lite_passthrough_VIP_ID_WIDTH, axi_vip_lite_passthrough_VIP_AWUSER_WIDTH, axi_vip_lite_passthrough_VIP_WUSER_WIDTH, axi_vip_lite_passthrough_VIP_BUSER_WIDTH, axi_vip_lite_passthrough_VIP_ARUSER_WIDTH,axi_vip_lite_passthrough_VIP_RUSER_WIDTH, axi_vip_lite_passthrough_VIP_SUPPORTS_NARROW, axi_vip_lite_passthrough_VIP_HAS_BURST, axi_vip_lite_passthrough_VIP_HAS_LOCK, axi_vip_lite_passthrough_VIP_HAS_CACHE, axi_vip_lite_passthrough_VIP_HAS_REGION, axi_vip_lite_passthrough_VIP_HAS_PROT, axi_vip_lite_passthrough_VIP_HAS_QOS, axi_vip_lite_passthrough_VIP_HAS_WSTRB, axi_vip_lite_passthrough_VIP_HAS_BRESP, axi_vip_lite_passthrough_VIP_HAS_RRESP, axi_vip_lite_passthrough_VIP_HAS_ARESETN)
+`define AXI_VIP_LITE_SLAVE_PARAMS #(axi_vip_lite_slave_VIP_PROTOCOL, axi_vip_lite_slave_VIP_ADDR_WIDTH, axi_vip_lite_slave_VIP_DATA_WIDTH, axi_vip_lite_slave_VIP_DATA_WIDTH, axi_vip_lite_slave_VIP_ID_WIDTH, axi_vip_lite_slave_VIP_ID_WIDTH, axi_vip_lite_slave_VIP_AWUSER_WIDTH, axi_vip_lite_slave_VIP_WUSER_WIDTH, axi_vip_lite_slave_VIP_BUSER_WIDTH, axi_vip_lite_slave_VIP_ARUSER_WIDTH,axi_vip_lite_slave_VIP_RUSER_WIDTH, axi_vip_lite_slave_VIP_SUPPORTS_NARROW, axi_vip_lite_slave_VIP_HAS_BURST, axi_vip_lite_slave_VIP_HAS_LOCK, axi_vip_lite_slave_VIP_HAS_CACHE, axi_vip_lite_slave_VIP_HAS_REGION, axi_vip_lite_slave_VIP_HAS_PROT, axi_vip_lite_slave_VIP_HAS_QOS, axi_vip_lite_slave_VIP_HAS_WSTRB, axi_vip_lite_slave_VIP_HAS_BRESP, axi_vip_lite_slave_VIP_HAS_RRESP, axi_vip_lite_slave_VIP_HAS_ARESETN)
+`define AXI_VIP_ST_PASSTHROUGH_H2A_PARAMS #(axi_vip_st_passthrough_h2a_VIP_SIGNAL_SET, axi_vip_st_passthrough_h2a_VIP_DEST_WIDTH, axi_vip_st_passthrough_h2a_VIP_DATA_WIDTH, axi_vip_st_passthrough_h2a_VIP_ID_WIDTH, axi_vip_st_passthrough_h2a_VIP_USER_WIDTH, axi_vip_st_passthrough_h2a_VIP_USER_BITS_PER_BYTE, axi_vip_st_passthrough_h2a_VIP_HAS_ARESETN)
+`define AXI_VIP_ST_SLAVE_PARAMS #(axi_vip_st_slave_VIP_SIGNAL_SET, axi_vip_st_slave_VIP_DEST_WIDTH, axi_vip_st_slave_VIP_DATA_WIDTH, axi_vip_st_slave_VIP_ID_WIDTH, axi_vip_st_slave_VIP_USER_WIDTH, axi_vip_st_slave_VIP_USER_BITS_PER_BYTE, axi_vip_st_slave_VIP_HAS_ARESETN)
 
 //INTERFACE & TRANSACTIONS
 `include "../util/brdg_cfg_obj.sv"
@@ -65,6 +77,7 @@ import axi_lite_passthrough_pkg::*;
 `endif
 
 //AGENTS
+`include "../action_bfm/action_bfm_pkg.svh"
 `include "../tl_bfm/env/tl_bfm_pkg.svh"
 
 //SEQUENCER

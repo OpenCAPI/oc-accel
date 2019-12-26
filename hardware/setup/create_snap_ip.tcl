@@ -385,95 +385,263 @@ if { $create_bram == "TRUE" } {
   export_simulation -of_objects [get_files $ip_dir/block_RAM/block_RAM.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 }
 
-
-#AXI_VIP create axi_vip_mm_check
+#AXI_VIP generating
 if { $unit_sim_used == "TRUE" } {
-  if { $odma_512_used == "TRUE" } {
+  if { $odma_used == "TRUE" } {
     if { $odma_st_mode_used == "TRUE" } {
-      create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_st_passthrough_h2a -dir $ip_dir >> $log_file
-      set_property -dict [list                                   \
-                          CONFIG.TDATA_NUM_BYTES {64}           \
-                          CONFIG.TID_WIDTH {5}                   \
-                          CONFIG.TUSER_WIDTH {9}                 \
-                          CONFIG.HAS_TKEEP {1}                   \
-                          CONFIG.HAS_TLAST {1}                   \
-                         ] [get_ips axi_st_passthrough_h2a] >> $log_file
-      generate_target {instantiation_template}     [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
-      set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
-      generate_target all                          [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
-      export_ip_user_files -of_objects             [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -no_script -sync -force -quiet >> $log_file
-      export_simulation -of_objects                [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+      puts "                        generating AXI VIP FOR ODMA ST MODE"
+      if { $odma_512_used == "TRUE" } {
+        create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_st_passthrough_h2a -dir $ip_dir >> $log_file
+        set_property -dict [list                                   \
+                            CONFIG.TDATA_NUM_BYTES {64}            \
+                            CONFIG.TID_WIDTH {5}                   \
+                            CONFIG.TUSER_WIDTH {9}                 \
+                            CONFIG.HAS_TKEEP {1}                   \
+                            CONFIG.HAS_TLAST {1}                   \
+                           ] [get_ips axi_vip_st_passthrough_h2a] >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] >> $log_file
+        set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] >> $log_file
+        generate_target all                          [get_files  $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] -no_script -sync -force -quiet >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+
+        create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_st_slave -dir $ip_dir >> $log_file
+        set_property -dict [list                                  \
+                            CONFIG.INTERFACE_MODE {SLAVE}         \
+                            CONFIG.TDATA_NUM_BYTES {64}           \
+                            CONFIG.TID_WIDTH {5}                  \
+                            CONFIG.TUSER_WIDTH {9}                \
+                            CONFIG.HAS_TKEEP {1}                  \
+                            CONFIG.HAS_TLAST {1}                  \
+                            ] [get_ips axi_vip_st_slave] >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] >> $log_file
+        set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] >> $log_file
+        generate_target all                          [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] -no_script -sync -force -quiet >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+      } else {
+        create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_st_passthrough_h2a -dir $ip_dir >> $log_file
+        set_property -dict [list                                   \
+                            CONFIG.TDATA_NUM_BYTES {128}           \
+                            CONFIG.TID_WIDTH {5}                   \
+                            CONFIG.TUSER_WIDTH {9}                 \
+                            CONFIG.HAS_TKEEP {1}                   \
+                            CONFIG.HAS_TLAST {1}                   \
+                           ] [get_ips axi_vip_st_passthrough_h2a] >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] >> $log_file
+        set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] >> $log_file
+        generate_target all                          [get_files  $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] -no_script -sync -force -quiet >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_st_passthrough_h2a/axi_vip_st_passthrough_h2a.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+
+        create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_st_slave -dir $ip_dir >> $log_file
+        set_property -dict [list                                  \
+                            CONFIG.INTERFACE_MODE {SLAVE}         \
+                            CONFIG.TDATA_NUM_BYTES {128}          \
+                            CONFIG.TID_WIDTH {5}                  \
+                            CONFIG.TUSER_WIDTH {9}                \
+                            CONFIG.HAS_TKEEP {1}                  \
+                            CONFIG.HAS_TLAST {1}                  \
+                            ] [get_ips axi_vip_st_slave] >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] >> $log_file
+        set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] >> $log_file
+        generate_target all                          [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] -no_script -sync -force -quiet >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_st_slave/axi_vip_st_slave.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+      }
     } else {
-    create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_check -dir $ip_dir >> $log_file
-      set_property -dict [list                                    \
-                          CONFIG.ADDR_WIDTH {64}                  \
-                          CONFIG.DATA_WIDTH {512}                 \
-                          CONFIG.ID_WIDTH {5}                     \
-                          CONFIG.AWUSER_WIDTH {9}                 \
-                          CONFIG.ARUSER_WIDTH {9}                 \
-                          CONFIG.RUSER_WIDTH {1}                  \
-                          CONFIG.WUSER_WIDTH {1}                  \
-                          CONFIG.BUSER_WIDTH {1}                  \
-                         ] [get_ips axi_vip_mm_check] >> $log_file
-      set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-      generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-      generate_target all                          [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-      export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -no_script -sync -force -quiet  >> $log_file
-      export_simulation -of_objects [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+      puts "                        generating AXI VIP FOR ODMA MM MODE"
+      if { $odma_512_used == "TRUE" } {
+        create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_passthrough -dir $ip_dir >> $log_file
+        set_property -dict [list                                    \
+                            CONFIG.ADDR_WIDTH {64}                  \
+                            CONFIG.DATA_WIDTH {512}                 \
+                            CONFIG.ID_WIDTH {5}                     \
+                            CONFIG.AWUSER_WIDTH {9}                 \
+                            CONFIG.ARUSER_WIDTH {9}                 \
+                            CONFIG.RUSER_WIDTH {9}                  \
+                            CONFIG.WUSER_WIDTH {9}                  \
+                            CONFIG.BUSER_WIDTH {9}                  \
+                            CONFIG.SUPPORTS_NARROW {1}              \
+                            CONFIG.HAS_BURST {1}                    \
+                            CONFIG.HAS_LOCK {0}                     \
+                            CONFIG.HAS_CACHE {0}                    \
+                            CONFIG.HAS_REGION {0}                   \
+                            CONFIG.HAS_QOS {0}                      \
+                            CONFIG.HAS_PROT {0}                     \
+                           ] [get_ips axi_vip_mm_passthrough] >> $log_file
+        set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        generate_target all                          [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci] -no_script -sync -force -quiet  >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+        create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_slave -dir $ip_dir >> $log_file
+        set_property -dict [list                                    \
+                            CONFIG.PROTOCOL {AXI4}                  \
+                            CONFIG.INTERFACE_MODE {SLAVE}           \
+                            CONFIG.ADDR_WIDTH {64}                  \
+                            CONFIG.DATA_WIDTH {512}                 \
+                            CONFIG.ID_WIDTH {5}                     \
+                            CONFIG.AWUSER_WIDTH {9}                 \
+                            CONFIG.ARUSER_WIDTH {9}                 \
+                            CONFIG.RUSER_WIDTH {9}                  \
+                            CONFIG.WUSER_WIDTH {9}                  \
+                            CONFIG.BUSER_WIDTH {9}                  \
+                            CONFIG.SUPPORTS_NARROW {1}              \
+                            CONFIG.HAS_BURST {1}                    \
+                            CONFIG.HAS_LOCK {0}                     \
+                            CONFIG.HAS_CACHE {0}                    \
+                            CONFIG.HAS_REGION {0}                   \
+                            CONFIG.HAS_QOS {0}                      \
+                            CONFIG.HAS_PROT {0}                     \
+                            ] [get_ips axi_vip_mm_slave] >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] >> $log_file
+        set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] >> $log_file
+        generate_target all                          [get_files  $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] -no_script -sync -force -quiet >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {xcelium=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/xcelium} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+      } else {
+        create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_passthrough -dir $ip_dir >> $log_file
+        set_property -dict [list                                    \
+                            CONFIG.ADDR_WIDTH {64}                  \
+                            CONFIG.DATA_WIDTH {1024}                \
+                            CONFIG.ID_WIDTH {5}                     \
+                            CONFIG.AWUSER_WIDTH {9}                 \
+                            CONFIG.ARUSER_WIDTH {9}                 \
+                            CONFIG.RUSER_WIDTH {9}                  \
+                            CONFIG.WUSER_WIDTH {9}                  \
+                            CONFIG.BUSER_WIDTH {9}                  \
+                            CONFIG.SUPPORTS_NARROW {1}              \
+                            CONFIG.HAS_BURST {1}                    \
+                            CONFIG.HAS_LOCK {0}                     \
+                            CONFIG.HAS_CACHE {0}                    \
+                            CONFIG.HAS_REGION {0}                   \
+                            CONFIG.HAS_QOS {0}                      \
+                            CONFIG.HAS_PROT {0}                     \
+                           ] [get_ips axi_vip_mm_passthrough] >> $log_file
+        set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        generate_target all                          [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci] -no_script -sync -force -quiet  >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+        create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_slave -dir $ip_dir >> $log_file
+        set_property -dict [list                                    \
+                            CONFIG.PROTOCOL {AXI4}                  \
+                            CONFIG.INTERFACE_MODE {SLAVE}           \
+                            CONFIG.ADDR_WIDTH {64}                  \
+                            CONFIG.DATA_WIDTH {1024}                \
+                            CONFIG.ID_WIDTH {5}                     \
+                            CONFIG.AWUSER_WIDTH {9}                 \
+                            CONFIG.ARUSER_WIDTH {9}                 \
+                            CONFIG.RUSER_WIDTH {9}                  \
+                            CONFIG.WUSER_WIDTH {9}                  \
+                            CONFIG.BUSER_WIDTH {9}                  \
+                            CONFIG.SUPPORTS_NARROW {1}              \
+                            CONFIG.HAS_BURST {1}                    \
+                            CONFIG.HAS_LOCK {0}                     \
+                            CONFIG.HAS_CACHE {0}                    \
+                            CONFIG.HAS_REGION {0}                   \
+                            CONFIG.HAS_QOS {0}                      \
+                            CONFIG.HAS_PROT {0}                     \
+                            ] [get_ips axi_vip_mm_slave] >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] >> $log_file
+        set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] >> $log_file
+        generate_target all                          [get_files  $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] -no_script -sync -force -quiet >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_mm_slave/axi_vip_mm_slave.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {xcelium=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/xcelium} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+      }
     }
   } else {
-    if { $odma_st_mode_used == "TRUE" } {
-      create_ip -name axi4stream_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_st_passthrough_h2a -dir $ip_dir >> $log_file
-      set_property -dict [list                                   \
-                          CONFIG.TDATA_NUM_BYTES {128}           \
-                          CONFIG.TID_WIDTH {5}                   \
-                          CONFIG.TUSER_WIDTH {9}                 \
-                          CONFIG.HAS_TKEEP {1}                   \
-                          CONFIG.HAS_TLAST {1}                   \
-                         ] [get_ips axi_st_passthrough_h2a] >> $log_file
-      generate_target {instantiation_template}     [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
-      set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
-      generate_target all                          [get_files  $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] >> $log_file
-      export_ip_user_files -of_objects             [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -no_script -sync -force -quiet >> $log_file
-      export_simulation -of_objects                [get_files $ip_dir/axi_st_passthrough_h2a/axi_st_passthrough_h2a.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
-      } else {
-      create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_check -dir $ip_dir >> $log_file
-      set_property -dict [list                                    \
-                          CONFIG.ADDR_WIDTH {64}                  \
-                          CONFIG.DATA_WIDTH {1024}                \
-                          CONFIG.ID_WIDTH {5}                     \
-                          CONFIG.AWUSER_WIDTH {9}                 \
-                          CONFIG.ARUSER_WIDTH {9}                 \
-                          CONFIG.RUSER_WIDTH {1}                  \
-                          CONFIG.WUSER_WIDTH {1}                  \
-                          CONFIG.BUSER_WIDTH {1}                  \
-                         ] [get_ips axi_vip_mm_check] >> $log_file
-      set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-      generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-      generate_target all                          [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci]                    >> $log_file
-      export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -no_script -sync -force -quiet  >> $log_file
-      export_simulation -of_objects [get_files $ip_dir/axi_vip_mm_check/axi_vip_mm_check.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
-    }
-  }
+        create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_passthrough -dir $ip_dir >> $log_file
+        set_property -dict [list                                    \
+                            CONFIG.ADDR_WIDTH {64}                  \
+                            CONFIG.DATA_WIDTH {1024}                \
+                            CONFIG.ID_WIDTH {5}                     \
+                            CONFIG.AWUSER_WIDTH {9}                 \
+                            CONFIG.ARUSER_WIDTH {9}                 \
+                            CONFIG.RUSER_WIDTH {9}                  \
+                            CONFIG.WUSER_WIDTH {9}                  \
+                            CONFIG.BUSER_WIDTH {9}                  \
+                            CONFIG.SUPPORTS_NARROW {1}              \
+                            CONFIG.HAS_BURST {1}                    \
+                            CONFIG.HAS_LOCK {0}                     \
+                            CONFIG.HAS_CACHE {0}                    \
+                            CONFIG.HAS_REGION {0}                   \
+                            CONFIG.HAS_QOS {0}                      \
+                            CONFIG.HAS_PROT {0}                     \
+                           ] [get_ips axi_vip_mm_passthrough] >> $log_file
+        set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        generate_target all                          [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci]                    >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci] -no_script -sync -force -quiet  >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_mm_passthrough/axi_vip_mm_passthrough.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 
-  puts "                        generating IP axi_lite_passthrough"
-  create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_lite_passthrough -dir $ip_dir >> $log_file
-  set_property -dict [list 										   \
-					  CONFIG.PROTOCOL {AXI4LITE} 				           \
-					  CONFIG.SUPPORTS_NARROW {0} 				           \
-					  CONFIG.HAS_BURST {0}						   \
-					  CONFIG.HAS_LOCK {0}						   \
-					  CONFIG.HAS_CACHE {0} 						   \
-					  CONFIG.HAS_REGION {0}						   \
-					  CONFIG.HAS_QOS {0}						   \
-					  CONFIG.HAS_PROT {0}						   \
-					 ] [get_ips axi_lite_passthrough] >> $log_file
-  generate_target {instantiation_template}     [get_files $ip_dir/axi_lite_passthrough/axi_lite_passthrough.xci] >> $log_file
-  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_lite_passthrough/axi_lite_passthrough.xci] >> $log_file
-  generate_target all                          [get_files $ip_dir/axi_lite_passthrough/axi_lite_passthrough.xci] >> $log_file
-  export_ip_user_files -of_objects             [get_files $ip_dir/axi_lite_passthrough/axi_lite_passthrough.xci] -no_script -sync -force -quiet >> $log_file
-  export_simulation -of_objects                [get_files $ip_dir/axi_lite_passthrough/axi_lite_passthrough.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
-#CONFIG.Component_Name {axi_lite_passthrough}
+        create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_mm_master -dir $ip_dir >> $log_file
+        set_property -dict [list                                    \
+                            CONFIG.PROTOCOL {AXI4}                  \
+                            CONFIG.INTERFACE_MODE {MASTER}          \
+                            CONFIG.ADDR_WIDTH {64}                  \
+                            CONFIG.DATA_WIDTH {1024}                \
+                            CONFIG.ID_WIDTH {5}                     \
+                            CONFIG.AWUSER_WIDTH {9}                 \
+                            CONFIG.ARUSER_WIDTH {9}                 \
+                            CONFIG.RUSER_WIDTH {9}                  \
+                            CONFIG.WUSER_WIDTH {9}                  \
+                            CONFIG.BUSER_WIDTH {9}                  \
+                            CONFIG.SUPPORTS_NARROW {1}              \
+                            CONFIG.HAS_BURST {1}                    \
+                            CONFIG.HAS_LOCK {0}                     \
+                            CONFIG.HAS_CACHE {0}                    \
+                            CONFIG.HAS_REGION {0}                   \
+                            CONFIG.HAS_QOS {0}                      \
+                            CONFIG.HAS_PROT {0}                     \
+                            ] [get_ips axi_vip_mm_master] >> $log_file
+        generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_mm_master/axi_vip_mm_master.xci] >> $log_file
+        set_property generate_synth_checkpoint false [get_files  $ip_dir/axi_vip_mm_master/axi_vip_mm_master.xci] >> $log_file
+        generate_target all                          [get_files  $ip_dir/axi_vip_mm_master/axi_vip_mm_master.xci] >> $log_file
+        export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_mm_master/axi_vip_mm_master.xci] -no_script -sync -force -quiet >> $log_file
+        export_simulation -of_objects                [get_files $ip_dir/axi_vip_mm_master/axi_vip_mm_master.xci] -directory $ip_dir/ip_user_files/sim_scripts -ip_user_files_dir $ip_dir/ip_user_files -ipstatic_source_dir $ip_dir/ip_user_files/ipstatic -lib_map_path [list {modelsim=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/modelsim} {questa=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/questa} {ies=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/ies} {xcelium=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/xcelium} {vcs=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/vcs} {riviera=$ip_dir/managed_ip_project/managed_ip_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet >> $log_file
+  }
+  puts "                        generating IP axi_vip_lite_passthrough"
+  create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_lite_passthrough -dir $ip_dir >> $log_file
+  set_property -dict [list                                          \
+                           CONFIG.PROTOCOL {AXI4LITE}               \
+                           CONFIG.SUPPORTS_NARROW {0}               \
+                           CONFIG.HAS_BURST {0}                     \
+                           CONFIG.HAS_LOCK {0}                      \
+                           CONFIG.HAS_CACHE {0}                     \
+                           CONFIG.HAS_REGION {0}                    \
+                           CONFIG.HAS_QOS {0}                       \
+                           CONFIG.HAS_PROT {0}                      \
+                           CONFIG.HAS_WSTRB {0}                     \
+                           ] [get_ips axi_vip_lite_passthrough] >> $log_file
+  generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_lite_passthrough/axi_vip_lite_passthrough.xci] >> $log_file
+  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_lite_passthrough/axi_vip_lite_passthrough.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/axi_vip_lite_passthrough/axi_vip_lite_passthrough.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_lite_passthrough/axi_vip_lite_passthrough.xci] -no_script -sync -force -quiet >> $log_file
+  export_simulation -of_objects                [get_files $ip_dir/axi_vip_lite_passthrough/axi_vip_lite_passthrough.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+  puts "                        generating IP axi_vip_lite_slave"
+  create_ip -name axi_vip -vendor xilinx.com -library ip -version 1.1 -module_name axi_vip_lite_slave -dir $ip_dir >> $log_file
+  set_property -dict [list                                          \
+                           CONFIG.PROTOCOL {AXI4LITE}               \
+                           CONFIG.INTERFACE_MODE {SLAVE}            \
+                           CONFIG.SUPPORTS_NARROW {0}               \
+                           CONFIG.HAS_BURST {0}                     \
+                           CONFIG.HAS_LOCK {0}                      \
+                           CONFIG.HAS_CACHE {0}                     \
+                           CONFIG.HAS_REGION {0}                    \
+                           CONFIG.HAS_QOS {0}                       \
+                           CONFIG.HAS_PROT {0}                      \
+                           CONFIG.HAS_WSTRB {0}                     \
+                           ] [get_ips axi_vip_lite_slave] >> $log_file
+  generate_target {instantiation_template}     [get_files $ip_dir/axi_vip_lite_slave/axi_vip_lite_slave.xci] >> $log_file
+  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_vip_lite_slave/axi_vip_lite_slave.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/axi_vip_lite_slave/axi_vip_lite_slave.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/axi_vip_lite_slave/axi_vip_lite_slave.xci] -no_script -sync -force -quiet >> $log_file
+  export_simulation -of_objects                [get_files $ip_dir/axi_vip_lite_slave/axi_vip_lite_slave.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 }
 
 #create axi_clock_converter_act2mem

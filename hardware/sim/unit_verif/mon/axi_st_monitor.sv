@@ -26,7 +26,7 @@
 
 class axi_st_monitor extends uvm_monitor;
 
-    virtual interface                          axi4stream_vip_if `AXI_STREAM_H2A_PARAMS st_check_h2a_vif;
+    virtual interface                          axi4stream_vip_if `AXI_VIP_ST_H2A_PARAMS st_check_h2a_vif;
     axi_st_passthrough_h2a_passthrough_t       st_check_h2a_passthrough;
     uvm_analysis_port #(axi_st_transaction)    axi_st_tran_port;
     //uvm_analysis_port #(axi_st_transaction)    axi_st_cmd_rd_port;
@@ -98,7 +98,7 @@ endfunction : build_phase
 function void axi_st_monitor::connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     `uvm_info(tID, $sformatf("connect_phase begin ..."), UVM_MEDIUM)
-    if(!uvm_config_db#(virtual axi4stream_vip_if `AXI_STREAM_H2A_PARAMS)::get(this, "", "st_h2a_check_vif", st_check_h2a_vif)) begin
+    if(!uvm_config_db#(virtual axi4stream_vip_if `AXI_STREAM_H2A_PARAMS)::get(this, "", "axi_vip_st_passthrough_h2a_vif", st_check_h2a_vif)) begin
         `uvm_fatal(tID, "No virtual interface st_check_h2a_vif specified to axi_st_monitor")
     end
     st_check_h2a_passthrough = new("st_check_h2a_passthrough", st_check_h2a_vif);

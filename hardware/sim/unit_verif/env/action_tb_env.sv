@@ -43,6 +43,7 @@ class action_tb_env extends uvm_env;
     `endif
     //tl_bfm_env                bfm_env;
     tl_agent                  bfm_agt;
+    action_agent              action_agt;
     tb_vseqr                  vsqr; 
     brdg_cfg_obj              brdg_cfg;
 
@@ -101,6 +102,7 @@ function void action_tb_env::build_phase(uvm_phase phase);
     vsqr             = tb_vseqr::type_id::create("vsqr", this);
 //    bfm_env          = tl_bfm_env::type_id::create("bfm_env", this);
     bfm_agt          = tl_agent::type_id::create("bfm_agt", this);
+    action_agt       = action_agent::type_id::create("action_agt", this);
     //host_mem         = host_mem_model::type_id::create("host_mem", this);
     uvm_config_db #(brdg_cfg_obj)::set(this, "bridge_check_sbd", "brdg_cfg", brdg_cfg);
     uvm_config_db #(brdg_cfg_obj)::set(this, "odma_check_sbd", "brdg_cfg", brdg_cfg);
@@ -139,6 +141,8 @@ function void action_tb_env::connect_phase(uvm_phase phase);
     vsqr.cfg_obj = bfm_agt.cfg_obj;
     vsqr.tl_agt = bfm_agt;
     vsqr.host_mem = bfm_agt.mgr.host_mem;
+    vsqr.action_agt = action_agt;
+    vsqr.act_sqr = action_agt.act_sqr;
 
 endfunction : connect_phase
 

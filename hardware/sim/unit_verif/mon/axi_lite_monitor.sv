@@ -15,23 +15,23 @@
  */
 class axi_lite_monitor extends uvm_monitor;
 	
-	virtual interface 								axi_vip_if `AXI_LITE_PARAMS axi_lite_vif;
-	axi_lite_passthrough_passthrough_t				axi_lite_check;
+	virtual interface 						axi_vip_if `AXI_VIP_LITE_PASSTHROUGH_PARAMS axi_lite_vif;
+	axi_vip_lite_passthrough_passthrough_t				axi_lite_check;
 	
 //	uvm_analysis_port #(axi_monitor_transaction)	trans_port;
-//	uvm_analysis_port #(axi_lite_transaction)		lite_trans_port;
+//	uvm_analysis_port #(axi_lite_transaction)	lite_trans_port;
 	
 	string                      					work_mode = "CROSS_CHECK";
-	string 											tID;
+	string 								tID;
 	
-	axi_monitor_transaction 						axi_trans;
-	axi_lite_transaction							lite_trans;
+	axi_monitor_transaction 					axi_trans;
+	axi_lite_transaction						lite_trans;
 	
 	 `uvm_component_utils_begin(axi_lite_monitor)
          `uvm_field_string(work_mode, UVM_ALL_ON)
      `uvm_component_utils_end
 	
-	extern function new(string name = "axi_lite_monitor", uvm_component parent = null);
+    extern function new(string name = "axi_lite_monitor", uvm_component parent = null);
     extern function void build_phase(uvm_phase phase);
     extern function void connect_phase(uvm_phase phase);
     extern function void start_of_simulation_phase(uvm_phase phase);
@@ -61,8 +61,9 @@ endfunction : build_phase
 function void axi_lite_monitor::connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     `uvm_info(tID, $sformatf("connect_phase begin ..."), UVM_MEDIUM)
-    if(!uvm_config_db#(virtual axi_vip_if `AXI_LITE_PARAMS)::get(this, "", "axi_lite_vif", axi_lite_vif)) begin
-        `uvm_fatal(tID, "No virtual interface axi_lite_vif specified for axi_lite_monitor")
+    if(!uvm_config_db#(virtual axi_vip_if `AXI_VIP_LITE_PASSTHROUGH_PARAMS)::get(this, "", "axi_vip_lite_passthrough_vif", axi_lite_vif)) begin
+
+        `uvm_fatal(tID, "No virtual interface axi_vip_lite_passthrough_vif specified for axi_lite_monitor")
     end
     axi_lite_check = new("axi_lite_check", axi_lite_vif);
     endfunction : connect_phase
