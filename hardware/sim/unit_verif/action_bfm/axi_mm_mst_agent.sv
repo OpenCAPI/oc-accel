@@ -247,7 +247,10 @@ endtask : wait_write_resp
 //Send action interrupt
 task axi_mm_mst_agent::send_intrp();
     forever begin
-        if(intrp_vif.intrp_ack == 1'b1 && intrp_vif.intrp_req == 1'b1)
+        if(intrp_vif.action_rst_n==0)begin
+            @(posedge mm_mst_vif.ACLK);
+        end
+        else if(intrp_vif.intrp_ack == 1'b1 && intrp_vif.intrp_req == 1'b1)
             intrp_vif.intrp_req <= 1'b0;
         else if(intrp_vif.intrp_ack == 1'b0 && intrp_vif.intrp_req == 1'b0 && axi_intrp_queue.size > 0)begin
             intrp_vif.intrp_req <= 1'b1;

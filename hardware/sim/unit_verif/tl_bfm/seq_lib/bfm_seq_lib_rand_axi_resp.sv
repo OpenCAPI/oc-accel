@@ -79,8 +79,8 @@ class bfm_seq_rd_wr_1_size5_len0_rand_resp_split extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h5;wr_size==3'h5;rd_len==8'h0;wr_len==8'h0;});
@@ -98,9 +98,9 @@ class bfm_seq_rd_wr_1_size5_len0_rand_resp_split extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #100000ns;
@@ -170,8 +170,8 @@ class bfm_seq_rd_wr_10_size5_len6_rand_resp_split extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h5;wr_size==3'h5;rd_len==8'h6;wr_len==8'h6;});
@@ -189,9 +189,9 @@ class bfm_seq_rd_wr_10_size5_len6_rand_resp_split extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #100000ns;
@@ -261,8 +261,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_strobe_rand_resp_split extends bfm_seque
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize()with{rd_id==0;wr_id==0;rd_usr==0;wr_usr==0;});
@@ -280,9 +280,9 @@ class bfm_seq_rd_wr_10_randsize_randlen_strobe_rand_resp_split extends bfm_seque
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
 
         #10000us;
@@ -353,8 +353,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_strobe_unaligned_rand_resp_split extends
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize()with{rd_id==0;wr_id==0;rd_usr==0;wr_usr==0;});
@@ -372,9 +372,9 @@ class bfm_seq_rd_wr_10_randsize_randlen_strobe_unaligned_rand_resp_split extends
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
 
         #10000us;
@@ -445,8 +445,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_strobe_unaligned_randid_rand_resp_split 
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize()with{rd_usr==0;wr_usr==0;});
@@ -464,9 +464,9 @@ class bfm_seq_rd_wr_10_randsize_randlen_strobe_unaligned_randid_rand_resp_split 
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
       
         #10000us;
@@ -537,8 +537,8 @@ class bfm_seq_rd_wr_64_randsize_randlen_strobe_unaligned_randid_rand_resp_split 
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<64; num++)begin
             void'(axi_item.randomize()with{rd_usr==0;wr_usr==0;});
@@ -556,9 +556,9 @@ class bfm_seq_rd_wr_64_randsize_randlen_strobe_unaligned_randid_rand_resp_split 
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
 
         #1000000us;
@@ -629,8 +629,8 @@ class bfm_seq_rd_wr_1024_randsize_randlen_strobe_unaligned_randid_rand_resp_spli
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize()with{rd_usr==0;wr_usr==0;});
@@ -648,9 +648,9 @@ class bfm_seq_rd_wr_1024_randsize_randlen_strobe_unaligned_randid_rand_resp_spli
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
 
         #10000000us;
@@ -721,8 +721,8 @@ class bfm_seq_rd_wr_2048_randsize_randlen_strobe_unaligned_randid_rand_resp_spli
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<2048; num++)begin
             void'(axi_item.randomize()with{rd_usr==0;wr_usr==0;});
@@ -740,9 +740,9 @@ class bfm_seq_rd_wr_2048_randsize_randlen_strobe_unaligned_randid_rand_resp_spli
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
 
         #20000000us;
@@ -813,8 +813,8 @@ class bfm_seq_rd_wr_4096_randsize_randlen_strobe_unaligned_randid_rand_resp_spli
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<4096; num++)begin
             void'(axi_item.randomize()with{rd_usr==0;wr_usr==0;});
@@ -832,9 +832,9 @@ class bfm_seq_rd_wr_4096_randsize_randlen_strobe_unaligned_randid_rand_resp_spli
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
 
         #40000000us;
@@ -905,8 +905,8 @@ class bfm_seq_rd_wr_10_size7_len31_randid_rand_resp extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h31;wr_len==8'h31;});
@@ -924,9 +924,9 @@ class bfm_seq_rd_wr_10_size7_len31_randid_rand_resp extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #100000ns;
@@ -996,8 +996,8 @@ class bfm_seq_rd_wr_10_size7_randlen_randid_rand_resp extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;});
@@ -1015,9 +1015,9 @@ class bfm_seq_rd_wr_10_size7_randlen_randid_rand_resp extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #500000ns;
@@ -1088,8 +1088,8 @@ class bfm_seq_rd_wr_1024_size7_len31_randid_rand_resp extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h31;wr_len==8'h31;});
@@ -1107,9 +1107,9 @@ class bfm_seq_rd_wr_1024_size7_len31_randid_rand_resp extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #20000us;
@@ -1180,8 +1180,8 @@ class bfm_seq_rd_wr_1024_size7_randlen_randid_rand_resp extends bfm_sequence_bas
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;});
@@ -1199,9 +1199,9 @@ class bfm_seq_rd_wr_1024_size7_randlen_randid_rand_resp extends bfm_sequence_bas
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #20000us;
@@ -1272,8 +1272,8 @@ class bfm_seq_rd_wr_1024_size6_randlen_randid_rand_resp extends bfm_sequence_bas
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h6;wr_size==3'h6;});
@@ -1291,9 +1291,9 @@ class bfm_seq_rd_wr_1024_size6_randlen_randid_rand_resp extends bfm_sequence_bas
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #20000us;
@@ -1364,8 +1364,8 @@ class bfm_seq_rd_wr_1024_randsize_randlen_randid_rand_resp extends bfm_sequence_
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize());
@@ -1383,9 +1383,9 @@ class bfm_seq_rd_wr_1024_randsize_randlen_randid_rand_resp extends bfm_sequence_
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #500000us;
@@ -1456,8 +1456,8 @@ class bfm_seq_rd_wr_1024_randsize_randlen_unaligned_randid_rand_resp extends bfm
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize());
@@ -1475,9 +1475,9 @@ class bfm_seq_rd_wr_1024_randsize_randlen_unaligned_randid_rand_resp extends bfm
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #100000us;
@@ -1548,8 +1548,8 @@ class bfm_seq_rd_wr_1024_randsize_randlen_strobe_unaligned_randid_rand_resp exte
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize());
@@ -1567,9 +1567,9 @@ class bfm_seq_rd_wr_1024_randsize_randlen_strobe_unaligned_randid_rand_resp exte
             p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
-                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
-                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;})
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;})
         end
 
         #10000000us;

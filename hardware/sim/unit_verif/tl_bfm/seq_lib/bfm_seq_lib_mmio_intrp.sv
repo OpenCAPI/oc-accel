@@ -121,8 +121,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_1 extends bfm_sequence_base; //Ten
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize());
@@ -131,8 +131,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_1 extends bfm_sequence_base; //Ten
             rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
             wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
             //Set address not cross a 4KB boundary
-            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
-            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[11:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[11:0] % (4096 - wr_block_byte));
             //Set address aligned to axi size
             read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
             write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
@@ -193,8 +193,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_2 extends bfm_sequence_base; //Ten
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize());
@@ -265,8 +265,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_20 extends bfm_sequence_base; //Te
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize());
@@ -335,8 +335,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_1_rty extends bfm_sequence_base; /
         p_sequencer.cfg_obj.inject_err_type = tl_cfg_obj::RESP_CODE_VALID_RTY_PENDING;    
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize());
@@ -411,8 +411,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_2_rty extends bfm_sequence_base; /
         
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize());
@@ -487,8 +487,8 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_20_rty extends bfm_sequence_base; 
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
             void'(axi_item.randomize());

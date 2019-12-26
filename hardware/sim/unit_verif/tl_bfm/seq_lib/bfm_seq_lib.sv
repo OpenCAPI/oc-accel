@@ -42,9 +42,9 @@ endclass
 //endclass
 
 class bridge_axi_item;
-    rand bit [63:32] read_addr_high;
+    rand bit [31:0] read_addr_high;
     rand bit [31:0] read_addr_low;
-    rand bit [63:32] write_addr_high;
+    rand bit [31:0] write_addr_high;
     rand bit [31:0] write_addr_low;
     rand int rd_adr_var;
     rand int wr_adr_var;
@@ -58,8 +58,8 @@ class bridge_axi_item;
     rand bit [8:0] wr_usr;
 
     constraint addr_range{
-        read_addr_high[63:60] inside{4'h3, 4'hC};
-        write_addr_high[63:60] inside{4'h5, 4'hA};
+        read_addr_high[31:28] inside{4'h3, 4'hC};
+        write_addr_high[31:28] inside{4'h5, 4'hA};
         rd_adr_var >= 32'h1000; rd_adr_var <= 32'h2000;
         wr_adr_var >= 32'h1000; wr_adr_var <= 32'h2000;
     }
@@ -365,8 +365,8 @@ class bfm_seq_read_4k extends bfm_sequence_base;
         p_sequencer.brdg_cfg.total_write_num = 0;
 
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:12],12'h0};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:12],12'h0};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:12],12'h0};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:12],12'h0};
 
         //Initial host memory data for read commands
         p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
@@ -377,7 +377,7 @@ class bfm_seq_read_4k extends bfm_sequence_base;
 
 
         `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                         act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                         act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
 
         #100000ns;
     endtask: body
@@ -415,8 +415,8 @@ class bfm_seq_write_4k extends bfm_sequence_base;
         p_sequencer.brdg_cfg.total_write_num = 1;
 
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:12],12'h0};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:12],12'h0};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:12],12'h0};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:12],12'h0};
 
         //Initial host memory data for read commands
         p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
@@ -426,7 +426,7 @@ class bfm_seq_write_4k extends bfm_sequence_base;
         p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
         `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                         act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                         act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
 
         #100000ns;
     endtask: body
@@ -464,8 +464,8 @@ class bfm_seq_read_4k_write_4k extends bfm_sequence_base;
         p_sequencer.brdg_cfg.total_write_num = 1;
 
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:12],12'h0};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:12],12'h0};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:12],12'h0};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:12],12'h0};
 
         //Initial host memory data for read commands
         p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
@@ -476,9 +476,9 @@ class bfm_seq_read_4k_write_4k extends bfm_sequence_base;
 
 
         `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                         act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                         act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
         `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                         act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                         act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
 
     #100000ns;
     endtask: body
@@ -524,8 +524,8 @@ class bfm_seq_read_4k_write_4k_n1024 extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
             void'(axi_item.randomize());
@@ -546,9 +546,9 @@ class bfm_seq_read_4k_write_4k_n1024 extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
         #10000us;
     endtask: body
@@ -594,8 +594,8 @@ class bfm_seq_read_4k_write_4k_n2048 extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<2048; num++)begin
             void'(axi_item.randomize());
@@ -608,9 +608,9 @@ class bfm_seq_read_4k_write_4k_n2048 extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #10000us;
@@ -657,8 +657,8 @@ class bfm_seq_read_4k_write_4k_n4096 extends bfm_sequence_base;
 
         //Initial read/write address
         void'(axi_item.randomize());
-        read_addr={axi_item.read_addr_high[63:32],axi_item.read_addr_low[31:0]};
-        write_addr={axi_item.write_addr_high[63:32],axi_item.write_addr_low[31:0]};
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<4096; num++)begin
             void'(axi_item.randomize());
@@ -671,9 +671,9 @@ class bfm_seq_read_4k_write_4k_n4096 extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
         #10000us;
