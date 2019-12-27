@@ -709,7 +709,7 @@ module brdg_data_bridge
  // psl default clock = (posedge clk);
 
 //==== PSL ASSERTION ==============================================================================
- // psl NEW_CONTEXT_CONGESTED : assert always onehot0({retry_tag_out_valid, ((MODE == DMA_R) && rd_valid), ((MODE == DMA_W) && ret_valid);}) report "information buffer read conflict! Reading the infor BUF for TLX retry command and for AXI reclaim should never happen in the same time.";
+// psl NEW_CONTEXT_CONGESTED : assert always onehot0({retry_tag_out_valid, ((MODE == DMA_R) && rd_valid), ((MODE == DMA_W) && ret_valid)}) report "information buffer read conflict! Reading the infor BUF for TLX retry command and for AXI reclaim should never happen in the same time.";
 //==== PSL ASSERTION ==============================================================================
 
 //==== PSL ASSERTION ==============================================================================

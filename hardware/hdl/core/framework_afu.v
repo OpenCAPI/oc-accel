@@ -259,8 +259,6 @@ module framework_afu (
   wire                       mm_snap2conv_rlast     ;
   wire                       mm_snap2conv_rvalid    ;
   wire                       mm_snap2conv_arready   ;
-  wire [`AXI_AWUSER-1:0]     mm_snap2conv_ruser     ;
-  wire [`AXI_AWUSER-1:0]     mm_snap2conv_buser     ;
 
   wire [`IDW-1:0]             mm_conv2snap_awid      ;
   wire [`AXI_MM_AW-1:0]       mm_conv2snap_awaddr    ;
@@ -436,8 +434,6 @@ module framework_afu (
   wire                       mm_conv2act_rlast     ;
   wire                       mm_conv2act_rvalid    ;
   wire                       mm_conv2act_arready   ;
-  wire [`AXI_AWUSER-1:0]     mm_conv2act_buser     ;
-  wire [`AXI_AWUSER-1:0]     mm_conv2act_ruser     ;
 
   wire [`IDW-1:0]            mm_act2conv_awid      ;
   wire [`AXI_MM_AW-1:0]      mm_act2conv_awaddr    ;
