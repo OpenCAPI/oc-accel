@@ -24,6 +24,11 @@ module brdg_command_encode
                           ( 
                            input                      clk              ,
                            input                      rst_n            ,
+                             
+                           //---- configuration --------------------------
+                           input      [011:0]         cfg_actag_base   ,
+                           input      [019:0]         cfg_pasid_base   ,
+                           input      [019:0]         cfg_pasid_mask   ,
 
                            //---- communication with command decoder -----
                            output                     prt_cmd_start    ,
@@ -38,6 +43,7 @@ module brdg_command_encode
                            input      [0127:0]        dma_cmd_be       ,
                            input      [0063:0]        dma_cmd_ea       ,
                            input      [`TAGW-1:0]     dma_cmd_tag      ,
+                           input      [`CTXW-1:0]     dma_cmd_ctx      ,
 
                            //---- TLX interface ---------------------------
                              // command
@@ -48,6 +54,8 @@ module brdg_command_encode
                            output reg [0001:0]        tlx_cmd_dl       , 
                            output reg [0002:0]        tlx_cmd_pl       , 
                            output     [0063:0]        tlx_cmd_be       , 
+                           output reg [0019:0]        tlx_cmd_pasid    ,
+                           output reg [0011:0]        tlx_cmd_actag    ,
                            output reg [1023:0]        tlx_cdata_bus    ,    
 
                              // credit availability
@@ -79,14 +87,14 @@ module brdg_command_encode
 
  reg             fifo_prt_info_wr_en;
  reg             fifo_prt_data_wr_en;
- reg [0193:00]   fifo_prt_info_din;
+ reg [0202:00]   fifo_prt_info_din;
  reg [1023:00]   fifo_prt_data_din;
  wire            fifo_prt_info_rd_en;
  wire            fifo_prt_data_rd_en;
- wire [0193:00]  fifo_prt_info_dout;
+ wire [0202:00]  fifo_prt_info_dout;
  wire [1023:00]  fifo_prt_data_dout;
  wire [0004:00]  fifo_prt_info_count;
- reg [0193:00]   fifo_prt_info_dout_sync;
+ reg [0202:00]   fifo_prt_info_dout_sync;
  reg [0511:00]   fifo_prt_data_dout_h_sync;
  wire            fifo_prt_info_empty;
  wire            fifo_prt_info_dv;
@@ -95,6 +103,7 @@ module brdg_command_encode
  wire            partial_l;
  wire            partial_h;
  reg [`TAGW-1:00] partial_tag;
+ reg [`CTXW-1:00] partial_ctx;
  wire[0004:00]   partial_cnt;
  reg [0056:00]   partial_ea_128B;
  reg             partial_2nd;
@@ -208,6 +217,22 @@ module brdg_command_encode
                 tlx_cmd_afutag    <= {MODE, 1'b1, partial_cnt, {prt_h,prt_l}, partial_tag};
               end
      
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n) 
+     begin
+       tlx_cmd_pasid <= 20'd0;
+       tlx_cmd_actag <= 12'd0; 
+     end
+   else if(bypass_mode)
+     begin
+       tlx_cmd_pasid <= ((cfg_pasid_base & cfg_pasid_mask) | ({{(20-`CTXW){1'd0}}, dma_cmd_ctx} & ~cfg_pasid_mask));
+       tlx_cmd_actag <= cfg_actag_base + {{(12-`CTXW){1'd0}},dma_cmd_ctx}; 
+     end
+   else
+     begin
+       tlx_cmd_pasid <= ((cfg_pasid_base & cfg_pasid_mask) | ({{(20-`CTXW){1'd0}}, partial_ctx} & ~cfg_pasid_mask));
+       tlx_cmd_actag <= cfg_actag_base + {{(12-`CTXW){1'd0}},partial_ctx}; 
+     end
 
 
 //=====================================================================================================================================
@@ -229,29 +254,29 @@ module brdg_command_encode
      begin
        fifo_prt_info_wr_en <= 1'b0;
        fifo_prt_data_wr_en <= 1'b0;
-       fifo_prt_info_din   <= 194'd0;
+       fifo_prt_info_din   <= 203'd0;
        fifo_prt_data_din   <= 1024'd0;
      end
    else 
      begin
        fifo_prt_info_wr_en <= partial_mode;
        fifo_prt_data_wr_en <= partial_mode;
-       fifo_prt_info_din   <= {prt_o, prt_e, dma_cmd_tag, dma_cmd_ea[63:7], dma_cmd_be}; //1+1+7+57+128=194
+       fifo_prt_info_din   <= {dma_cmd_ctx, prt_o, prt_e, dma_cmd_tag, dma_cmd_ea[63:7], dma_cmd_be}; //9+1+1+7+57+128=203
        fifo_prt_data_din   <= dma_cmd_data;
      end
 
 //---- FIFO for partial info ----
  fifo_sync #(
-             .DATA_WIDTH (194),
+             .DATA_WIDTH (203),
              .ADDR_WIDTH (5), 
              .DISTR(1)
              ) mfifo_prt_info (
                                .clk         (clk                ), // input clk
                                .rst_n       (rst_n              ), // input rst
-                               .din         (fifo_prt_info_din  ), // input [192 : 0] din
+                               .din         (fifo_prt_info_din  ), // input [202 : 0] din
                                .wr_en       (fifo_prt_info_wr_en), // input wr_en
                                .rd_en       (fifo_prt_info_rd_en), // input rd_en
-                               .dout        (fifo_prt_info_dout ), // output [192 : 0] dout
+                               .dout        (fifo_prt_info_dout ), // output [202 : 0] dout
                                .empty       (fifo_prt_info_empty), // output empty
                                .count       (fifo_prt_info_count), // output [4 : 0] count
                                .valid       (fifo_prt_info_dv   ), // output           valid
@@ -285,7 +310,7 @@ module brdg_command_encode
  always@(posedge clk or negedge rst_n)
    if(~rst_n) 
      begin
-       fifo_prt_info_dout_sync   <= 194'd0;
+       fifo_prt_info_dout_sync   <= 203'd0;
        fifo_prt_data_dout_h_sync <= 512'd0;
      end
    else if(fifo_prt_info_dv)
@@ -301,12 +326,14 @@ module brdg_command_encode
        partial_tag     <= {`TAGW{1'b1}};
        partial_ea_128B <= 57'd0;
        partial_2nd     <= 1'b0;
+       partial_ctx     <= {`CTXW{1'b0}};
      end
    else if(prt_cstate == CHECK_PARTIAL)
      begin
        partial_tag     <= fifo_prt_info_dout[191:185];
        partial_ea_128B <= fifo_prt_info_dout[184:128];
        partial_2nd     <= fifo_prt_info_dout[193];
+       partial_ctx     <= fifo_prt_info_dout[202:194];
      end
 
 //---- adjust data position ----

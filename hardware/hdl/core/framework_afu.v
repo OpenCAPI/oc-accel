@@ -957,12 +957,14 @@ module framework_afu (
       .mm_snap2conv_wready              (mm_snap2conv_wready              ),
       .mm_snap2conv_bid                 (mm_snap2conv_bid                 ),
       .mm_snap2conv_bresp               (mm_snap2conv_bresp               ),
+      .mm_snap2conv_buser               (mm_snap2conv_buser               ),
       .mm_snap2conv_bvalid              (mm_snap2conv_bvalid              ),
       .mm_snap2conv_rid                 (mm_snap2conv_rid                 ),
       .mm_snap2conv_rdata               (mm_snap2conv_rdata               ),
       .mm_snap2conv_rresp               (mm_snap2conv_rresp               ),
       .mm_snap2conv_rlast               (mm_snap2conv_rlast               ),
       .mm_snap2conv_rvalid              (mm_snap2conv_rvalid              ),
+      .mm_snap2conv_ruser               (mm_snap2conv_ruser               ),
       .mm_snap2conv_arready             (mm_snap2conv_arready             ),
 
 
@@ -1278,14 +1280,14 @@ module framework_afu (
       .m_axi_host_mem_bid                 ( mm_conv2act_bid            ) ,
       .m_axi_host_mem_bready              ( mm_act2conv_bready         ) ,
       .m_axi_host_mem_bresp               ( mm_conv2act_bresp          ) ,
-      .m_axi_host_mem_buser               ( 1'b0                       ) ,
+      .m_axi_host_mem_buser               ( mm_conv2act_buser          ) ,
       .m_axi_host_mem_bvalid              ( mm_conv2act_bvalid         ) ,
       .m_axi_host_mem_rdata               ( mm_conv2act_rdata          ) ,
       .m_axi_host_mem_rid                 ( mm_conv2act_rid            ) ,
       .m_axi_host_mem_rlast               ( mm_conv2act_rlast          ) ,
       .m_axi_host_mem_rready              ( mm_act2conv_rready         ) ,
       .m_axi_host_mem_rresp               ( mm_conv2act_rresp          ) ,
-      .m_axi_host_mem_ruser               ( 1'b0                       ) ,
+      .m_axi_host_mem_ruser               ( mm_conv2act_ruser          ) ,
       .m_axi_host_mem_rvalid              ( mm_conv2act_rvalid         ) ,
       .m_axi_host_mem_wdata               ( mm_act2conv_wdata          ) ,
       .m_axi_host_mem_wlast               ( mm_act2conv_wlast          ) ,
@@ -1579,9 +1581,12 @@ module framework_afu (
 
 assign  mm_conv2snap_aruser = mm_act2conv_aruser;
 assign  mm_conv2snap_awuser = mm_act2conv_awuser;
-
-assign  mm_conv2snap_awid = {`IDW{1'b0}};
-assign  mm_conv2snap_arid = {`IDW{1'b0}};
+assign  mm_conv2act_buser = mm_snap2conv_buser;
+assign  mm_conv2act_ruser = mm_snap2conv_ruser;
+assign  mm_conv2snap_awid = mm_act2conv_awid;
+assign  mm_conv2snap_arid = mm_act2conv_arid;
+assign  mm_conv2act_bid = mm_snap2conv_bid;
+assign  mm_conv2act_rid = mm_snap2conv_rid;
 
 `else
   `ifdef ACTION_USER_CLOCK
@@ -1702,6 +1707,8 @@ assign mm_conv2act_rresp                = mm_snap2conv_rresp                ;
 assign mm_conv2act_rlast                = mm_snap2conv_rlast                ;
 assign mm_conv2act_rvalid               = mm_snap2conv_rvalid               ;
 assign mm_conv2act_arready              = mm_snap2conv_arready              ;
+assign mm_conv2act_buser                = mm_snap2conv_buser                ;
+assign mm_conv2act_ruser                = mm_snap2conv_ruser                ;
 
 assign mm_conv2snap_awid                 = mm_act2conv_awid                 ;
 assign mm_conv2snap_awaddr               = mm_act2conv_awaddr               ;
