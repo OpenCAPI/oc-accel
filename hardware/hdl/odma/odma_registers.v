@@ -126,7 +126,11 @@ module odma_registers #(
     input  [31: 0 ]                 cmp_ch0_dsc_cnt,        //channel0 completed descriptor count
     input  [31: 0 ]                 cmp_ch1_dsc_cnt,        //channel1 completed descriptor count
     input  [31: 0 ]                 cmp_ch2_dsc_cnt,        //channel2 completed descriptor count
-    input  [31: 0 ]                 cmp_ch3_dsc_cnt         //channel3 completed descriptor count
+    input  [31: 0 ]                 cmp_ch3_dsc_cnt,        //channel3 completed descriptor count
+    output [63: 0 ]                 cmp_ch0_obj_handle,     //channel0 interrupt object handler
+    output [63: 0 ]                 cmp_ch1_obj_handle,     //channel1 interrupt object handler
+    output [63: 0 ]                 cmp_ch2_obj_handle,     //channel2 interrupt object handler
+    output [63: 0 ]                 cmp_ch3_obj_handle      //channel3 interrupt object handler
 );
 //------------------------------------------------------------------------------
 // Internal signals
@@ -329,6 +333,14 @@ reg  [31:0] reg_intr_user_req;
 reg  [31:0] reg_intr_chnl_req;
 reg  [31:0] reg_intr_user_pending;
 reg  [31:0] reg_intr_chnl_pending;
+reg  [31:0] reg_intr_ch0_obj_handle_lo;
+reg  [31:0] reg_intr_ch0_obj_handle_hi;
+reg  [31:0] reg_intr_ch1_obj_handle_lo;
+reg  [31:0] reg_intr_ch1_obj_handle_hi;
+reg  [31:0] reg_intr_ch2_obj_handle_lo;
+reg  [31:0] reg_intr_ch2_obj_handle_hi;
+reg  [31:0] reg_intr_ch3_obj_handle_lo;
+reg  [31:0] reg_intr_ch3_obj_handle_hi;
 //Config registers
 reg  [31:0] reg_cfg_id;
 reg  [31:0] reg_cfg_axi_max_wr_size;
@@ -658,7 +670,25 @@ assign host_axi_wdata_mask = h_s_axi_wdata & host_axi_wr_mask;
 
 always@(posedge clk or negedge rst_n) begin
   if(~rst_n) begin
+`ifndef ENABLE_ODMA_ST_MODE
     reg_h2a_ch0_id                  <= 32'h1FC00004; 
+    reg_h2a_ch1_id                  <= 32'h1FC00104;                             
+    reg_h2a_ch2_id                  <= 32'h1FC00204;
+    reg_h2a_ch3_id                  <= 32'h1FC00304;
+    reg_a2h_ch0_id                  <= 32'h1FC10004;
+    reg_a2h_ch1_id                  <= 32'h1FC10104;
+    reg_a2h_ch2_id                  <= 32'h1FC10204;
+    reg_a2h_ch3_id                  <= 32'h1FC10304;
+`else
+    reg_h2a_ch0_id                  <= 32'h1FC08004; 
+    reg_h2a_ch1_id                  <= 32'h1FC08104;                             
+    reg_h2a_ch2_id                  <= 32'h1FC08204;
+    reg_h2a_ch3_id                  <= 32'h1FC08304;
+    reg_a2h_ch0_id                  <= 32'h1FC18004;
+    reg_a2h_ch1_id                  <= 32'h1FC18104;
+    reg_a2h_ch2_id                  <= 32'h1FC18204;
+    reg_a2h_ch3_id                  <= 32'h1FC18304;
+`endif
     reg_h2a_ch0_ctrl                <= 32'h04000000;
     reg_h2a_ch0_align               <= 32'b0; 
     reg_h2a_ch0_wb_size             <= 32'b0; 
@@ -670,7 +700,6 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch0_perf_cyc_cnt_hi     <= 32'b0;     
     reg_h2a_ch0_perf_data_cnt_lo    <= 32'b0;     
     reg_h2a_ch0_perf_data_cnt_hi    <= 32'b0;     
-    reg_h2a_ch1_id                  <= 32'h1FC00104;                             
     reg_h2a_ch1_ctrl                <= 32'h04000000;
     reg_h2a_ch1_align               <= 32'b0;
     reg_h2a_ch1_wb_size             <= 32'b0;
@@ -682,7 +711,6 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch1_perf_cyc_cnt_hi     <= 32'b0;
     reg_h2a_ch1_perf_data_cnt_lo    <= 32'b0;
     reg_h2a_ch1_perf_data_cnt_hi    <= 32'b0;
-    reg_h2a_ch2_id                  <= 32'h1FC00204;
     reg_h2a_ch2_ctrl                <= 32'h04000000;
     reg_h2a_ch2_align               <= 32'b0;
     reg_h2a_ch2_wb_size             <= 32'b0;
@@ -694,7 +722,6 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch2_perf_cyc_cnt_hi     <= 32'b0;
     reg_h2a_ch2_perf_data_cnt_lo    <= 32'b0;
     reg_h2a_ch2_perf_data_cnt_hi    <= 32'b0;
-    reg_h2a_ch3_id                  <= 32'h1FC00304;
     reg_h2a_ch3_ctrl                <= 32'h04000000;
     reg_h2a_ch3_align               <= 32'b0;
     reg_h2a_ch3_wb_size             <= 32'b0;
@@ -706,7 +733,6 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch3_perf_cyc_cnt_hi     <= 32'b0;
     reg_h2a_ch3_perf_data_cnt_lo    <= 32'b0;
     reg_h2a_ch3_perf_data_cnt_hi    <= 32'b0;
-    reg_a2h_ch0_id                  <= 32'h1FC10004;
     reg_a2h_ch0_ctrl                <= 32'h04000000;
     reg_a2h_ch0_align               <= 32'b0;
     reg_a2h_ch0_wb_size             <= 32'b0;
@@ -718,7 +744,6 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch0_perf_cyc_cnt_hi     <= 32'b0;
     reg_a2h_ch0_perf_data_cnt_lo    <= 32'b0;
     reg_a2h_ch0_perf_data_cnt_hi    <= 32'b0;
-    reg_a2h_ch1_id                  <= 32'h1FC10104;
     reg_a2h_ch1_ctrl                <= 32'h04000000;
     reg_a2h_ch1_align               <= 32'b0;
     reg_a2h_ch1_wb_size             <= 32'b0;
@@ -730,7 +755,6 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch1_perf_cyc_cnt_hi     <= 32'b0;
     reg_a2h_ch1_perf_data_cnt_lo    <= 32'b0;
     reg_a2h_ch1_perf_data_cnt_hi    <= 32'b0;
-    reg_a2h_ch2_id                  <= 32'h1FC10204;
     reg_a2h_ch2_ctrl                <= 32'h04000000;
     reg_a2h_ch2_align               <= 32'b0;
     reg_a2h_ch2_wb_size             <= 32'b0;
@@ -742,7 +766,6 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch2_perf_cyc_cnt_hi     <= 32'b0;
     reg_a2h_ch2_perf_data_cnt_lo    <= 32'b0;
     reg_a2h_ch2_perf_data_cnt_hi    <= 32'b0;
-    reg_a2h_ch3_id                  <= 32'h1FC10304;
     reg_a2h_ch3_ctrl                <= 32'h04000000;
     reg_a2h_ch3_align               <= 32'b0;
     reg_a2h_ch3_wb_size             <= 32'b0;
@@ -761,6 +784,14 @@ always@(posedge clk or negedge rst_n) begin
     reg_intr_chnl_req               <= 32'b0;
     reg_intr_user_pending           <= 32'b0;
     reg_intr_chnl_pending           <= 32'b0;
+    reg_intr_ch0_obj_handle_lo      <= 32'b0;
+    reg_intr_ch0_obj_handle_hi      <= 32'b0;
+    reg_intr_ch1_obj_handle_lo      <= 32'b0;
+    reg_intr_ch1_obj_handle_hi      <= 32'b0;
+    reg_intr_ch2_obj_handle_lo      <= 32'b0;
+    reg_intr_ch2_obj_handle_hi      <= 32'b0;
+    reg_intr_ch3_obj_handle_lo      <= 32'b0;
+    reg_intr_ch3_obj_handle_hi      <= 32'b0;
     reg_cfg_id                      <= 32'h1FC30004;
     reg_cfg_axi_max_wr_size         <= 32'b0;
     reg_cfg_axi_max_rd_size         <= 32'b0;
@@ -898,6 +929,14 @@ always@(posedge clk or negedge rst_n) begin
       `INTR_CHNL_EN_MASK           : reg_intr_chnl_en_mask       <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_chnl_en_mask);
       `INTR_CHNL_EN_MASK_W1S       : reg_intr_chnl_en_mask       <= host_axi_wdata_mask | reg_intr_chnl_en_mask;
       `INTR_CHNL_EN_MASK_W1C       : reg_intr_chnl_en_mask       <= ~host_axi_wdata_mask & reg_intr_chnl_en_mask;
+      `INTR_CH0_OBJ_HANDLE_LO      : reg_intr_ch0_obj_handle_lo  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch0_obj_handle_lo);
+      `INTR_CH0_OBJ_HANDLE_HI      : reg_intr_ch0_obj_handle_hi  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch0_obj_handle_hi);
+      `INTR_CH1_OBJ_HANDLE_LO      : reg_intr_ch1_obj_handle_lo  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch1_obj_handle_lo);
+      `INTR_CH1_OBJ_HANDLE_HI      : reg_intr_ch1_obj_handle_hi  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch1_obj_handle_hi);
+      `INTR_CH2_OBJ_HANDLE_LO      : reg_intr_ch2_obj_handle_lo  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch2_obj_handle_lo);
+      `INTR_CH2_OBJ_HANDLE_HI      : reg_intr_ch2_obj_handle_hi  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch2_obj_handle_hi);
+      `INTR_CH3_OBJ_HANDLE_LO      : reg_intr_ch3_obj_handle_lo  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch3_obj_handle_lo);
+      `INTR_CH3_OBJ_HANDLE_HI      : reg_intr_ch3_obj_handle_hi  <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_intr_ch3_obj_handle_hi);
       `CFG_AXI_MAX_WR_SIZE         : reg_cfg_axi_max_wr_size     <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_cfg_axi_max_wr_size);
       `CFG_AXI_MAX_RD_SIZE         : reg_cfg_axi_max_rd_size     <= host_axi_wdata_mask | (~host_axi_wr_mask & reg_cfg_axi_max_rd_size);
       `CFG_AXI_WR_FLUSH_TIMEOUT    : reg_cfg_axi_wr_flush_timeout<= host_axi_wdata_mask | (~host_axi_wr_mask & reg_cfg_axi_wr_flush_timeout);
@@ -1437,6 +1476,14 @@ always@(posedge clk or negedge rst_n) begin
       `INTR_CHNL_REQ             : host_axi_rdata <= reg_intr_chnl_req;
       `INTR_USER_PENDING         : host_axi_rdata <= reg_intr_user_pending;
       `INTR_CHNL_PENDING         : host_axi_rdata <= reg_intr_chnl_pending;
+      `INTR_CH0_OBJ_HANDLE_LO    : host_axi_rdata <= reg_intr_ch0_obj_handle_lo;
+      `INTR_CH0_OBJ_HANDLE_HI    : host_axi_rdata <= reg_intr_ch0_obj_handle_hi;
+      `INTR_CH1_OBJ_HANDLE_LO    : host_axi_rdata <= reg_intr_ch1_obj_handle_lo;
+      `INTR_CH1_OBJ_HANDLE_HI    : host_axi_rdata <= reg_intr_ch1_obj_handle_hi;
+      `INTR_CH2_OBJ_HANDLE_LO    : host_axi_rdata <= reg_intr_ch2_obj_handle_lo;
+      `INTR_CH2_OBJ_HANDLE_HI    : host_axi_rdata <= reg_intr_ch2_obj_handle_hi;
+      `INTR_CH3_OBJ_HANDLE_LO    : host_axi_rdata <= reg_intr_ch3_obj_handle_lo;
+      `INTR_CH3_OBJ_HANDLE_HI    : host_axi_rdata <= reg_intr_ch3_obj_handle_hi;
       `CFG_ID                    : host_axi_rdata <= reg_cfg_id;
       `CFG_AXI_MAX_WR_SIZE       : host_axi_rdata <= reg_cfg_axi_max_wr_size;
       `CFG_AXI_MAX_RD_SIZE       : host_axi_rdata <= reg_cfg_axi_max_rd_size;
@@ -1558,5 +1605,10 @@ assign cmp_ch0_poll_wb_size = h2a_ch0_run ? reg_h2a_ch0_wb_size : reg_a2h_ch0_wb
 assign cmp_ch1_poll_wb_size = h2a_ch1_run ? reg_h2a_ch1_wb_size : reg_a2h_ch1_wb_size;
 assign cmp_ch2_poll_wb_size = h2a_ch2_run ? reg_h2a_ch2_wb_size : reg_a2h_ch2_wb_size;
 assign cmp_ch3_poll_wb_size = h2a_ch3_run ? reg_h2a_ch3_wb_size : reg_a2h_ch3_wb_size;
+
+assign cmp_ch0_obj_handle = {reg_intr_ch0_obj_handle_hi, reg_intr_ch0_obj_handle_lo};
+assign cmp_ch1_obj_handle = {reg_intr_ch1_obj_handle_hi, reg_intr_ch1_obj_handle_lo};
+assign cmp_ch2_obj_handle = {reg_intr_ch2_obj_handle_hi, reg_intr_ch2_obj_handle_lo};
+assign cmp_ch3_obj_handle = {reg_intr_ch3_obj_handle_hi, reg_intr_ch3_obj_handle_lo};
 
 endmodule

@@ -73,7 +73,7 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 if [ -z "$SNAP_CONFIG" ]; then
     echo "Get CARD VERSION"
-    snap_maint -C ${snap_card} -v || exit 1;
+    oc_maint -C ${snap_card} -v || exit 1;
     snap_peek -C ${snap_card} 0x0 || exit 1;
     snap_peek -C ${snap_card} 0x8 || exit 1;
     echo

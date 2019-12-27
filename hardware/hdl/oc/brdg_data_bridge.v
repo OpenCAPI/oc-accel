@@ -619,6 +619,7 @@ module brdg_data_bridge
  `endif
 
 
+
 //=================================================================================================================
 // STATUS output for SNAP registers
 //=================================================================================================================
@@ -710,6 +711,20 @@ module brdg_data_bridge
 //==== PSL ASSERTION ==============================================================================
  // psl NEW_CONTEXT_CONGESTED : assert always onehot0({retry_tag_out_valid, ((MODE == DMA_R) && rd_valid), ((MODE == DMA_W) && ret_valid);}) report "information buffer read conflict! Reading the infor BUF for TLX retry command and for AXI reclaim should never happen in the same time.";
 //==== PSL ASSERTION ==============================================================================
+
+//==== PSL ASSERTION ==============================================================================
+// psl DMA_COMMAND_RETRY_CONFLICT : assert never (retry_tag_out_valid_sync && local_cmd_valid_sync) report "retry and normal command conflict! It's not allowed to send both retry command from retry FIFO and normal command from AXI to command encoder simultanuously.";
+
+// psl SURPLUS_TLX_RSP : assert never (fifo_rcy_tag_full && dma_resp_valid) report "all buffer slots have been released, response from TLX is nevertheless received.";
+
+// psl SURPLUS_AXI_CMD : assert never (fifo_rcy_tag_empty && local_cmd_valid) report "buffer slots have been used up, command from AXI is nevertheless received.";
+//==== PSL ASSERTION ==============================================================================
+
+//==== PSL COVERAGE ==============================================================================
+ // psl RETRY_FIFO_ALMOST_FULL : cover {retry_intrpt};
+ // psl TAG_ALL_CLAIMED : cover {~fifo_rcy_tag_full; fifo_rcy_tag_full};
+ // psl TAG_ALL_SET_FREE : cover {~fifo_rcy_tag_empty; fifo_rcy_tag_empty};
+//==== PSL COVERAGE ==============================================================================
 
 
 endmodule
