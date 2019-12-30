@@ -15,16 +15,17 @@
  */
 `ifndef _TB_VSEQR_SV
 `define _TB_VSEQR_SV
-    
+
 class tb_vseqr extends uvm_sequencer;
     
     tl_tx_seqr      tx_sqr;
-    action_seqr     act_sqr;
     tl_cfg_obj      cfg_obj;
     tl_agent        tl_agt;
     host_mem_model  host_mem;
     brdg_cfg_obj    brdg_cfg;
     action_agent    action_agt;
+    action_seqr     act_sqr;
+    action_seqr_st  act_sqr_st;
 
     `uvm_component_utils_begin(tb_vseqr)
         `uvm_field_object (cfg_obj, UVM_ALL_ON)

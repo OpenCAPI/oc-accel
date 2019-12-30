@@ -13,28 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-`ifndef _ACTION_BFM_PKG_SVH_
-`define _ACTION_BFM_PKG_SVH_
+`ifndef _ACTION_SEQR_ST_SV
+`define _ACTION_SEQR_ST_SV
 
-`include "../../../hdl/core/snap_global_vars.v"
+class action_seqr_st extends uvm_sequencer #(axi_st_transaction);
 
-//SEQUENCE
-`include "action_seqr.sv"
-`include "action_seqr_st.sv"
+    `uvm_component_utils(action_seqr_st)
 
-//AGENTS
-`ifndef ENABLE_ODMA
-    `include "axi_mm_mst_agent.sv"
-`else
-    `ifndef ENABLE_ODMA_ST_MODE
-        `include "axi_mm_slv_agent.sv"
-    `else
-        `include "axi_st_slv_agent.sv"
-        `include "axi_st_mst_agent.sv"
-    `endif
+    function new (string name="action_seqr_st", uvm_component parent);
+        super.new(name, parent);
+    endfunction: new
+
+endclass: action_seqr_st
+
 `endif
-`include "axi_lite_slv_agent.sv"
-`include "action_agent.sv"
-
-`endif // _ACTION_BFM_PKG_SVH_
-

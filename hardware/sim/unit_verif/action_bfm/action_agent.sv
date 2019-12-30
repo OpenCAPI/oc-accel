@@ -27,11 +27,13 @@ class action_agent extends uvm_agent;
         `ifndef ENABLE_ODMA_ST_MODE
             axi_mm_slv_agent    mm_slv_agt;
         `else
+            axi_st_mst_agent    st_mst_agt;
             axi_st_slv_agent    st_slv_agt;
         `endif
     `endif
-    axi_lite_slv_agent    lite_slv_agt;
-    action_seqr           act_sqr;
+    axi_lite_slv_agent   lite_slv_agt;
+    action_seqr          act_sqr;
+    action_seqr_st       act_sqr_st;
     //tl_tx_driver     tx_drv;
     //tl_tx_monitor    tx_mon;
     //tl_rx_monitor    rx_mon;
@@ -54,14 +56,16 @@ class action_agent extends uvm_agent;
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
         lite_slv_agt = axi_lite_slv_agent::type_id::create("lite_slv_agt", this);
+        act_sqr = action_seqr::type_id::create("act_sqr", this);
+        act_sqr_st = action_seqr_st::type_id::create("act_sqr_st", this);
         `ifndef ENABLE_ODMA
-            act_sqr = action_seqr::type_id::create("act_sqr", this);
             mm_mst_agt = axi_mm_mst_agent::type_id::create("mm_mst_agt", this);
         `else
             `ifndef ENABLE_ODMA_ST_MODE
                 mm_slv_agt = axi_mm_slv_agent::type_id::create("mm_slv_agt", this);
             `else
                 st_slv_agt = axi_st_slv_agent::type_id::create("st_slv_agt", this);
+                st_mst_agt = axi_st_mst_agent::type_id::create("st_mst_agt", this);
             `endif
         `endif
     endfunction: build_phase
@@ -71,6 +75,10 @@ class action_agent extends uvm_agent;
         `ifndef ENABLE_ODMA
             mm_mst_agt.seq_item_port.connect(act_sqr.seq_item_export);
         `else
+            `ifndef ENABLE_ODMA_ST_MODE
+            `else
+                st_mst_agt.seq_item_port.connect(act_sqr_st.seq_item_export);
+            `endif
         `endif
         ////tx_drv.seq_item_port.connect(tx_sqr.seq_item_export);
         //mgr.mgr_output_trans_port.connect(tx_drv.tl_mgr_imp);

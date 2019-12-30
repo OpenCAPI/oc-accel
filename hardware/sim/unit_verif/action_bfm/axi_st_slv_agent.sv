@@ -26,7 +26,7 @@
 class axi_st_slv_agent extends uvm_agent;
 
     virtual interface               axi4stream_vip_if `AXI_VIP_ST_SLAVE_PARAMS lite_slv_vif;
-    axi_vip_st_slave_slv_mem_t      axi_vip_st_slave_slv;
+    axi_vip_st_slave_slv_t          axi_vip_st_slave_slv;
     uvm_active_passive_enum         is_active = UVM_PASSIVE;
     string                          tID;
     

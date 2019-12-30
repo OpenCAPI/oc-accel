@@ -142,6 +142,7 @@ class odma_seq_block1_dsc1_a2h_4k_st extends bfm_sequence_base;
     bfm_seq_initial_config initial_config;
 
     tl_tx_trans trans;
+    axi_st_transaction act_trans;
     temp_capp_tag capp_tag=new();
     odma_reg_addr reg_addr_list=new();
     rand bit [63:0] temp_addr;
@@ -208,6 +209,21 @@ class odma_seq_block1_dsc1_a2h_4k_st extends bfm_sequence_base;
         init_mem_desp_item.init_data_queue(desp_item);
         //Initial host memory data for descriptors
         p_sequencer.host_mem.set_memory_by_length({write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]}, 32, init_mem_desp_item.init_data_queue(desp_item));
+        //Initial stream write commands
+        if(odma_desp_templ_item.length%128 != 0)begin
+	    `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
+        end
+        else begin
+            for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
+                if(seq_num==odma_desp_templ_item.length/128-1)begin
+                    `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
+                                                                        act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                end else begin
+                    `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
+                                                                        act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                end
+            end
+        end
         
         //Action start
         temp_addr={64'h0000_0008_8000_1008};
@@ -395,6 +411,7 @@ class odma_seq_block1_dsc4_a2h_4k_st extends bfm_sequence_base;
     bfm_seq_initial_config initial_config;
 
     tl_tx_trans trans;
+    axi_st_transaction act_trans;
     temp_capp_tag capp_tag=new();
     odma_reg_addr reg_addr_list=new();
     rand bit [63:0] temp_addr;
@@ -470,8 +487,21 @@ class odma_seq_block1_dsc4_a2h_4k_st extends bfm_sequence_base;
                 init_mem_desp_item.init_data_queue(desp_item);
                 //Initial host memory data for descriptors
                 p_sequencer.host_mem.set_memory_by_length(({write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]}+32*i), 32, init_mem_desp_item.init_data_queue(desp_item));
-                //Initial host memory data for read commands
-                p_sequencer.host_mem.set_memory_by_length(odma_desp_templ_item.dst_adr, odma_desp_templ_item.length, init_host_mem_item.init_data_queue(odma_desp_templ_item.length));
+                //Initial stream write commands
+                if(odma_desp_templ_item.length%128 != 0)begin
+	            `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
+                end
+                else begin
+                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
+                        if(seq_num==odma_desp_templ_item.length/128-1)begin
+                            `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
+                                                                                act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                        end else begin
+                            `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
+                                                                                act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                        end
+                    end
+                end
             end
             else begin
                 void'(odma_desp_templ_item.randomize()with{nxt_adj == 0; control == 8'h11; length == 28'h1000;});
@@ -488,8 +518,21 @@ class odma_seq_block1_dsc4_a2h_4k_st extends bfm_sequence_base;
                 init_mem_desp_item.init_data_queue(desp_item);
                 //Initial host memory data for descriptors
                 p_sequencer.host_mem.set_memory_by_length(({write_mmio_patt[64'h0000_0008_8000_5084], write_mmio_patt[64'h0000_0008_8000_5080]}+32*i), 32, init_mem_desp_item.init_data_queue(desp_item));                
-                //Initial host memory data for read commands
-                p_sequencer.host_mem.set_memory_by_length(odma_desp_templ_item.dst_adr, odma_desp_templ_item.length, init_host_mem_item.init_data_queue(odma_desp_templ_item.length));
+                //Initial stream write commands
+                if(odma_desp_templ_item.length%128 != 0)begin
+	            `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
+                end
+                else begin
+                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
+                        if(seq_num==odma_desp_templ_item.length/128-1)begin
+                            `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
+                                                                                act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                        end else begin
+                            `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
+                                                                                act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                        end
+                    end
+                end
             end
         end
 
