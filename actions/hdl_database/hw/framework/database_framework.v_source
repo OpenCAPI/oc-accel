@@ -804,7 +804,9 @@ job_manager job_manager0 (
        .m_axi_rvalid      (job_m_axi_rvalid      )
         );
 
-job_scheduler job_scheduler0(
+job_scheduler #(
+       .KERNEL_NUM   (KERNEL_NUM                     )
+    )job_scheduler0(
         .clk                    ( clk                   ),
         .rst_n                  ( rst_n                 ),
         .dsc0_pull_o            ( dsc0_pull_w           ),
