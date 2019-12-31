@@ -79,7 +79,8 @@ class axi_st_monitor extends uvm_monitor;
     //extern function void final_phase(uvm_phase phase);
 //    extern function void check_transactions_inflight();
     // }@
-    extern task collect_transactions();
+    extern task collect_h2a_trans();
+    extern task collect_a2h_trans();
 
 endclass : axi_st_monitor
 
@@ -89,6 +90,7 @@ function axi_st_monitor::new(string name = "axi_st_monitor", uvm_component paren
     super.new(name, parent);
     tID = get_type_name();
     axi_st_h2a_tran_port = new("axi_st_h2a_tran_port", this);
+    axi_st_a2h_tran_port = new("axi_st_a2h_tran_port", this);
 endfunction : new
 
 // Function: build_phase
@@ -106,7 +108,11 @@ function void axi_st_monitor::connect_phase(uvm_phase phase);
     if(!uvm_config_db#(virtual axi4stream_vip_if `AXI_VIP_ST_PASSTHROUGH_H2A_PARAMS)::get(this, "", "axi_vip_st_passthrough_h2a_vif", st_h2a_vif)) begin
         `uvm_fatal(tID, "No virtual interface st_h2a_vif specified to axi_st_monitor")
     end
+    if(!uvm_config_db#(virtual axi4stream_vip_if `AXI_VIP_ST_PASSTHROUGH_A2H_PARAMS)::get(this, "", "axi_vip_st_passthrough_a2h_vif", st_a2h_vif)) begin
+        `uvm_fatal(tID, "No virtual interface st_h2a_vif specified to axi_st_monitor")
+    end
     st_h2a_passthrough = new("st_h2a_passthrough", st_h2a_vif);
+    st_a2h_passthrough = new("st_a2h_passthrough", st_a2h_vif);
 endfunction : connect_phase
 
 function void axi_st_monitor::start_of_simulation_phase(uvm_phase phase);
@@ -128,8 +134,10 @@ task axi_st_monitor::main_phase(uvm_phase phase);
     super.main_phase(phase);
     `uvm_info(tID, $sformatf("main_phase begin ..."), UVM_MEDIUM)
     st_h2a_passthrough.start_monitor();
+    st_a2h_passthrough.start_monitor();
     fork
-        collect_transactions();
+        collect_h2a_trans();
+        collect_a2h_trans();
     join
 endtask : main_phase
 
@@ -143,8 +151,9 @@ function void axi_st_monitor::check_phase(uvm_phase phase);
     `uvm_info(tID, $sformatf("check_phase begin ..."), UVM_MEDIUM)
 endfunction : check_phase
 
-task axi_st_monitor::collect_transactions();
-    `uvm_info(tID, $sformatf("dbb check collect_transactions begin ..."), UVM_MEDIUM)
+//Collect H2A transactions
+task axi_st_monitor::collect_h2a_trans();
+    `uvm_info(tID, $sformatf("dbb check collect_h2a_trans begin ..."), UVM_MEDIUM)
     //Turn off current monitor transaction depth check
     //st_h2a_passthrough.monitor.disable_transaction_depth_checks();
     forever begin
@@ -152,14 +161,36 @@ task axi_st_monitor::collect_transactions();
         st_h2a_passthrough.monitor.item_collected_port.get(axi_st_h2a_trans);
         `uvm_info(tID, $sformatf("AXI ST VIP Detects a h2a transaction: \n%s.", axi_st_h2a_trans.convert2string()), UVM_HIGH)
         st_txn_h2a=new("st_txn_h2a");
+        st_txn_h2a.trans=axi_st_transaction::H2A;
         st_txn_h2a.data[1023:0]=axi_st_h2a_trans.get_data_beat();
         st_txn_h2a.tkeep[127:0]=axi_st_h2a_trans.get_keep_beat();
         st_txn_h2a.tid=axi_st_h2a_trans.get_id();
         st_txn_h2a.tuser=axi_st_h2a_trans.get_user_beat();
         st_txn_h2a.tlast=axi_st_h2a_trans.get_last();
-        `uvm_info(tID, $sformatf("AXI ST Monitor Detects a h2a transaction: \n%s.", st_txn_h2a.sprint()), UVM_LOW)
+        `uvm_info(tID, $sformatf("AXI ST Monitor Detects a h2a transaction: \n%s.", st_txn_h2a.sprint()), UVM_MEDIUM)
         axi_st_h2a_tran_port.write(st_txn_h2a);
     end
-endtask : collect_transactions
+endtask : collect_h2a_trans
+
+//Collect A2H transactions
+task axi_st_monitor::collect_a2h_trans();
+    `uvm_info(tID, $sformatf("dbb check collect_a2h_trans begin ..."), UVM_MEDIUM)
+    //Turn off current monitor transaction depth check
+    //st_a2h_passthrough.monitor.disable_transaction_depth_checks();
+    forever begin
+        axi_st_a2h_trans=new("axi_st_a2h_trans");
+        st_a2h_passthrough.monitor.item_collected_port.get(axi_st_a2h_trans);
+        `uvm_info(tID, $sformatf("AXI ST VIP Detects a a2h transaction: \n%s.", axi_st_a2h_trans.convert2string()), UVM_HIGH)
+        st_txn_a2h=new("st_txn_a2h");
+        st_txn_a2h.trans=axi_st_transaction::A2H;
+        st_txn_a2h.data[1023:0]=axi_st_a2h_trans.get_data_beat();
+        st_txn_a2h.tkeep[127:0]=axi_st_a2h_trans.get_keep_beat();
+        st_txn_a2h.tid=axi_st_a2h_trans.get_id();
+        st_txn_a2h.tuser=axi_st_a2h_trans.get_user_beat();
+        st_txn_a2h.tlast=axi_st_a2h_trans.get_last();
+        `uvm_info(tID, $sformatf("AXI ST Monitor Detects a a2h transaction: \n%s.", st_txn_a2h.sprint()), UVM_MEDIUM)
+        axi_st_a2h_tran_port.write(st_txn_a2h);
+    end
+endtask : collect_a2h_trans
 
 `endif // _AXI_MONITOR_SV_

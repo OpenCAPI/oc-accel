@@ -129,7 +129,8 @@ function void action_tb_env::connect_phase(uvm_phase phase);
         `ifndef ENABLE_ODMA_ST_MODE
             axi_mm_mon.axi_mm_tran_port.connect(odma_check_sbd.aimp_axi_mm_odma);
         `else
-            axi_st_mon.axi_st_h2a_tran_port.connect(odma_check_sbd.aimp_axi_st_odma);
+            axi_st_mon.axi_st_h2a_tran_port.connect(odma_check_sbd.aimp_axi_st_odma_h2a);
+            axi_st_mon.axi_st_a2h_tran_port.connect(odma_check_sbd.aimp_axi_st_odma_a2h);
         `endif
     `endif
     //Connect sequencers to virtual sequencer
