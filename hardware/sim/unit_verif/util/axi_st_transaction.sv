@@ -29,7 +29,7 @@ class axi_st_transaction extends uvm_sequence_item;
 
     rand bit [1023:0]         data;
     rand bit [127:0]          tkeep;
-    rand bit [7:0]            tid;
+    rand bit [4:0]            tid;
     rand bit [8:0]            tuser;
     rand bit                  tlast;
     rand uvm_axi_txn_e        trans;

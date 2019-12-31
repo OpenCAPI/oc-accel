@@ -27,7 +27,8 @@
 `uvm_analysis_imp_decl(_tlx_afu_odma)
 `uvm_analysis_imp_decl(_afu_tlx_odma)
 `uvm_analysis_imp_decl(_axi_mm_odma)
-`uvm_analysis_imp_decl(_axi_st_odma)
+`uvm_analysis_imp_decl(_axi_st_odma_h2a)
+`uvm_analysis_imp_decl(_axi_st_odma_a2h)
 //`uvm_analysis_imp_decl(_axi_mm_cmd_rd)
 //`uvm_analysis_imp_decl(_axi_mm_cmd_wr)
 
@@ -42,7 +43,8 @@ class odma_check_scoreboard extends uvm_component;
     uvm_analysis_imp_tlx_afu_odma        #(tlx_afu_transaction, odma_check_scoreboard) aimp_tlx_afu_odma;
     uvm_analysis_imp_afu_tlx_odma        #(afu_tlx_transaction, odma_check_scoreboard) aimp_afu_tlx_odma;
     uvm_analysis_imp_axi_mm_odma         #(axi_mm_transaction, odma_check_scoreboard) aimp_axi_mm_odma;
-    uvm_analysis_imp_axi_st_odma         #(axi_st_transaction, odma_check_scoreboard) aimp_axi_st_odma;
+    uvm_analysis_imp_axi_st_odma_h2a     #(axi_st_transaction, odma_check_scoreboard) aimp_axi_st_odma_h2a;
+    uvm_analysis_imp_axi_st_odma_a2h     #(axi_st_transaction, odma_check_scoreboard) aimp_axi_st_odma_a2h;
     brdg_cfg_obj                         brdg_cfg;
 
     //Internal signals declaration
@@ -174,7 +176,8 @@ class odma_check_scoreboard extends uvm_component;
     extern function void write_tlx_afu_odma(tlx_afu_transaction tlx_afu_tran);
     extern function void write_afu_tlx_odma(afu_tlx_transaction afu_tlx_tran);
     extern function void write_axi_mm_odma(axi_mm_transaction axi_mm_tran);
-    extern function void write_axi_st_odma(axi_st_transaction axi_st_tran);
+    extern function void write_axi_st_odma_h2a(axi_st_transaction axi_st_tran);
+    extern function void write_axi_st_odma_a2h(axi_st_transaction axi_st_tran);
     extern function int dl2dl_num(bit[1:0] dl);
     extern function bit afutag_in_flight(bit[15:0] afutag);
     extern function void check_tlx_resp(bit nrw, bit[15:0]afutag, tlx_afu_transaction tlx_afu_tran);
@@ -207,7 +210,8 @@ function odma_check_scoreboard::new(string name = "odma_check_scoreboard", uvm_c
     aimp_tlx_afu_odma = new("aimp_tlx_afu_odma", this);
     aimp_afu_tlx_odma = new("aimp_afu_tlx_odma", this);
     aimp_axi_mm_odma  = new("aimp_axi_mm_odma", this);
-    aimp_axi_st_odma  = new("aimp_axi_st_odma", this);
+    aimp_axi_st_odma_h2a  = new("aimp_axi_st_odma_h2a", this);
+    aimp_axi_st_odma_a2h  = new("aimp_axi_st_odma_a2h", this);
     total_num    = 0;
     compare_num  = 0;
     list_mm_format_ch0 = new("list_mm_format_ch0");
@@ -352,38 +356,43 @@ function void odma_check_scoreboard::write_axi_mm_odma(axi_mm_transaction axi_mm
     end
 endfunction : write_axi_mm_odma
 
-function void odma_check_scoreboard::write_axi_st_odma(axi_st_transaction axi_st_tran);
+//Get odma st h2a transactions
+function void odma_check_scoreboard::write_axi_st_odma_h2a(axi_st_transaction axi_st_tran);
     //Check transaction tid
     if(axi_st_tran.tid > 3)begin
         `uvm_error(tID, $sformatf("Get an illegal AXI stream tid of %d.", axi_st_tran.tid))
     end
     //Collect H2A transactions
-    if(axi_st_tran.trans == axi_st_transaction::H2A)begin
-        if(axi_st_tran.tlast == 1)begin
-            st_h2a_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
-            st_h2a_data[axi_st_tran.tid].st_byte_num_queue.push_back(st_h2a_data[axi_st_tran.tid].st_byte_num);
-            st_h2a_data[axi_st_tran.tid].st_byte_num=0;
-            push_st_data(axi_st_tran.tid, 1, axi_st_tran);
-        end
-        else begin
-            st_h2a_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
-            push_st_data(axi_st_tran.tid, 1, axi_st_tran);
-        end
+    if(axi_st_tran.tlast == 1)begin
+        st_h2a_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
+        st_h2a_data[axi_st_tran.tid].st_byte_num_queue.push_back(st_h2a_data[axi_st_tran.tid].st_byte_num);
+        st_h2a_data[axi_st_tran.tid].st_byte_num=0;
+        push_st_data(axi_st_tran.tid, 1, axi_st_tran);
+    end
+    else begin
+        st_h2a_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
+        push_st_data(axi_st_tran.tid, 1, axi_st_tran);
+    end
+endfunction : write_axi_st_odma_h2a
+
+//Get odma st a2h transactions
+function void odma_check_scoreboard::write_axi_st_odma_a2h(axi_st_transaction axi_st_tran);
+    //Check transaction tid
+    if(axi_st_tran.tid > 3)begin
+        `uvm_error(tID, $sformatf("Get an illegal AXI stream tid of %d.", axi_st_tran.tid))
     end
     //Collect A2H transactions
-    else begin
-        if(axi_st_tran.tlast == 1)begin
-            st_a2h_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
-            st_a2h_data[axi_st_tran.tid].st_byte_num_queue.push_back(st_a2h_data[axi_st_tran.tid].st_byte_num);
-            st_a2h_data[axi_st_tran.tid].st_byte_num=0;
-            push_st_data(axi_st_tran.tid, 0, axi_st_tran);
-        end
-        else begin
-            st_a2h_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
-            push_st_data(axi_st_tran.tid, 0, axi_st_tran);
-        end
+    if(axi_st_tran.tlast == 1)begin
+        st_a2h_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
+        st_a2h_data[axi_st_tran.tid].st_byte_num_queue.push_back(st_a2h_data[axi_st_tran.tid].st_byte_num);
+        st_a2h_data[axi_st_tran.tid].st_byte_num=0;
+        push_st_data(axi_st_tran.tid, 0, axi_st_tran);
     end
-endfunction : write_axi_st_odma
+    else begin
+        st_a2h_data[axi_st_tran.tid].st_byte_num+=get_tkeek_num(axi_st_tran);
+        push_st_data(axi_st_tran.tid, 0, axi_st_tran);
+    end
+endfunction : write_axi_st_odma_a2h
 
 //Check read/write response data
 function bit odma_check_scoreboard::check_resp_data(axi_mm_transaction axi_mm_tran, bit[63:0]beat_index, bit nrw);
@@ -1761,7 +1770,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
             if((st_a2h_data[chnl_num].st_byte_num_queue.size > 0) && (st_a2h_data[chnl_num].st_byte_num_queue[0] == (st_a2h_data[chnl_num].desp_byte_num+desp_item.length)))begin
                 for(int i=0; i<desp_item.length; i++)begin
                     if(!brdg_write_memory.exists(desp_item.dst_adr+i))begin
-                        `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Not found a match afu-tlx read command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.dst_adr+i, desp_item.sprint()))
+                        `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Not found a match afu-tlx write command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.dst_adr+i, desp_item.sprint()))
                     end
                     if(st_a2h_data[chnl_num].data_queue[0] != st_a2h_data[chnl_num].data_queue[0])begin
                         `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Stream data mismatch in the dst_adr=0x%16h with host data=0x%2h, AXI stream data=0x%2h. The descriptor:\n%s", chnl_num, desp_item.dst_adr+i, brdg_write_memory[desp_item.dst_adr+i], st_a2h_data[chnl_num].data_queue[0], desp_item.sprint()))
@@ -1782,7 +1791,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
             if((st_a2h_data[chnl_num].data_queue.size > 0) && !(st_a2h_data[chnl_num].data_queue.size < desp_item.length))begin
                 for(int i=0; i<desp_item.length; i++)begin
                     if(!brdg_write_memory.exists(desp_item.dst_adr+i))begin
-                        `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Not found a match afu-tlx read command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.dst_adr+i, desp_item.sprint()))
+                        `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Not found a match afu-tlx write command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.dst_adr+i, desp_item.sprint()))
                     end
                     if(st_a2h_data[chnl_num].data_queue[0] != brdg_write_memory[desp_item.dst_adr+i])begin
                         `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Stream data mismatch in the dst_adr=0x%16h with host data=0x%2h, AXI stream data=0x%2h. The descriptor:\n%s", chnl_num, desp_item.dst_adr+i, brdg_write_memory[desp_item.dst_adr+i], st_a2h_data[chnl_num].data_queue[0], desp_item.sprint()))
@@ -1912,6 +1921,7 @@ function void odma_check_scoreboard::push_st_data(int channel, bit direction, ax
                 st_h2a_data[channel].data_queue.push_back(axi_st_tran.data[8*i+7-:8]);
         end
     end
+    //A2H
     else begin
         for(int i=0; i<`AXI_ST_DW/8; i++)begin
             if(axi_st_tran.tkeep[i])

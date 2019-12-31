@@ -13,28 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-`ifndef _TB_VSEQR_SV
-`define _TB_VSEQR_SV
+`ifndef _ACTION_SEQR_SV
+`define _ACTION_SEQR_SV
 
-class tb_vseqr extends uvm_sequencer;
-    
-    tl_tx_seqr      tx_sqr;
-    tl_cfg_obj      cfg_obj;
-    tl_agent        tl_agt;
-    host_mem_model  host_mem;
-    brdg_cfg_obj    brdg_cfg;
-    action_agent    action_agt;
-    action_seqr     act_sqr;
-    action_seqr_st  act_sqr_st;
+class action_seqr extends uvm_sequencer #(axi_mm_transaction);
 
-    `uvm_component_utils_begin(tb_vseqr)
-        `uvm_field_object (cfg_obj, UVM_ALL_ON)
-    `uvm_component_utils_end
+    `uvm_component_utils(action_seqr)
 
-    function new(string name="tb_vseqr", uvm_component parent);
+    function new (string name="action_seqr", uvm_component parent);
         super.new(name, parent);
     endfunction: new
 
-endclass: tb_vseqr
-    
+endclass: action_seqr
+
 `endif

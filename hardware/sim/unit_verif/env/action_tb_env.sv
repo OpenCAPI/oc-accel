@@ -35,7 +35,7 @@ class action_tb_env extends uvm_env;
     `else
         axi_st_monitor            axi_st_mon;
     `endif
-	axi_lite_monitor		  axi_lite_mon; //added at 2019.08.14
+	axi_lite_monitor          axi_lite_mon; //added at 2019.08.14
     `ifndef ENABLE_ODMA
         bridge_check_scoreboard   bridge_check_sbd;
     `else
@@ -43,6 +43,7 @@ class action_tb_env extends uvm_env;
     `endif
     //tl_bfm_env                bfm_env;
     tl_agent                  bfm_agt;
+    action_agent              action_agt;
     tb_vseqr                  vsqr; 
     brdg_cfg_obj              brdg_cfg;
 
@@ -91,8 +92,8 @@ function void action_tb_env::build_phase(uvm_phase phase);
     `else
         axi_st_mon       = axi_st_monitor::type_id::create("axi_st_mon", this);
     `endif
-	axi_lite_mon	 = axi_lite_monitor::type_id::create("axi_lite_mon", this); //added at 2019.08.14
-    tlx_afu_mon      = tlx_afu_monitor::type_id::create("tlx_afu_mon", this);
+    axi_lite_mon	 = axi_lite_monitor::type_id::create("axi_lite_mon", this); //added at 2019.08.14
+    tlx_afu_mon          = tlx_afu_monitor::type_id::create("tlx_afu_mon", this);
     `ifndef ENABLE_ODMA    
         bridge_check_sbd = bridge_check_scoreboard::type_id::create("bridge_check_sbd", this);
     `else
@@ -101,6 +102,7 @@ function void action_tb_env::build_phase(uvm_phase phase);
     vsqr             = tb_vseqr::type_id::create("vsqr", this);
 //    bfm_env          = tl_bfm_env::type_id::create("bfm_env", this);
     bfm_agt          = tl_agent::type_id::create("bfm_agt", this);
+    action_agt       = action_agent::type_id::create("action_agt", this);
     //host_mem         = host_mem_model::type_id::create("host_mem", this);
     uvm_config_db #(brdg_cfg_obj)::set(this, "bridge_check_sbd", "brdg_cfg", brdg_cfg);
     uvm_config_db #(brdg_cfg_obj)::set(this, "odma_check_sbd", "brdg_cfg", brdg_cfg);
@@ -127,7 +129,8 @@ function void action_tb_env::connect_phase(uvm_phase phase);
         `ifndef ENABLE_ODMA_ST_MODE
             axi_mm_mon.axi_mm_tran_port.connect(odma_check_sbd.aimp_axi_mm_odma);
         `else
-            axi_st_mon.axi_st_tran_port.connect(odma_check_sbd.aimp_axi_st_odma);
+            axi_st_mon.axi_st_h2a_tran_port.connect(odma_check_sbd.aimp_axi_st_odma_h2a);
+            axi_st_mon.axi_st_a2h_tran_port.connect(odma_check_sbd.aimp_axi_st_odma_a2h);
         `endif
     `endif
     //Connect sequencers to virtual sequencer
@@ -139,6 +142,9 @@ function void action_tb_env::connect_phase(uvm_phase phase);
     vsqr.cfg_obj = bfm_agt.cfg_obj;
     vsqr.tl_agt = bfm_agt;
     vsqr.host_mem = bfm_agt.mgr.host_mem;
+    vsqr.action_agt = action_agt;
+    vsqr.act_sqr = action_agt.act_sqr;
+    vsqr.act_sqr_st = action_agt.act_sqr_st;
 
 endfunction : connect_phase
 
