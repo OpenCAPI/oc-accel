@@ -84,7 +84,7 @@ wire                                            dsc_fifo_valid;             //de
 wire    [255 : 0]                               dsc_fifo_dout;              //descriptor FIFO data out
 wire                                            dsc_fifo_full;              //descriptor FIFO full
 wire                                            dsc_fifo_empty;             //descriptor FIFO empty
-wire    [ 2 : 0]                                dsc_intr;                   //descriptor interrupt flag
+wire                                            dsc_intr;                   //descriptor interrupt flag
 wire    [63 : 0]                                dsc_dst_addr;               //descriptor destination address
 wire    [27 : 0]                                dsc_length;                 //descriptor dma transfer length
 wire    [ 1 : 0]                                dsc_channel_id;             //descriptor channel ID
@@ -626,7 +626,7 @@ assign dsc_length_sum_nxt = dsc_length_sum + 8'd128;
 assign lcl_wr_valid  = (lcl_wr_data_ch0_valid & ~dsc_ch0_wr_fifo_full) | (lcl_wr_data_ch1_valid & ~dsc_ch1_wr_fifo_full) 
                      | (lcl_wr_data_ch2_valid & ~dsc_ch2_wr_fifo_full) | (lcl_wr_data_ch3_valid & ~dsc_ch3_wr_fifo_full);
 assign lcl_wr_ea     = dsc_wr_first ? sel_dsc_addr : dsc_cur_addr;
-assign lcl_wr_axi_id = {rtag_fifo_tid[1:0], `A2HMM_ENGINE_ID};
+assign lcl_wr_axi_id = {rtag_fifo_tid[1:0], `A2HST_ENGINE_ID};
 assign lcl_wr_first  = lcl_wr_valid & dsc_wr_first;
 assign lcl_wr_last   = lcl_wr_valid & (rtag_fifo_tlast | (dsc_wr_first & (sel_dsc_length == 28'd128)) | dsc_length_left == 28'd128);
 
