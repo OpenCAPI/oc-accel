@@ -497,10 +497,10 @@ assign lcl_wr_dsc_lower_half = lcl_wr_ch0_dsc_lower_half | lcl_wr_ch1_dsc_lower_
 
 // generate lcl write data and be
 assign lcl_wr_data = lcl_wr_dsc_lower_half ? {512'b0, rdata_fifo_dout}
-                       : (lcl_wr_data_ch0_valid ? {axi_rdata_ch0_data, rdata_fifo_dout}
-                         : (lcl_wr_data_ch1_valid ? {axi_rdata_ch1_data, rdata_fifo_dout}
-                           : (lcl_wr_data_ch2_valid ? {axi_rdata_ch2_data, rdata_fifo_dout}
-                             : (lcl_wr_data_ch3_valid ? {axi_rdata_ch3_data, rdata_fifo_dout} : 1024'b0))));
+                       : (lcl_wr_data_ch0_valid ? {rdata_fifo_dout, axi_rdata_ch0_data}
+                         : (lcl_wr_data_ch1_valid ? {rdata_fifo_dout, axi_rdata_ch1_data}
+                           : (lcl_wr_data_ch2_valid ? {rdata_fifo_dout, axi_rdata_ch2_data}
+                             : (lcl_wr_data_ch3_valid ? {rdata_fifo_dout, axi_rdata_ch3_data} : 1024'b0))));
 
 assign lcl_wr_be   = lcl_wr_dsc_lower_half ? {64'b0, rtag_fifo_tkeep} : {64'hFFFFFFFF_FFFFFFFF, rtag_fifo_tkeep}; 
 // *****************************
