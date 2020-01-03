@@ -111,7 +111,6 @@ endtask : get_st_trans
 task axi_st_mst_agent::send_st_write();
     forever begin
         if(axi_st_queue.size > 0)begin
-            `uvm_info(tID, $sformatf("zt_debug get st trans:\n%s", axi_st_queue[0].sprint()), UVM_LOW)
             vip_trans = axi_vip_st_master_mst.driver.create_transaction("write transaction");
             vip_trans.set_id(axi_st_queue[0].tid);
             vip_trans.set_user_beat(axi_st_queue[0].tuser);

@@ -1720,7 +1720,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_info(tID, $sformatf("H2A Channel %d: Data check successfully for the EOP descriptor:\n%s", chnl_num, desp_item.sprint()), UVM_LOW)
             end
             else begin
-                `uvm_error(tID, $sformatf("H2A channel %d byte number not match! AXI stream has a number of %d bytes while the EOP despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].st_byte_num_queue[0], desp_item.length))
+                `uvm_error(tID, $sformatf("H2A channel %d: byte number not match! AXI stream has a number of %d bytes while the EOP despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].st_byte_num_queue[0], desp_item.length))
             end
         end
         //Not the EOP descriptor
@@ -1739,7 +1739,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 st_h2a_data[chnl_num].desp_byte_num+=desp_item.length;
             end
             else begin
-                `uvm_error(tID, $sformatf("H2A channel %d byte number not match! AXI stream has a number of %d bytes while the despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].data_queue.size, desp_item.length))
+                `uvm_error(tID, $sformatf("H2A channel %d: byte number not match! AXI stream has a number of %d bytes while the despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].data_queue.size, desp_item.length))
             end
         end
     `endif
@@ -1762,7 +1762,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
     `else
         //Check collected data from AXI-Stream interface
         if(st_a2h_data[chnl_num].data_queue.size == 0)begin
-             `uvm_error(tID, $sformatf("A2H channel %d dose not get any data from AXI-Stream interface for descriptor:\n%s.", chnl_num, desp_item.sprint()))
+             `uvm_error(tID, $sformatf("A2H channel %d: dose not get any data from AXI-Stream interface for descriptor:\n%s.", chnl_num, desp_item.sprint()))
         end
         //For the EOP descriptor
         if(desp_item.st_eop == 1)begin
@@ -1782,7 +1782,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_info(tID, $sformatf("A2H Channel %d: Data check successfully for the EOP descriptor:\n%s", chnl_num, desp_item.sprint()), UVM_LOW)
             end
             else begin
-                `uvm_error(tID, $sformatf("A2H channel %d byte number not match! AXI stream has a number of %d while the EOP despcriptor has a length of %d.", chnl_num, desp_item.length))
+                `uvm_error(tID, $sformatf("A2H channel %d: byte number not match! AXI stream has a number of %d while the EOP despcriptor has a length of %d.", chnl_num, st_a2h_data[chnl_num].st_byte_num_queue[0], desp_item.length))
             end
         end
         //Not the EOP descriptor
@@ -1801,7 +1801,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 st_a2h_data[chnl_num].desp_byte_num+=desp_item.length;
             end
             else begin
-                `uvm_error(tID, $sformatf("A2H channel %d byte number not match! AXI stream has a number of %d while the despcriptor has a length of %d.", chnl_num, desp_item.length))
+                `uvm_error(tID, $sformatf("A2H channel %d: byte number not match! AXI stream has a number of %d while the despcriptor has a length of %d.", chnl_num, st_a2h_data[chnl_num].data_queue.size, desp_item.length))
             end
         end
     `endif
