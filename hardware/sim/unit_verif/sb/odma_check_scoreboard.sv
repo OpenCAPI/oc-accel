@@ -1726,7 +1726,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
         //Not the EOP descriptor
         else begin
             //Check data length
-            if((st_h2a_data[chnl_num].data_queue.size > 0) && (st_h2a_data[chnl_num].data_queue.size > desp_item.length))begin
+            if((st_h2a_data[chnl_num].data_queue.size > 0) && (st_h2a_data[chnl_num].data_queue.size >= desp_item.length))begin
                 for(int i=0; i<desp_item.length; i++)begin
                     if(!brdg_read_memory.exists(desp_item.src_adr+i))begin
                         `uvm_error(get_type_name(), $psprintf("H2A Channel %d: Not found a match afu-tlx read command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.src_adr+i, desp_item.sprint()))
@@ -1788,7 +1788,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
         //Not the EOP descriptor
         else begin
             //Check data length
-            if((st_a2h_data[chnl_num].data_queue.size > 0) && (st_a2h_data[chnl_num].data_queue.size > desp_item.length))begin
+            if((st_a2h_data[chnl_num].data_queue.size > 0) && (st_a2h_data[chnl_num].data_queue.size >= desp_item.length))begin
                 for(int i=0; i<desp_item.length; i++)begin
                     if(!brdg_write_memory.exists(desp_item.dst_adr+i))begin
                         `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Not found a match afu-tlx write command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.dst_adr+i, desp_item.sprint()))
