@@ -520,7 +520,6 @@ if { $unit_sim_used == "TRUE" } {
                             CONFIG.AWUSER_WIDTH {9}                 \
                             CONFIG.ARUSER_WIDTH {9}                 \
                             CONFIG.RUSER_WIDTH {9}                  \
-                            CONFIG.WUSER_WIDTH {9}                  \
                             CONFIG.BUSER_WIDTH {9}                  \
                             CONFIG.SUPPORTS_NARROW {1}              \
                             CONFIG.HAS_BURST {1}                    \
@@ -546,7 +545,6 @@ if { $unit_sim_used == "TRUE" } {
                             CONFIG.AWUSER_WIDTH {9}                 \
                             CONFIG.ARUSER_WIDTH {9}                 \
                             CONFIG.RUSER_WIDTH {9}                  \
-                            CONFIG.WUSER_WIDTH {9}                  \
                             CONFIG.BUSER_WIDTH {9}                  \
                             CONFIG.SUPPORTS_NARROW {1}              \
                             CONFIG.HAS_BURST {1}                    \
@@ -570,7 +568,6 @@ if { $unit_sim_used == "TRUE" } {
                             CONFIG.AWUSER_WIDTH {9}                 \
                             CONFIG.ARUSER_WIDTH {9}                 \
                             CONFIG.RUSER_WIDTH {9}                  \
-                            CONFIG.WUSER_WIDTH {9}                  \
                             CONFIG.BUSER_WIDTH {9}                  \
                             CONFIG.SUPPORTS_NARROW {1}              \
                             CONFIG.HAS_BURST {1}                    \
@@ -596,7 +593,6 @@ if { $unit_sim_used == "TRUE" } {
                             CONFIG.AWUSER_WIDTH {9}                 \
                             CONFIG.ARUSER_WIDTH {9}                 \
                             CONFIG.RUSER_WIDTH {9}                  \
-                            CONFIG.WUSER_WIDTH {9}                  \
                             CONFIG.BUSER_WIDTH {9}                  \
                             CONFIG.SUPPORTS_NARROW {1}              \
                             CONFIG.HAS_BURST {1}                    \
@@ -622,7 +618,6 @@ if { $unit_sim_used == "TRUE" } {
                             CONFIG.AWUSER_WIDTH {9}                 \
                             CONFIG.ARUSER_WIDTH {9}                 \
                             CONFIG.RUSER_WIDTH {9}                  \
-                            CONFIG.WUSER_WIDTH {9}                  \
                             CONFIG.BUSER_WIDTH {9}                  \
                             CONFIG.SUPPORTS_NARROW {1}              \
                             CONFIG.HAS_BURST {1}                    \
@@ -648,7 +643,6 @@ if { $unit_sim_used == "TRUE" } {
                             CONFIG.AWUSER_WIDTH {9}                 \
                             CONFIG.ARUSER_WIDTH {9}                 \
                             CONFIG.RUSER_WIDTH {9}                  \
-                            CONFIG.WUSER_WIDTH {9}                  \
                             CONFIG.BUSER_WIDTH {9}                  \
                             CONFIG.SUPPORTS_NARROW {1}              \
                             CONFIG.HAS_BURST {1}                    \

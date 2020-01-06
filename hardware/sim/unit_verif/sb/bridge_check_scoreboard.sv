@@ -33,13 +33,14 @@ class bridge_check_scoreboard extends uvm_component;
     typedef class brdg_packet;
     typedef class tlx_resp_packet;
     typedef class intrp_packet;
+    typedef class actag_entry;
     //TLM port & transaction declaration
     uvm_analysis_imp_tlx_afu        #(tlx_afu_transaction, bridge_check_scoreboard) aimp_tlx_afu;
     uvm_analysis_imp_afu_tlx        #(afu_tlx_transaction, bridge_check_scoreboard) aimp_afu_tlx;
     uvm_analysis_imp_axi_mm         #(axi_mm_transaction, bridge_check_scoreboard) aimp_axi_mm;
     uvm_analysis_imp_axi_mm_cmd_rd  #(axi_mm_transaction, bridge_check_scoreboard) aimp_axi_mm_cmd_rd;
     uvm_analysis_imp_axi_mm_cmd_wr  #(axi_mm_transaction, bridge_check_scoreboard) aimp_axi_mm_cmd_wr;
-    uvm_analysis_imp_intrp         #(intrp_transaction, bridge_check_scoreboard) aimp_intrp;
+    uvm_analysis_imp_intrp          #(intrp_transaction, bridge_check_scoreboard) aimp_intrp;
     brdg_cfg_obj                    brdg_cfg;
 
     //Internal signals declaration
@@ -65,7 +66,9 @@ class bridge_check_scoreboard extends uvm_component;
     tlx_resp_packet tlx_write_resp[bit[15:0]]; //Tlx_afu write response, the index is afutag
     bit [7:0] brdg_read_memory[longint unsigned]; //Brdg read data from tlx
     bit [7:0] brdg_write_memory[longint unsigned]; //Brdg write data to tlx
+    bit [19:0] brdg_memory_pasid[longint unsigned]; //Bridge pasid for read/write
     intrp_packet brdg_intrp; //Bridge interrupt
+    actag_entry actag_table[bit[11:0]]; //Actag table entry
 
     //Bridge commands and responses packet structure
     class brdg_packet;
@@ -102,6 +105,19 @@ class bridge_check_scoreboard extends uvm_component;
         endfunction   
     endclass: intrp_packet
 
+    //Actag entry
+    class actag_entry;
+        bit valid;
+        bit[15:0] bdf;
+        bit[19:0] pasid;
+
+        function new (string name = "actag_entry");
+            valid = 0;
+            bdf = 0;
+            pasid = 0;
+        endfunction: new
+    endclass: actag_entry
+    
     `uvm_component_utils_begin(bridge_check_scoreboard)
     `uvm_component_utils_end
 
@@ -148,6 +164,9 @@ class bridge_check_scoreboard extends uvm_component;
     extern function void write_brdg_memory(bit[63:0] brdg_addr, bit[63:0] brdg_addr_mask, bit[511:0] data, bit nrw);
     extern function bit[63:0] gen_pr_mask(bit[63:0] brdg_addr, bit[2:0] brdg_plength);
     extern function bit check_brdg_memory(bit[63:0] axi_addr, bit[127:0] axi_addr_mask, bit[1023:0] data, bit nrw);
+    extern function void write_actag_table(input bit[11:0] actag, input bit[15:0] bdf, input bit[19:0] pasid);
+    extern function void write_memory_pasid(bit[63:0] brdg_addr, bit[63:0] brdg_addr_mask, bit[19:0] pasid);
+    extern function bit check_memory_pasid(bit[63:0] axi_addr, bit[127:0] axi_addr_mask, bit[8:0] user, bit nrw);
 
 endclass : bridge_check_scoreboard
 
@@ -270,6 +289,7 @@ function void bridge_check_scoreboard::write_axi_mm(axi_mm_transaction axi_mm_tr
                     end
                     if(axi_mm_tran.trans == axi_mm_transaction::READ)begin
                         //if(check_brdg_memory((axi_mm_tran.addr/128)*128, axi_mask, axi_mm_tran.data[i]<<(8*(axi_mm_tran.addr-((axi_mm_tran.addr/128)*128))), 0))begin
+                        //Check read data
                         if(check_brdg_memory((axi_addr_align/128)*128, axi_mask, axi_mm_tran.data[i]<<(8*(axi_addr_align-((axi_addr_align/128)*128))), 0))begin
                             `uvm_error(tID, $sformatf("Check axi read data failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
                             break;
@@ -277,14 +297,31 @@ function void bridge_check_scoreboard::write_axi_mm(axi_mm_transaction axi_mm_tr
                         else begin
                             `uvm_info(tID, $sformatf("Compare axi read data successfully! Addr=0x%16h, Mask=0x%32h, Data=0x%256h", (axi_mm_tran.addr/128)*128, axi_mask, axi_mm_tran.data[i]), UVM_HIGH)                            
                         end
+                        //Check read pasid/user
+                        if(check_memory_pasid((axi_addr_align/128)*128, axi_mask, axi_mm_tran.axi_usr, 0))begin
+                            `uvm_error(tID, $sformatf("Check axi read user failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
+                            break;
+                        end
+                        else begin
+                            `uvm_info(tID, $sformatf("Compare axi read user successfully! Addr=0x%16h, Mask=0x%32h, User=0x%3h", (axi_mm_tran.addr/128)*128, axi_mask, axi_mm_tran.axi_usr), UVM_HIGH)
+                        end
                     end
                     else begin
+                        //Check write data
                         if(check_brdg_memory((axi_addr_align/128)*128, axi_wr_mask, axi_mm_tran.data[i]<<(8*(axi_addr_align-((axi_addr_align/128)*128))), 1))begin
                             `uvm_error(tID, $sformatf("Check axi write data failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
                             break;
                         end
                         else begin
                             `uvm_info(tID, $sformatf("Compare axi write data successfully! Addr=0x%16h, Mask=0x%32h, Data=0x%256h", (axi_mm_tran.addr/128)*128, axi_mask, axi_mm_tran.data[i]), UVM_HIGH)
+                        end
+                        //Check write pasid/user
+                        if(check_memory_pasid((axi_addr_align/128)*128, axi_wr_mask, axi_mm_tran.axi_usr, 1))begin
+                            `uvm_error(tID, $sformatf("Check axi write user failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
+                            break;
+                        end
+                        else begin
+                            `uvm_info(tID, $sformatf("Compare axi write user successfully! Addr=0x%16h, Mask=0x%32h, User=0x%3h", (axi_mm_tran.addr/128)*128, axi_mask, axi_mm_tran.axi_usr), UVM_HIGH)
                         end
                     end
                 end
@@ -306,6 +343,7 @@ function void bridge_check_scoreboard::write_axi_mm(axi_mm_transaction axi_mm_tr
                         end
                     end
                     if(axi_mm_tran.trans == axi_mm_transaction::READ)begin
+                        //Check read data
                         if(check_brdg_memory((axi_addr_align/128)*128, axi_mask, axi_mm_tran.data[i]<<(8*(axi_addr_align-((axi_addr_align/128)*128))), 0))begin
                             `uvm_error(tID, $sformatf("Check axi read data failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
                             break;
@@ -313,14 +351,31 @@ function void bridge_check_scoreboard::write_axi_mm(axi_mm_transaction axi_mm_tr
                         else begin
                             `uvm_info(tID, $sformatf("Compare axi read data successfully! Addr=0x%16h, Mask=0x%32h, Data=0x%256h", (axi_addr_align/128)*128, axi_mask, axi_mm_tran.data[i]), UVM_HIGH)                                                    
                         end
+                        //Check read pasid/user
+                        if(check_memory_pasid((axi_addr_align/128)*128, axi_mask, axi_mm_tran.axi_usr, 0))begin
+                            `uvm_error(tID, $sformatf("Check axi read user failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
+                            break;
+                        end
+                        else begin
+                            `uvm_info(tID, $sformatf("Compare axi read user successfully! Addr=0x%16h, Mask=0x%32h, User=0x%3h", (axi_addr_align/128)*128, axi_mask, axi_mm_tran.axi_usr), UVM_HIGH)
+                        end
                     end
                     else begin
+                        //Check write data
                         if(check_brdg_memory((axi_addr_align/128)*128, axi_wr_mask, axi_mm_tran.data[i]<<(8*(axi_addr_align-((axi_addr_align/128)*128))), 1))begin
                             `uvm_error(tID, $sformatf("Check axi write data failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
                             break;
                         end
                         else begin
                             `uvm_info(tID, $sformatf("Compare axi write data successfully! Addr=0x%16h, Mask=0x%32h, Data=0x%256h", (axi_addr_align/128)*128, axi_mask, axi_mm_tran.data[i]), UVM_HIGH)                                                                            
+                        end
+                        //Check write pasid/user
+                        if(check_memory_pasid((axi_addr_align/128)*128, axi_wr_mask, axi_mm_tran.axi_usr, 1))begin
+                            `uvm_error(tID, $sformatf("Check axi write user failed, the number of transfor is %d.\nThe axi transaction is:\n%s", i, axi_mm_tran.sprint()))
+                            break;
+                        end
+                        else begin
+                            `uvm_info(tID, $sformatf("Compare axi write user successfully! Addr=0x%16h, Mask=0x%32h, User=0x%3h", (axi_addr_align/128)*128, axi_mask, axi_mm_tran.axi_usr), UVM_HIGH)
                         end
                     end
                 end
@@ -566,6 +621,10 @@ function void bridge_check_scoreboard::write_afu_tlx(afu_tlx_transaction afu_tlx
             if(afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::DMA_W || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::DMA_W_N
             || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::DMA_W_BE || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::DMA_W_BE_N
             || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::DMA_PR_W || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::DMA_PR_W)begin
+                //Check actag table
+                if(!actag_table.exists(afu_tlx_tran.afu_tlx_actag))begin
+                    `uvm_error(get_type_name(), $sformatf("Get an illegal actag of 0x%h in the command:\n%s",afu_tlx_tran.afu_tlx_actag, afu_tlx_tran.sprint()))
+                end
                 //Clone an afu_tlx_tran to flight_afu_tlx_wr queue
                 $cast(flight_afu_tlx_wr[afu_tlx_tran.afu_tlx_afutag], afu_tlx_tran.clone());
                 `uvm_info(tID, $sformatf("The current afutag for write:"), UVM_MEDIUM)                    
@@ -578,6 +637,10 @@ function void bridge_check_scoreboard::write_afu_tlx(afu_tlx_transaction afu_tlx
             end
             else if(afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::RD_WNITC || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::RD_WNITC_N
             || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::PR_RD_WNITC_N)begin
+                //Check actag table
+                if(!actag_table.exists(afu_tlx_tran.afu_tlx_actag))begin
+                    `uvm_error(get_type_name(), $sformatf("Get an illegal actag of 0x%h in the command:\n%s",afu_tlx_tran.afu_tlx_actag, afu_tlx_tran.sprint()))
+                end
                 //Clone an afu_tlx_tran to flight_afu_tlx_rd queue
                 $cast(flight_afu_tlx_rd[afu_tlx_tran.afu_tlx_afutag], afu_tlx_tran.clone());                    
                 `uvm_info(tID, $sformatf("The current afutag for read:"), UVM_MEDIUM)                    
@@ -610,8 +673,11 @@ function void bridge_check_scoreboard::write_afu_tlx(afu_tlx_transaction afu_tlx
                 end
             end
             else begin
-                if(afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::ASSIGN_ACTAG
-                || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::MEM_RD_RESPONSE || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::MEM_RD_FAIL
+                if(afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::ASSIGN_ACTAG)begin
+                    write_actag_table(afu_tlx_tran.afu_tlx_actag, afu_tlx_tran.afu_tlx_bdf, afu_tlx_tran.afu_tlx_pasid);
+                    return;
+                end
+                else if(afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::MEM_RD_RESPONSE || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::MEM_RD_FAIL
                 || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::MEM_WR_RESPONSE || afu_tlx_tran.afu_tlx_type == afu_tlx_transaction::MEM_WR_FAIL)begin
                     return;
                 end
@@ -1086,6 +1152,7 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                         flight_afu_tlx_rd[afutag].afu_tlx_data_bus[i] = tlx_afu_tran.tlx_afu_data_bus[i];
                         if(!brdg_cfg.enable_brdg_ref_model)begin
                             write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+64*i, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[i], 1'b0);
+                            write_memory_pasid(flight_afu_tlx_rd[afutag].afu_tlx_addr+64*i, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
                         end
                     end
                 end
@@ -1105,7 +1172,9 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                         flight_afu_tlx_rd[afutag].afu_tlx_data_bus[1] = tlx_afu_tran.tlx_afu_data_bus[1];
                         if(!brdg_cfg.enable_brdg_ref_model)begin
                             write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[0], 1'b0);
-                            write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+64, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[1], 1'b0);                        
+                            write_memory_pasid(flight_afu_tlx_rd[afutag].afu_tlx_addr, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
+                            write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+64, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[1], 1'b0);
+                            write_memory_pasid(flight_afu_tlx_rd[afutag].afu_tlx_addr+64, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
                         end
                     end               
                     else if(tlx_afu_tran.tlx_afu_dp == 2)begin
@@ -1113,7 +1182,9 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                         flight_afu_tlx_rd[afutag].afu_tlx_data_bus[3] = tlx_afu_tran.tlx_afu_data_bus[1];
                         if(!brdg_cfg.enable_brdg_ref_model)begin
                             write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+128, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[2], 1'b0);
-                            write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+192, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[3], 1'b0);                        
+                            write_memory_pasid(flight_afu_tlx_rd[afutag].afu_tlx_addr+128, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
+                            write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+192, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[3], 1'b0);
+                            write_memory_pasid(flight_afu_tlx_rd[afutag].afu_tlx_addr+192, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
                         end
                     end
                     else begin
@@ -1139,12 +1210,14 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                         flight_afu_tlx_rd[afutag].afu_tlx_data_bus[0] = tlx_afu_tran.tlx_afu_data_bus[0];
                         if(!brdg_cfg.enable_brdg_ref_model)begin
                             write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[0], 1'b0);
+                            write_memory_pasid(flight_afu_tlx_rd[afutag].afu_tlx_addr, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
                         end
                     end               
                     else if(tlx_afu_tran.tlx_afu_dp == 1)begin
                         flight_afu_tlx_rd[afutag].afu_tlx_data_bus[1] = tlx_afu_tran.tlx_afu_data_bus[0];
                         if(!brdg_cfg.enable_brdg_ref_model)begin
-                            write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+64, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[1], 1'b0);                        
+                            write_brdg_memory(flight_afu_tlx_rd[afutag].afu_tlx_addr+64, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[1], 1'b0);
+                            write_memory_pasid(flight_afu_tlx_rd[afutag].afu_tlx_addr+64, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
                         end
                     end
                     else begin
@@ -1173,7 +1246,8 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                     flight_afu_tlx_rd[afutag].afu_tlx_data_bus[0] = tlx_afu_tran.tlx_afu_data_bus[0];
                     if(!brdg_cfg.enable_brdg_ref_model)begin
                         addr_mask=gen_pr_mask(flight_afu_tlx_rd[afutag].afu_tlx_addr, flight_afu_tlx_rd[afutag].afu_tlx_pl);
-                        write_brdg_memory({flight_afu_tlx_rd[afutag].afu_tlx_addr[63:6], 6'h0}, addr_mask, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[0], 1'b0);                        
+                        write_brdg_memory({flight_afu_tlx_rd[afutag].afu_tlx_addr[63:6], 6'h0}, addr_mask, flight_afu_tlx_rd[afutag].afu_tlx_data_bus[0], 1'b0);
+                        write_memory_pasid({flight_afu_tlx_rd[afutag].afu_tlx_addr[63:6], 6'h0}, addr_mask, flight_afu_tlx_rd[afutag].afu_tlx_pasid);
                     end
                 end
                 if(!brdg_cfg.enable_brdg_ref_model)begin
@@ -1201,6 +1275,7 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                     if(tlx_afu_tran.tlx_afu_type == tlx_afu_transaction::WRITE_RESPONSE)begin
                         for(int i=0; i<dl2dl_num(tlx_afu_tran.tlx_afu_dl); i++)begin
                             write_brdg_memory(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*i, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_data_bus[i], 1'b1);
+                            write_memory_pasid(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*i, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_pasid);
                         end
                     end
                     flight_afu_tlx_wr.delete(afutag);                    
@@ -1219,7 +1294,9 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                 if(tlx_afu_tran.tlx_afu_type == tlx_afu_transaction::WRITE_RESPONSE)begin                
                     if(!brdg_cfg.enable_brdg_ref_model)begin
                         write_brdg_memory(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*tlx_afu_tran.tlx_afu_dp, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_data_bus[tlx_afu_tran.tlx_afu_dp], 1'b1);
+                        write_memory_pasid(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*tlx_afu_tran.tlx_afu_dp, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_pasid);
                         write_brdg_memory(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*(tlx_afu_tran.tlx_afu_dp+1), 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_data_bus[tlx_afu_tran.tlx_afu_dp+1], 1'b1);
+                        write_memory_pasid(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*(tlx_afu_tran.tlx_afu_dp+1), 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_pasid);
                     end
                 end
                 if(tlx_write_resp[afutag].tlx_afu_reap_num == 2)begin
@@ -1242,6 +1319,7 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                 if(tlx_afu_tran.tlx_afu_type == tlx_afu_transaction::WRITE_RESPONSE)begin                                
                     if(!brdg_cfg.enable_brdg_ref_model)begin
                         write_brdg_memory(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*tlx_afu_tran.tlx_afu_dp, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_data_bus[tlx_afu_tran.tlx_afu_dp], 1'b1);
+                        write_memory_pasid(flight_afu_tlx_wr[afutag].afu_tlx_addr+64*tlx_afu_tran.tlx_afu_dp, 64'hffff_ffff_ffff_ffff, flight_afu_tlx_wr[afutag].afu_tlx_pasid);
                     end
                 end
                 if(tlx_write_resp[afutag].tlx_afu_reap_num == 2)begin
@@ -1270,6 +1348,7 @@ function void bridge_check_scoreboard::check_tlx_resp(bit nrw, bit[15:0]afutag, 
                             addr_mask=gen_pr_mask(flight_afu_tlx_wr[afutag].afu_tlx_addr, flight_afu_tlx_wr[afutag].afu_tlx_pl);
                         end
                         write_brdg_memory({flight_afu_tlx_wr[afutag].afu_tlx_addr[63:6], 6'h0}, addr_mask, flight_afu_tlx_wr[afutag].afu_tlx_data_bus[0], 1'b1);
+                        write_memory_pasid({flight_afu_tlx_wr[afutag].afu_tlx_addr[63:6], 6'h0}, addr_mask, flight_afu_tlx_wr[afutag].afu_tlx_pasid);
                     end
                     flight_afu_tlx_wr.delete(afutag);                    
                 end
@@ -1367,6 +1446,18 @@ function void bridge_check_scoreboard::write_brdg_memory(bit[63:0] brdg_addr, bi
     end
 endfunction : write_brdg_memory
 
+function void bridge_check_scoreboard::write_memory_pasid(bit[63:0] brdg_addr, bit[63:0] brdg_addr_mask, bit[19:0] pasid);
+    if(brdg_addr[5:0] != 6'h0)
+        `uvm_error(tID, $sformatf("The address of %h is not aligned to 64 bytes.", brdg_addr))
+    else begin
+        for(int i=0; i<64; i++)begin
+            if(brdg_addr_mask[i])begin
+                brdg_memory_pasid[brdg_addr+i]=pasid;
+            end
+        end
+    end
+endfunction : write_memory_pasid
+
 function bit bridge_check_scoreboard::check_brdg_memory(bit[63:0] axi_addr, bit[127:0] axi_addr_mask, bit[1023:0] data, bit nrw);
     bit[1023:0] host_mem_1024;
     bit data_mismatch;
@@ -1421,6 +1512,38 @@ function bit bridge_check_scoreboard::check_brdg_memory(bit[63:0] axi_addr, bit[
     return check_brdg_memory;
 endfunction : check_brdg_memory
 
+function bit bridge_check_scoreboard::check_memory_pasid(bit[63:0] axi_addr, bit[127:0] axi_addr_mask, bit[8:0] user, bit nrw);
+    bit pasid_mismatch;
+    bit pasid_invalid;
+    check_memory_pasid=0;    
+    for(int i=0; i<128; i++)begin
+        if(axi_addr_mask[i])begin
+            if(!nrw)begin
+                if(!brdg_memory_pasid.exists(axi_addr+i))begin
+                    pasid_invalid = 1;
+                    `uvm_info(tID, $sformatf("Not exists an valid pasid for a read address of 0x%16h", axi_addr+i), UVM_LOW)
+                end
+                else if(user != brdg_memory_pasid[axi_addr+i][8:0])begin
+                    pasid_mismatch = 1;
+                    `uvm_info(tID, $sformatf("Mismatch user=0x%3h pasid=0x%5h, for a read address of 0x%16h",user, brdg_memory_pasid[axi_addr+i], axi_addr+i), UVM_LOW)
+                end
+            end
+            else begin
+                if(!brdg_memory_pasid.exists(axi_addr+i))begin
+                    pasid_invalid = 1;
+                    `uvm_info(tID, $sformatf("Not exists an valid pasid for a write address of 0x%16h", axi_addr+i), UVM_LOW)
+                end
+                else if(user != brdg_memory_pasid[axi_addr+i][8:0])begin
+                    pasid_mismatch = 1;
+                    `uvm_info(tID, $sformatf("Mismatch user=0x%3h pasid=0x%5h, for a write address of 0x%16h",user, brdg_memory_pasid[axi_addr+i], axi_addr+i), UVM_LOW)
+                end
+            end
+        end
+    end
+    check_memory_pasid = pasid_invalid | pasid_mismatch;
+    return check_memory_pasid;
+endfunction : check_memory_pasid
+
 function bit[63:0] bridge_check_scoreboard::gen_pr_mask(bit[63:0] brdg_addr, bit[2:0] brdg_plength);
     if(brdg_addr%(1 << brdg_plength) != 0)
         `uvm_error(tID, $sformatf("The address of %h is not aligned to the plength of %h.", brdg_addr, brdg_plength))
@@ -1435,6 +1558,24 @@ function bit[63:0] bridge_check_scoreboard::gen_pr_mask(bit[63:0] brdg_addr, bit
         end
     end
 endfunction : gen_pr_mask
+
+//Write actag table
+function void bridge_check_scoreboard::write_actag_table(input bit[11:0] actag, input bit[15:0] bdf, input bit[19:0] pasid);
+    actag_entry actag_item;
+    if(actag_table.exists(actag))begin
+        actag_table[actag].bdf = bdf;
+        actag_table[actag].pasid = pasid;
+        `uvm_info(get_type_name(),$psprintf("Write actag table entry index=%d, bdf=0x%x, pasid=0x%x", actag, bdf, pasid), UVM_MEDIUM)
+    end
+    else begin
+        actag_item = new("actag_item");
+        actag_item.bdf = bdf;
+        actag_item.pasid = pasid;
+        actag_table[actag] = actag_item;
+        `uvm_info(get_type_name(),$psprintf("New write actag table entry index=%d, bdf=0x%x, pasid=0x%x", actag, bdf, pasid), UVM_MEDIUM)
+    end
+endfunction: write_actag_table
+
 
 `endif
 
