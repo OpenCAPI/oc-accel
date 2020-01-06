@@ -20,6 +20,8 @@ echo "                     arg1=$1 arg2=$2"
 # NAME=`basename $2`
 NAME="${2%.*}"
 echo "                     patch $NAME for $SIMULATOR"
+coveragefile=$(dirname `readlink -f $0`)"/cov.ccf"
+#pslfile=$(dirname `readlink -f $0`)"/bridge.psl"
 case $SIMULATOR in
   "xsim")
     sed -i "s/  simulate/# simulate/g"                   $1/$2 # run up to elaboration, skip execution
@@ -39,9 +41,9 @@ case $SIMULATOR in
     ;;
   "xcelium")
     if [[ $UNIT_SIM_USED == 'TRUE' ]]; then
-      sed -i "s/93 -relax/93 -sv -elaborate -smartorder -relax +libext+.vlib+.v+.sv+.svh -define UNIT_SIM_USED -seed 666 -uvm -uvmhome \$UVM_HOME -uvmnocdnsextra +UVM_VERBOSITY=UVM_LOW +UVM_TESTNAME=action_tb_base_test +WORK_MODE=CROSS_CHECK +UVM_OBJECTION_TRACE +uvm_set_config_int=*,auto_dump_surface,1 +UVM_MAX_QUIT_COUNT=1,NO/gI"         $1/$2 # run irun up to elaboration, skip execution    
+      sed -i "s%93 -relax%93 -sv -elaborate -smartorder -relax +libext+.vlib+.v+.sv+.svh -define UNIT_SIM_USED -uvm -uvmhome \$UVM_HOME -uvmnocdnsextra +UVM_VERBOSITY=UVM_LOW +UVM_TESTNAME=action_tb_base_test +WORK_MODE=CROSS_CHECK +UVM_OBJECTION_TRACE +uvm_set_config_int=*,auto_dump_surface,1 +UVM_MAX_QUIT_COUNT=1,NO -assert -coverage a -covoverwrite -covfile $coveragefile -coverage functional%gI"         $1/$2 # run irun up to elaboration, skip execution    
     else
-      sed -i "s/93 -relax/93 -elaborate -relax/gI"         $1/$2 # run irun up to elaboration, skip execution
+      sed -i "s/93 -relax/93 -sv -elaborate -smartorder -relax +libext+.vlib+.v+.sv+.svh -timescale 1ns\/1ns/gI"         $1/$2 # run irun up to elaboration, skip execution
     fi
     sed -i "s/-top xil_defaultlib.top/-top work.$NAME/gI"  $1/$2 # build top in work library
     if [[ "$NVME_USED" == "TRUE" && -n "$DENALI" ]]; then :
@@ -51,6 +53,8 @@ case $SIMULATOR in
     fi
     if [ -f ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f ]; then
       perl -i.ori -pe 'BEGIN{undef $/;} s/(^-makelib.*\n.*glbl.v.*\n.*endlib)//mg' ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f; # remove glbl.v from compile list
+      perl -i.ori -pe 'BEGIN{undef $/;} s/(^-endlib.*\n^-makelib xcelium_lib\/.* \\\n)//mg' ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f; # merge everything to one lib
+      perl -i.ori -pe 'BEGIN{undef $/;} s/^-makelib xcelium_lib\/xil_defaultlib/-makelib xcelium_lib\/work/mg' ${SNAP_HARDWARE_ROOT}/sim/xcelium/run.f; # set lib name to work in run.f
     fi
     ;;
   "questa"|"modelsim")

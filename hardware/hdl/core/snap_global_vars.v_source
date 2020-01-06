@@ -40,6 +40,14 @@
 `define ENABLE_ODMA
 #endif
 
+#if defined(CONFIG_ENABLE_ODMA_ST_MODE)
+`define ENABLE_ODMA_ST_MODE
+#endif
+
+#if defined(CONFIG_ENABLE_ODMA_512)
+`define ENABLE_ODMA_512
+#endif
+
 #if defined(CONFIG_ENABLE_NVME)
 `define ENABLE_NVME
 #endif
@@ -86,27 +94,21 @@
 
 
 ////////////////////////////////////////////////////////////////////
-
-#if defined(CONFIG_AXI_IDW_1)
-  `define IDW             1
-#endif
-#if defined(CONFIG_AXI_IDW_2)
-  `define IDW             2
-#endif
-#if defined(CONFIG_AXI_IDW_3)
-  `define IDW             3
-#endif
-#if defined(CONFIG_AXI_IDW_4)
-  `define IDW             4
-#endif
-#if defined(CONFIG_AXI_IDW_5)
-  `define IDW             5
+#if defined(CONFIG_AXI_ID_WIDTH)
+`define IDW             CONFIG_AXI_ID_WIDTH
 #endif
   `define CTXW            9
   `define TAGW            7
+
+#if defined(CONFIG_ENABLE_ODMA_512)
+  `define AXI_MM_DW     512
+  `define AXI_ST_DW     512
+#else
   `define AXI_MM_DW    1024
-  `define AXI_MM_AW      64
   `define AXI_ST_DW    1024
+#endif
+
+  `define AXI_MM_AW      64
   `define AXI_ST_AW      64
   `define AXI_LITE_DW    32
   `define AXI_LITE_AW    32
@@ -115,6 +117,7 @@
   `define AXI_WUSER       1
   `define AXI_RUSER       1
   `define AXI_BUSER       1
+  `define AXI_ST_USER     9
 
   `define AXI_CARD_MEM_ID_WIDTH      4
   `define AXI_CARD_MEM_DATA_WIDTH    512

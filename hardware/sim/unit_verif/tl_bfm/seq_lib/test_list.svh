@@ -23,6 +23,7 @@
 `include "bfm_seq_lib_rand_axi_resp.sv"
 `include "odma_seq_lib.sv"
 `include "odma_seq_lib_unalign.sv"
+`include "odma_seq_lib_st.sv"
 `include "bfm_seq_lib_mmio_intrp.sv"
 
 `endif

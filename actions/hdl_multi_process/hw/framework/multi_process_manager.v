@@ -3,8 +3,7 @@
 //IBM CSL OpenPower
 //lyhlu@cn.ibm.com
 
-module multi_process_manager #(
-    parameter KERNEL_NUM = 8,
+module mp_manager #(
     parameter ID_WIDTH = 1,
     parameter ARUSER_WIDTH = 9,
     parameter AWUSER_WIDTH = 9,
@@ -13,11 +12,12 @@ module multi_process_manager #(
 )(
         input                               clk             ,
         input                               rst_n           ,
-        input      [087:0]                  process_info    ,
-        input                               process_start   ,
-        output                              process_accept  ,
-        input                               new_dsc         ,
-        output reg                          engine_start    ,
+        input      [087:0]                  process_info_i  ,
+        input                               process_start_i ,
+        output                              process_ready_o ,
+        input                               dsc0_pull_i     ,
+		output      [1023:0]                dsc0_data_o     ,
+        output                              dsc0_ready_o    ,
 
         //---- AXI bus ----
            // AXI read address channel
@@ -41,13 +41,9 @@ module multi_process_manager #(
         input      [DATA_WIDTH - 1:0]     m_axi_rdata   ,
         input      [001:0]                m_axi_rresp   ,
         input                             m_axi_rlast   ,
-        input                             m_axi_rvalid  ,
-
-        //output
-        output reg [1023:0]               system_register
+        input                             m_axi_rvalid
 );
 
-    reg     [1:0]       delay;
     reg     [8:0]       process_num;
     reg                 in_read;
     wire                read_done;
@@ -90,15 +86,15 @@ process_fifo fifo_process (
     .data_count (                   )
 );
 
+	assign process_ready_o = !(read_done & (m_axi_rdata[1023:960] != 'd0));
     assign m_axi_araddr = process_fifo_out[63:0];
     assign m_axi_aruser = process_fifo_out[72:64];
     assign m_axi_arlen  = process_fifo_out[77:73];
     assign process_fifo_pull = read_done;
-    assign process_fifo_push = (read_done & (m_axi_rdata[1023:960] != 'd0)) | process_start;
-    assign process_fifo_in = (read_done & (m_axi_rdata[1023:960] != 'd0)) ? {10'b0,m_axi_rdata[12:8],process_num,m_axi_rdata[1023:960]} : process_info;
+    assign process_fifo_push = (read_done & (m_axi_rdata[1023:960] != 'd0)) | process_start_i;
+    assign process_fifo_in = (read_done & (m_axi_rdata[1023:960] != 'd0)) ? {10'b0,m_axi_rdata[12:8],process_num,m_axi_rdata[1023:960]} : process_info_i;
     assign read_done = m_axi_rvalid & m_axi_rlast & (m_axi_rresp == 2'b0) & (m_axi_rid == 5'b00000);
     assign read_request = ((dsc_fifo_cnt + m_axi_arlen) <'d63) & !in_read;
-    assign process_accept = process_start & ! (read_done & (m_axi_rdata[1023:960] != 'd0));
 
     always@(posedge clk) if(m_axi_arready & m_axi_arvalid) process_num <= m_axi_aruser;
 
@@ -132,27 +128,8 @@ descriptor_fifo fifo_descriptor (
 
     assign dsc_fifo_in = {23'b0, process_num, m_axi_rdata[991:0]};
     assign dsc_fifo_push = m_axi_rvalid & (m_axi_rid == 5'b00000) & (m_axi_rresp == 2'b00);
-    assign dsc_fifo_pull = (delay == 2'b00) && new_dsc && !dsc_fifo_empty && !engine_start;
-
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
-            delay <= 2'b00;
-        else if(engine_start)
-            delay <= 2'b11;
-        else if(delay != 2'b00)
-            delay <= delay - 1'b1;
-
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
-            engine_start <= 1'b0;
-        else if(engine_start)
-            engine_start <= 1'b0;
-        else if(delay == 2'b00)
-            engine_start <= new_dsc & !dsc_fifo_empty;
-        else
-            engine_start <= 1'b0;
-
-    always@(posedge clk)
-        system_register <= dsc_fifo_out;
+    assign dsc_fifo_pull = dsc0_pull_i;
+    assign dsc0_data_o = dsc_fifo_out;
+    assign dsc0_ready_o = !dsc_fifo_empty;
 
 endmodule

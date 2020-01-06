@@ -8,6 +8,10 @@ Here is a more detailed diagram for OC-Accel **Bridge** mode.
 * **oc_bsp_wrap** and **oc_cfg** come from oc-bip ( [OpenCAPI3.0 Device Reference design] )
 * **oc_function** comes from OC-Accel `hardware/hdl/core`.
 
+oc_bsp_wrap has DLX, PHY, TLX, VPD (Virtual Product Data) and flash_sub_system. oc_cfg handles the registers defined in OpenCAPI CFG specification. 
+
+
+Under oc_function, **framework_afu** can be replaced by other reference AFUs like AFP3 or MCP3 in [OpenCAPI3.0 Device Reference design]. framework_afu contains its cfg_descriptor to describe the basic settings for this AFU. 
 
 [OpenCAPI3.0 Device Reference design]: https://github.com/OpenCAPI/OpenCAPI3.0_Client_RefDesign
 
@@ -17,6 +21,10 @@ It has following clock domains:
 * **clk_afu**: 200MHz (Adjustable)
 * **clk_act**: 200MHz (Adjustable)
 * **Other**: Depending on the requirements of peripheral IPs
+
+The blocks with transitional color means it has the clock converter logic or asynchronous clock interfaces. 
+
+A partial reconfiguration region is defined as shown in the dotted box. This area is dynamic area that allows user to change their functional logic and all of the other regions are static in PR (Partial Reconfiguration) Flow.
 
 ## AXI4 feature list
 

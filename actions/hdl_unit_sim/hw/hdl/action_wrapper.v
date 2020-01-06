@@ -34,16 +34,18 @@ module action_wrapper #(
     parameter C_S_AXI_CTRL_REG_ADDR_WIDTH    = 32,
 
     // Parameters of Axi Master Bus Interface AXI_HOST_MEM ; to Host memory
-    parameter C_M_AXI_HOST_MEM_ID_WIDTH      = 5,
+    parameter C_M_AXI_HOST_MEM_ID_WIDTH      = `IDW,
     parameter C_M_AXI_HOST_MEM_ADDR_WIDTH    = 64,
-    parameter C_M_AXI_HOST_MEM_DATA_WIDTH    = 1024,
-    parameter C_M_AXI_HOST_MEM_AWUSER_WIDTH  = 9,
-    parameter C_M_AXI_HOST_MEM_ARUSER_WIDTH  = 9,
+    parameter C_M_AXI_HOST_MEM_DATA_WIDTH    = `AXI_MM_DW,
+    parameter C_M_AXI_HOST_MEM_AWUSER_WIDTH  = `CTXW,
+    parameter C_M_AXI_HOST_MEM_ARUSER_WIDTH  = `CTXW,
     parameter C_M_AXI_HOST_MEM_WUSER_WIDTH   = 1,
     parameter C_M_AXI_HOST_MEM_RUSER_WIDTH   = 1,
     parameter C_M_AXI_HOST_MEM_BUSER_WIDTH   = 1,
+
+    // Parameters of Interrupt Interface
     parameter SOURCE_BITS                    = 64,
-    parameter CONTEXT_BITS                   = 9
+    parameter CONTEXT_BITS                   = `CTXW
 
 )
 (
@@ -327,7 +329,7 @@ module action_wrapper #(
         .s_axi_snap_rresp      (s_axi_ctrl_reg_rresp),
         .s_axi_snap_rready     (s_axi_ctrl_reg_rready),
         .s_axi_snap_rvalid     (s_axi_ctrl_reg_rvalid),
-        .i_action_type         (32'h10140003), //Should match ACTION_TYPE_HDL_BRIDGE_TEST with sw
+        .i_action_type         (32'h10142004), //Should match ACTION_TYPE_HDL_BRIDGE_TEST with sw
         .i_action_version      (32'h00000001), //Hardware Version
         .interrupt             (interrupt),
         .interrupt_ack         (interrupt_ack),
@@ -340,77 +342,99 @@ endmodule
 // Place holder for ODMA unit sim AFU.
 //
 module action_wrapper #(
-    parameter  AXI_ID_WIDTH      = 5, 
-    parameter  AXI_ADDR_WIDTH    = 64,
-    parameter  AXI_DATA_WIDTH    = 1024,
-    parameter  AXI_AWUSER_WIDTH  = 9, 
-    parameter  AXI_ARUSER_WIDTH  = 9, 
-    parameter  AXI_WUSER_WIDTH   = 1, 
-    parameter  AXI_RUSER_WIDTH   = 1, 
-    parameter  AXI_BUSER_WIDTH   = 1, 
-    parameter  AXIL_ADDR_WIDTH   = 32,
-    parameter  AXIL_DATA_WIDTH   = 32, 
-    parameter  INT_BITS          = 3,
-    parameter  SOURCE_BITS       = 64,
-    parameter  CONTEXT_BITS      = 9
-)
+    // Parameters of Axi MM Bus Interface
+    parameter  AXI_ID_WIDTH                  = 5, 
+    parameter  AXI_ADDR_WIDTH                = 64,
+    parameter  AXI_DATA_WIDTH                = `AXI_MM_DW,
+    parameter  AXI_AWUSER_WIDTH              = 9, 
+    parameter  AXI_ARUSER_WIDTH              = 9, 
+    parameter  AXI_WUSER_WIDTH               = 1, 
+    parameter  AXI_RUSER_WIDTH               = 1, 
+    parameter  AXI_BUSER_WIDTH               = 1, 
+    parameter  AXIL_ADDR_WIDTH               = 32,
+    parameter  AXIL_DATA_WIDTH               = 32, 
+
+    // Parameters of Axi Stream Bus Interface
+    parameter AXIS_ID_WIDTH                  = `IDW,
+    parameter AXIS_DATA_WIDTH                = `AXI_ST_DW,
+    parameter AXIS_USER_WIDTH                = `CTXW,
+
+    // Parameters of Interrupt Interface
+    parameter SOURCE_BITS                    = 64,
+    parameter CONTEXT_BITS                   = `CTXW)
 (
     input  ap_clk                    ,
     input  ap_rst_n                  ,
-    //output interrupt                 ,
-    //output [INT_BITS-2 : 0] interrupt_src             ,
-    //output [CONTEXT_BITS-1 : 0] interrupt_ctx             ,
-    //input  interrupt_ack             ,
-    
-    //----- AXI4 read addr interface -----
-    input  [AXI_ADDR_WIDTH-1 : 0]       axi_mm_araddr,         
-    input  [1 : 0]                      axi_mm_arburst,        
-    input  [3 : 0]                      axi_mm_arcache,        
-    input  [AXI_ID_WIDTH-1 : 0]         axi_mm_arid,           
-    input  [7 : 0]                      axi_mm_arlen,         
-    input  [1 : 0]                      axi_mm_arlock,         
-    input  [2 : 0]                      axi_mm_arprot,         
-    input  [3 : 0]                      axi_mm_arqos,          
-    output                              axi_mm_arready,       
-    input  [3 : 0]                      axi_mm_arregion,       
-    input  [2 : 0]                      axi_mm_arsize,         
-    input  [AXI_ARUSER_WIDTH-1 : 0]     axi_mm_aruser,         
-    input                               axi_mm_arvalid,       
-    //----- AXI4 read data interface -----
-    output [AXI_DATA_WIDTH-1 : 0 ]      axi_mm_rdata,          
-    output [AXI_ID_WIDTH-1 : 0 ]        axi_mm_rid,            
-    output                              axi_mm_rlast,          
-    input                               axi_mm_rready,         
-    output [1 : 0 ]                     axi_mm_rresp,        
-    output [AXI_RUSER_WIDTH-1 : 0 ]     axi_mm_ruser,          
-    output                              axi_mm_rvalid,         
-    //----- AXI4 write addr interface -----
-    input  [AXI_ADDR_WIDTH-1 : 0]       axi_mm_awaddr,         
-    input  [1 : 0]                      axi_mm_awburst,        
-    input  [3 : 0]                      axi_mm_awcache,        
-    input  [AXI_ID_WIDTH-1 : 0]         axi_mm_awid,           
-    input  [7 : 0]                      axi_mm_awlen,         
-    input  [1 : 0]                      axi_mm_awlock,         
-    input  [2 : 0]                      axi_mm_awprot,         
-    input  [3 : 0]                      axi_mm_awqos,          
-    output                              axi_mm_awready,       
-    input  [3 : 0]                      axi_mm_awregion,       
-    input  [2 : 0]                      axi_mm_awsize,         
-    input  [AXI_AWUSER_WIDTH-1 : 0]     axi_mm_awuser,         
-    input                               axi_mm_awvalid,       
-    //----- AXI4 write data interface -----
-    input  [AXI_DATA_WIDTH-1 : 0 ]      axi_mm_wdata,          
-    input  [(AXI_DATA_WIDTH/8)-1 : 0 ]  axi_mm_wstrb,          
-    input                               axi_mm_wlast,          
-    input  [AXI_WUSER_WIDTH-1 : 0 ]     axi_mm_wuser,          
-    input                               axi_mm_wvalid,         
-    output                              axi_mm_wready,         
-    //----- AXI4 write resp interface -----
-    output                              axi_mm_bvalid,         
-    output [1 : 0]                      axi_mm_bresp,         
-    output [AXI_BUSER_WIDTH-1 : 0 ]     axi_mm_buser,          
-    output [AXI_ID_WIDTH-1 : 0 ]        axi_mm_bid,
-    input                               axi_mm_bready,
+    output interrupt                 ,
+    output [SOURCE_BITS-1  : 0] interrupt_src             ,
+    output [CONTEXT_BITS-1 : 0] interrupt_ctx             ,
+    input  interrupt_ack             ,
+    `ifndef ENABLE_ODMA_ST_MODE    
+        //----- AXI4 read addr interface -----
+        input  [AXI_ADDR_WIDTH-1 : 0]       axi_mm_araddr,         
+        input  [1 : 0]                      axi_mm_arburst,        
+        input  [3 : 0]                      axi_mm_arcache,        
+        input  [AXI_ID_WIDTH-1 : 0]         axi_mm_arid,           
+        input  [7 : 0]                      axi_mm_arlen,         
+        input  [1 : 0]                      axi_mm_arlock,         
+        input  [2 : 0]                      axi_mm_arprot,         
+        input  [3 : 0]                      axi_mm_arqos,          
+        output                              axi_mm_arready,       
+        input  [3 : 0]                      axi_mm_arregion,       
+        input  [2 : 0]                      axi_mm_arsize,         
+        input  [AXI_ARUSER_WIDTH-1 : 0]     axi_mm_aruser,         
+        input                               axi_mm_arvalid,       
+        //----- AXI4 read data interface -----
+        output [AXI_DATA_WIDTH-1 : 0 ]      axi_mm_rdata,          
+        output [AXI_ID_WIDTH-1 : 0 ]        axi_mm_rid,            
+        output                              axi_mm_rlast,          
+        input                               axi_mm_rready,         
+        output [1 : 0 ]                     axi_mm_rresp,        
+        output [AXI_RUSER_WIDTH-1 : 0 ]     axi_mm_ruser,          
+        output                              axi_mm_rvalid,         
+        //----- AXI4 write addr interface -----
+        input  [AXI_ADDR_WIDTH-1 : 0]       axi_mm_awaddr,         
+        input  [1 : 0]                      axi_mm_awburst,        
+        input  [3 : 0]                      axi_mm_awcache,        
+        input  [AXI_ID_WIDTH-1 : 0]         axi_mm_awid,           
+        input  [7 : 0]                      axi_mm_awlen,         
+        input  [1 : 0]                      axi_mm_awlock,         
+        input  [2 : 0]                      axi_mm_awprot,         
+        input  [3 : 0]                      axi_mm_awqos,          
+        output                              axi_mm_awready,       
+        input  [3 : 0]                      axi_mm_awregion,       
+        input  [2 : 0]                      axi_mm_awsize,         
+        input  [AXI_AWUSER_WIDTH-1 : 0]     axi_mm_awuser,         
+        input                               axi_mm_awvalid,       
+        //----- AXI4 write data interface -----
+        input  [AXI_DATA_WIDTH-1 : 0 ]      axi_mm_wdata,          
+        input  [(AXI_DATA_WIDTH/8)-1 : 0 ]  axi_mm_wstrb,          
+        input                               axi_mm_wlast,          
+        input  [AXI_WUSER_WIDTH-1 : 0 ]     axi_mm_wuser,          
+        input                               axi_mm_wvalid,         
+        output                              axi_mm_wready,         
+        //----- AXI4 write resp interface -----
+        output                              axi_mm_bvalid,         
+        output [1 : 0]                      axi_mm_bresp,         
+        output [AXI_BUSER_WIDTH-1 : 0 ]     axi_mm_buser,          
+        output [AXI_ID_WIDTH-1 : 0 ]        axi_mm_bid,
+        input                               axi_mm_bready,
+    `else
+        output                              m_axis_tready,
+        input                               m_axis_tlast,
+        input [`AXI_ST_DW - 1:0]            m_axis_tdata,
+        input [`AXI_ST_DW/8 - 1:0]          m_axis_tkeep,
+        input                               m_axis_tvalid,
+        input [`IDW - 1:0]                  m_axis_tid,
+        input [`AXI_ST_USER - 1:0]          m_axis_tuser,
+        input                               s_axis_tready,
+        output                              s_axis_tlast,
+        output  [`AXI_ST_DW - 1:0]          s_axis_tdata,
+        output  [`AXI_ST_DW/8 - 1:0]        s_axis_tkeep ,
+        output                              s_axis_tvalid,
+        output  [`IDW - 1:0]                s_axis_tid,
+        output  [`AXI_ST_USER - 1:0]        s_axis_tuser,
+    `endif
     //----- AXI lite slave interface -----
     input                               a_s_axi_arvalid,        
     input  [AXIL_ADDR_WIDTH-1 : 0]      a_s_axi_araddr,         
@@ -446,11 +470,7 @@ module action_wrapper #(
     input                               a_m_axi_wready,         
     input                               a_m_axi_bvalid,         
     input  [1 : 0 ]                     a_m_axi_bresp,          
-    output                              a_m_axi_bready,       
-    output                              interrupt,
-    output [SOURCE_BITS-1  : 0]         interrupt_src,
-    output [CONTEXT_BITS-1 : 0]         interrupt_ctx,
-    input                               interrupt_ack
+    output                              a_m_axi_bready
 );
 
     //TODO: Send interrupt
@@ -563,10 +583,10 @@ module action_wrapper #(
 //     /*output                             */   .m_lite_bready ( a_m_axi_bready  )   
 //                   );
 
-//odma_axi_slave is ready, codes are as follows
-
-	odma_axi_slave  axi_slave(
-	/*input                              */   .clk           ( ap_clk         ),
+`ifndef ENABLE_ODMA_ST_MODE
+    //odma_axi_slave is ready, codes are as follows
+    odma_axi_slave  axi_slave(
+    /*input                              */   .clk           ( ap_clk         ),
     /*input                              */   .rst_n         ( ap_rst_n       ),
     /* AXI4 read addr interface */
     /*input  [AXI_ADDR_WIDTH-1 : 0]      */   .axi_araddr    ( axi_mm_araddr     ),         
@@ -617,34 +637,66 @@ module action_wrapper #(
     /*output [AXI_BUSER_WIDTH-1 : 0 ]    */   .axi_buser     ( axi_mm_buser      ),          
     /*output [AXI_ID_WIDTH-1 : 0 ]       */   .axi_bid       ( axi_mm_bid        ),
     /*input                              */   .axi_bready    ( axi_mm_bready     )
-     
-);
+    );
+`else
+    //odma_axi_st_slave is ready, codes are as follows
+    odma_axi_st_slave #(
+        .AXIS_ID_WIDTH      ( AXIS_ID_WIDTH ),
+        .AXIS_USER_WIDTH    ( AXIS_USER_WIDTH ),
+        .AXIS_DATA_WIDTH    ( AXIS_DATA_WIDTH )
+    ) st_slave(
+        .clk                (ap_clk),
+        .rst_n              (ap_rst_n),
+        .axis_tvalid        (m_axis_tvalid),
+        .axis_tready        (m_axis_tready),
+        .axis_tdata         (m_axis_tdata),
+        .axis_tkeep         (m_axis_tkeep),
+        .axis_tlast         (m_axis_tlast),
+        .axis_tid           (m_axis_tid),
+        .axis_tuser         (m_axis_tuser)
+    );
 
-//odma_axi_lite_slave is ready, codes are as follows
+    //odma_axi_st_master is ready, codes are as follows
+    odma_axi_st_master #(
+        .AXIS_ID_WIDTH      ( AXIS_ID_WIDTH ),
+        .AXIS_USER_WIDTH    ( AXIS_USER_WIDTH ),
+        .AXIS_DATA_WIDTH    ( AXIS_DATA_WIDTH )
+    ) st_master(
+        .clk                (ap_clk),
+        .rst_n              (ap_rst_n),
+        .axis_tvalid        (s_axis_tvalid),
+        .axis_tready        (s_axis_tready),
+        .axis_tdata         (s_axis_tdata),
+        .axis_tkeep         (s_axis_tkeep),
+        .axis_tlast         (s_axis_tlast),
+        .axis_tid           (s_axis_tid),
+        .axis_tuser         (s_axis_tuser)
+    );
+`endif
 
-		  
+//odma_axi_lite_slave is ready, codes are as follows		  
 odma_axi_lite_slave 		lite_slave(
-										.clk           (ap_clk         ),
-										.aresetn       (ap_rst_n       ),
-										
-										.s_lite_arvalid(a_s_axi_arvalid),        
-										.s_lite_araddr (a_s_axi_araddr ),         
-										.s_lite_arready(a_s_axi_arready),        
-										.s_lite_rvalid (a_s_axi_rvalid ),         
-										.s_lite_rdata  (a_s_axi_rdata  ),          
-										.s_lite_rresp  (a_s_axi_rresp  ),          
-										.s_lite_rready (a_s_axi_rready ),         
-										.s_lite_awvalid(a_s_axi_awvalid),        
-										.s_lite_awaddr (a_s_axi_awaddr ),         
-										.s_lite_awready(a_s_axi_awready),        
-										.s_lite_wvalid (a_s_axi_wvalid ),         
-										.s_lite_wdata  (a_s_axi_wdata  ),          
-										.s_lite_wstrb  (a_s_axi_wstrb  ),          
-										.s_lite_wready (a_s_axi_wready ),         
-										.s_lite_bvalid (a_s_axi_bvalid ),         
-										.s_lite_bresp  (a_s_axi_bresp  ),          
-										.s_lite_bready (a_s_axi_bready )
-								);
+    .clk           (ap_clk         ),
+    .aresetn       (ap_rst_n       ),
+    
+    .s_lite_arvalid(a_s_axi_arvalid),        
+    .s_lite_araddr (a_s_axi_araddr ),         
+    .s_lite_arready(a_s_axi_arready),        
+    .s_lite_rvalid (a_s_axi_rvalid ),         
+    .s_lite_rdata  (a_s_axi_rdata  ),          
+    .s_lite_rresp  (a_s_axi_rresp  ),          
+    .s_lite_rready (a_s_axi_rready ),         
+    .s_lite_awvalid(a_s_axi_awvalid),        
+    .s_lite_awaddr (a_s_axi_awaddr ),         
+    .s_lite_awready(a_s_axi_awready),        
+    .s_lite_wvalid (a_s_axi_wvalid ),         
+    .s_lite_wdata  (a_s_axi_wdata  ),          
+    .s_lite_wstrb  (a_s_axi_wstrb  ),          
+    .s_lite_wready (a_s_axi_wready ),         
+    .s_lite_bvalid (a_s_axi_bvalid ),         
+    .s_lite_bresp  (a_s_axi_bresp  ),          
+    .s_lite_bready (a_s_axi_bready )
+);
 
 odma_axi_lite_master 		lite_master(
     /*output                             */   .m_lite_arvalid( a_m_axi_arvalid ),        
@@ -664,8 +716,7 @@ odma_axi_lite_master 		lite_master(
     /*input                              */   .m_lite_bvalid ( a_m_axi_bvalid  ),         
     /*input  [1 : 0 ]                    */   .m_lite_bresp  ( a_m_axi_bresp   ),          
     /*output                             */   .m_lite_bready ( a_m_axi_bready  ) 
-										);
-
+);
 
 endmodule
 `endif
