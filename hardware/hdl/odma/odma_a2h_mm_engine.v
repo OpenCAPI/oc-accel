@@ -62,7 +62,7 @@ module odma_a2h_mm_engine #(
     output reg [127 : 0]            lcl_wr_be,          //local write byte enable
     output                          lcl_wr_first,       //local write first beat
     output                          lcl_wr_last,        //local write last beat
-    output reg [1023 : 0]           lcl_wr_data,        //local write data
+    output [1023 : 0]               lcl_wr_data,        //local write data
     input                           lcl_wr_ready,       //local write ready
     //----- local write context interface -----
     output                          lcl_wr_ctx_valid,   //local context write valid
@@ -98,267 +98,241 @@ parameter   READ_IDLE   =   3'b000,
             WRITE_REG   =   3'b010,     //write in-flight descriptor reg
             READ_CMD    =   3'b100;     //issue axi read cmd
 
-reg     [2 : 0]                     rd_fsm_cur_state;                   //read FSM current state
-reg     [2 : 0]                     rd_fsm_nxt_state;                   //read FSM next state
-wire                                rd_fsm_state_read_fifo;             //read FSM state read fifo
-wire                                rd_fsm_state_write_reg;             //read FSM state write reg
-wire                                rd_fsm_state_read_cmd;              //read FSM state read cmd
+reg     [2 : 0]                 rd_fsm_cur_state;                   //read FSM current state
+reg     [2 : 0]                 rd_fsm_nxt_state;                   //read FSM next state
+wire                            rd_fsm_state_read_fifo;             //read FSM state read fifo
+wire                            rd_fsm_state_write_reg;             //read FSM state write reg
+wire                            rd_fsm_state_read_cmd;              //read FSM state read cmd
 //--- Descriptor FIFO ---
-wire    [255 : 0]                   dsc_fifo_din;                       //descriptor FIFO data in
-wire                                dsc_fifo_wr_en;                     //descriptor FIFO write enable
-wire                                dsc_fifo_rd_en;                     //descriptor FIFO read enable
-wire                                dsc_fifo_valid;                     //descriptor FIFO data out valid
-wire    [255 : 0]                   dsc_fifo_dout;                      //descriptor FIFO data out
-wire                                dsc_fifo_full;                      //descriptor FIFO full
-wire                                dsc_fifo_empty;                     //descriptor FIFO empty
-wire                                dsc_fifo_rd_ready;                  //descriptor FIFO ready to read
-wire    [63 : 0]                    dsc_src_addr;                       //descriptor source address
-wire    [63 : 0]                    dsc_src_align_addr;                 //descriptor aligned source address
-wire    [63 : 0]                    dsc_dst_addr;                       //descriptor destination address
-wire    [63 : 0]                    dsc_dst_align_addr;                 //descriptor aligned destination address
-wire    [27 : 0]                    dsc_length;                         //descriptor dma transfer length
-wire    [27 : 0]                    dsc_src_align_length;               //descriptor dma transfer source aligned length
-wire    [27 : 0]                    dsc_dst_align_length;               //descriptor dma transfer dest aligned length
-wire    [63 : 0]                    dsc_dst_end_addr;                   //descriptor dest end addr
-wire    [63 : 0]                    dsc_dst_end_align_addr;             //descriptor aligned end addr
-wire    [ 1 : 0]                    dsc_channel_id;                     //descriptor channel ID
-reg     [ 1 : 0]                    dsc_channel_id_l;                   //descriptor channel ID latch
-wire    [29 : 0]                    dsc_descriptor_id;                  //descriptor ID
+wire    [255 : 0]               dsc_fifo_din;                       //descriptor FIFO data in
+wire                            dsc_fifo_wr_en;                     //descriptor FIFO write enable
+wire                            dsc_fifo_rd_en;                     //descriptor FIFO read enable
+wire                            dsc_fifo_valid;                     //descriptor FIFO data out valid
+wire    [255 : 0]               dsc_fifo_dout;                      //descriptor FIFO data out
+wire                            dsc_fifo_full;                      //descriptor FIFO full
+wire                            dsc_fifo_empty;                     //descriptor FIFO empty
+wire                            dsc_fifo_rd_ready;                  //descriptor FIFO ready to read
+wire                            dsc_intr;                           //descriptor interrupt flag
+wire    [63 : 0]                dsc_src_addr;                       //descriptor source address
+wire    [63 : 0]                dsc_src_align_addr;                 //descriptor aligned source address
+wire    [63 : 0]                dsc_dst_addr;                       //descriptor destination address
+wire    [63 : 0]                dsc_dst_align_addr;                 //descriptor aligned destination address
+wire    [27 : 0]                dsc_length;                         //descriptor dma transfer length
+wire    [27 : 0]                dsc_src_align_length;               //descriptor dma transfer source aligned length
+wire    [27 : 0]                dsc_dst_align_length;               //descriptor dma transfer dest aligned length
+wire    [63 : 0]                dsc_dst_end_addr;                   //descriptor dest end addr
+wire    [63 : 0]                dsc_dst_end_align_addr;             //descriptor aligned end addr
+wire    [ 1 : 0]                dsc_channel_id;                     //descriptor channel ID
+reg     [ 1 : 0]                dsc_channel_id_l;                   //descriptor channel ID latch
+wire    [29 : 0]                dsc_descriptor_id;                  //descriptor ID
 //---------In-flight descriptor register set ---------
 //----- Descriptor 0 register set -----
-reg                                 dsc_flight_reg0_valid;              //descriptor 0 valid
-reg                                 dsc_flight_reg0_complete;           //descriptor 0 dma transfer done
-reg                                 dsc_flight_reg0_commit;             //descriptor 0 commit to complete engine done
-reg     [ 1 : 0]                    dsc_flight_reg0_ch_id;              //descriptor 0 channel ID
-reg     [29 : 0]                    dsc_flight_reg0_dsc_id;             //descriptor 0 ID 
-reg     [AXI_DATA_BYTE_WIDTH-1 :0]  dsc_flight_reg0_src_first_byte_addr;//descriptor 0 source first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg0_dst_first_byte_addr;//descriptor 0 dest first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg0_dst_last_byte_addr; //descriptor 0 dest last beat unaligned byte addr
-reg     [63 : 0]                    dsc_flight_reg0_src_addr;           //descriptor 0 source AXI read addr
-reg     [63 : 0]                    dsc_flight_reg0_dst_addr;           //descriptor 0 destination local write addr
-reg     [27 : 0]                    dsc_flight_reg0_src_length;         //descriptor 0 source read length left
-reg     [27 : 0]                    dsc_flight_reg0_dst_length;         //descriptor 0 destination write length left
-reg     [27 : 0]                    dsc_flight_reg0_rsp_length;         //descriptor 0 local write resp length left
-reg     [ 1 : 0]                    dsc_flight_reg0_src_err;            //descriptor 0 source AXI read error
-reg                                 dsc_flight_reg0_rsp_err;            //descriptor 0 local write resp error
-reg     [63 : 0]                    dsc_flight_reg0_src_err_addr;       //descriptor 0 first source AXI read error addr
-reg     [63 : 0]                    dsc_flight_reg0_rsp_err_addr;       //descriptor 0 first local write resp error addr
+reg                             dsc_flight_reg0_valid;              //descriptor 0 valid
+reg                             dsc_flight_reg0_intr;               //descriptor 0 interrupt flag
+reg                             dsc_flight_reg0_complete;           //descriptor 0 dma transfer done
+reg                             dsc_flight_reg0_commit;             //descriptor 0 commit to complete engine done
+reg     [ 1 : 0]                dsc_flight_reg0_ch_id;              //descriptor 0 channel ID
+reg     [29 : 0]                dsc_flight_reg0_dsc_id;             //descriptor 0 ID
+reg     [ 6 : 0]                dsc_flight_reg0_dst_first_be_addr;  //descriptor 0 dest first beat unaligned byte addr
+reg     [ 6 : 0]                dsc_flight_reg0_dst_last_be_addr;   //descriptor 0 dest last beat unaligned byte addr 
+reg     [63 : 0]                dsc_flight_reg0_src_addr;           //descriptor 0 source AXI read addr
+reg     [63 : 0]                dsc_flight_reg0_dst_addr;           //descriptor 0 destination local write addr
+reg     [27 : 0]                dsc_flight_reg0_src_length;         //descriptor 0 source read length left
+reg     [27 : 0]                dsc_flight_reg0_dst_length;         //descriptor 0 destination write length left
+reg     [27 : 0]                dsc_flight_reg0_rsp_length;         //descriptor 0 local write resp length left
+reg     [ 1 : 0]                dsc_flight_reg0_src_err;            //descriptor 0 source AXI read error
+reg                             dsc_flight_reg0_rsp_err;            //descriptor 0 local write resp error
+reg     [63 : 0]                dsc_flight_reg0_src_err_addr;       //descriptor 0 first source AXI read error addr
+reg     [63 : 0]                dsc_flight_reg0_rsp_err_addr;       //descriptor 0 first local write resp error addr
 //----- Descriptor 0 ctrl signals -----
-wire                                dsc_flight_reg0_clear;              //descriptor 0 register set clear
-wire                                dsc_flight_reg0_write;              //descriptor 0 register set write
-wire                                dsc_flight_reg0_src_match;          //descriptor 0 register set match for source info update
-reg                                 dsc_flight_reg0_src_update;         //descriptor 0 register set source info update
-wire                                dsc_flight_reg0_src_err_update;     //descriptor 0 register set source error info update
-reg                                 dsc_flight_reg0_src_err_happen;     //descriptor 0 source AXI read error happened
-wire                                dsc_flight_reg0_dst_use;            //descriptor 0 register set dest info to use for lcl write cmd
-wire                                dsc_flight_reg0_ch0_dst_data_valid; //descriptor 0 channel 0 dest write data valid
-wire                                dsc_flight_reg0_ch1_dst_data_valid; //descriptor 0 channel 1 dest write data valid
-wire                                dsc_flight_reg0_ch2_dst_data_valid; //descriptor 0 channel 2 dest write data valid
-wire                                dsc_flight_reg0_ch3_dst_data_valid; //descriptor 0 channel 3 dest write data valid
-wire                                dsc_flight_reg0_dst_match;          //descriptor 0 register set match for dest info update
-reg                                 dsc_flight_reg0_dst_update;         //descriptor 0 register set dest info update
-wire                                dsc_flight_reg0_dst_first_beat;     //descriptor 0 dest write first beat
-wire                                dsc_flight_reg0_dst_last_beat;      //descriptor 0 dest write last beat
-wire    [127: 0]                    dsc_flight_reg0_dst_first_beat_be;  //descriptor 0 dest write first beat byte enable
-wire    [127: 0]                    dsc_flight_reg0_dst_last_beat_be;   //descriptor 0 dest write last beat byte enable
-wire                                dsc_flight_reg0_dst_large;          //descriptor 0 dest unalign addr larger than src
-wire                                dsc_flight_reg0_dst_equal;          //descriptor 0 dest unalign addr equal with src
-wire    [ 6 : 0]                    dsc_flight_reg0_dst_src_diff;       //descriptor 0 unaligned dest addr and src addr difference
-wire                                dsc_flight_reg0_rsp_err_update;     //descriptor 0 register set lcl write resp error info update
-wire                                dsc_flight_reg0_rsp_match;          //descriptor 0 register set match for write resp info update
-reg                                 dsc_flight_reg0_rsp_update;         //descriptor 0 register set write resp info update
-wire                                dsc_flight_reg0_commit_ready;       //descriptor 0 ready to commit to complete engine
-wire                                dsc_flight_reg0_sts_err;            //descriptor 0 status error
-wire    [511: 0]                    dsc_flight_reg0_commit_data;        //descriptor 0 data commit to complete engine
-wire                                dsc_flight_reg0_commit_update;      //descriptor 0 commit bit to write into register commit       
+wire                            dsc_flight_reg0_clear;              //descriptor 0 register set clear
+wire                            dsc_flight_reg0_write;              //descriptor 0 register set write
+wire                            dsc_flight_reg0_src_match;          //descriptor 0 register set match for source info update
+reg                             dsc_flight_reg0_src_update;         //descriptor 0 register set source info update
+wire                            dsc_flight_reg0_src_err_update;     //descriptor 0 register set source error info update
+reg                             dsc_flight_reg0_src_err_happen;     //descriptor 0 source AXI read error happened
+wire                            dsc_flight_reg0_dst_use;            //descriptor 0 register set dest info to use for lcl write cmd
+wire                            dsc_flight_reg0_dst_match;          //descriptor 0 register set match for dest info update
+reg                             dsc_flight_reg0_dst_update;         //descriptor 0 register set dest info update
+wire                            dsc_flight_reg0_dst_first_beat;     //descriptor 0 dest write first beat
+wire                            dsc_flight_reg0_dst_last_beat;      //descriptor 0 dest write last beat
+wire    [127: 0]                dsc_flight_reg0_dst_first_beat_be;  //descriptor 0 dest write first beat byte enable
+wire    [127: 0]                dsc_flight_reg0_dst_last_beat_be;   //descriptor 0 dest write last beat byte enable
+wire                            dsc_flight_reg0_rsp_err_update;     //descriptor 0 register set lcl write resp error info update
+wire                            dsc_flight_reg0_rsp_match;          //descriptor 0 register set match for write resp info update
+reg                             dsc_flight_reg0_rsp_update;         //descriptor 0 register set write resp info update
+wire                            dsc_flight_reg0_commit_ready;       //descriptor 0 ready to commit to complete engine
+wire                            dsc_flight_reg0_sts_err;            //descriptor 0 status error
+wire    [511: 0]                dsc_flight_reg0_commit_data;        //descriptor 0 data commit to complete engine
+wire                            dsc_flight_reg0_commit_update;      //descriptor 0 commit bit to write into register commit       
 //----- Descriptor 1 register set -----
-reg                                 dsc_flight_reg1_valid;              //descriptor 1 valid                                                       
-reg                                 dsc_flight_reg1_complete;           //descriptor 1 dma transfer done                                
-reg                                 dsc_flight_reg1_commit;             //descriptor 1 commit to complete engine done                   
-reg     [ 1 : 0]                    dsc_flight_reg1_ch_id;              //descriptor 1 channel ID                                       
-reg     [29 : 0]                    dsc_flight_reg1_dsc_id;             //descriptor 1 ID                                               
-reg     [AXI_DATA_BYTE_WIDTH-1 :0]  dsc_flight_reg1_src_first_byte_addr;//descriptor 1 source first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg1_dst_first_byte_addr;//descriptor 1 dest first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg1_dst_last_byte_addr; //descriptor 1 dest last beat unaligned byte addr
-reg     [63 : 0]                    dsc_flight_reg1_src_addr;           //descriptor 1 source AXI read addr                             
-reg     [63 : 0]                    dsc_flight_reg1_dst_addr;           //descriptor 1 destination local write addr                     
-reg     [27 : 0]                    dsc_flight_reg1_src_length;         //descriptor 1 source read length left                          
-reg     [27 : 0]                    dsc_flight_reg1_dst_length;         //descriptor 1 destination write length left                    
-reg     [27 : 0]                    dsc_flight_reg1_rsp_length;         //descriptor 1 local write resp length left                     
-reg     [ 1 : 0]                    dsc_flight_reg1_src_err;            //descriptor 1 source AXI read error                            
-reg                                 dsc_flight_reg1_rsp_err;            //descriptor 1 local write resp error
-reg     [63 : 0]                    dsc_flight_reg1_src_err_addr;       //descriptor 1 first source AXI read error addr
-reg     [63 : 0]                    dsc_flight_reg1_rsp_err_addr;       //descriptor 1 first local write resp error addr
+reg                             dsc_flight_reg1_valid;              //descriptor 1 valid                                                       
+reg                             dsc_flight_reg1_intr;               //descriptor 1 interrupt flag
+reg                             dsc_flight_reg1_complete;           //descriptor 1 dma transfer done                                
+reg                             dsc_flight_reg1_commit;             //descriptor 1 commit to complete engine done                   
+reg     [ 1 : 0]                dsc_flight_reg1_ch_id;              //descriptor 1 channel ID                                       
+reg     [29 : 0]                dsc_flight_reg1_dsc_id;             //descriptor 1 ID                                               
+reg     [ 6 : 0]                dsc_flight_reg1_dst_first_be_addr;  //descriptor 1 dest first beat unaligned byte addr
+reg     [ 6 : 0]                dsc_flight_reg1_dst_last_be_addr;   //descriptor 1 dest last beat unaligned byte addr 
+reg     [63 : 0]                dsc_flight_reg1_src_addr;           //descriptor 1 source AXI read addr                             
+reg     [63 : 0]                dsc_flight_reg1_dst_addr;           //descriptor 1 destination local write addr                     
+reg     [27 : 0]                dsc_flight_reg1_src_length;         //descriptor 1 source read length left                          
+reg     [27 : 0]                dsc_flight_reg1_dst_length;         //descriptor 1 destination write length left                    
+reg     [27 : 0]                dsc_flight_reg1_rsp_length;         //descriptor 1 local write resp length left                     
+reg     [ 1 : 0]                dsc_flight_reg1_src_err;            //descriptor 1 source AXI read error                            
+reg                             dsc_flight_reg1_rsp_err;            //descriptor 1 local write resp error
+reg     [63 : 0]                dsc_flight_reg1_src_err_addr;       //descriptor 1 first source AXI read error addr
+reg     [63 : 0]                dsc_flight_reg1_rsp_err_addr;       //descriptor 1 first local write resp error addr
 //----- Descriptor 1 ctrl signals -----                                                                                            
-wire                                dsc_flight_reg1_clear;              //descriptor 1 register set clear
-wire                                dsc_flight_reg1_write;              //descriptor 1 register set write
-wire                                dsc_flight_reg1_src_match;          //descriptor 1 register set match for source info update
-reg                                 dsc_flight_reg1_src_update;         //descriptor 1 register set source info update
-wire                                dsc_flight_reg1_src_err_update;     //descriptor 1 register set source error info update
-reg                                 dsc_flight_reg1_src_err_happen;     //descriptor 1 source AXI read error happened
-wire                                dsc_flight_reg1_dst_use;            //descriptor 1 register set dest info to use for lcl write cmd
-wire                                dsc_flight_reg1_ch0_dst_data_valid; //descriptor 1 channel 0 dest write data valid
-wire                                dsc_flight_reg1_ch1_dst_data_valid; //descriptor 1 channel 1 dest write data valid
-wire                                dsc_flight_reg1_ch2_dst_data_valid; //descriptor 1 channel 2 dest write data valid
-wire                                dsc_flight_reg1_ch3_dst_data_valid; //descriptor 1 channel 3 dest write data valid
-wire                                dsc_flight_reg1_dst_match;          //descriptor 1 register set match for dest info update
-reg                                 dsc_flight_reg1_dst_update;         //descriptor 1 register set dest info update
-wire                                dsc_flight_reg1_dst_first_beat;     //descriptor 1 dest write first beat
-wire                                dsc_flight_reg1_dst_last_beat;      //descriptor 1 dest write last beat
-wire    [127: 0]                    dsc_flight_reg1_dst_first_beat_be;  //descriptor 1 dest write first beat byte enable
-wire    [127: 0]                    dsc_flight_reg1_dst_last_beat_be;   //descriptor 1 dest write last beat byte enable
-wire                                dsc_flight_reg1_dst_large;          //descriptor 1 dest unalign addr larger than src
-wire                                dsc_flight_reg1_dst_equal;          //descriptor 1 dest unalign addr equal with src
-wire    [ 6 : 0]                    dsc_flight_reg1_dst_src_diff;       //descriptor 1 unaligned dest addr and src addr difference
-wire                                dsc_flight_reg1_rsp_err_update;     //descriptor 1 register set lcl write resp error info update
-wire                                dsc_flight_reg1_rsp_match;          //descriptor 1 register set match for write resp info update
-reg                                 dsc_flight_reg1_rsp_update;         //descriptor 1 register set write resp info update
-wire                                dsc_flight_reg1_commit_ready;       //descriptor 1 ready to commit to complete engine
-wire                                dsc_flight_reg1_sts_err;            //descriptor 1 status error
-wire    [511: 0]                    dsc_flight_reg1_commit_data;        //descriptor 1 data commit to complete engine
-wire                                dsc_flight_reg1_commit_update;      //descriptor 1 commit bit to write into register commit       
+wire                            dsc_flight_reg1_clear;              //descriptor 1 register set clear
+wire                            dsc_flight_reg1_write;              //descriptor 1 register set write
+wire                            dsc_flight_reg1_src_match;          //descriptor 1 register set match for source info update
+reg                             dsc_flight_reg1_src_update;         //descriptor 1 register set source info update
+wire                            dsc_flight_reg1_src_err_update;     //descriptor 1 register set source error info update
+reg                             dsc_flight_reg1_src_err_happen;     //descriptor 1 source AXI read error happened
+wire                            dsc_flight_reg1_dst_use;            //descriptor 1 register set dest info to use for lcl write cmd
+wire                            dsc_flight_reg1_dst_match;          //descriptor 1 register set match for dest info update
+reg                             dsc_flight_reg1_dst_update;         //descriptor 1 register set dest info update
+wire                            dsc_flight_reg1_dst_first_beat;     //descriptor 1 dest write first beat
+wire                            dsc_flight_reg1_dst_last_beat;      //descriptor 1 dest write last beat
+wire    [127: 0]                dsc_flight_reg1_dst_first_beat_be;  //descriptor 1 dest write first beat byte enable
+wire    [127: 0]                dsc_flight_reg1_dst_last_beat_be;   //descriptor 1 dest write last beat byte enable
+wire                            dsc_flight_reg1_rsp_err_update;     //descriptor 1 register set lcl write resp error info update
+wire                            dsc_flight_reg1_rsp_match;          //descriptor 1 register set match for write resp info update
+reg                             dsc_flight_reg1_rsp_update;         //descriptor 1 register set write resp info update
+wire                            dsc_flight_reg1_commit_ready;       //descriptor 1 ready to commit to complete engine
+wire                            dsc_flight_reg1_sts_err;            //descriptor 1 status error
+wire    [511: 0]                dsc_flight_reg1_commit_data;        //descriptor 1 data commit to complete engine
+wire                            dsc_flight_reg1_commit_update;      //descriptor 1 commit bit to write into register commit       
 //----- Descriptor 2 register set -----
-reg                                 dsc_flight_reg2_valid;              //descriptor 2 valid
-reg                                 dsc_flight_reg2_complete;           //descriptor 2 dma transfer done
-reg                                 dsc_flight_reg2_commit;             //descriptor 2 commit to complete engine done
-reg     [ 1 : 0]                    dsc_flight_reg2_ch_id;              //descriptor 2 channel ID
-reg     [29 : 0]                    dsc_flight_reg2_dsc_id;             //descriptor 2 ID 
-reg     [AXI_DATA_BYTE_WIDTH-1 :0]  dsc_flight_reg2_src_first_byte_addr;//descriptor 2 source first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg2_dst_first_byte_addr;//descriptor 2 dest first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg2_dst_last_byte_addr; //descriptor 2 dest last beat unaligned byte addr
-reg     [63 : 0]                    dsc_flight_reg2_src_addr;           //descriptor 2 source AXI read addr
-reg     [63 : 0]                    dsc_flight_reg2_dst_addr;           //descriptor 2 destination local write addr
-reg     [27 : 0]                    dsc_flight_reg2_src_length;         //descriptor 2 source read length left
-reg     [27 : 0]                    dsc_flight_reg2_dst_length;         //descriptor 2 destination write length left
-reg     [27 : 0]                    dsc_flight_reg2_rsp_length;         //descriptor 2 local write resp length left
-reg     [ 1 : 0]                    dsc_flight_reg2_src_err;            //descriptor 2 source AXI read error
-reg                                 dsc_flight_reg2_rsp_err;            //descriptor 2 local write resp error
-reg     [63 : 0]                    dsc_flight_reg2_src_err_addr;       //descriptor 2 first source AXI read error addr
-reg     [63 : 0]                    dsc_flight_reg2_rsp_err_addr;       //descriptor 2 first local write resp error addr
+reg                             dsc_flight_reg2_valid;              //descriptor 2 valid
+reg                             dsc_flight_reg2_intr;               //descriptor 2 interrupt flag
+reg                             dsc_flight_reg2_complete;           //descriptor 2 dma transfer done
+reg                             dsc_flight_reg2_commit;             //descriptor 2 commit to complete engine done
+reg     [ 1 : 0]                dsc_flight_reg2_ch_id;              //descriptor 2 channel ID
+reg     [29 : 0]                dsc_flight_reg2_dsc_id;             //descriptor 2 ID 
+reg     [ 6 : 0]                dsc_flight_reg2_dst_first_be_addr;  //descriptor 2 dest first beat unaligned byte addr
+reg     [ 6 : 0]                dsc_flight_reg2_dst_last_be_addr;   //descriptor 2 dest last beat unaligned byte addr 
+reg     [63 : 0]                dsc_flight_reg2_src_addr;           //descriptor 2 source AXI read addr
+reg     [63 : 0]                dsc_flight_reg2_dst_addr;           //descriptor 2 destination local write addr
+reg     [27 : 0]                dsc_flight_reg2_src_length;         //descriptor 2 source read length left
+reg     [27 : 0]                dsc_flight_reg2_dst_length;         //descriptor 2 destination write length left
+reg     [27 : 0]                dsc_flight_reg2_rsp_length;         //descriptor 2 local write resp length left
+reg     [ 1 : 0]                dsc_flight_reg2_src_err;            //descriptor 2 source AXI read error
+reg                             dsc_flight_reg2_rsp_err;            //descriptor 2 local write resp error
+reg     [63 : 0]                dsc_flight_reg2_src_err_addr;       //descriptor 2 first source AXI read error addr
+reg     [63 : 0]                dsc_flight_reg2_rsp_err_addr;       //descriptor 2 first local write resp error addr
 //----- Descriptor 2 ctrl signals -----                                                                                            
-wire                                dsc_flight_reg2_clear;              //descriptor 2 register set clear
-wire                                dsc_flight_reg2_write;              //descriptor 2 register set write
-wire                                dsc_flight_reg2_src_match;          //descriptor 2 register set match for source info update
-reg                                 dsc_flight_reg2_src_update;         //descriptor 2 register set source info update
-wire                                dsc_flight_reg2_src_err_update;     //descriptor 2 register set source error info update
-reg                                 dsc_flight_reg2_src_err_happen;     //descriptor 2 source AXI read error happened
-wire                                dsc_flight_reg2_dst_use;            //descriptor 2 register set dest info to use for lcl write cmd
-wire                                dsc_flight_reg2_ch0_dst_data_valid; //descriptor 2 channel 0 dest write data valid
-wire                                dsc_flight_reg2_ch1_dst_data_valid; //descriptor 2 channel 1 dest write data valid
-wire                                dsc_flight_reg2_ch2_dst_data_valid; //descriptor 2 channel 2 dest write data valid
-wire                                dsc_flight_reg2_ch3_dst_data_valid; //descriptor 2 channel 3 dest write data valid
-wire                                dsc_flight_reg2_dst_match;          //descriptor 2 register set match for dest info update
-reg                                 dsc_flight_reg2_dst_update;         //descriptor 2 register set dest info update
-wire                                dsc_flight_reg2_dst_first_beat;     //descriptor 2 dest write first beat
-wire                                dsc_flight_reg2_dst_last_beat;      //descriptor 2 dest write last beat
-wire    [127: 0]                    dsc_flight_reg2_dst_first_beat_be;  //descriptor 2 dest write first beat byte enable
-wire    [127: 0]                    dsc_flight_reg2_dst_last_beat_be;   //descriptor 2 dest write last beat byte enable
-wire                                dsc_flight_reg2_dst_large;          //descriptor 2 dest unalign addr larger than src
-wire                                dsc_flight_reg2_dst_equal;          //descriptor 2 dest unalign addr equal with src
-wire    [ 6 : 0]                    dsc_flight_reg2_dst_src_diff;       //descriptor 2 unaligned dest addr and src addr difference
-wire                                dsc_flight_reg2_rsp_err_update;     //descriptor 2 register set lcl write resp error info update
-wire                                dsc_flight_reg2_rsp_match;          //descriptor 2 register set match for write resp info update
-reg                                 dsc_flight_reg2_rsp_update;         //descriptor 2 register set write resp info update
-wire                                dsc_flight_reg2_commit_ready;       //descriptor 2 ready to commit to complete engine
-wire                                dsc_flight_reg2_sts_err;            //descriptor 2 status error
-wire    [511: 0]                    dsc_flight_reg2_commit_data;        //descriptor 2 data commit to complete engine
-wire                                dsc_flight_reg2_commit_update;      //descriptor 2 commit bit to write into register commit       
+wire                            dsc_flight_reg2_clear;              //descriptor 2 register set clear
+wire                            dsc_flight_reg2_write;              //descriptor 2 register set write
+wire                            dsc_flight_reg2_src_match;          //descriptor 2 register set match for source info update
+reg                             dsc_flight_reg2_src_update;         //descriptor 2 register set source info update
+wire                            dsc_flight_reg2_src_err_update;     //descriptor 2 register set source error info update
+reg                             dsc_flight_reg2_src_err_happen;     //descriptor 2 source AXI read error happened
+wire                            dsc_flight_reg2_dst_use;            //descriptor 2 register set dest info to use for lcl write cmd
+wire                            dsc_flight_reg2_dst_match;          //descriptor 2 register set match for dest info update
+reg                             dsc_flight_reg2_dst_update;         //descriptor 2 register set dest info update
+wire                            dsc_flight_reg2_dst_first_beat;     //descriptor 2 dest write first beat
+wire                            dsc_flight_reg2_dst_last_beat;      //descriptor 2 dest write last beat
+wire    [127: 0]                dsc_flight_reg2_dst_first_beat_be;  //descriptor 2 dest write first beat byte enable
+wire    [127: 0]                dsc_flight_reg2_dst_last_beat_be;   //descriptor 2 dest write last beat byte enable
+wire                            dsc_flight_reg2_rsp_err_update;     //descriptor 2 register set lcl write resp error info update
+wire                            dsc_flight_reg2_rsp_match;          //descriptor 2 register set match for write resp info update
+reg                             dsc_flight_reg2_rsp_update;         //descriptor 2 register set write resp info update
+wire                            dsc_flight_reg2_commit_ready;       //descriptor 2 ready to commit to complete engine
+wire                            dsc_flight_reg2_sts_err;            //descriptor 2 status error
+wire    [511: 0]                dsc_flight_reg2_commit_data;        //descriptor 2 data commit to complete engine
+wire                            dsc_flight_reg2_commit_update;      //descriptor 2 commit bit to write into register commit       
 //----- Descriptor 3 register set -----
-reg                                 dsc_flight_reg3_valid;              //descriptor 3 valid
-reg                                 dsc_flight_reg3_complete;           //descriptor 3 dma transfer done
-reg                                 dsc_flight_reg3_commit;             //descriptor 3 commit to complete engine done
-reg     [ 1 : 0]                    dsc_flight_reg3_ch_id;              //descriptor 3 channel ID
-reg     [29 : 0]                    dsc_flight_reg3_dsc_id;             //descriptor 3 ID 
-reg     [AXI_DATA_BYTE_WIDTH-1 :0]  dsc_flight_reg3_src_first_byte_addr;//descriptor 3 source first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg3_dst_first_byte_addr;//descriptor 3 dest first beat unaligned byte addr
-reg     [ 6 : 0]                    dsc_flight_reg3_dst_last_byte_addr; //descriptor 3 dest last beat unaligned byte addr
-reg     [63 : 0]                    dsc_flight_reg3_src_addr;           //descriptor 3 source AXI read addr
-reg     [63 : 0]                    dsc_flight_reg3_dst_addr;           //descriptor 3 destination local write addr
-reg     [27 : 0]                    dsc_flight_reg3_src_length;         //descriptor 3 source read length left
-reg     [27 : 0]                    dsc_flight_reg3_dst_length;         //descriptor 3 destination write length left
-reg     [27 : 0]                    dsc_flight_reg3_rsp_length;         //descriptor 3 local write resp length left
-reg     [ 1 : 0]                    dsc_flight_reg3_src_err;            //descriptor 3 source AXI read error
-reg                                 dsc_flight_reg3_rsp_err;            //descriptor 3 local write resp error
-reg     [63 : 0]                    dsc_flight_reg3_src_err_addr;       //descriptor 3 first source AXI read error addr
-reg     [63 : 0]                    dsc_flight_reg3_rsp_err_addr;       //descriptor 3 first local write resp error addr
+reg                             dsc_flight_reg3_valid;              //descriptor 3 valid
+reg                             dsc_flight_reg3_intr;               //descriptor 3 interrupt flag
+reg                             dsc_flight_reg3_complete;           //descriptor 3 dma transfer done
+reg                             dsc_flight_reg3_commit;             //descriptor 3 commit to complete engine done
+reg     [ 1 : 0]                dsc_flight_reg3_ch_id;              //descriptor 3 channel ID
+reg     [29 : 0]                dsc_flight_reg3_dsc_id;             //descriptor 3 ID 
+reg     [ 6 : 0]                dsc_flight_reg3_dst_first_be_addr;  //descriptor 3 dest first beat unaligned byte addr
+reg     [ 6 : 0]                dsc_flight_reg3_dst_last_be_addr;   //descriptor 3 dest last beat unaligned byte addr 
+reg     [63 : 0]                dsc_flight_reg3_src_addr;           //descriptor 3 source AXI read addr
+reg     [63 : 0]                dsc_flight_reg3_dst_addr;           //descriptor 3 destination local write addr
+reg     [27 : 0]                dsc_flight_reg3_src_length;         //descriptor 3 source read length left
+reg     [27 : 0]                dsc_flight_reg3_dst_length;         //descriptor 3 destination write length left
+reg     [27 : 0]                dsc_flight_reg3_rsp_length;         //descriptor 3 local write resp length left
+reg     [ 1 : 0]                dsc_flight_reg3_src_err;            //descriptor 3 source AXI read error
+reg                             dsc_flight_reg3_rsp_err;            //descriptor 3 local write resp error
+reg     [63 : 0]                dsc_flight_reg3_src_err_addr;       //descriptor 3 first source AXI read error addr
+reg     [63 : 0]                dsc_flight_reg3_rsp_err_addr;       //descriptor 3 first local write resp error addr
 //----- Descriptor 3 ctrl signals -----                                                                                            
-wire                                dsc_flight_reg3_clear;              //descriptor 3 register set clear
-wire                                dsc_flight_reg3_write;              //descriptor 3 register set write
-wire                                dsc_flight_reg3_src_match;          //descriptor 3 register set match for source info update
-reg                                 dsc_flight_reg3_src_update;         //descriptor 3 register set source info update
-wire                                dsc_flight_reg3_src_err_update;     //descriptor 3 register set source error info update
-reg                                 dsc_flight_reg3_src_err_happen;     //descriptor 3 source AXI read error happened
-wire                                dsc_flight_reg3_dst_use;            //descriptor 3 register set dest info to use for lcl write cmd
-wire                                dsc_flight_reg3_ch0_dst_data_valid; //descriptor 3 channel 0 dest write data valid
-wire                                dsc_flight_reg3_ch1_dst_data_valid; //descriptor 3 channel 1 dest write data valid
-wire                                dsc_flight_reg3_ch2_dst_data_valid; //descriptor 3 channel 2 dest write data valid
-wire                                dsc_flight_reg3_ch3_dst_data_valid; //descriptor 3 channel 3 dest write data valid
-wire                                dsc_flight_reg3_dst_match;          //descriptor 3 register set match for dest info update
-reg                                 dsc_flight_reg3_dst_update;         //descriptor 3 register set dest info update
-wire                                dsc_flight_reg3_dst_first_beat;     //descriptor 3 dest write first beat
-wire                                dsc_flight_reg3_dst_last_beat;      //descriptor 3 dest write last beat
-wire    [127: 0]                    dsc_flight_reg3_dst_first_beat_be;  //descriptor 3 dest write first beat byte enable
-wire    [127: 0]                    dsc_flight_reg3_dst_last_beat_be;   //descriptor 3 dest write last beat byte enable
-wire                                dsc_flight_reg3_dst_large;          //descriptor 3 dest unalign addr larger than src
-wire                                dsc_flight_reg3_dst_equal;          //descriptor 3 dest unalign addr equal with src
-wire    [ 6 : 0]                    dsc_flight_reg3_dst_src_diff;       //descriptor 3 unaligned dest addr and src addr difference
-wire                                dsc_flight_reg3_rsp_err_update;     //descriptor 3 register set lcl write resp error info update
-wire                                dsc_flight_reg3_rsp_match;          //descriptor 3 register set match for write resp info update
-reg                                 dsc_flight_reg3_rsp_update;         //descriptor 3 register set write resp info update
-wire                                dsc_flight_reg3_commit_ready;       //descriptor 3 ready to commit to complete engine
-wire                                dsc_flight_reg3_sts_err;            //descriptor 3 status error
-wire    [511: 0]                    dsc_flight_reg3_commit_data;        //descriptor 3 data commit to complete engine
-wire                                dsc_flight_reg3_commit_update;      //descriptor 3 commit bit to write into register commit       
+wire                            dsc_flight_reg3_clear;              //descriptor 3 register set clear
+wire                            dsc_flight_reg3_write;              //descriptor 3 register set write
+wire                            dsc_flight_reg3_src_match;          //descriptor 3 register set match for source info update
+reg                             dsc_flight_reg3_src_update;         //descriptor 3 register set source info update
+wire                            dsc_flight_reg3_src_err_update;     //descriptor 3 register set source error info update
+reg                             dsc_flight_reg3_src_err_happen;     //descriptor 3 source AXI read error happened
+wire                            dsc_flight_reg3_dst_use;            //descriptor 3 register set dest info to use for lcl write cmd
+wire                            dsc_flight_reg3_dst_match;          //descriptor 3 register set match for dest info update
+reg                             dsc_flight_reg3_dst_update;         //descriptor 3 register set dest info update
+wire                            dsc_flight_reg3_dst_first_beat;     //descriptor 3 dest write first beat
+wire                            dsc_flight_reg3_dst_last_beat;      //descriptor 3 dest write last beat
+wire    [127: 0]                dsc_flight_reg3_dst_first_beat_be;  //descriptor 3 dest write first beat byte enable
+wire    [127: 0]                dsc_flight_reg3_dst_last_beat_be;   //descriptor 3 dest write last beat byte enable
+wire                            dsc_flight_reg3_rsp_err_update;     //descriptor 3 register set lcl write resp error info update
+wire                            dsc_flight_reg3_rsp_match;          //descriptor 3 register set match for write resp info update
+reg                             dsc_flight_reg3_rsp_update;         //descriptor 3 register set write resp info update
+wire                            dsc_flight_reg3_commit_ready;       //descriptor 3 ready to commit to complete engine
+wire                            dsc_flight_reg3_sts_err;            //descriptor 3 status error
+wire    [511: 0]                dsc_flight_reg3_commit_data;        //descriptor 3 data commit to complete engine
+wire                            dsc_flight_reg3_commit_update;      //descriptor 3 commit bit to write into register commit       
 //----- Descriptor register sets ctrl signals -----                                                                                            
-wire                                dsc_flight_reg_avail;               //descriptor register sets available
-wire    [ 3 : 0]                    dsc_flight_reg_src_match;           //descriptor register sets match for source info update
-wire    [ 3 : 0]                    dsc_flight_reg_dst_match;           //descriptor register sets match for dest info update
-wire    [ 3 : 0]                    dsc_flight_reg_rsp_match;           //descriptor register sets match for lcl write resp info update
-reg                                 dsc_flight_rlast;                   //descriptor last AXI read data
+wire                            dsc_flight_reg_avail;               //descriptor register sets available
+wire    [ 3 : 0]                dsc_flight_reg_src_match;           //descriptor register sets match for source info update
+wire    [ 3 : 0]                dsc_flight_reg_dst_match;           //descriptor register sets match for dest info update
+wire    [ 3 : 0]                dsc_flight_reg_rsp_match;           //descriptor register sets match for lcl write resp info update
+reg                             dsc_flight_rlast;                   //descriptor last AXI read data
 //--- AXI read command ---
-wire    [63 : 0]                    dsc_src_end_addr;                   //AXI read end addr
-wire    [63 : 0]                    dsc_src_end_align_addr;             //AXI read end aligned addr
-reg     [63 : 0]                    dsc_src_end_align_addr_l;           //AXI read end aligned addr latch
-wire    [63 : 0]                    dsc_src_nxt_4k_addr;                //AXI read next 4K boundary addr
-reg     [63 : 0]                    dsc_src_cur_axi_start_addr;         //current AXI read start addr
-wire    [63 : 0]                    dsc_src_cur_axi_end_addr;           //current AXI read end addr
-wire    [ 7 : 0]                    dsc_src_cur_axi_length;             //current AXI read length
-wire                                dsc_src_last_cmd;                   //descriptor last AXI read cmd
-wire                                dsc_src_last_cmd_done;              //descriptor last AXI read cmd issue done
+wire    [63 : 0]                dsc_src_end_addr;                   //AXI read end addr
+wire    [63 : 0]                dsc_src_end_align_addr;             //AXI read end aligned addr
+reg     [63 : 0]                dsc_src_end_align_addr_l;           //AXI read end aligned addr latch
+wire    [63 : 0]                dsc_src_nxt_4k_addr;                //AXI read next 4K boundary addr
+reg     [63 : 0]                dsc_src_cur_axi_start_addr;         //current AXI read start addr
+wire    [63 : 0]                dsc_src_cur_axi_end_addr;           //current AXI read end addr
+wire    [ 7 : 0]                dsc_src_cur_axi_length;             //current AXI read length
+wire                            dsc_src_last_cmd;                   //descriptor last AXI read cmd
+wire                            dsc_src_last_cmd_done;              //descriptor last AXI read cmd issue done
 //--- AXI read data ---
-wire    [AXI_DATA_WIDTH-1 : 0]      rdata_fifo_din;                     //AXI read data FIFO in
-wire                                rdata_fifo_wr_en;                   //AXI read data FIFO write enable
-wire                                rdata_fifo_rd_en;                   //AXI read data FIFO read enable
-wire                                rdata_fifo_valid;                   //AXI read data FIFO out valid
-wire    [AXI_DATA_WIDTH-1 : 0]      rdata_fifo_dout;                    //AXI read data FIFO out
-wire                                rdata_fifo_full;                    //AXI read data FIFO full
-wire                                rdata_fifo_empty;                   //AXI read data FIFO empty
-wire    [8 : 0]                     rtag_fifo_din;                      //AXI read data tag FIFO in
-wire    [8 : 0]                     rtag_fifo_dout;                     //AXI read data tag FIFO out
-wire    [AXI_ID_WIDTH-1 : 0 ]       rtag_fifo_axi_rid;                  //AXI read data tag FIFO out AXI rid
-wire    [1 : 0 ]                    rtag_fifo_axi_rresp;                //AXI read data tag FIFO out AXI rresp
-wire    [AXI_RUSER_WIDTH-1 : 0 ]    rtag_fifo_axi_ruser;                //AXI read data tag FIFO out AXI ruser
-wire                                rtag_fifo_dsc_rlast;                //AXI read data tag FIFO out descriptor last read
+wire    [AXI_DATA_WIDTH-1 : 0]  rdata_fifo_din;                     //AXI read data FIFO in
+wire                            rdata_fifo_wr_en;                   //AXI read data FIFO write enable
+wire                            rdata_fifo_rd_en;                   //AXI read data FIFO read enable
+wire                            rdata_fifo_valid;                   //AXI read data FIFO out valid
+wire    [AXI_DATA_WIDTH-1 : 0]  rdata_fifo_dout;                    //AXI read data FIFO out
+wire                            rdata_fifo_full;                    //AXI read data FIFO full
+wire                            rdata_fifo_empty;                   //AXI read data FIFO empty
+wire    [8 : 0]                 rtag_fifo_din;                      //AXI read data tag FIFO in
+wire    [8 : 0]                 rtag_fifo_dout;                     //AXI read data tag FIFO out
+wire    [AXI_ID_WIDTH-1 : 0 ]   rtag_fifo_axi_rid;                  //AXI read data tag FIFO out AXI rid
+wire    [1 : 0 ]                rtag_fifo_axi_rresp;                //AXI read data tag FIFO out AXI rresp
+wire    [AXI_RUSER_WIDTH-1 : 0 ]rtag_fifo_axi_ruser;                //AXI read data tag FIFO out AXI ruser
+wire                            rtag_fifo_dsc_rlast;                //AXI read data tag FIFO out descriptor last read
 //--- Local write command ---
-wire                                lcl_wr_done;                        //local write done
-wire                                lcl_wr_data_valid;                  //local write data valid
+wire                            lcl_wr_done;                        //local write done
+wire                            lcl_wr_data_valid;                  //local write data valid
+wire    [11 : 0]                lcl_wr_be_ctrl;                     //local write byte enable control
 //--- Descriptor completion ---
-wire                                dsc_cmp_reg0_ch0_valid;             //descriptor 0 is channel 0, completion valid 
-wire                                dsc_cmp_reg0_ch1_valid;             //descriptor 0 is channel 1, completion valid
-wire                                dsc_cmp_reg0_ch2_valid;             //descriptor 0 is channel 2, completion valid
-wire                                dsc_cmp_reg0_ch3_valid;             //descriptor 0 is channel 3, completion valid
-wire                                dsc_cmp_reg1_ch0_valid;             //descriptor 1 is channel 0, completion valid
-wire                                dsc_cmp_reg1_ch1_valid;             //descriptor 1 is channel 1, completion valid
-wire                                dsc_cmp_reg1_ch2_valid;             //descriptor 1 is channel 2, completion valid
-wire                                dsc_cmp_reg1_ch3_valid;             //descriptor 1 is channel 3, completion valid
-wire                                dsc_cmp_reg2_ch0_valid;             //descriptor 2 is channel 0, completion valid
-wire                                dsc_cmp_reg2_ch1_valid;             //descriptor 2 is channel 1, completion valid
-wire                                dsc_cmp_reg2_ch2_valid;             //descriptor 2 is channel 2, completion valid
-wire                                dsc_cmp_reg2_ch3_valid;             //descriptor 2 is channel 3, completion valid
-wire                                dsc_cmp_reg3_ch0_valid;             //descriptor 3 is channel 0, completion valid
-wire                                dsc_cmp_reg3_ch1_valid;             //descriptor 3 is channel 1, completion valid
-wire                                dsc_cmp_reg3_ch2_valid;             //descriptor 3 is channel 2, completion valid
-wire                                dsc_cmp_reg3_ch3_valid;             //descriptor 3 is channel 3, completion valid
+wire                            dsc_cmp_reg0_ch0_valid;             //descriptor 0 is channel 0, completion valid 
+wire                            dsc_cmp_reg0_ch1_valid;             //descriptor 0 is channel 1, completion valid
+wire                            dsc_cmp_reg0_ch2_valid;             //descriptor 0 is channel 2, completion valid
+wire                            dsc_cmp_reg0_ch3_valid;             //descriptor 0 is channel 3, completion valid
+wire                            dsc_cmp_reg1_ch0_valid;             //descriptor 1 is channel 0, completion valid
+wire                            dsc_cmp_reg1_ch1_valid;             //descriptor 1 is channel 1, completion valid
+wire                            dsc_cmp_reg1_ch2_valid;             //descriptor 1 is channel 2, completion valid
+wire                            dsc_cmp_reg1_ch3_valid;             //descriptor 1 is channel 3, completion valid
+wire                            dsc_cmp_reg2_ch0_valid;             //descriptor 2 is channel 0, completion valid
+wire                            dsc_cmp_reg2_ch1_valid;             //descriptor 2 is channel 1, completion valid
+wire                            dsc_cmp_reg2_ch2_valid;             //descriptor 2 is channel 2, completion valid
+wire                            dsc_cmp_reg2_ch3_valid;             //descriptor 2 is channel 3, completion valid
+wire                            dsc_cmp_reg3_ch0_valid;             //descriptor 3 is channel 0, completion valid
+wire                            dsc_cmp_reg3_ch1_valid;             //descriptor 3 is channel 1, completion valid
+wire                            dsc_cmp_reg3_ch2_valid;             //descriptor 3 is channel 2, completion valid
+wire                            dsc_cmp_reg3_ch3_valid;             //descriptor 3 is channel 3, completion valid
 //------------------------------------------------------------------------------
 // Read FSM
 //------------------------------------------------------------------------------
@@ -414,6 +388,7 @@ assign dsc_ready      = ~dsc_fifo_full;
 // standard fifo: data is valid next cycle after read enable
 assign dsc_fifo_rd_ready = ~dsc_fifo_empty & dsc_flight_reg_avail;
 assign dsc_fifo_rd_en = rd_fsm_state_read_fifo;
+assign dsc_intr     = dsc_fifo_valid ? dsc_fifo_dout[1] : 1'b0;
 assign dsc_src_addr = dsc_fifo_valid ? dsc_fifo_dout[127: 64] : 64'b0;
 assign dsc_dst_addr = dsc_fifo_valid ? dsc_fifo_dout[191:128] : 64'b0;
 assign dsc_length   = dsc_fifo_valid ? dsc_fifo_dout[ 59: 32] : 28'b0;
@@ -512,38 +487,38 @@ assign axi_arcache  = 4'b0;
 always@(posedge clk or negedge rst_n) begin
   if(~rst_n) begin
     dsc_flight_reg0_valid               <= 1'b0;
+    dsc_flight_reg0_intr                <= 1'b0;
     dsc_flight_reg0_ch_id               <= 2'b0;
     dsc_flight_reg0_dsc_id              <= 30'b0;
-    dsc_flight_reg0_src_first_byte_addr <= {AXI_DATA_BYTE_WIDTH{1'b0}};
-    dsc_flight_reg0_dst_first_byte_addr <= 7'b0;
-    dsc_flight_reg0_dst_last_byte_addr  <= 7'b0;
+    dsc_flight_reg0_dst_first_be_addr   <= 7'b0;
+    dsc_flight_reg0_dst_last_be_addr    <= 7'b0;
     dsc_flight_reg0_rsp_length          <= 28'b0;
   end
   else if(dsc_flight_reg0_write) begin
     dsc_flight_reg0_valid               <= 1'b1;
+    dsc_flight_reg0_intr                <= dsc_intr;
     dsc_flight_reg0_ch_id               <= dsc_channel_id;
     dsc_flight_reg0_dsc_id              <= dsc_descriptor_id;
-    dsc_flight_reg0_src_first_byte_addr <= dsc_src_addr[AXI_DATA_BYTE_WIDTH-1 : 0];
-    dsc_flight_reg0_dst_first_byte_addr <= dsc_dst_addr[6:0];
-    dsc_flight_reg0_dst_last_byte_addr  <= dsc_dst_end_addr[6:0];
+    dsc_flight_reg0_dst_first_be_addr   <= dsc_dst_addr[6:0];
+    dsc_flight_reg0_dst_last_be_addr    <= dsc_dst_end_addr[6:0];
     dsc_flight_reg0_rsp_length          <= dsc_dst_align_length;
   end
   else if(dsc_flight_reg0_clear) begin
     dsc_flight_reg0_valid               <= dsc_flight_reg1_valid;       
+    dsc_flight_reg0_intr                <= dsc_flight_reg1_intr;
     dsc_flight_reg0_ch_id               <= dsc_flight_reg1_ch_id;       
     dsc_flight_reg0_dsc_id              <= dsc_flight_reg1_dsc_id;      
-    dsc_flight_reg0_src_first_byte_addr <= dsc_flight_reg1_src_first_byte_addr;
-    dsc_flight_reg0_dst_first_byte_addr <= dsc_flight_reg1_dst_first_byte_addr;
-    dsc_flight_reg0_dst_last_byte_addr  <= dsc_flight_reg1_dst_last_byte_addr;
+    dsc_flight_reg0_dst_first_be_addr   <= dsc_flight_reg1_dst_first_be_addr;
+    dsc_flight_reg0_dst_last_be_addr    <= dsc_flight_reg1_dst_last_be_addr;
     dsc_flight_reg0_rsp_length          <= dsc_flight_reg1_rsp_length;  
   end
   else begin
     dsc_flight_reg0_valid               <= dsc_flight_reg0_valid;       
+    dsc_flight_reg0_intr                <= dsc_flight_reg0_intr;
     dsc_flight_reg0_ch_id               <= dsc_flight_reg0_ch_id;       
     dsc_flight_reg0_dsc_id              <= dsc_flight_reg0_dsc_id;      
-    dsc_flight_reg0_src_first_byte_addr <= dsc_flight_reg0_src_first_byte_addr;
-    dsc_flight_reg0_dst_first_byte_addr <= dsc_flight_reg0_dst_first_byte_addr;
-    dsc_flight_reg0_dst_last_byte_addr  <= dsc_flight_reg0_dst_last_byte_addr;
+    dsc_flight_reg0_dst_first_be_addr   <= dsc_flight_reg0_dst_first_be_addr;
+    dsc_flight_reg0_dst_last_be_addr    <= dsc_flight_reg0_dst_last_be_addr;
     dsc_flight_reg0_rsp_length          <= dsc_flight_reg0_rsp_length;  
   end
 end
@@ -551,38 +526,38 @@ end
 always@(posedge clk or negedge rst_n) begin
   if(~rst_n) begin
     dsc_flight_reg1_valid               <= 1'b0;
+    dsc_flight_reg1_intr                <= 1'b0;
     dsc_flight_reg1_ch_id               <= 2'b0;
     dsc_flight_reg1_dsc_id              <= 30'b0;
-    dsc_flight_reg1_src_first_byte_addr <= {AXI_DATA_BYTE_WIDTH{1'b0}};
-    dsc_flight_reg1_dst_first_byte_addr <= 7'b0;
-    dsc_flight_reg1_dst_last_byte_addr  <= 7'b0;
+    dsc_flight_reg1_dst_first_be_addr   <= 7'b0;
+    dsc_flight_reg1_dst_last_be_addr    <= 7'b0;
     dsc_flight_reg1_rsp_length          <= 28'b0;
   end
   else if(dsc_flight_reg1_write) begin
     dsc_flight_reg1_valid               <= 1'b1;
+    dsc_flight_reg1_intr                <= dsc_intr;
     dsc_flight_reg1_ch_id               <= dsc_channel_id;
     dsc_flight_reg1_dsc_id              <= dsc_descriptor_id;
-    dsc_flight_reg1_src_first_byte_addr <= dsc_src_addr[AXI_DATA_BYTE_WIDTH-1 : 0];
-    dsc_flight_reg1_dst_first_byte_addr <= dsc_dst_addr[6:0];
-    dsc_flight_reg1_dst_last_byte_addr  <= dsc_dst_end_addr[6:0];
+    dsc_flight_reg1_dst_first_be_addr   <= dsc_dst_addr[6:0];
+    dsc_flight_reg1_dst_last_be_addr    <= dsc_dst_end_addr[6:0];
     dsc_flight_reg1_rsp_length          <= dsc_dst_align_length;
   end
   else if(dsc_flight_reg1_clear | dsc_flight_reg0_clear) begin
     dsc_flight_reg1_valid               <= dsc_flight_reg2_valid;       
+    dsc_flight_reg1_intr                <= dsc_flight_reg2_intr;
     dsc_flight_reg1_ch_id               <= dsc_flight_reg2_ch_id;       
     dsc_flight_reg1_dsc_id              <= dsc_flight_reg2_dsc_id;      
-    dsc_flight_reg1_src_first_byte_addr <= dsc_flight_reg2_src_first_byte_addr;
-    dsc_flight_reg1_dst_first_byte_addr <= dsc_flight_reg2_dst_first_byte_addr;
-    dsc_flight_reg1_dst_last_byte_addr  <= dsc_flight_reg2_dst_last_byte_addr;
+    dsc_flight_reg1_dst_first_be_addr   <= dsc_flight_reg2_dst_first_be_addr;
+    dsc_flight_reg1_dst_last_be_addr    <= dsc_flight_reg2_dst_last_be_addr;
     dsc_flight_reg1_rsp_length          <= dsc_flight_reg2_rsp_length;  
   end
   else begin
     dsc_flight_reg1_valid               <= dsc_flight_reg1_valid;       
+    dsc_flight_reg1_intr                <= dsc_flight_reg1_intr;
     dsc_flight_reg1_ch_id               <= dsc_flight_reg1_ch_id;       
     dsc_flight_reg1_dsc_id              <= dsc_flight_reg1_dsc_id;      
-    dsc_flight_reg1_src_first_byte_addr <= dsc_flight_reg1_src_first_byte_addr;
-    dsc_flight_reg1_dst_first_byte_addr <= dsc_flight_reg1_dst_first_byte_addr;
-    dsc_flight_reg1_dst_last_byte_addr  <= dsc_flight_reg1_dst_last_byte_addr;
+    dsc_flight_reg1_dst_first_be_addr   <= dsc_flight_reg1_dst_first_be_addr;
+    dsc_flight_reg1_dst_last_be_addr    <= dsc_flight_reg1_dst_last_be_addr;
     dsc_flight_reg1_rsp_length          <= dsc_flight_reg1_rsp_length;  
   end
 end
@@ -590,38 +565,38 @@ end
 always@(posedge clk or negedge rst_n) begin
   if(~rst_n) begin
     dsc_flight_reg2_valid               <= 1'b0;
+    dsc_flight_reg2_intr                <= 1'b0;
     dsc_flight_reg2_ch_id               <= 2'b0;
     dsc_flight_reg2_dsc_id              <= 30'b0;
-    dsc_flight_reg2_src_first_byte_addr <= {AXI_DATA_BYTE_WIDTH{1'b0}};
-    dsc_flight_reg2_dst_first_byte_addr <= 7'b0;
-    dsc_flight_reg2_dst_last_byte_addr  <= 7'b0;
+    dsc_flight_reg2_dst_first_be_addr   <= 7'b0;
+    dsc_flight_reg2_dst_last_be_addr    <= 7'b0;
     dsc_flight_reg2_rsp_length          <= 28'b0;
   end
   else if(dsc_flight_reg2_write) begin
     dsc_flight_reg2_valid               <= 1'b1;
+    dsc_flight_reg2_intr                <= dsc_intr;
     dsc_flight_reg2_ch_id               <= dsc_channel_id;
     dsc_flight_reg2_dsc_id              <= dsc_descriptor_id;
-    dsc_flight_reg2_src_first_byte_addr <= dsc_src_addr[AXI_DATA_BYTE_WIDTH-1 : 0];
-    dsc_flight_reg2_dst_first_byte_addr <= dsc_dst_addr[6:0];
-    dsc_flight_reg2_dst_last_byte_addr  <= dsc_dst_end_addr[6:0];
+    dsc_flight_reg2_dst_first_be_addr   <= dsc_dst_addr[6:0];
+    dsc_flight_reg2_dst_last_be_addr    <= dsc_dst_end_addr[6:0];
     dsc_flight_reg2_rsp_length          <= dsc_dst_align_length;
   end
   else if(dsc_flight_reg2_clear | dsc_flight_reg1_clear | dsc_flight_reg0_clear) begin
     dsc_flight_reg2_valid               <= dsc_flight_reg3_valid;       
+    dsc_flight_reg2_intr                <= dsc_flight_reg3_intr;
     dsc_flight_reg2_ch_id               <= dsc_flight_reg3_ch_id;       
     dsc_flight_reg2_dsc_id              <= dsc_flight_reg3_dsc_id;      
-    dsc_flight_reg2_src_first_byte_addr <= dsc_flight_reg3_src_first_byte_addr;
-    dsc_flight_reg2_dst_first_byte_addr <= dsc_flight_reg3_dst_first_byte_addr;
-    dsc_flight_reg2_dst_last_byte_addr  <= dsc_flight_reg3_dst_last_byte_addr;
+    dsc_flight_reg2_dst_first_be_addr   <= dsc_flight_reg3_dst_first_be_addr;
+    dsc_flight_reg2_dst_last_be_addr    <= dsc_flight_reg3_dst_last_be_addr;
     dsc_flight_reg2_rsp_length          <= dsc_flight_reg3_rsp_length;  
   end
   else begin
     dsc_flight_reg2_valid               <= dsc_flight_reg2_valid;       
+    dsc_flight_reg2_intr                <= dsc_flight_reg2_intr;
     dsc_flight_reg2_ch_id               <= dsc_flight_reg2_ch_id;       
     dsc_flight_reg2_dsc_id              <= dsc_flight_reg2_dsc_id;      
-    dsc_flight_reg2_src_first_byte_addr <= dsc_flight_reg2_src_first_byte_addr;
-    dsc_flight_reg2_dst_first_byte_addr <= dsc_flight_reg2_dst_first_byte_addr;
-    dsc_flight_reg2_dst_last_byte_addr  <= dsc_flight_reg2_dst_last_byte_addr;
+    dsc_flight_reg2_dst_first_be_addr   <= dsc_flight_reg2_dst_first_be_addr;
+    dsc_flight_reg2_dst_last_be_addr    <= dsc_flight_reg2_dst_last_be_addr;
     dsc_flight_reg2_rsp_length          <= dsc_flight_reg2_rsp_length;  
   end
 end
@@ -629,38 +604,38 @@ end
 always@(posedge clk or negedge rst_n) begin
   if(~rst_n) begin
     dsc_flight_reg3_valid               <= 1'b0;
+    dsc_flight_reg3_intr                <= 1'b0;
     dsc_flight_reg3_ch_id               <= 2'b0;
     dsc_flight_reg3_dsc_id              <= 30'b0;
-    dsc_flight_reg3_src_first_byte_addr <= {AXI_DATA_BYTE_WIDTH{1'b0}};
-    dsc_flight_reg3_dst_first_byte_addr <= 7'b0;
-    dsc_flight_reg3_dst_last_byte_addr  <= 7'b0;
+    dsc_flight_reg3_dst_first_be_addr   <= 7'b0;
+    dsc_flight_reg3_dst_last_be_addr    <= 7'b0;
     dsc_flight_reg3_rsp_length          <= 28'b0;
   end
   else if(dsc_flight_reg3_write) begin
     dsc_flight_reg3_valid               <= 1'b1;
+    dsc_flight_reg3_intr                <= dsc_intr;
     dsc_flight_reg3_ch_id               <= dsc_channel_id;
     dsc_flight_reg3_dsc_id              <= dsc_descriptor_id;
-    dsc_flight_reg3_src_first_byte_addr <= dsc_src_addr[AXI_DATA_BYTE_WIDTH-1 : 0];
-    dsc_flight_reg3_dst_first_byte_addr <= dsc_dst_addr[6:0];
-    dsc_flight_reg3_dst_last_byte_addr  <= dsc_dst_end_addr[6:0];
+    dsc_flight_reg3_dst_first_be_addr   <= dsc_dst_addr[6:0];
+    dsc_flight_reg3_dst_last_be_addr    <= dsc_dst_end_addr[6:0];
     dsc_flight_reg3_rsp_length          <= dsc_dst_align_length;
   end
   else if(dsc_flight_reg3_clear | dsc_flight_reg2_clear | dsc_flight_reg1_clear | dsc_flight_reg0_clear) begin
     dsc_flight_reg3_valid               <= 1'b0;
+    dsc_flight_reg3_intr                <= 1'b0;
     dsc_flight_reg3_ch_id               <= 2'b0;
     dsc_flight_reg3_dsc_id              <= 30'b0;
-    dsc_flight_reg3_src_first_byte_addr <= {AXI_DATA_BYTE_WIDTH{1'b0}};
-    dsc_flight_reg3_dst_first_byte_addr <= 7'b0;
-    dsc_flight_reg3_dst_last_byte_addr  <= 7'b0;
+    dsc_flight_reg3_dst_first_be_addr   <= 7'b0;
+    dsc_flight_reg3_dst_last_be_addr    <= 7'b0;
     dsc_flight_reg3_rsp_length          <= 28'b0;
   end
   else begin
     dsc_flight_reg3_valid               <= dsc_flight_reg3_valid;       
+    dsc_flight_reg3_intr                <= dsc_flight_reg3_intr;
     dsc_flight_reg3_ch_id               <= dsc_flight_reg3_ch_id;       
     dsc_flight_reg3_dsc_id              <= dsc_flight_reg3_dsc_id;      
-    dsc_flight_reg3_src_first_byte_addr <= dsc_flight_reg3_src_first_byte_addr;
-    dsc_flight_reg3_dst_first_byte_addr <= dsc_flight_reg3_dst_first_byte_addr;
-    dsc_flight_reg3_dst_last_byte_addr  <= dsc_flight_reg3_dst_last_byte_addr;
+    dsc_flight_reg3_dst_first_be_addr   <= dsc_flight_reg3_dst_first_be_addr;
+    dsc_flight_reg3_dst_last_be_addr    <= dsc_flight_reg3_dst_last_be_addr;
     dsc_flight_reg3_rsp_length          <= dsc_flight_reg3_rsp_length;  
   end
 end
@@ -955,35 +930,47 @@ assign rtag_fifo_axi_ruser = rtag_fifo_dout[1];
 assign rtag_fifo_dsc_rlast = rtag_fifo_dout[0];
 
 `ifdef ACTION_DATA_WIDTH_512
-// *************************
-// 512 bit AXI data width
-// *************************
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch0_data;           //channel 0 first beat AXI read data
-reg                           axi_rdata_ch0_valid;          //channel 0 first beat AXI read data valid
-wire                          axi_rdata_ch0_wr;             //channel 0 first beat AXI read data update
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch1_data;           //channel 1 first beat AXI read data
-reg                           axi_rdata_ch1_valid;          //channel 1 first beat AXI read data valid
-wire                          axi_rdata_ch1_wr;             //channel 1 first beat AXI read data update
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch2_data;           //channel 2 first beat AXI read data
-reg                           axi_rdata_ch2_valid;          //channel 2 first beat AXI read data valid
-wire                          axi_rdata_ch2_wr;             //channel 2 first beat AXI read data update
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch3_data;           //channel 3 first beat AXI read data
-reg                           axi_rdata_ch3_valid;          //channel 3 first beat AXI read data valid
-wire                          axi_rdata_ch3_wr;             //channel 3 first beat AXI read data update
-wire                          axi_rdata_wr;                 //any channel first beat AXI read data update
-wire                          lcl_ch0_wr_done;              //channel 0 local write done
-wire                          lcl_ch1_wr_done;              //channel 1 local write done
-wire                          lcl_ch2_wr_done;              //channel 2 local write done
-wire                          lcl_ch3_wr_done;              //channel 3 local write done
-wire                          lcl_wr_data_ch0_valid;        //channel 0 local write data(two beats) valid
-wire                          lcl_wr_data_ch1_valid;        //channel 1 local write data(two beats) valid
-wire                          lcl_wr_data_ch2_valid;        //channel 2 local write data(two beats) valid
-wire                          lcl_wr_data_ch3_valid;        //channel 3 local write data(two beats) valid
-wire                          lcl_wr_ch0_dsc_last_half;     //channel 0 last write beat data is first 512b on lcl write data bus
-wire                          lcl_wr_ch1_dsc_last_half;     //channel 1 last write beat data is first 512b on lcl write data bus
-wire                          lcl_wr_ch2_dsc_last_half;     //channel 2 last write beat data is first 512b on lcl write data bus
-wire                          lcl_wr_ch3_dsc_last_half;     //channel 3 last write beat data is first 512b on lcl write data bus
-wire                          lcl_wr_dsc_last_half;         //any channel last write beat data is first 512b on lcl write data bus
+// *****************************
+// begin 512 bit AXI data width
+// *****************************
+reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch0_data;               //channel 0 first beat AXI read data
+reg                           axi_rdata_ch0_valid;              //channel 0 first beat AXI read data valid
+wire                          axi_rdata_ch0_wr;                 //channel 0 first beat AXI read data update
+reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch1_data;               //channel 1 first beat AXI read data
+reg                           axi_rdata_ch1_valid;              //channel 1 first beat AXI read data valid
+wire                          axi_rdata_ch1_wr;                 //channel 1 first beat AXI read data update
+reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch2_data;               //channel 2 first beat AXI read data
+reg                           axi_rdata_ch2_valid;              //channel 2 first beat AXI read data valid
+wire                          axi_rdata_ch2_wr;                 //channel 2 first beat AXI read data update
+reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch3_data;               //channel 3 first beat AXI read data
+reg                           axi_rdata_ch3_valid;              //channel 3 first beat AXI read data valid
+wire                          axi_rdata_ch3_wr;                 //channel 3 first beat AXI read data update
+wire                          axi_rdata_wr;                     //any channel first beat AXI read data update
+wire                          axi_rdata_fifo_ch0_valid;         //AXI read data fifo head data is channel 0
+wire                          axi_rdata_fifo_ch1_valid;         //AXI read data fifo head data is channel 1
+wire                          axi_rdata_fifo_ch2_valid;         //AXI read data fifo head data is channel 2
+wire                          axi_rdata_fifo_ch3_valid;         //AXI read data fifo head data is channel 3
+wire                          lcl_ch0_wr_done;                  //channel 0 local write done
+wire                          lcl_ch1_wr_done;                  //channel 1 local write done
+wire                          lcl_ch2_wr_done;                  //channel 2 local write done
+wire                          lcl_ch3_wr_done;                  //channel 3 local write done
+wire                          lcl_wr_data_ch0_valid;            //channel 0 local write data(two beats) valid
+wire                          lcl_wr_data_ch1_valid;            //channel 1 local write data(two beats) valid
+wire                          lcl_wr_data_ch2_valid;            //channel 2 local write data(two beats) valid
+wire                          lcl_wr_data_ch3_valid;            //channel 3 local write data(two beats) valid
+wire                          lcl_wr_ch0_dsc_lower_half;        //channel 0 last write beat data is first 512b on lcl write data bus
+wire                          lcl_wr_ch1_dsc_lower_half;        //channel 1 last write beat data is first 512b on lcl write data bus
+wire                          lcl_wr_ch2_dsc_lower_half;        //channel 2 last write beat data is first 512b on lcl write data bus
+wire                          lcl_wr_ch3_dsc_lower_half;        //channel 3 last write beat data is first 512b on lcl write data bus
+wire                          lcl_wr_dsc_lower_half;            //any channel last write beat data is first 512b on lcl write data bus
+wire                          lcl_reg0_first_beat_upper_half;   //descriptor 0 write first beat start addr is upper 512b half
+wire                          lcl_reg1_first_beat_upper_half;   //descriptor 1 write first beat start addr is upper 512b half
+wire                          lcl_reg2_first_beat_upper_half;   //descriptor 2 write first beat start addr is upper 512b half
+wire                          lcl_reg3_first_beat_upper_half;   //descriptor 3 write first beat start addr is upper 512b half
+wire                          lcl_first_beat_upper_half;        //lcl write first beat start addr is upper 512b half
+wire [3   : 0]                lcl_wr_data_ctrl;                 //lcl write data control
+reg  [1023: 0]                lcl_normal_wr_data;               //lcl normal write data
+reg  [1023: 0]                lcl_first_wr_data;                //lcl first beat write data
 
 // first 512-bit AXI data (not rlast data) write into register
 // rlast data will send to local bus if it is the first beat
@@ -1065,15 +1052,21 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-assign axi_rdata_ch0_wr = ~axi_rdata_ch0_valid & rdata_fifo_valid & ~rtag_fifo_dsc_rlast & (rtag_fifo_axi_rid==5'd0);
-assign axi_rdata_ch1_wr = ~axi_rdata_ch1_valid & rdata_fifo_valid & ~rtag_fifo_dsc_rlast & (rtag_fifo_axi_rid==5'd1);
-assign axi_rdata_ch2_wr = ~axi_rdata_ch2_valid & rdata_fifo_valid & ~rtag_fifo_dsc_rlast & (rtag_fifo_axi_rid==5'd2);
-assign axi_rdata_ch3_wr = ~axi_rdata_ch3_valid & rdata_fifo_valid & ~rtag_fifo_dsc_rlast & (rtag_fifo_axi_rid==5'd3);
+assign axi_rdata_fifo_ch0_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd0);
+assign axi_rdata_fifo_ch1_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd1);
+assign axi_rdata_fifo_ch2_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd2);
+assign axi_rdata_fifo_ch3_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd3);
+
+assign axi_rdata_ch0_wr = axi_rdata_fifo_ch0_valid & ~rtag_fifo_dsc_rlast & (~axi_rdata_ch0_valid | (lcl_first_beat_upper_half & lcl_wr_done));
+assign axi_rdata_ch1_wr = axi_rdata_fifo_ch1_valid & ~rtag_fifo_dsc_rlast & (~axi_rdata_ch1_valid | (lcl_first_beat_upper_half & lcl_wr_done));
+assign axi_rdata_ch2_wr = axi_rdata_fifo_ch2_valid & ~rtag_fifo_dsc_rlast & (~axi_rdata_ch2_valid | (lcl_first_beat_upper_half & lcl_wr_done));
+assign axi_rdata_ch3_wr = axi_rdata_fifo_ch3_valid & ~rtag_fifo_dsc_rlast & (~axi_rdata_ch3_valid | (lcl_first_beat_upper_half & lcl_wr_done));
 assign axi_rdata_wr = axi_rdata_ch0_wr | axi_rdata_ch1_wr | axi_rdata_ch2_wr | axi_rdata_ch3_wr;
 
-// read fifo when first beat data write into register or second beat data
-// write done on local bus
-assign rdata_fifo_rd_en = ~rdata_fifo_empty & (axi_rdata_wr | lcl_wr_done);
+// read fifo when first beat data write into register or
+// write data done on local bus when not first 512b beat is upper half and second
+// 512b beat is lower half of the next lcl 1024b beat
+assign rdata_fifo_rd_en = ~rdata_fifo_empty & (axi_rdata_wr | (lcl_wr_done & (~lcl_first_beat_upper_half | lcl_wr_dsc_lower_half)));
 
 //---AXI read data FIFO(512b width x 8 depth)
 // Xilinx IP: FWFT fifo
@@ -1109,249 +1102,76 @@ fifo_sync_9x8 rtag_fifo (
 //--------------------------
 // ready to issue write cmd when two beat data for the same id are valid
 // or is dsc last beat data
-assign lcl_wr_data_ch0_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd0) & (axi_rdata_ch0_valid | rtag_fifo_dsc_rlast);
-assign lcl_wr_data_ch1_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd1) & (axi_rdata_ch1_valid | rtag_fifo_dsc_rlast);
-assign lcl_wr_data_ch2_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd2) & (axi_rdata_ch2_valid | rtag_fifo_dsc_rlast);
-assign lcl_wr_data_ch3_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd3) & (axi_rdata_ch3_valid | rtag_fifo_dsc_rlast);
+assign lcl_wr_data_ch0_valid = axi_rdata_fifo_ch0_valid & (axi_rdata_ch0_valid | rtag_fifo_dsc_rlast);
+assign lcl_wr_data_ch1_valid = axi_rdata_fifo_ch1_valid & (axi_rdata_ch1_valid | rtag_fifo_dsc_rlast);
+assign lcl_wr_data_ch2_valid = axi_rdata_fifo_ch2_valid & (axi_rdata_ch2_valid | rtag_fifo_dsc_rlast);
+assign lcl_wr_data_ch3_valid = axi_rdata_fifo_ch3_valid & (axi_rdata_ch3_valid | rtag_fifo_dsc_rlast);
 assign lcl_wr_data_valid = lcl_wr_data_ch0_valid | lcl_wr_data_ch1_valid | lcl_wr_data_ch2_valid | lcl_wr_data_ch3_valid;
-
-// check last beat data is the first 512b of 1024b data
-assign lcl_wr_ch0_dsc_last_half = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd0) & rtag_fifo_dsc_rlast & ~axi_rdata_ch0_valid;
-assign lcl_wr_ch1_dsc_last_half = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd1) & rtag_fifo_dsc_rlast & ~axi_rdata_ch1_valid;
-assign lcl_wr_ch2_dsc_last_half = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd2) & rtag_fifo_dsc_rlast & ~axi_rdata_ch2_valid;
-assign lcl_wr_ch3_dsc_last_half = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd3) & rtag_fifo_dsc_rlast & ~axi_rdata_ch3_valid;
-
-assign lcl_wr_dsc_last_half = lcl_wr_ch0_dsc_last_half | lcl_wr_ch1_dsc_last_half | lcl_wr_ch2_dsc_last_half | lcl_wr_ch3_dsc_last_half;
-
-// generate lcl write cmd signals for 512b
-assign lcl_wr_be   = lcl_wr_dsc_last_half ? 128'h0000_0000_0000_0000_FFFF_FFFF_FFFF_FFFF : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
-assign lcl_wr_data = lcl_wr_dsc_last_half ? {512'b0, rdata_fifo_dout} 
-                     : (lcl_wr_data_ch0_valid ? {rdata_fifo_dout, axi_rdata_ch0_data}
-                       : (lcl_wr_data_ch1_valid ? {rdata_fifo_dout, axi_rdata_ch1_data}
-                         : (lcl_wr_data_ch2_valid ? {rdata_fifo_dout, axi_rdata_ch2_data}
-                           : (lcl_wr_data_ch3_valid ? {rdata_fifo_dout, axi_rdata_ch3_data} : 1024'b0))));
 
 assign lcl_ch0_wr_done = lcl_wr_data_ch0_valid & lcl_wr_ready;
 assign lcl_ch1_wr_done = lcl_wr_data_ch1_valid & lcl_wr_ready;
 assign lcl_ch2_wr_done = lcl_wr_data_ch2_valid & lcl_wr_ready;
 assign lcl_ch3_wr_done = lcl_wr_data_ch3_valid & lcl_wr_ready;
 
+// check last beat data is the lower 512b half
+assign lcl_wr_ch0_dsc_lower_half = axi_rdata_fifo_ch0_valid & rtag_fifo_dsc_rlast & ~axi_rdata_ch0_valid;
+assign lcl_wr_ch1_dsc_lower_half = axi_rdata_fifo_ch1_valid & rtag_fifo_dsc_rlast & ~axi_rdata_ch1_valid;
+assign lcl_wr_ch2_dsc_lower_half = axi_rdata_fifo_ch2_valid & rtag_fifo_dsc_rlast & ~axi_rdata_ch2_valid;
+assign lcl_wr_ch3_dsc_lower_half = axi_rdata_fifo_ch3_valid & rtag_fifo_dsc_rlast & ~axi_rdata_ch3_valid;
+
+assign lcl_wr_dsc_lower_half = lcl_wr_ch0_dsc_lower_half | lcl_wr_ch1_dsc_lower_half | lcl_wr_ch2_dsc_lower_half | lcl_wr_ch3_dsc_lower_half;
+
+// check descriptor first write beat start addr is upper 512b half
+assign lcl_reg0_first_beat_upper_half = dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_first_be_addr[6];
+assign lcl_reg1_first_beat_upper_half = dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_first_be_addr[6];
+assign lcl_reg2_first_beat_upper_half = dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_first_be_addr[6];
+assign lcl_reg3_first_beat_upper_half = dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_first_be_addr[6];
+
+assign lcl_first_beat_upper_half = dsc_flight_reg0_dst_use ? lcl_reg0_first_beat_upper_half
+                                   : (dsc_flight_reg1_dst_use ? lcl_reg1_first_beat_upper_half
+                                     : (dsc_flight_reg2_dst_use ? lcl_reg2_first_beat_upper_half
+                                       : (dsc_flight_reg3_dst_use ? lcl_reg3_first_beat_upper_half : 1'b0)));
+
+// generate lcl write data
+assign lcl_wr_data_ctrl = {lcl_wr_data_ch0_valid, lcl_wr_data_ch1_valid, lcl_wr_data_ch2_valid, lcl_wr_data_ch3_valid};
+
+always@(*) begin
+  case(lcl_wr_data_ctrl)
+    4'b1000: begin
+      lcl_normal_wr_data = {rdata_fifo_dout, axi_rdata_ch0_data};
+      lcl_first_wr_data  = {axi_rdata_ch0_data, 512'b0};
+    end
+    4'b0100: begin
+      lcl_normal_wr_data = {rdata_fifo_dout, axi_rdata_ch1_data};
+      lcl_first_wr_data  = {axi_rdata_ch1_data, 512'b0};
+    end
+    4'b0010: begin
+      lcl_normal_wr_data = {rdata_fifo_dout, axi_rdata_ch2_data};
+      lcl_first_wr_data  = {axi_rdata_ch2_data, 512'b0};
+    end
+    4'b0001: begin
+      lcl_normal_wr_data = {rdata_fifo_dout, axi_rdata_ch3_data};
+      lcl_first_wr_data  = {axi_rdata_ch3_data, 512'b0};
+    end
+    default: begin
+      lcl_normal_wr_data = 1024'b0;
+      lcl_first_wr_data  = 1024'b0;
+    end
+  endcase
+end
+
+assign lcl_wr_data = (lcl_wr_dsc_lower_half & ~lcl_first_beat_upper_half) ? {512'b0, rdata_fifo_dout}
+                       : ((lcl_wr_dsc_lower_half & lcl_first_beat_upper_half) ? {rdata_fifo_dout, 512'b0}
+                         : ((~lcl_wr_dsc_lower_half & lcl_first_beat_upper_half) ? lcl_first_wr_data : lcl_normal_wr_data));
+// *****************************
+// end 512 bit AXI data width
+// *****************************
 `else 
-// *************************
-// 1024 bit AXI data width
-// *************************
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch0_data;               //channel 0 first beat AXI read data
-reg                           axi_rdata_ch0_valid;              //channel 0 first beat AXI read data valid
-reg                           axi_rdata_ch0_rlast;              //channel 0 first beat AXI read data is dsc last beat
-reg  [6 : 0]                  axi_rdata_ch0_remain;             //channel 0 first beat AXI read data remain valid bytes number
-wire                          axi_rdata_ch0_wr;                 //channel 0 first beat AXI read data update
-wire                          axi_rdata_ch0_clr;                //channel 0 first beat AXI read data clear
-wire                          axi_rdata_ch0_all_out;            //channel 0 first beat AXI read data all bytes sent to lcl write bus
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch1_data;               //channel 1 first beat AXI read data
-reg                           axi_rdata_ch1_valid;              //channel 1 first beat AXI read data valid
-reg                           axi_rdata_ch1_rlast;              //channel 1 first beat AXI read data is dsc last beat
-reg  [6 : 0]                  axi_rdata_ch1_remain;             //channel 1 first beat AXI read data remain valid bytes number
-wire                          axi_rdata_ch1_wr;                 //channel 1 first beat AXI read data update
-wire                          axi_rdata_ch1_clr;                //channel 1 first beat AXI read data clear
-wire                          axi_rdata_ch1_all_out;            //channel 1 first beat AXI read data all bytes sent to lcl write bus
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch2_data;               //channel 2 first beat AXI read data
-reg                           axi_rdata_ch2_valid;              //channel 2 first beat AXI read data valid
-reg                           axi_rdata_ch2_rlast;              //channel 2 first beat AXI read data is dsc last beat
-reg  [6 : 0]                  axi_rdata_ch2_remain;             //channel 2 first beat AXI read data remain valid bytes number
-wire                          axi_rdata_ch2_wr;                 //channel 2 first beat AXI read data update
-wire                          axi_rdata_ch2_clr;                //channel 2 first beat AXI read data clear
-wire                          axi_rdata_ch2_all_out;            //channel 2 first beat AXI read data all bytes sent to lcl write bus
-reg  [AXI_DATA_WIDTH-1 : 0 ]  axi_rdata_ch3_data;               //channel 3 first beat AXI read data
-reg                           axi_rdata_ch3_valid;              //channel 3 first beat AXI read data valid
-reg                           axi_rdata_ch3_rlast;              //channel 3 first beat AXI read data is dsc last beat
-reg  [6 : 0]                  axi_rdata_ch3_remain;             //channel 3 first beat AXI read data remain valid bytes number
-wire                          axi_rdata_ch3_wr;                 //channel 3 first beat AXI read data update
-wire                          axi_rdata_ch3_clr;                //channel 3 first beat AXI read data clear
-wire                          axi_rdata_ch3_all_out;            //channel 3 first beat AXI read data all bytes sent to lcl write bus
-wire                          axi_rdata_wr;                     //any channel first beat AXI read data update
-wire                          axi_rdata_fifo_ch0_valid;         //AXI read data fifo head data is channel 0
-wire                          axi_rdata_fifo_ch1_valid;         //AXI read data fifo head data is channel 1
-wire                          axi_rdata_fifo_ch2_valid;         //AXI read data fifo head data is channel 2
-wire                          axi_rdata_fifo_ch3_valid;         //AXI read data fifo head data is channel 3
-wire                          lcl_ch0_wr_done;                  //channel 0 local write done
-wire                          lcl_ch1_wr_done;                  //channel 1 local write done
-wire                          lcl_ch2_wr_done;                  //channel 2 local write done
-wire                          lcl_ch3_wr_done;                  //channel 3 local write done
-wire                          lcl_wr_data_ch0_valid;            //channel 0 local write data(two beats) valid
-wire                          lcl_wr_data_ch1_valid;            //channel 1 local write data(two beats) valid
-wire                          lcl_wr_data_ch2_valid;            //channel 2 local write data(two beats) valid
-wire                          lcl_wr_data_ch3_valid;            //channel 3 local write data(two beats) valid
-wire [11: 0]                  lcl_wr_be_ctrl;                   //local write byte enable control
-wire [27: 0]                  lcl_wr_data_ctrl;                 //local write data control
-wire [1023:0]                 lcl_first_shift_right_ch0_reg0;   //channel 0 descriptor 0 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch0_reg1;   //channel 0 descriptor 1 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch0_reg2;   //channel 0 descriptor 2 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch0_reg3;   //channel 0 descriptor 3 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch1_reg0;   //channel 1 descriptor 0 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch1_reg1;   //channel 1 descriptor 1 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch1_reg2;   //channel 1 descriptor 2 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch1_reg3;   //channel 1 descriptor 3 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch2_reg0;   //channel 2 descriptor 0 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch2_reg1;   //channel 2 descriptor 1 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch2_reg2;   //channel 2 descriptor 2 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch2_reg3;   //channel 2 descriptor 3 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch3_reg0;   //channel 3 descriptor 0 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch3_reg1;   //channel 3 descriptor 1 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch3_reg2;   //channel 3 descriptor 2 first beat data right shift
-wire [1023:0]                 lcl_first_shift_right_ch3_reg3;   //channel 3 descriptor 3 first beat data right shift
-wire [1023:0]                 lcl_first_shift_left_ch0_reg0;    //channel 0 descriptor 0 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch0_reg1;    //channel 0 descriptor 1 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch0_reg2;    //channel 0 descriptor 2 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch0_reg3;    //channel 0 descriptor 3 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch1_reg0;    //channel 1 descriptor 0 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch1_reg1;    //channel 1 descriptor 1 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch1_reg2;    //channel 1 descriptor 2 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch1_reg3;    //channel 1 descriptor 3 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch2_reg0;    //channel 2 descriptor 0 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch2_reg1;    //channel 2 descriptor 1 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch2_reg2;    //channel 2 descriptor 2 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch2_reg3;    //channel 2 descriptor 3 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch3_reg0;    //channel 3 descriptor 0 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch3_reg1;    //channel 3 descriptor 1 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch3_reg2;    //channel 3 descriptor 2 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_left_ch3_reg3;    //channel 3 descriptor 3 first beat data left shift 
-wire [1023:0]                 lcl_first_shift_remain_ch0;       //channel 0 first beat data shift remain bytes
-wire [1023:0]                 lcl_first_shift_remain_ch1;       //channel 1 first beat data shift remain bytes
-wire [1023:0]                 lcl_first_shift_remain_ch2;       //channel 2 first beat data shift remain bytes
-wire [1023:0]                 lcl_first_shift_remain_ch3;       //channel 3 first beat data shift remain bytes
-wire [1023:0]                 lcl_second_shift_reg0;            //descriptor 0 second beat data shift
-wire [1023:0]                 lcl_second_shift_reg1;            //descriptor 1 second beat data shift
-wire [1023:0]                 lcl_second_shift_reg2;            //descriptor 2 second beat data shift
-wire [1023:0]                 lcl_second_shift_reg3;            //descriptor 3 second beat data shift
-wire [1023:0]                 lcl_second_shift_remain_ch0;      //channel 0 second beat data shift
-wire [1023:0]                 lcl_second_shift_remain_ch1;      //channel 1 second beat data shift
-wire [1023:0]                 lcl_second_shift_remain_ch2;      //channel 2 second beat data shift
-wire [1023:0]                 lcl_second_shift_remain_ch3;      //channel 3 second beat data shift
-
-// first 1024-bit AXI data write into register
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
-    axi_rdata_ch0_valid <= 1'b0;
-    axi_rdata_ch0_rlast <= 1'b0;
-    axi_rdata_ch0_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch0_clr) begin
-    axi_rdata_ch0_valid <= 1'b0;
-    axi_rdata_ch0_rlast <= 1'b0;
-    axi_rdata_ch0_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch0_wr) begin
-    axi_rdata_ch0_valid <= 1'b1;
-    axi_rdata_ch0_rlast <= rtag_fifo_dout[0];
-    axi_rdata_ch0_data  <= rdata_fifo_dout;
-  end
-  else begin
-    axi_rdata_ch0_valid <= axi_rdata_ch0_valid;
-    axi_rdata_ch0_rlast <= axi_rdata_ch0_rlast;
-    axi_rdata_ch0_data  <= axi_rdata_ch0_data;
-  end
-end
-
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
-    axi_rdata_ch1_valid <= 1'b0;
-    axi_rdata_ch1_rlast <= 1'b0;
-    axi_rdata_ch1_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch1_clr) begin
-    axi_rdata_ch1_valid <= 1'b0;
-    axi_rdata_ch1_rlast <= 1'b0;
-    axi_rdata_ch1_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch1_wr) begin
-    axi_rdata_ch1_valid <= 1'b1;
-    axi_rdata_ch1_rlast <= rtag_fifo_dout[0];
-    axi_rdata_ch1_data  <= rdata_fifo_dout[AXI_DATA_WIDTH-1 : 0];
-  end
-  else begin
-    axi_rdata_ch1_valid <= axi_rdata_ch1_valid;
-    axi_rdata_ch1_rlast <= axi_rdata_ch1_rlast;
-    axi_rdata_ch1_data  <= axi_rdata_ch1_data;
-  end
-end
-
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
-    axi_rdata_ch2_valid <= 1'b0;
-    axi_rdata_ch2_rlast <= 1'b0;
-    axi_rdata_ch2_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch2_clr) begin
-    axi_rdata_ch2_valid <= 1'b0;
-    axi_rdata_ch2_rlast <= 1'b0;
-    axi_rdata_ch2_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch2_wr) begin
-    axi_rdata_ch2_valid <= 1'b1;
-    axi_rdata_ch2_rlast <= rtag_fifo_dout[0];
-    axi_rdata_ch2_data  <= rdata_fifo_dout[AXI_DATA_WIDTH-1 : 0];
-  end
-  else begin
-    axi_rdata_ch2_valid <= axi_rdata_ch2_valid;
-    axi_rdata_ch2_rlast <= axi_rdata_ch2_rlast;
-    axi_rdata_ch2_data  <= axi_rdata_ch2_data;
-  end
-end
-
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
-    axi_rdata_ch3_valid <= 1'b0;
-    axi_rdata_ch3_rlast <= 1'b0;
-    axi_rdata_ch3_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch3_clr) begin
-    axi_rdata_ch3_valid <= 1'b0;
-    axi_rdata_ch3_rlast <= 1'b0;
-    axi_rdata_ch3_data  <= 1024'b0;
-  end
-  else if(axi_rdata_ch3_wr) begin
-    axi_rdata_ch3_valid <= 1'b1;
-    axi_rdata_ch3_rlast <= rtag_fifo_dout[0];
-    axi_rdata_ch3_data  <= rdata_fifo_dout[AXI_DATA_WIDTH-1 : 0];
-  end
-  else begin
-    axi_rdata_ch3_valid <= axi_rdata_ch3_valid;
-    axi_rdata_ch3_rlast <= axi_rdata_ch3_rlast;
-    axi_rdata_ch3_data  <= axi_rdata_ch3_data;
-  end
-end
-
-assign axi_rdata_fifo_ch0_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd0);
-assign axi_rdata_fifo_ch1_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd1);
-assign axi_rdata_fifo_ch2_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd2);
-assign axi_rdata_fifo_ch3_valid = rdata_fifo_valid & (rtag_fifo_axi_rid==5'd3);
-
-// write data latch when 
-// 1) first beat data of descriptor and no data write in progress 
-// 2) all latch bytes sent to local write bus and have data followed
-assign axi_rdata_ch0_wr = axi_rdata_fifo_ch0_valid & ((~axi_rdata_ch0_valid & ~lcl_wr_data_valid) | (lcl_ch0_wr_done & axi_rdata_ch0_all_out));
-assign axi_rdata_ch1_wr = axi_rdata_fifo_ch1_valid & ((~axi_rdata_ch1_valid & ~lcl_wr_data_valid) | (lcl_ch1_wr_done & axi_rdata_ch1_all_out));
-assign axi_rdata_ch2_wr = axi_rdata_fifo_ch2_valid & ((~axi_rdata_ch2_valid & ~lcl_wr_data_valid) | (lcl_ch2_wr_done & axi_rdata_ch2_all_out));
-assign axi_rdata_ch3_wr = axi_rdata_fifo_ch3_valid & ((~axi_rdata_ch3_valid & ~lcl_wr_data_valid) | (lcl_ch3_wr_done & axi_rdata_ch3_all_out));
-assign axi_rdata_wr = axi_rdata_ch0_wr | axi_rdata_ch1_wr | axi_rdata_ch2_wr | axi_rdata_ch3_wr;
-
-// clear data latch when lcl write last beat done and 1) axi read data last beat in FIFO
-// 2) axi read data last beat in latch and data in FIFO is not same channel
-assign axi_rdata_ch0_clr = lcl_ch0_wr_done & lcl_wr_last & 
-                           ((~axi_rdata_ch0_rlast & axi_rdata_fifo_ch0_valid & rtag_fifo_dout[0])
-                            | (axi_rdata_ch0_rlast & ~axi_rdata_fifo_ch0_valid));
-assign axi_rdata_ch1_clr = lcl_ch1_wr_done & lcl_wr_last & 
-                           ((~axi_rdata_ch1_rlast & axi_rdata_fifo_ch1_valid & rtag_fifo_dout[0])
-                            | (axi_rdata_ch1_rlast & ~axi_rdata_fifo_ch1_valid));
-assign axi_rdata_ch2_clr = lcl_ch2_wr_done & lcl_wr_last & 
-                           ((~axi_rdata_ch2_rlast & axi_rdata_fifo_ch2_valid & rtag_fifo_dout[0])
-                            | (axi_rdata_ch2_rlast & ~axi_rdata_fifo_ch2_valid));
-assign axi_rdata_ch3_clr = lcl_ch3_wr_done & lcl_wr_last & 
-                           ((~axi_rdata_ch3_rlast & axi_rdata_fifo_ch3_valid & rtag_fifo_dout[0])
-                            | (axi_rdata_ch3_rlast & ~axi_rdata_fifo_ch3_valid));
-
-// read fifo when first beat data write into latch
-assign rdata_fifo_rd_en = ~rdata_fifo_empty & axi_rdata_wr;
+// *****************************
+// begin 1024 bit AXI data width
+// *****************************
+// read fifo when data write done on local bus
+assign rdata_fifo_rd_en = ~rdata_fifo_empty & lcl_wr_done;
 
 //---AXI read data FIFO(1024b width x 8 depth)
 // Xilinx IP: FWFT fifo(FIFO IP max data width is 1024)
@@ -1382,356 +1202,12 @@ fifo_sync_9x8 rtag_fifo (
   .empty        (                )
 );
 
-//--------------------------
-// Local write command
-//--------------------------
-// ready to issue write cmd when two beat data for the same id are valid
-// or is descriptor last beat data
-assign lcl_wr_data_ch0_valid = axi_rdata_ch0_valid & (axi_rdata_fifo_ch0_valid | axi_rdata_ch0_rlast);
-assign lcl_wr_data_ch1_valid = axi_rdata_ch1_valid & (axi_rdata_fifo_ch1_valid | axi_rdata_ch1_rlast);
-assign lcl_wr_data_ch2_valid = axi_rdata_ch2_valid & (axi_rdata_fifo_ch2_valid | axi_rdata_ch2_rlast);
-assign lcl_wr_data_ch3_valid = axi_rdata_ch3_valid & (axi_rdata_fifo_ch3_valid | axi_rdata_ch3_rlast);
-assign lcl_wr_data_valid = lcl_wr_data_ch0_valid | lcl_wr_data_ch1_valid | lcl_wr_data_ch2_valid | lcl_wr_data_ch3_valid;
-
-assign lcl_ch0_wr_done = lcl_wr_data_ch0_valid & lcl_wr_ready;
-assign lcl_ch1_wr_done = lcl_wr_data_ch1_valid & lcl_wr_ready;
-assign lcl_ch2_wr_done = lcl_wr_data_ch2_valid & lcl_wr_ready;
-assign lcl_ch3_wr_done = lcl_wr_data_ch3_valid & lcl_wr_ready;
-
-// generate lcl write byte enable based on descriptor first or last beat
-// 1.first beat wr_be is based on dest unaligned byte start addr
-// 2.last beat wr_be is based on dest unaligned byte end addr
-// 3.only one beat (first and last beat) wr_be is based on both dest unaligned byte start and end addr
-assign lcl_wr_be_ctrl = {dsc_flight_reg0_dst_use, dsc_flight_reg0_dst_first_beat, dsc_flight_reg0_dst_last_beat,
-                         dsc_flight_reg1_dst_use, dsc_flight_reg1_dst_first_beat, dsc_flight_reg1_dst_last_beat,
-                         dsc_flight_reg2_dst_use, dsc_flight_reg2_dst_first_beat, dsc_flight_reg2_dst_last_beat,
-                         dsc_flight_reg3_dst_use, dsc_flight_reg3_dst_first_beat, dsc_flight_reg3_dst_last_beat};
-
-assign dsc_flight_reg0_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg0_dst_first_byte_addr;
-assign dsc_flight_reg1_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg1_dst_first_byte_addr;
-assign dsc_flight_reg2_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg2_dst_first_byte_addr;
-assign dsc_flight_reg3_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg3_dst_first_byte_addr;
-assign dsc_flight_reg0_dst_last_beat_be  = (dsc_flight_reg0_dst_last_byte_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF 
-                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg0_dst_last_byte_addr);
-assign dsc_flight_reg1_dst_last_beat_be  = (dsc_flight_reg1_dst_last_byte_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
-                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg1_dst_last_byte_addr);
-assign dsc_flight_reg2_dst_last_beat_be  = (dsc_flight_reg2_dst_last_byte_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
-                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg2_dst_last_byte_addr);
-assign dsc_flight_reg3_dst_last_beat_be  = (dsc_flight_reg3_dst_last_byte_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
-                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg3_dst_last_byte_addr);
-
-always@(*) begin
-  casez(lcl_wr_be_ctrl)
-    12'b111_???_???_???: lcl_wr_be = dsc_flight_reg0_dst_first_beat_be & dsc_flight_reg0_dst_last_beat_be;
-    12'b110_???_???_???: lcl_wr_be = dsc_flight_reg0_dst_first_beat_be;
-    12'b101_???_???_???: lcl_wr_be = dsc_flight_reg0_dst_last_beat_be;
-    12'b0??_111_???_???: lcl_wr_be = dsc_flight_reg1_dst_first_beat_be & dsc_flight_reg1_dst_last_beat_be;
-    12'b0??_110_???_???: lcl_wr_be = dsc_flight_reg1_dst_first_beat_be;
-    12'b0??_101_???_???: lcl_wr_be = dsc_flight_reg1_dst_last_beat_be;
-    12'b0??_0??_111_???: lcl_wr_be = dsc_flight_reg2_dst_first_beat_be & dsc_flight_reg2_dst_last_beat_be;
-    12'b0??_0??_110_???: lcl_wr_be = dsc_flight_reg2_dst_first_beat_be;
-    12'b0??_0??_101_???: lcl_wr_be = dsc_flight_reg2_dst_last_beat_be;
-    12'b0??_0??_0??_111: lcl_wr_be = dsc_flight_reg3_dst_first_beat_be & dsc_flight_reg3_dst_last_beat_be;
-    12'b0??_0??_0??_110: lcl_wr_be = dsc_flight_reg3_dst_first_beat_be;
-    12'b0??_0??_0??_101: lcl_wr_be = dsc_flight_reg3_dst_last_beat_be;
-    default:             lcl_wr_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
-  endcase
-end
-
-//update remain valid byte number when first beat data written out
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
-    axi_rdata_ch0_remain <= 7'b0;
-  else if(dsc_flight_reg0_ch0_dst_data_valid & dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= ~dsc_flight_reg0_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg0_ch0_dst_data_valid & dsc_flight_reg0_dst_first_beat & ~dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= dsc_flight_reg0_dst_src_diff;
-  else if(dsc_flight_reg1_ch0_dst_data_valid & dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= ~dsc_flight_reg1_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg1_ch0_dst_data_valid & dsc_flight_reg1_dst_first_beat & ~dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= dsc_flight_reg1_dst_src_diff;
-  else if(dsc_flight_reg2_ch0_dst_data_valid & dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= ~dsc_flight_reg2_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg2_ch0_dst_data_valid & dsc_flight_reg2_dst_first_beat & ~dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= dsc_flight_reg2_dst_src_diff;
-  else if(dsc_flight_reg3_ch0_dst_data_valid & dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= ~dsc_flight_reg3_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg3_ch0_dst_data_valid & dsc_flight_reg3_dst_first_beat & ~dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch0_remain <= dsc_flight_reg3_dst_src_diff;
-  else
-    axi_rdata_ch0_remain <= axi_rdata_ch0_remain;
-end
-
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
-    axi_rdata_ch1_remain <= 7'b0;
-  else if(dsc_flight_reg0_ch1_dst_data_valid & dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= ~dsc_flight_reg0_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg0_ch1_dst_data_valid & dsc_flight_reg0_dst_first_beat & ~dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= dsc_flight_reg0_dst_src_diff;
-  else if(dsc_flight_reg1_ch1_dst_data_valid & dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= ~dsc_flight_reg1_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg1_ch1_dst_data_valid & dsc_flight_reg1_dst_first_beat & ~dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= dsc_flight_reg1_dst_src_diff;
-  else if(dsc_flight_reg2_ch1_dst_data_valid & dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= ~dsc_flight_reg2_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg2_ch1_dst_data_valid & dsc_flight_reg2_dst_first_beat & ~dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= dsc_flight_reg2_dst_src_diff;
-  else if(dsc_flight_reg3_ch1_dst_data_valid & dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= ~dsc_flight_reg3_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg3_ch1_dst_data_valid & dsc_flight_reg3_dst_first_beat & ~dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch1_remain <= dsc_flight_reg3_dst_src_diff;
-  else
-    axi_rdata_ch1_remain <= axi_rdata_ch1_remain;
-end
-
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
-    axi_rdata_ch2_remain <= 7'b0;
-  else if(dsc_flight_reg0_ch2_dst_data_valid & dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= ~dsc_flight_reg0_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg0_ch2_dst_data_valid & dsc_flight_reg0_dst_first_beat & ~dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= dsc_flight_reg0_dst_src_diff;
-  else if(dsc_flight_reg1_ch2_dst_data_valid & dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= ~dsc_flight_reg1_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg1_ch2_dst_data_valid & dsc_flight_reg1_dst_first_beat & ~dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= dsc_flight_reg1_dst_src_diff;
-  else if(dsc_flight_reg2_ch2_dst_data_valid & dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= ~dsc_flight_reg2_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg2_ch2_dst_data_valid & dsc_flight_reg2_dst_first_beat & ~dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= dsc_flight_reg2_dst_src_diff;
-  else if(dsc_flight_reg3_ch2_dst_data_valid & dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= ~dsc_flight_reg3_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg3_ch2_dst_data_valid & dsc_flight_reg3_dst_first_beat & ~dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch2_remain <= dsc_flight_reg3_dst_src_diff;
-  else
-    axi_rdata_ch2_remain <= axi_rdata_ch2_remain;
-end
-
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
-    axi_rdata_ch3_remain <= 7'b0;
-  else if(dsc_flight_reg0_ch3_dst_data_valid & dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= ~dsc_flight_reg0_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg0_ch3_dst_data_valid & dsc_flight_reg0_dst_first_beat & ~dsc_flight_reg0_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= dsc_flight_reg0_dst_src_diff;
-  else if(dsc_flight_reg1_ch3_dst_data_valid & dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= ~dsc_flight_reg1_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg1_ch3_dst_data_valid & dsc_flight_reg1_dst_first_beat & ~dsc_flight_reg1_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= dsc_flight_reg1_dst_src_diff;
-  else if(dsc_flight_reg2_ch3_dst_data_valid & dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= ~dsc_flight_reg2_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg2_ch3_dst_data_valid & dsc_flight_reg2_dst_first_beat & ~dsc_flight_reg2_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= dsc_flight_reg2_dst_src_diff;
-  else if(dsc_flight_reg3_ch3_dst_data_valid & dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= ~dsc_flight_reg3_dst_src_diff + 1'b1;
-  else if(dsc_flight_reg3_ch3_dst_data_valid & dsc_flight_reg3_dst_first_beat & ~dsc_flight_reg3_dst_large & lcl_wr_ready)
-    axi_rdata_ch3_remain <= dsc_flight_reg3_dst_src_diff;
-  else
-    axi_rdata_ch3_remain <= axi_rdata_ch3_remain;
-end
-
-//check descriptor src and dest unaligned addr difference
-assign dsc_flight_reg0_dst_large = dsc_flight_reg0_dst_first_byte_addr > dsc_flight_reg0_src_first_byte_addr;
-assign dsc_flight_reg1_dst_large = dsc_flight_reg1_dst_first_byte_addr > dsc_flight_reg1_src_first_byte_addr;
-assign dsc_flight_reg2_dst_large = dsc_flight_reg2_dst_first_byte_addr > dsc_flight_reg2_src_first_byte_addr;
-assign dsc_flight_reg3_dst_large = dsc_flight_reg3_dst_first_byte_addr > dsc_flight_reg3_src_first_byte_addr;
-assign dsc_flight_reg0_dst_equal = dsc_flight_reg0_dst_first_byte_addr == dsc_flight_reg0_src_first_byte_addr;
-assign dsc_flight_reg1_dst_equal = dsc_flight_reg1_dst_first_byte_addr == dsc_flight_reg1_src_first_byte_addr;
-assign dsc_flight_reg2_dst_equal = dsc_flight_reg2_dst_first_byte_addr == dsc_flight_reg2_src_first_byte_addr;
-assign dsc_flight_reg3_dst_equal = dsc_flight_reg3_dst_first_byte_addr == dsc_flight_reg3_src_first_byte_addr;
-
-assign dsc_flight_reg0_dst_src_diff = dsc_flight_reg0_dst_large ? (dsc_flight_reg0_dst_first_byte_addr - dsc_flight_reg0_src_first_byte_addr)
-                                                                : (dsc_flight_reg0_src_first_byte_addr - dsc_flight_reg0_dst_first_byte_addr);
-assign dsc_flight_reg1_dst_src_diff = dsc_flight_reg0_dst_large ? (dsc_flight_reg1_dst_first_byte_addr - dsc_flight_reg1_src_first_byte_addr)
-                                                                : (dsc_flight_reg1_src_first_byte_addr - dsc_flight_reg1_dst_first_byte_addr);
-assign dsc_flight_reg2_dst_src_diff = dsc_flight_reg0_dst_large ? (dsc_flight_reg2_dst_first_byte_addr - dsc_flight_reg2_src_first_byte_addr)
-                                                                : (dsc_flight_reg2_src_first_byte_addr - dsc_flight_reg2_dst_first_byte_addr);
-assign dsc_flight_reg3_dst_src_diff = dsc_flight_reg0_dst_large ? (dsc_flight_reg3_dst_first_byte_addr - dsc_flight_reg3_src_first_byte_addr)
-                                                                : (dsc_flight_reg3_src_first_byte_addr - dsc_flight_reg3_dst_first_byte_addr);
-
-//first read data not all out when first decriptor beat write 
-//and dst unaligned addr larger than src
-assign axi_rdata_ch0_all_out = dsc_flight_reg0_ch0_dst_data_valid ? ~(dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large) :
-                                  (dsc_flight_reg1_ch0_dst_data_valid ? ~(dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large) :
-                                    (dsc_flight_reg2_ch0_dst_data_valid ? ~(dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large) :
-                                      (dsc_flight_reg3_ch0_dst_data_valid ? ~(dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large) : 1'b1)));
-assign axi_rdata_ch1_all_out = dsc_flight_reg0_ch1_dst_data_valid ? ~(dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large) :
-                                  (dsc_flight_reg1_ch1_dst_data_valid ? ~(dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large) :
-                                    (dsc_flight_reg2_ch1_dst_data_valid ? ~(dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large) :
-                                      (dsc_flight_reg3_ch1_dst_data_valid ? ~(dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large) : 1'b1)));
-assign axi_rdata_ch2_all_out = dsc_flight_reg0_ch2_dst_data_valid ? ~(dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large) :
-                                  (dsc_flight_reg1_ch2_dst_data_valid ? ~(dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large) :
-                                    (dsc_flight_reg2_ch2_dst_data_valid ? ~(dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large) :
-                                      (dsc_flight_reg3_ch2_dst_data_valid ? ~(dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large) : 1'b1)));
-assign axi_rdata_ch3_all_out = dsc_flight_reg0_ch3_dst_data_valid ? ~(dsc_flight_reg0_dst_first_beat & dsc_flight_reg0_dst_large) :
-                                  (dsc_flight_reg1_ch3_dst_data_valid ? ~(dsc_flight_reg1_dst_first_beat & dsc_flight_reg1_dst_large) :
-                                    (dsc_flight_reg2_ch3_dst_data_valid ? ~(dsc_flight_reg2_dst_first_beat & dsc_flight_reg2_dst_large) :
-                                      (dsc_flight_reg3_ch3_dst_data_valid ? ~(dsc_flight_reg3_dst_first_beat & dsc_flight_reg3_dst_large) : 1'b1)));
-
-// generate lcl write data based on descriptor src and dst addr diff, and whether fisrt beat
-// 1.first beat, and dst unaligned addr larger than src: read data first beat left shift
-// 2.first beat, and dst unaligned addr less than src: read data first beat right shift + second beat
-// 3.not first beat: read data first beat + second beat
-// 4.dst addr equal with src: read data first beat
-assign lcl_wr_data_ctrl = {dsc_flight_reg0_ch0_dst_data_valid, dsc_flight_reg0_ch1_dst_data_valid, dsc_flight_reg0_ch2_dst_data_valid, dsc_flight_reg0_ch3_dst_data_valid, 
-                           dsc_flight_reg0_dst_first_beat, dsc_flight_reg0_dst_large, dsc_flight_reg0_dst_equal,
-                           dsc_flight_reg1_ch0_dst_data_valid, dsc_flight_reg1_ch1_dst_data_valid, dsc_flight_reg1_ch2_dst_data_valid, dsc_flight_reg1_ch3_dst_data_valid, 
-                           dsc_flight_reg1_dst_first_beat, dsc_flight_reg1_dst_large, dsc_flight_reg1_dst_equal,
-                           dsc_flight_reg2_ch0_dst_data_valid, dsc_flight_reg2_ch1_dst_data_valid, dsc_flight_reg2_ch2_dst_data_valid, dsc_flight_reg2_ch3_dst_data_valid, 
-                           dsc_flight_reg2_dst_first_beat, dsc_flight_reg2_dst_large, dsc_flight_reg2_dst_equal,
-                           dsc_flight_reg3_ch0_dst_data_valid, dsc_flight_reg3_ch1_dst_data_valid, dsc_flight_reg3_ch2_dst_data_valid, dsc_flight_reg3_ch3_dst_data_valid, 
-                           dsc_flight_reg3_dst_first_beat, dsc_flight_reg3_dst_large, dsc_flight_reg3_dst_equal};
-
-assign lcl_first_shift_right_ch0_reg0 = axi_rdata_ch0_data >> dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch0_reg1 = axi_rdata_ch0_data >> dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch0_reg2 = axi_rdata_ch0_data >> dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch0_reg3 = axi_rdata_ch0_data >> dsc_flight_reg3_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch1_reg0 = axi_rdata_ch1_data >> dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch1_reg1 = axi_rdata_ch1_data >> dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch1_reg2 = axi_rdata_ch1_data >> dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch1_reg3 = axi_rdata_ch1_data >> dsc_flight_reg3_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch2_reg0 = axi_rdata_ch2_data >> dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch2_reg1 = axi_rdata_ch2_data >> dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch2_reg2 = axi_rdata_ch2_data >> dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch2_reg3 = axi_rdata_ch2_data >> dsc_flight_reg3_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch3_reg0 = axi_rdata_ch3_data >> dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch3_reg1 = axi_rdata_ch3_data >> dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch3_reg2 = axi_rdata_ch3_data >> dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_right_ch3_reg3 = axi_rdata_ch3_data >> dsc_flight_reg3_dst_src_diff * 10'd8;
-
-assign lcl_first_shift_left_ch0_reg0  = axi_rdata_ch0_data << dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch0_reg1  = axi_rdata_ch0_data << dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch0_reg2  = axi_rdata_ch0_data << dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch0_reg3  = axi_rdata_ch0_data << dsc_flight_reg3_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch1_reg0  = axi_rdata_ch1_data << dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch1_reg1  = axi_rdata_ch1_data << dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch1_reg2  = axi_rdata_ch1_data << dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch1_reg3  = axi_rdata_ch1_data << dsc_flight_reg3_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch2_reg0  = axi_rdata_ch2_data << dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch2_reg1  = axi_rdata_ch2_data << dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch2_reg2  = axi_rdata_ch2_data << dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch2_reg3  = axi_rdata_ch2_data << dsc_flight_reg3_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch3_reg0  = axi_rdata_ch3_data << dsc_flight_reg0_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch3_reg1  = axi_rdata_ch3_data << dsc_flight_reg1_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch3_reg2  = axi_rdata_ch3_data << dsc_flight_reg2_dst_src_diff * 10'd8;
-assign lcl_first_shift_left_ch3_reg3  = axi_rdata_ch3_data << dsc_flight_reg3_dst_src_diff * 10'd8;
-
-assign lcl_first_shift_remain_ch0 = axi_rdata_ch0_data >> axi_rdata_ch0_remain * 10'd8;
-assign lcl_first_shift_remain_ch1 = axi_rdata_ch0_data >> axi_rdata_ch1_remain * 10'd8;
-assign lcl_first_shift_remain_ch2 = axi_rdata_ch0_data >> axi_rdata_ch2_remain * 10'd8;
-assign lcl_first_shift_remain_ch3 = axi_rdata_ch0_data >> axi_rdata_ch3_remain * 10'd8;
-
-assign lcl_second_shift_reg0 = rdata_fifo_dout << (11'd1024 - dsc_flight_reg0_dst_src_diff * 10'd8);
-assign lcl_second_shift_reg1 = rdata_fifo_dout << (11'd1024 - dsc_flight_reg1_dst_src_diff * 10'd8);
-assign lcl_second_shift_reg2 = rdata_fifo_dout << (11'd1024 - dsc_flight_reg2_dst_src_diff * 10'd8);
-assign lcl_second_shift_reg3 = rdata_fifo_dout << (11'd1024 - dsc_flight_reg3_dst_src_diff * 10'd8);
-
-assign lcl_second_shift_remain_ch0 = rdata_fifo_dout << (11'd1024 - axi_rdata_ch0_remain * 10'd8);
-assign lcl_second_shift_remain_ch1 = rdata_fifo_dout << (11'd1024 - axi_rdata_ch1_remain * 10'd8);
-assign lcl_second_shift_remain_ch2 = rdata_fifo_dout << (11'd1024 - axi_rdata_ch2_remain * 10'd8);
-assign lcl_second_shift_remain_ch3 = rdata_fifo_dout << (11'd1024 - axi_rdata_ch3_remain * 10'd8);
-
-always@(*) begin
-  casez(lcl_wr_data_ctrl)
-    //descriptor 0
-    28'b1000_110_????_???_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch0_reg0;
-    28'b1000_100_????_???_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg0 | lcl_first_shift_right_ch0_reg0;
-    28'b0100_110_????_???_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch1_reg0;
-    28'b0100_100_????_???_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg0 | lcl_first_shift_right_ch1_reg0;
-    28'b0010_110_????_???_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch2_reg0;
-    28'b0010_100_????_???_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg0 | lcl_first_shift_right_ch2_reg0;
-    28'b0001_110_????_???_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch3_reg0;
-    28'b0001_100_????_???_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg0 | lcl_first_shift_right_ch3_reg0;
-    //descriptor 1
-    28'b0000_???_1000_110_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch0_reg1;
-    28'b0000_???_1000_100_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg1 | lcl_first_shift_right_ch0_reg1;
-    28'b0000_???_0100_110_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch1_reg1;
-    28'b0000_???_0100_100_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg1 | lcl_first_shift_right_ch1_reg1;
-    28'b0000_???_0010_110_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch2_reg1;
-    28'b0000_???_0010_100_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg1 | lcl_first_shift_right_ch2_reg1;
-    28'b0000_???_0001_110_????_???_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch3_reg1;
-    28'b0000_???_0001_100_????_???_????_???: 
-        lcl_wr_data = lcl_second_shift_reg1 | lcl_first_shift_right_ch3_reg1;
-    //descriptor 2
-    28'b0000_???_0000_???_1000_110_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch0_reg2;
-    28'b0000_???_0000_???_1000_100_????_???: 
-        lcl_wr_data = lcl_second_shift_reg2 | lcl_first_shift_right_ch0_reg2;
-    28'b0000_???_0000_???_0100_110_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch1_reg2;
-    28'b0000_???_0000_???_0100_100_????_???: 
-        lcl_wr_data = lcl_second_shift_reg2 | lcl_first_shift_right_ch1_reg2;
-    28'b0000_???_0000_???_0010_110_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch2_reg2;
-    28'b0000_???_0000_???_0010_100_????_???: 
-        lcl_wr_data = lcl_second_shift_reg2 | lcl_first_shift_right_ch2_reg2;
-    28'b0000_???_0000_???_0001_110_????_???:  
-        lcl_wr_data = lcl_first_shift_left_ch3_reg2;
-    28'b0000_???_0000_???_0001_100_????_???: 
-        lcl_wr_data = lcl_second_shift_reg2 | lcl_first_shift_right_ch3_reg2;
-    //descriptor 3
-    28'b0000_???_0000_???_0000_???_1000_110:  
-        lcl_wr_data = lcl_first_shift_left_ch0_reg3;
-    28'b0000_???_0000_???_0000_???_1000_100: 
-        lcl_wr_data = lcl_second_shift_reg3 | lcl_first_shift_right_ch0_reg3;
-    28'b0000_???_0000_???_0000_???_0100_110:  
-        lcl_wr_data = lcl_first_shift_left_ch1_reg3;
-    28'b0000_???_0000_???_0000_???_0100_100: 
-        lcl_wr_data = lcl_second_shift_reg3 | lcl_first_shift_right_ch1_reg3;
-    28'b0000_???_0000_???_0000_???_0010_110:  
-        lcl_wr_data = lcl_first_shift_left_ch2_reg3;
-    28'b0000_???_0000_???_0000_???_0010_100: 
-        lcl_wr_data = lcl_second_shift_reg3 | lcl_first_shift_right_ch2_reg3;
-    28'b0000_???_0000_???_0000_???_0001_110:  
-        lcl_wr_data = lcl_first_shift_left_ch3_reg3;
-    28'b0000_???_0000_???_0000_???_0001_100: 
-        lcl_wr_data = lcl_second_shift_reg3 | lcl_first_shift_right_ch3_reg3;
-    //channel only, no descriptor info needed
-    28'b1000_0?0_????_???_????_???_????_???, 28'b0000_???_1000_0?0_????_???_????_???, 
-    28'b0000_???_0000_???_1000_0?0_????_???, 28'b0000_???_0000_???_0000_???_1000_0?0: 
-        lcl_wr_data = lcl_second_shift_remain_ch0 | lcl_first_shift_remain_ch0;
-    28'b1000_?01_????_???_????_???_????_???, 28'b0000_???_1000_?01_????_???_????_???,
-    28'b0000_???_0000_???_1000_?01_????_???, 28'b0000_???_0000_???_0000_???_1000_?01: 
-        lcl_wr_data = axi_rdata_ch0_data;
-    28'b0100_0?0_????_???_????_???_????_???, 28'b0000_???_0100_0?0_????_???_????_???,
-    28'b0000_???_0000_???_0100_0?0_????_???, 28'b0000_???_0000_???_0000_???_0100_0?0: 
-        lcl_wr_data = lcl_second_shift_remain_ch1 | lcl_first_shift_remain_ch1;
-    28'b0100_?01_????_???_????_???_????_???, 28'b0000_???_0100_?01_????_???_????_???,
-    28'b0000_???_0000_???_0100_?01_????_???, 28'b0000_???_0000_???_0000_???_0100_?01: 
-        lcl_wr_data = axi_rdata_ch1_data;
-    28'b0010_0?0_????_???_????_???_????_???, 28'b0000_???_0010_0?0_????_???_????_???, 
-    28'b0000_???_0000_???_0010_0?0_????_???, 28'b0000_???_0000_???_0000_???_0010_0?0: 
-        lcl_wr_data = lcl_second_shift_remain_ch2 | lcl_first_shift_remain_ch2;
-    28'b0010_?01_????_???_????_???_????_???, 28'b0000_???_0010_?01_????_???_????_???, 
-    28'b0000_???_0000_???_0010_?01_????_???, 28'b0000_???_0000_???_0000_???_0010_?01: 
-        lcl_wr_data = axi_rdata_ch2_data;
-    28'b0001_0?0_????_???_????_???_????_???, 28'b0000_???_0001_0?0_????_???_????_???, 
-    28'b0000_???_0000_???_0001_0?0_????_???, 28'b0000_???_0000_???_0000_???_0001_0?0: 
-        lcl_wr_data = lcl_second_shift_remain_ch3 | lcl_first_shift_remain_ch3;
-    28'b0001_?01_????_???_????_???_????_???, 28'b0000_???_0001_?01_????_???_????_???, 
-    28'b0000_???_0000_???_0001_?01_????_???, 28'b0000_???_0000_???_0000_???_0001_?01: 
-        lcl_wr_data = axi_rdata_ch3_data;
-    default:
-        lcl_wr_data = 1024'b0;
-  endcase
-end
-
+// generate lcl write data for 1024b
+assign lcl_wr_data_valid = rdata_fifo_valid;
+assign lcl_wr_data       = rdata_fifo_valid ? rdata_fifo_dout[AXI_DATA_WIDTH-1 : 0] : 1024'b0;
+// *****************************
+// end 1024 bit AXI data width
+// *****************************
 `endif
 
 //------------------------------------------------------------------------------
@@ -1751,27 +1227,50 @@ assign dsc_flight_reg3_dst_last_beat = (dsc_flight_reg3_dst_length == 28'd128);
 // find the in-flight registers when lcl write data ready
 // (if lcl_wr_ready is not '1', the register set might shift, 
 // but still can keep correct register matched till the cycle cmd issued)
-assign dsc_flight_reg0_ch0_dst_data_valid = dsc_flight_reg0_valid & (dsc_flight_reg0_ch_id == 2'b00) & lcl_wr_data_ch0_valid & (dsc_flight_reg0_dst_length != 28'b0);
-assign dsc_flight_reg0_ch1_dst_data_valid = dsc_flight_reg0_valid & (dsc_flight_reg0_ch_id == 2'b01) & lcl_wr_data_ch1_valid & (dsc_flight_reg0_dst_length != 28'b0);
-assign dsc_flight_reg0_ch2_dst_data_valid = dsc_flight_reg0_valid & (dsc_flight_reg0_ch_id == 2'b10) & lcl_wr_data_ch2_valid & (dsc_flight_reg0_dst_length != 28'b0);
-assign dsc_flight_reg0_ch3_dst_data_valid = dsc_flight_reg0_valid & (dsc_flight_reg0_ch_id == 2'b11) & lcl_wr_data_ch3_valid & (dsc_flight_reg0_dst_length != 28'b0);
-assign dsc_flight_reg1_ch0_dst_data_valid = dsc_flight_reg1_valid & (dsc_flight_reg1_ch_id == 2'b00) & lcl_wr_data_ch0_valid & (dsc_flight_reg1_dst_length != 28'b0);
-assign dsc_flight_reg1_ch1_dst_data_valid = dsc_flight_reg1_valid & (dsc_flight_reg1_ch_id == 2'b01) & lcl_wr_data_ch1_valid & (dsc_flight_reg1_dst_length != 28'b0);
-assign dsc_flight_reg1_ch2_dst_data_valid = dsc_flight_reg1_valid & (dsc_flight_reg1_ch_id == 2'b10) & lcl_wr_data_ch2_valid & (dsc_flight_reg1_dst_length != 28'b0);
-assign dsc_flight_reg1_ch3_dst_data_valid = dsc_flight_reg1_valid & (dsc_flight_reg1_ch_id == 2'b11) & lcl_wr_data_ch3_valid & (dsc_flight_reg1_dst_length != 28'b0);
-assign dsc_flight_reg2_ch0_dst_data_valid = dsc_flight_reg2_valid & (dsc_flight_reg2_ch_id == 2'b00) & lcl_wr_data_ch0_valid & (dsc_flight_reg2_dst_length != 28'b0);
-assign dsc_flight_reg2_ch1_dst_data_valid = dsc_flight_reg2_valid & (dsc_flight_reg2_ch_id == 2'b01) & lcl_wr_data_ch1_valid & (dsc_flight_reg2_dst_length != 28'b0);
-assign dsc_flight_reg2_ch2_dst_data_valid = dsc_flight_reg2_valid & (dsc_flight_reg2_ch_id == 2'b10) & lcl_wr_data_ch2_valid & (dsc_flight_reg2_dst_length != 28'b0);
-assign dsc_flight_reg2_ch3_dst_data_valid = dsc_flight_reg2_valid & (dsc_flight_reg2_ch_id == 2'b11) & lcl_wr_data_ch3_valid & (dsc_flight_reg2_dst_length != 28'b0);
-assign dsc_flight_reg3_ch0_dst_data_valid = dsc_flight_reg3_valid & (dsc_flight_reg3_ch_id == 2'b00) & lcl_wr_data_ch0_valid & (dsc_flight_reg3_dst_length != 28'b0);
-assign dsc_flight_reg3_ch1_dst_data_valid = dsc_flight_reg3_valid & (dsc_flight_reg3_ch_id == 2'b01) & lcl_wr_data_ch1_valid & (dsc_flight_reg3_dst_length != 28'b0);
-assign dsc_flight_reg3_ch2_dst_data_valid = dsc_flight_reg3_valid & (dsc_flight_reg3_ch_id == 2'b10) & lcl_wr_data_ch2_valid & (dsc_flight_reg3_dst_length != 28'b0);
-assign dsc_flight_reg3_ch3_dst_data_valid = dsc_flight_reg3_valid & (dsc_flight_reg3_ch_id == 2'b11) & lcl_wr_data_ch3_valid & (dsc_flight_reg3_dst_length != 28'b0);
+assign dsc_flight_reg0_dst_use = lcl_wr_data_valid & dsc_flight_reg0_valid & (dsc_flight_reg0_dst_length != 28'b0) & (rtag_fifo_axi_rid[1:0] == dsc_flight_reg0_ch_id);
+assign dsc_flight_reg1_dst_use = lcl_wr_data_valid & dsc_flight_reg1_valid & (dsc_flight_reg1_dst_length != 28'b0) & (rtag_fifo_axi_rid[1:0] == dsc_flight_reg1_ch_id);
+assign dsc_flight_reg2_dst_use = lcl_wr_data_valid & dsc_flight_reg2_valid & (dsc_flight_reg2_dst_length != 28'b0) & (rtag_fifo_axi_rid[1:0] == dsc_flight_reg2_ch_id);
+assign dsc_flight_reg3_dst_use = lcl_wr_data_valid & dsc_flight_reg3_valid & (dsc_flight_reg3_dst_length != 28'b0) & (rtag_fifo_axi_rid[1:0] == dsc_flight_reg3_ch_id);
 
-assign dsc_flight_reg0_dst_use = dsc_flight_reg0_ch0_dst_data_valid | dsc_flight_reg0_ch1_dst_data_valid | dsc_flight_reg0_ch2_dst_data_valid | dsc_flight_reg0_ch3_dst_data_valid;
-assign dsc_flight_reg1_dst_use = dsc_flight_reg1_ch0_dst_data_valid | dsc_flight_reg1_ch1_dst_data_valid | dsc_flight_reg1_ch2_dst_data_valid | dsc_flight_reg1_ch3_dst_data_valid;
-assign dsc_flight_reg2_dst_use = dsc_flight_reg2_ch0_dst_data_valid | dsc_flight_reg2_ch1_dst_data_valid | dsc_flight_reg2_ch2_dst_data_valid | dsc_flight_reg2_ch3_dst_data_valid;
-assign dsc_flight_reg3_dst_use = dsc_flight_reg3_ch0_dst_data_valid | dsc_flight_reg3_ch1_dst_data_valid | dsc_flight_reg3_ch2_dst_data_valid | dsc_flight_reg3_ch3_dst_data_valid;
+// generate lcl write byte enable based on descriptor first or last beat
+// 1.first beat wr_be is based on dest unaligned byte start addr
+// 2.last beat wr_be is based on dest unaligned byte end addr
+// 3.only one beat (first and last beat) wr_be is based on both dest unaligned byte start and end addr
+assign lcl_wr_be_ctrl = {dsc_flight_reg0_dst_use, dsc_flight_reg0_dst_first_beat, dsc_flight_reg0_dst_last_beat,
+                         dsc_flight_reg1_dst_use, dsc_flight_reg1_dst_first_beat, dsc_flight_reg1_dst_last_beat,
+                         dsc_flight_reg2_dst_use, dsc_flight_reg2_dst_first_beat, dsc_flight_reg2_dst_last_beat,
+                         dsc_flight_reg3_dst_use, dsc_flight_reg3_dst_first_beat, dsc_flight_reg3_dst_last_beat};
+
+assign dsc_flight_reg0_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg0_dst_first_be_addr;
+assign dsc_flight_reg1_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg1_dst_first_be_addr;
+assign dsc_flight_reg2_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg2_dst_first_be_addr;
+assign dsc_flight_reg3_dst_first_beat_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg3_dst_first_be_addr;
+assign dsc_flight_reg0_dst_last_beat_be  = (dsc_flight_reg0_dst_last_be_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF 
+                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg0_dst_last_be_addr);
+assign dsc_flight_reg1_dst_last_beat_be  = (dsc_flight_reg1_dst_last_be_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
+                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg1_dst_last_be_addr);
+assign dsc_flight_reg2_dst_last_beat_be  = (dsc_flight_reg2_dst_last_be_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
+                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg2_dst_last_be_addr);
+assign dsc_flight_reg3_dst_last_beat_be  = (dsc_flight_reg3_dst_last_be_addr==7'b0) ? 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
+                                           : ~(128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF << dsc_flight_reg3_dst_last_be_addr);
+
+always@(*) begin
+  casez(lcl_wr_be_ctrl)
+    12'b111_???_???_???: lcl_wr_be = dsc_flight_reg0_dst_first_beat_be & dsc_flight_reg0_dst_last_beat_be;
+    12'b110_???_???_???: lcl_wr_be = dsc_flight_reg0_dst_first_beat_be;
+    12'b101_???_???_???: lcl_wr_be = dsc_flight_reg0_dst_last_beat_be;
+    12'b0??_111_???_???: lcl_wr_be = dsc_flight_reg1_dst_first_beat_be & dsc_flight_reg1_dst_last_beat_be;
+    12'b0??_110_???_???: lcl_wr_be = dsc_flight_reg1_dst_first_beat_be;
+    12'b0??_101_???_???: lcl_wr_be = dsc_flight_reg1_dst_last_beat_be;
+    12'b0??_0??_111_???: lcl_wr_be = dsc_flight_reg2_dst_first_beat_be & dsc_flight_reg2_dst_last_beat_be;
+    12'b0??_0??_110_???: lcl_wr_be = dsc_flight_reg2_dst_first_beat_be;
+    12'b0??_0??_101_???: lcl_wr_be = dsc_flight_reg2_dst_last_beat_be;
+    12'b0??_0??_0??_111: lcl_wr_be = dsc_flight_reg3_dst_first_beat_be & dsc_flight_reg3_dst_last_beat_be;
+    12'b0??_0??_0??_110: lcl_wr_be = dsc_flight_reg3_dst_first_beat_be;
+    12'b0??_0??_0??_101: lcl_wr_be = dsc_flight_reg3_dst_last_beat_be;
+    default:             lcl_wr_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
+  endcase
+end
 
 // generate lcl write cmd
 assign lcl_wr_valid  = lcl_wr_data_valid;
@@ -1780,11 +1279,6 @@ assign lcl_wr_ea     = dsc_flight_reg0_dst_use ? dsc_flight_reg0_dst_addr
                        : (dsc_flight_reg1_dst_use ? dsc_flight_reg1_dst_addr
                          : (dsc_flight_reg2_dst_use ? dsc_flight_reg2_dst_addr
                            : (dsc_flight_reg3_dst_use ? dsc_flight_reg3_dst_addr : 64'b0)));
-
-assign lcl_wr_axi_id = dsc_flight_reg0_dst_use ? {dsc_flight_reg0_ch_id, `A2HMM_ENGINE_ID}
-                       : (dsc_flight_reg1_dst_use ? {dsc_flight_reg1_ch_id, `A2HMM_ENGINE_ID}
-                         : (dsc_flight_reg2_dst_use ? {dsc_flight_reg2_ch_id, `A2HMM_ENGINE_ID}
-                           : (dsc_flight_reg3_dst_use ? {dsc_flight_reg3_ch_id, `A2HMM_ENGINE_ID} : 5'b0)));
 
 assign lcl_wr_first  = dsc_flight_reg0_dst_use ? dsc_flight_reg0_dst_first_beat
                        : (dsc_flight_reg1_dst_use ? dsc_flight_reg1_dst_first_beat
@@ -1795,6 +1289,8 @@ assign lcl_wr_last   = dsc_flight_reg0_dst_use ? dsc_flight_reg0_dst_last_beat
                        : (dsc_flight_reg1_dst_use ? dsc_flight_reg1_dst_last_beat
                          : (dsc_flight_reg2_dst_use ? dsc_flight_reg2_dst_last_beat
                            : (dsc_flight_reg3_dst_use ? dsc_flight_reg3_dst_last_beat : 1'b0)));
+
+assign lcl_wr_axi_id = {rtag_fifo_axi_rid[1:0], `A2HMM_ENGINE_ID};
 
 assign lcl_wr_done   = lcl_wr_data_valid & lcl_wr_ready;
 
@@ -2186,7 +1682,8 @@ assign dsc_flight_reg0_commit_data = {190'b0,
                                       62'b0,
                                       dsc_flight_reg0_src_err,
                                       dsc_flight_reg0_src_err_addr,
-                                      94'b0,
+                                      93'b0,
+                                      dsc_flight_reg0_intr,
                                       dsc_flight_reg0_ch_id,
                                       dsc_flight_reg0_dsc_id,
                                       dsc_flight_reg0_complete,
@@ -2198,7 +1695,8 @@ assign dsc_flight_reg1_commit_data = {190'b0,
                                       62'b0,
                                       dsc_flight_reg1_src_err,
                                       dsc_flight_reg1_src_err_addr,
-                                      94'b0,
+                                      93'b0,
+                                      dsc_flight_reg1_intr,
                                       dsc_flight_reg1_ch_id,
                                       dsc_flight_reg1_dsc_id,
                                       dsc_flight_reg1_complete,
@@ -2209,7 +1707,8 @@ assign dsc_flight_reg2_commit_data = {190'b0,
                                       62'b0,
                                       dsc_flight_reg2_src_err,
                                       dsc_flight_reg2_src_err_addr,
-                                      94'b0,
+                                      93'b0,
+                                      dsc_flight_reg2_intr,
                                       dsc_flight_reg2_ch_id,
                                       dsc_flight_reg2_dsc_id,
                                       dsc_flight_reg2_complete,
@@ -2220,7 +1719,8 @@ assign dsc_flight_reg3_commit_data = {190'b0,
                                       62'b0,
                                       dsc_flight_reg3_src_err,
                                       dsc_flight_reg3_src_err_addr,
-                                      94'b0,
+                                      93'b0,
+                                      dsc_flight_reg3_intr,
                                       dsc_flight_reg3_ch_id,
                                       dsc_flight_reg3_dsc_id,
                                       dsc_flight_reg3_complete,

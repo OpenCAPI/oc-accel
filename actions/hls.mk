@@ -20,30 +20,14 @@
 #   xcku115-flva1517-2-e
 #FPGACHIP    ?= xcku060-ffva1156-2-e
 CONFIG_FILE = $(SNAP_ROOT)/.snap_config
+HLS_ACTION_CLOCK_DEFAULT = 4
 ifneq ("$(wildcard $(CONFIG_FILE))","")
   FPGACHIP = $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+  HLS_ACTION_CLOCK = $(shell grep HLS_CLOCK_PERIOD_CONSTRAINT $(CONFIG_FILE) | cut -d = -f 2 | tr -d 'ns"')
 #  $(info FPGACHIP is set to $(FPGACHIP).)
 endif
 
 PART_NUMBER ?= $(FPGACHIP)
-
-#Reading HLS_CLOCK_PERIOD which can be set in snap_env.sh
-snap_env_sh = $(SNAP_ROOT)/snap_env.sh
-HLS_ACTION_CLOCK_DEFAULT = 4
-ifneq ("$(wildcard $(snap_env_sh))","")
-  HLS_ACTION_CLOCK_COMMENTED = $(shell grep HLS_CLOCK_PERIOD_CONSTRAINT $(snap_env_sh) | grep "\#")
-  ifeq "$(HLS_ACTION_CLOCK_COMMENTED)" ""
-    #if line not commented, then get the value
-    HLS_ACTION_CLOCK = $(shell grep HLS_CLOCK_PERIOD_CONSTRAINT $(snap_env_sh) | cut -d = -f 2 | tr -d 'ns"')
-    ifeq "$(HLS_ACTION_CLOCK)" ""
-      HLS_ACTION_CLOCK = $(HLS_ACTION_CLOCK_DEFAULT)
-    endif
-#    $(info HLS CLOCK PERIOD is set to: $(HLS_ACTION_CLOCK) ns)
-  else
-    HLS_ACTION_CLOCK = $(HLS_ACTION_CLOCK_DEFAULT)
-  endif
-endif
-
 
 HLS_CFLAGS ?= ""
 

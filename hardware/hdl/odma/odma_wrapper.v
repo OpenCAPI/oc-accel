@@ -55,13 +55,20 @@ module odma_wrapper #(
                           parameter    AXI_MM_ARUSER = 9,
                           parameter    AXI_MM_WUSER = 1,
                           parameter    AXI_MM_RUSER = 1,
-                          parameter    AXI_MM_BUSER = 1
+                          parameter    AXI_MM_BUSER = 1,
+                          parameter    AXI_ST_USER = 8
                          )
                    (
                    //---- synchronous clocks and reset ----------------------
                    input                 clk_tlx                        ,
                    input                 clk_afu                        ,
                    input                 rst_n                          ,
+                   
+                   // interrupt
+                   output                interrupt_ack                  ,
+                   input                 interrupt                      ,
+                   input      [063:0]    interrupt_src                  ,
+                   input      [008:0]    interrupt_ctx                  ,
 
                    //---- configurations ------------------------------------
                    input      [0003:0]   cfg_backoff_timer              ,
@@ -109,7 +116,8 @@ module odma_wrapper #(
                    output                afu_tlx_resp_credit            ,
                    output     [0006:0]   afu_tlx_resp_initial_credit    ,
 
-                   //----- AXI MM/ST Data  ----------------------------------
+                   //----- AXI MM/ST Data  --------------------------//
+`ifndef ENABLE_ODMA_ST_MODE
                    //--------------- AXI4-MM Interface --------------//
                    //---------- Write Addr/Req Channel --------------//
                    output [AXI_MM_AW - 1:0]        axi_mm_awaddr     ,
@@ -159,57 +167,26 @@ module odma_wrapper #(
                    output                          axi_mm_rready     ,         
                    input  [0001:0]                 axi_mm_rresp      ,         
                    input  [AXI_MM_RUSER - 1:0]     axi_mm_ruser      ,         
-                   input                           axi_mm_rvalid     ,         
-                   // TODO: ST is not supported now
-                   ////--------------- AXI4-ST Interface --------------//
-                   ////---------- H2C AXI4-ST Channel 0 ---------------//
-                   //input                           axi_st_h2c_tready_0,
-                   //output                          axi_st_h2c_tlast_0 ,
-                   //output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_0 ,
-                   //output                          axi_st_h2c_tvalid_0,
-                   //output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_0 ,
-                   ////---------- H2C AXI4-ST Channel 1 ---------------//
-                   //input                           axi_st_h2c_tready_1,
-                   //output                          axi_st_h2c_tlast_1 ,
-                   //output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_1 ,
-                   //output                          axi_st_h2c_tvalid_1,
-                   //output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_1 ,
-                   ////---------- H2C AXI4-ST Channel 2 ---------------//
-                   //input                           axi_st_h2c_tready_2,
-                   //output                          axi_st_h2c_tlast_2 ,
-                   //output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_2 ,
-                   //output                          axi_st_h2c_tvalid_2,
-                   //output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_2 ,
-                   ////---------- H2C AXI4-ST Channel 3 ---------------//
-                   //input                           axi_st_h2c_tready_3,
-                   //output                          axi_st_h2c_tlast_3 ,
-                   //output [AXI_ST_DW - 1:0]        axi_st_h2c_tdata_3 ,
-                   //output                          axi_st_h2c_tvalid_3,
-                   //output [AXI_ST_DW/8 - 1:0]      axi_st_h2c_tuser_3 ,
-                   ////---------- C2H AXI4-ST Channel 0 ---------------//
-                   //output                          axi_st_c2h_tready_0,
-                   //input                           axi_st_c2h_tlast_0 ,
-                   //input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_0 ,
-                   //input                           axi_st_c2h_tvalid_0,
-                   //input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_0 ,
-                   ////---------- C2H AXI4-ST Channel 1 ---------------//
-                   //output                          axi_st_c2h_tready_1,
-                   //input                           axi_st_c2h_tlast_1 ,
-                   //input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_1 ,
-                   //input                           axi_st_c2h_tvalid_1,
-                   //input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_1 ,
-                   ////---------- C2H AXI4-ST Channel 2 ---------------//
-                   //output                          axi_st_c2h_tready_2,
-                   //input                           axi_st_c2h_tlast_2 ,
-                   //input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_2 ,
-                   //input                           axi_st_c2h_tvalid_2,
-                   //input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_2 ,
-                   ////---------- C2H AXI4-ST Channel 3 ---------------//
-                   //output                          axi_st_c2h_tready_3,
-                   //input                           axi_st_c2h_tlast_3 ,
-                   //input  [AXI_ST_DW - 1:0]        axi_st_c2h_tdata_3 ,
-                   //input                           axi_st_c2h_tvalid_3,
-                   //input  [AXI_ST_DW/8 - 1:0]      axi_st_c2h_tuser_3 ,
+                   input                           axi_mm_rvalid     , 
+`else        
+                   //--------------- AXI4-ST Interface --------------//
+                   //------------------ H2A AXI4-ST -----------------//
+                   input                           m_axis_tready     ,
+                   output                          m_axis_tlast      ,
+                   output [AXI_ST_DW - 1:0]        m_axis_tdata      ,
+                   output [AXI_ST_DW/8 - 1:0]      m_axis_tkeep      ,
+                   output                          m_axis_tvalid     ,
+                   output [IDW - 1:0]              m_axis_tid        ,
+                   output [AXI_ST_USER - 1:0]      m_axis_tuser      ,
+                   //------------------ A2H AXI4-ST -----------------//
+                   output                          s_axis_tready     ,
+                   input                           s_axis_tlast      ,
+                   input  [AXI_ST_DW - 1:0]        s_axis_tdata      ,
+                   input  [AXI_ST_DW/8 - 1:0]      s_axis_tkeep      ,
+                   input                           s_axis_tvalid     ,
+                   input  [IDW - 1:0]              s_axis_tid        ,
+                   input  [AXI_ST_USER - 1:0]      s_axis_tuser      ,
+`endif
                    //-------- Host AXI-Lite slave Interface ---------//
                    input                           h_s_axi_arvalid   ,        
                    input  [AXI_LITE_AW - 1:0]      h_s_axi_araddr    ,        
@@ -414,6 +391,18 @@ wire  [0002:0] tlx_r_cmd_pl       ;
 wire           tlx_r_cmd_ready    ;
 wire  [1023:0] tlx_r_cdata_bus    ;
 
+wire           odma_interrupt     ;
+wire  [0008:0] odma_interrupt_ctx ;
+wire           odma_interrupt_ack ;
+wire  [0063:0] odma_interrupt_src ;
+wire           tlx_i_cmd_valid    ;
+wire  [0067:0] tlx_i_cmd_obj      ;
+wire  [0015:0] tlx_i_cmd_afutag   ;
+wire  [0007:0] tlx_i_cmd_opcode   ;
+wire           tlx_i_rsp_valid    ;
+wire  [0015:0] tlx_i_rsp_afutag   ;
+wire  [0007:0] tlx_i_rsp_opcode   ;
+wire  [0003:0] tlx_i_rsp_code     ;
 
 //===============================================================================================================
 // Clock converters:
@@ -496,7 +485,13 @@ brdg_tlx_cmd_converter tlx_cmd_conv (
                 /*input                 */   .tlx_ac_cmd_valid                ( tlx_ac_cmd_valid                ),
                 /*input      [0019:0]   */   .tlx_ac_cmd_pasid                ( tlx_ac_cmd_pasid                ),
                 /*input      [0011:0]   */   .tlx_ac_cmd_actag                ( tlx_ac_cmd_actag                ),
-                /*input      [0007:0]   */   .tlx_ac_cmd_opcode               ( tlx_ac_cmd_opcode               )
+                /*input      [0007:0]   */   .tlx_ac_cmd_opcode               ( tlx_ac_cmd_opcode               ),
+
+                // interrupt channel
+                /*input                 */   .tlx_in_cmd_valid                ( tlx_i_cmd_valid                ),
+                /*input      [067:0]    */   .tlx_in_cmd_obj                  ( tlx_i_cmd_obj                  ),
+                /*input      [015:0]    */   .tlx_in_cmd_afutag               ( tlx_i_cmd_afutag               ),     
+                /*input      [007:0]    */   .tlx_in_cmd_opcode               ( tlx_i_cmd_opcode               )
                 );
 
 
@@ -554,7 +549,12 @@ brdg_tlx_rsp_converter tlx_rsp_conv(
                 /*output                */   .tlx_r_rdata_o_bdi              ( tlx_r_rdata_o_bdi              ),
                 /*output                */   .tlx_r_rdata_e_bdi              ( tlx_r_rdata_e_bdi              ),
                 /*output     [511:0]    */   .tlx_r_rdata_o                  ( tlx_r_rdata_o                  ),
-                /*output     [511:0]    */   .tlx_r_rdata_e                  ( tlx_r_rdata_e                  )
+                /*output     [511:0]    */   .tlx_r_rdata_e                  ( tlx_r_rdata_e                  ),
+                  // interrupt channel
+                /*input              */      .tlx_i_rsp_valid                ( tlx_i_rsp_valid                ),
+                /*input      [0015:0]*/      .tlx_i_rsp_afutag               ( tlx_i_rsp_afutag               ),
+                /*input      [0007:0]*/      .tlx_i_rsp_opcode               ( tlx_i_rsp_opcode               ),
+                /*input      [0003:0]*/      .tlx_i_rsp_code                 ( tlx_i_rsp_code                 )
                 );
 
 
@@ -895,6 +895,8 @@ brdg_context_surveil ctx_surveil(
                 /*input      [008:0]    */   .lcl_rd_ctx             ( lcl_rd_ctx             ),
                 /*input                 */   .lcl_wr_ctx_valid       ( lcl_wr_ctx_valid       ),
                 /*input                 */   .lcl_rd_ctx_valid       ( lcl_rd_ctx_valid       ),
+                /*input              */      .interrupt              ( odma_interrupt         ),
+                /*input      [008:0] */      .interrupt_ctx          ( odma_interrupt_ctx     ),
 
                 //---- status ----------------------------------------
                 /*input                 */   .last_context_cleared   ( last_context_cleared   ),
@@ -906,6 +908,30 @@ brdg_context_surveil ctx_surveil(
                 /*output     [011:0]    */   .tlx_cmd_actag          ( tlx_ac_cmd_actag        ),
                 /*output     [007:0]    */   .tlx_cmd_opcode         ( tlx_ac_cmd_opcode       )
                 );
+
+//===============================================================================================================
+//
+//    Interrupt 
+//
+//===============================================================================================================
+
+ brdg_interrupt mbrdg_interrupt ( 
+                       /*input              */  .clk              (clk_afu             ),
+                       /*input              */  .rst_n            (rst_n               ),
+                       /*input      [003:0] */  .backoff_limit    (cfg_backoff_timer   ),
+                       /*input              */  .interrupt_enable (last_context_cleared),
+                       /*output             */  .interrupt_ack    (odma_interrupt_ack  ),
+                       /*input              */  .interrupt        (odma_interrupt      ),
+                       /*input      [067:0] */  .interrupt_src    (odma_interrupt_src  ),
+                       /*output reg         */  .tlx_cmd_valid    (tlx_i_cmd_valid     ),
+                       /*output reg [067:0] */  .tlx_cmd_obj      (tlx_i_cmd_obj       ),
+                       /*output reg [015:0] */  .tlx_cmd_afutag   (tlx_i_cmd_afutag    ),     
+                       /*output reg [007:0] */  .tlx_cmd_opcode   (tlx_i_cmd_opcode    ),
+                       /*input              */  .tlx_rsp_valid    (tlx_i_rsp_valid     ),
+                       /*input      [0015:0]*/  .tlx_rsp_afutag   (tlx_i_rsp_afutag    ),
+                       /*input      [0007:0]*/  .tlx_rsp_opcode   (tlx_i_rsp_opcode    ),
+                       /*input      [0003:0]*/  .tlx_rsp_code     (tlx_i_rsp_code      )
+                       );
 
 //===============================================================================================================
 //
@@ -926,11 +952,20 @@ odma
                     .AXI_MM_ARUSER (AXI_MM_ARUSER),
                     .AXI_MM_WUSER  (AXI_MM_WUSER),
                     .AXI_MM_RUSER  (AXI_MM_RUSER),
-                    .AXI_MM_BUSER  (AXI_MM_BUSER)
+                    .AXI_MM_BUSER  (AXI_MM_BUSER),
+                    .AXI_ST_USER   (AXI_ST_USER)
                    )
                 odma (
                 /*input                 */   .clk                      ( clk_afu            ),
                 /*input                 */   .rst_n                    ( rst_n              ),
+                /*input                 */   .action_interrupt         ( interrupt          ),
+                /*input [0008:0]        */   .action_interrupt_ctx     ( interrupt_ctx      ),
+                /*input [0063:0]        */   .action_interrupt_src     ( interrupt_src      ),
+                /*output                */   .action_interrupt_ack     ( interrupt_ack      ),
+                /*output                */   .odma_interrupt           ( odma_interrupt     ),
+                /*output [0008:0]       */   .odma_interrupt_ctx       ( odma_interrupt_ctx ),
+                /*output [0063:0]       */   .odma_interrupt_src       ( odma_interrupt_src ),
+                /*input                 */   .odma_interrupt_ack       ( odma_interrupt_ack ),
                 //-------------- LCL Read Interface --------------//
                 //-------------- Read Addr/Req Channel -----------//
                 /*output                */          .lcl_rd_valid       ( lcl_rd_valid       ),
@@ -967,6 +1002,7 @@ odma
                 /*input  [IDW - 1:0]    */          .lcl_wr_rsp_axi_id  ( lcl_wr_rsp_axi_id  ),
                 /*input                 */          .lcl_wr_rsp_code    ( lcl_wr_rsp_code    ),
                 /*output [0031:0]       */          .lcl_wr_rsp_ready   ( lcl_wr_rsp_ready   ),
+`ifndef ENABLE_ODMA_ST_MODE
                 //--------------- AXI4-MM Interface --------------//
                 //---------- Write Addr/Req Channel --------------//
                 /*output [AXI_MM_AW - 1:0]*/        .axi_mm_awaddr     ( axi_mm_awaddr       ),
@@ -1016,57 +1052,26 @@ odma
                 /*output                      */    .axi_mm_rready     ( axi_mm_rready       ),         
                 /*input  [0001:0]             */    .axi_mm_rresp      ( axi_mm_rresp        ),         
                 /*input  [AXI_MM_RUSER - 1:0] */    .axi_mm_ruser      ( axi_mm_ruser        ),         
-                /*input                       */    .axi_mm_rvalid     ( axi_mm_rvalid       ),         
-                // TODO: ST is not supported now
-                ////--------------- AXI4-ST Interface --------------//
-                ////---------- H2C AXI4-ST Channel 0 ---------------//
-                ///*input                       */    .axi_st_h2c_tready_0 ( axi_st_h2c_tready_0 ),
-                ///*output                      */    .axi_st_h2c_tlast_0  ( axi_st_h2c_tlast_0  ),
-                ///*output [AXI_ST_DW - 1:0]    */    .axi_st_h2c_tdata_0  ( axi_st_h2c_tdata_0  ),
-                ///*output                      */    .axi_st_h2c_tvalid_0 ( axi_st_h2c_tvalid_0 ),
-                ///*output [AXI_ST_DW/8 - 1:0]  */    .axi_st_h2c_tuser_0  ( axi_st_h2c_tuser_0  ),
-                ////---------- H2C AXI4-ST Channel 1 ---------------//
-                ///*input                       */    .axi_st_h2c_tready_1 ( axi_st_h2c_tready_1 ),
-                ///*output                      */    .axi_st_h2c_tlast_1  ( axi_st_h2c_tlast_1  ),
-                ///*output [AXI_ST_DW - 1:0]    */    .axi_st_h2c_tdata_1  ( axi_st_h2c_tdata_1  ),
-                ///*output                      */    .axi_st_h2c_tvalid_1 ( axi_st_h2c_tvalid_1 ),
-                ///*output [AXI_ST_DW/8 - 1:0]  */    .axi_st_h2c_tuser_1  ( axi_st_h2c_tuser_1  ),
-                ////---------- H2C AXI4-ST Channel 2 ---------------//
-                ///*input                       */    .axi_st_h2c_tready_2 ( axi_st_h2c_tready_2 ),
-                ///*output                      */    .axi_st_h2c_tlast_2  ( axi_st_h2c_tlast_2  ),
-                ///*output [AXI_ST_DW - 1:0]    */    .axi_st_h2c_tdata_2  ( axi_st_h2c_tdata_2  ),
-                ///*output                      */    .axi_st_h2c_tvalid_2 ( axi_st_h2c_tvalid_2 ),
-                ///*output [AXI_ST_DW/8 - 1:0]  */    .axi_st_h2c_tuser_2  ( axi_st_h2c_tuser_2  ),
-                ////---------- H2C AXI4-ST Channel 3 ---------------//
-                ///*input                       */    .axi_st_h2c_tready_3 ( axi_st_h2c_tready_3 ),
-                ///*output                      */    .axi_st_h2c_tlast_3  ( axi_st_h2c_tlast_3  ),
-                ///*output [AXI_ST_DW - 1:0]    */    .axi_st_h2c_tdata_3  ( axi_st_h2c_tdata_3  ),
-                ///*output                      */    .axi_st_h2c_tvalid_3 ( axi_st_h2c_tvalid_3 ),
-                ///*output [AXI_ST_DW/8 - 1:0]  */    .axi_st_h2c_tuser_3  ( axi_st_h2c_tuser_3  ),
-                ////---------- C2H AXI4-ST Channel 0 ---------------//
-                ///*output                      */    .axi_st_c2h_tready_0 ( axi_st_c2h_tready_0 ),
-                ///*input                       */    .axi_st_c2h_tlast_0  ( axi_st_c2h_tlast_0  ),
-                ///*input  [AXI_ST_DW - 1:0]    */    .axi_st_c2h_tdata_0  ( axi_st_c2h_tdata_0  ),
-                ///*input                       */    .axi_st_c2h_tvalid_0 ( axi_st_c2h_tvalid_0 ),
-                ///*input  [AXI_ST_DW/8 - 1:0]  */    .axi_st_c2h_tuser_0  ( axi_st_c2h_tuser_0  ),
-                ////---------- C2H AXI4-ST Channel 1 ---------------//
-                ///*output                      */    .axi_st_c2h_tready_1 ( axi_st_c2h_tready_1 ),
-                ///*input                       */    .axi_st_c2h_tlast_1  ( axi_st_c2h_tlast_1  ),
-                ///*input  [AXI_ST_DW - 1:0]    */    .axi_st_c2h_tdata_1  ( axi_st_c2h_tdata_1  ),
-                ///*input                       */    .axi_st_c2h_tvalid_1 ( axi_st_c2h_tvalid_1 ),
-                ///*input  [AXI_ST_DW/8 - 1:0]  */    .axi_st_c2h_tuser_1  ( axi_st_c2h_tuser_1  ),
-                ////---------- C2H AXI4-ST Channel 2 ---------------//
-                ///*output                      */    .axi_st_c2h_tready_2 ( axi_st_c2h_tready_2 ),
-                ///*input                       */    .axi_st_c2h_tlast_2  ( axi_st_c2h_tlast_2  ),
-                ///*input  [AXI_ST_DW - 1:0]    */    .axi_st_c2h_tdata_2  ( axi_st_c2h_tdata_2  ),
-                ///*input                       */    .axi_st_c2h_tvalid_2 ( axi_st_c2h_tvalid_2 ),
-                ///*input  [AXI_ST_DW/8 - 1:0]  */    .axi_st_c2h_tuser_2  ( axi_st_c2h_tuser_2  ),
-                ////---------- C2H AXI4-ST Channel 3 ---------------//
-                ///*output                      */    .axi_st_c2h_tready_3 ( axi_st_c2h_tready_3 ),
-                ///*input                       */    .axi_st_c2h_tlast_3  ( axi_st_c2h_tlast_3  ),
-                ///*input  [AXI_ST_DW - 1:0]    */    .axi_st_c2h_tdata_3  ( axi_st_c2h_tdata_3  ),
-                ///*input                       */    .axi_st_c2h_tvalid_3 ( axi_st_c2h_tvalid_3 ),
-                ///*input  [AXI_ST_DW/8 - 1:0]  */    .axi_st_c2h_tuser_3  ( axi_st_c2h_tuser_3  ),
+                /*input                       */    .axi_mm_rvalid     ( axi_mm_rvalid       ), 
+`else        
+                //--------------- AXI4-ST Interface --------------//
+                //----------------- H2C AXI4-ST  -----------------//
+                /*input                       */    .m_axis_tready     ( m_axis_tready ),
+                /*output                      */    .m_axis_tlast      ( m_axis_tlast  ),
+                /*output [AXI_ST_DW - 1:0]    */    .m_axis_tdata      ( m_axis_tdata  ),
+                /*output [AXI_ST_DW/8 - 1:0]  */    .m_axis_tkeep      ( m_axis_tkeep  ),
+                /*output                      */    .m_axis_tvalid     ( m_axis_tvalid ),
+                /*output [AXI_ST_USER - 1:0]  */    .m_axis_tid        ( m_axis_tid    ),
+                /*output [AXI_ST_USER - 1:0]  */    .m_axis_tuser      ( m_axis_tuser  ),
+                //----------------- C2H AXI4-ST -----------------//    
+                /*output                      */    .s_axis_tready     ( s_axis_tready ),
+                /*input                       */    .s_axis_tlast      ( s_axis_tlast  ),
+                /*input  [AXI_ST_DW - 1:0]    */    .s_axis_tdata      ( s_axis_tdata  ),
+                /*input  [AXI_ST_DW/8 - 1:0]  */    .s_axis_tkeep      ( s_axis_tkeep  ),
+                /*input                       */    .s_axis_tvalid     ( s_axis_tvalid ),
+                /*input  [AXI_ST_USER - 1:0]  */    .s_axis_tid        ( s_axis_tid    ),
+                /*input  [AXI_ST_USER - 1:0]  */    .s_axis_tuser      ( s_axis_tuser  ),
+`endif
                 //-------- Host AXI-Lite slave Interface ---------//
                 /*input                       */    .h_s_axi_arvalid   ( h_s_axi_arvalid ),        
                 /*input  [AXI_LITE_AW - 1:0]  */    .h_s_axi_araddr    ( h_s_axi_araddr  ),        

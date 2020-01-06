@@ -248,17 +248,17 @@ module framework_afu (
 
   wire                       mm_snap2conv_awready   ;
   wire                       mm_snap2conv_wready    ;
-  wire [`IDW-1:0]             mm_snap2conv_bid       ;
+  wire [`IDW-1:0]             mm_snap2conv_bid      ;
+  wire [`AXI_BUSER-1:0]       mm_snap2conv_buser    ;
   wire [1:0]                 mm_snap2conv_bresp     ;
   wire                       mm_snap2conv_bvalid    ;
-  wire [`IDW-1:0]             mm_snap2conv_rid       ;
+  wire [`IDW-1:0]             mm_snap2conv_rid      ;
+  wire [`AXI_RUSER-1:0]       mm_snap2conv_ruser    ;
   wire [`AXI_MM_DW-1:0]       mm_snap2conv_rdata     ;
   wire [1:0]                 mm_snap2conv_rresp     ;
   wire                       mm_snap2conv_rlast     ;
   wire                       mm_snap2conv_rvalid    ;
   wire                       mm_snap2conv_arready   ;
-  wire [`AXI_AWUSER-1:0]     mm_snap2conv_ruser     ;
-  wire [`AXI_AWUSER-1:0]     mm_snap2conv_buser     ;
 
   wire [`IDW-1:0]             mm_conv2snap_awid      ;
   wire [`AXI_MM_AW-1:0]       mm_conv2snap_awaddr    ;
@@ -270,10 +270,11 @@ module framework_afu (
   wire [2:0]                 mm_conv2snap_awprot    ;
   wire [3:0]                 mm_conv2snap_awqos     ;
   wire [3:0]                 mm_conv2snap_awregion  ;
-  wire [`AXI_AWUSER-1:0]      mm_conv2snap_awuser    ;
+  wire [`AXI_AWUSER-1:0]      mm_conv2snap_awuser   ;
   wire                       mm_conv2snap_awvalid   ;
-  wire [`AXI_MM_DW-1:0]       mm_conv2snap_wdata     ;
-  wire [(`AXI_MM_DW/8)-1:0]   mm_conv2snap_wstrb     ;
+  wire [`AXI_MM_DW-1:0]       mm_conv2snap_wdata    ;
+  wire [`AXI_WUSER-1:0]       mm_conv2snap_wuser    ;
+  wire [(`AXI_MM_DW/8)-1:0]   mm_conv2snap_wstrb    ;
   wire                       mm_conv2snap_wlast     ;
   wire                       mm_conv2snap_wvalid    ;
   wire                       mm_conv2snap_bready    ;
@@ -298,50 +299,67 @@ module framework_afu (
   wire [`CTXW-1:0]            int_ctx         ;
 
 `ifdef ENABLE_ODMA
-  wire [`AXI_MM_AW-1:0]       axi_mm_awaddr   ;
-  wire [`IDW-1:0]             axi_mm_awid     ;
-  wire [7:0]                 axi_mm_awlen    ;
-  wire [2:0]                 axi_mm_awsize   ;
-  wire [1:0]                 axi_mm_awburst  ;
-  wire [2:0]                 axi_mm_awprot   ;
-  wire [3:0]                 axi_mm_awqos    ;
-  wire [3:0]                 axi_mm_awregion ;
-  wire [`AXI_AWUSER-1:0]      axi_mm_awuser   ;
-  wire                       axi_mm_awvalid  ;
-  wire [1:0]                 axi_mm_awlock   ;
-  wire [3:0]                 axi_mm_awcache  ;
-  wire                       axi_mm_awready  ;
-  wire [`AXI_MM_DW-1:0]       axi_mm_wdata    ;
-  wire                       axi_mm_wlast    ;
-  wire [`AXI_MM_DW/8-1:0]     axi_mm_wstrb    ;
-  wire                       axi_mm_wvalid   ;
-  wire [`AXI_WUSER-1:0]       axi_mm_wuser    ;
-  wire                       axi_mm_wready   ;
-  wire                       axi_mm_bvalid   ;
-  wire [1:0]                 axi_mm_bresp    ;
-  wire [`IDW-1:0]             axi_mm_bid      ;
-  wire [`AXI_BUSER-1:0]       axi_mm_buser    ;
-  wire                       axi_mm_bready   ;
-  wire [`AXI_MM_AW-1:0]       axi_mm_araddr   ;
-  wire [1:0]                 axi_mm_arburst  ;
-  wire [3:0]                 axi_mm_arcache  ;
-  wire [`IDW-1:0]             axi_mm_arid     ;
-  wire [7:0]                 axi_mm_arlen    ;
-  wire [1:0]                 axi_mm_arlock   ;
-  wire [2:0]                 axi_mm_arprot   ;
-  wire [3:0]                 axi_mm_arqos    ;
-  wire                       axi_mm_arready  ;
-  wire [3:0]                 axi_mm_arregion ;
-  wire [2:0]                 axi_mm_arsize   ;
-  wire [`AXI_ARUSER-1:0]      axi_mm_aruser   ;
-  wire                       axi_mm_arvalid  ;
-  wire [`AXI_MM_DW-1:0]       axi_mm_rdata    ;
-  wire [`IDW-1:0]             axi_mm_rid      ;
-  wire                       axi_mm_rlast    ;
-  wire                       axi_mm_rready   ;
-  wire [1:0]                 axi_mm_rresp    ;
-  wire [`AXI_RUSER-1:0]       axi_mm_ruser    ;
-  wire                       axi_mm_rvalid   ;
+    `ifndef ENABLE_ODMA_ST_MODE
+        wire [`AXI_MM_AW-1:0]       axi_mm_awaddr   ;
+        wire [`IDW-1:0]             axi_mm_awid     ;
+        wire [7:0]                 axi_mm_awlen    ;
+        wire [2:0]                 axi_mm_awsize   ;
+        wire [1:0]                 axi_mm_awburst  ;
+        wire [2:0]                 axi_mm_awprot   ;
+        wire [3:0]                 axi_mm_awqos    ;
+        wire [3:0]                 axi_mm_awregion ;
+        wire [`AXI_AWUSER-1:0]      axi_mm_awuser   ;
+        wire                       axi_mm_awvalid  ;
+        wire [1:0]                 axi_mm_awlock   ;
+        wire [3:0]                 axi_mm_awcache  ;
+        wire                       axi_mm_awready  ;
+        wire [`AXI_MM_DW-1:0]       axi_mm_wdata    ;
+        wire                       axi_mm_wlast    ;
+        wire [`AXI_MM_DW/8-1:0]     axi_mm_wstrb    ;
+        wire                       axi_mm_wvalid   ;
+        wire [`AXI_WUSER-1:0]       axi_mm_wuser    ;
+        wire                       axi_mm_wready   ;
+        wire                       axi_mm_bvalid   ;
+        wire [1:0]                 axi_mm_bresp    ;
+        wire [`IDW-1:0]             axi_mm_bid      ;
+        wire [`AXI_BUSER-1:0]       axi_mm_buser    ;
+        wire                       axi_mm_bready   ;
+        wire [`AXI_MM_AW-1:0]       axi_mm_araddr   ;
+        wire [1:0]                 axi_mm_arburst  ;
+        wire [3:0]                 axi_mm_arcache  ;
+        wire [`IDW-1:0]             axi_mm_arid     ;
+        wire [7:0]                 axi_mm_arlen    ;
+        wire [1:0]                 axi_mm_arlock   ;
+        wire [2:0]                 axi_mm_arprot   ;
+        wire [3:0]                 axi_mm_arqos    ;
+        wire                       axi_mm_arready  ;
+        wire [3:0]                 axi_mm_arregion ;
+        wire [2:0]                 axi_mm_arsize   ;
+        wire [`AXI_ARUSER-1:0]      axi_mm_aruser   ;
+        wire                       axi_mm_arvalid  ;
+        wire [`AXI_MM_DW-1:0]       axi_mm_rdata    ;
+        wire [`IDW-1:0]             axi_mm_rid      ;
+        wire                       axi_mm_rlast    ;
+        wire                       axi_mm_rready   ;
+        wire [1:0]                 axi_mm_rresp    ;
+        wire [`AXI_RUSER-1:0]       axi_mm_ruser    ;
+        wire                       axi_mm_rvalid   ;
+    `else
+        wire                        m_axis_tready    ; 
+        wire                        m_axis_tlast     ; 
+        wire [`AXI_ST_DW - 1:0]      m_axis_tdata     ; 
+        wire [`AXI_ST_DW/8 - 1:0]    m_axis_tkeep     ; 
+        wire                        m_axis_tvalid    ; 
+        wire [`IDW - 1:0]           m_axis_tid        ; 
+        wire [`AXI_ST_USER - 1:0]    m_axis_tuser     ; 
+        wire                        s_axis_tready    ; 
+        wire                        s_axis_tlast     ; 
+        wire [`AXI_ST_DW - 1:0]      s_axis_tdata     ; 
+        wire [`AXI_ST_DW/8 - 1:0]    s_axis_tkeep     ; 
+        wire                        s_axis_tvalid    ; 
+        wire [`IDW - 1:0]           s_axis_tid       ; 
+        wire [`AXI_ST_USER - 1:0]    s_axis_tuser     ; 
+    `endif
   //
   //ActionAXI-LiteslaveInterface
   wire                       a_s_axi_arvalid ;
@@ -363,18 +381,18 @@ module framework_afu (
   wire                       a_s_axi_bready  ;
   //ActionAXI-LitemasterInterface
   wire                       a_m_axi_arvalid ;
-  wire [`AXI_LITE_AW-1:0]     a_m_axi_araddr  ;
+  wire [`AXI_LITE_AW-1:0]    a_m_axi_araddr  ;
   wire                       a_m_axi_arready ;
   wire                       a_m_axi_rvalid  ;
-  wire [`AXI_LITE_DW-1:0]     a_m_axi_rdata   ;
+  wire [`AXI_LITE_DW-1:0]    a_m_axi_rdata   ;
   wire [1:0]                 a_m_axi_rresp   ;
   wire                       a_m_axi_rready  ;
   wire                       a_m_axi_awvalid ;
-  wire [`AXI_LITE_AW-1:0]     a_m_axi_awaddr  ;
+  wire [`AXI_LITE_AW-1:0]    a_m_axi_awaddr  ;
   wire                       a_m_axi_awready ;
   wire                       a_m_axi_wvalid  ;
-  wire [`AXI_LITE_DW-1:0]     a_m_axi_wdata   ;
-  wire [`AXI_LITE_DW/8-1:0]   a_m_axi_wstrb   ;
+  wire [`AXI_LITE_DW-1:0]    a_m_axi_wdata   ;
+  wire [`AXI_LITE_DW/8-1:0]  a_m_axi_wstrb   ;
   wire                       a_m_axi_wready  ;
   wire                       a_m_axi_bvalid  ;
   wire [1:0]                 a_m_axi_bresp   ;
@@ -382,14 +400,14 @@ module framework_afu (
 `endif
 
   // // Interface between action_wrapper and (clock/dwidth) converter
-  wire [`AXI_LITE_AW-1:0]     lite_conv2act_awaddr  ;
+  wire [`AXI_LITE_AW-1:0]    lite_conv2act_awaddr  ;
   wire [2:0]                 lite_conv2act_awprot  ;
   wire                       lite_conv2act_awvalid ;
-  wire [`AXI_LITE_DW-1:0]     lite_conv2act_wdata   ;
+  wire [`AXI_LITE_DW-1:0]    lite_conv2act_wdata   ;
   wire [3:0]                 lite_conv2act_wstrb   ;
   wire                       lite_conv2act_wvalid  ;
   wire                       lite_conv2act_bready  ;
-  wire [`AXI_LITE_AW-1:0]     lite_conv2act_araddr  ;
+  wire [`AXI_LITE_AW-1:0]    lite_conv2act_araddr  ;
   wire [2:0]                 lite_conv2act_arprot  ;
   wire                       lite_conv2act_arvalid ;
   wire                       lite_conv2act_rready  ;
@@ -399,26 +417,26 @@ module framework_afu (
   wire [1:0]                 lite_act2conv_bresp   ;
   wire                       lite_act2conv_bvalid  ;
   wire                       lite_act2conv_arready ;
-  wire [`AXI_LITE_DW-1:0]     lite_act2conv_rdata   ;
+  wire [`AXI_LITE_DW-1:0]    lite_act2conv_rdata   ;
   wire [1:0]                 lite_act2conv_rresp   ;
   wire                       lite_act2conv_rvalid  ;
 
   wire                       mm_conv2act_awready   ;
   wire                       mm_conv2act_wready    ;
-  wire [`IDW-1:0]             mm_conv2act_bid       ;
+  wire [`IDW-1:0]            mm_conv2act_bid       ;
+  wire [`AXI_BUSER-1:0]      mm_conv2act_buser     ;
   wire [1:0]                 mm_conv2act_bresp     ;
   wire                       mm_conv2act_bvalid    ;
-  wire [`IDW-1:0]             mm_conv2act_rid       ;
-  wire [`AXI_ACT_DW-1:0]      mm_conv2act_rdata     ;
+  wire [`IDW-1:0]            mm_conv2act_rid       ;
+  wire [`AXI_RUSER-1:0]      mm_conv2act_ruser     ;
+  wire [`AXI_ACT_DW-1:0]     mm_conv2act_rdata     ;
   wire [1:0]                 mm_conv2act_rresp     ;
   wire                       mm_conv2act_rlast     ;
   wire                       mm_conv2act_rvalid    ;
   wire                       mm_conv2act_arready   ;
-  wire [`AXI_AWUSER-1:0]     mm_conv2act_buser     ;
-  wire [`AXI_AWUSER-1:0]     mm_conv2act_ruser     ;
 
-  wire [`IDW-1:0]             mm_act2conv_awid      ;
-  wire [`AXI_MM_AW-1:0]       mm_act2conv_awaddr    ;
+  wire [`IDW-1:0]            mm_act2conv_awid      ;
+  wire [`AXI_MM_AW-1:0]      mm_act2conv_awaddr    ;
   wire [7:0]                 mm_act2conv_awlen     ;
   wire [2:0]                 mm_act2conv_awsize    ;
   wire [1:0]                 mm_act2conv_awburst   ;
@@ -427,9 +445,10 @@ module framework_afu (
   wire [2:0]                 mm_act2conv_awprot    ;
   wire [3:0]                 mm_act2conv_awqos     ;
   wire [3:0]                 mm_act2conv_awregion  ;
-  wire [`AXI_AWUSER-1:0]      mm_act2conv_awuser    ;
+  wire [`AXI_AWUSER-1:0]     mm_act2conv_awuser    ;
   wire                       mm_act2conv_awvalid   ;
-  wire [`AXI_ACT_DW-1:0]      mm_act2conv_wdata     ;
+  wire [`AXI_ACT_DW-1:0]     mm_act2conv_wdata     ;
+  wire [`AXI_WUSER-1:0]      mm_act2conv_wuser     ;
   wire [(`AXI_ACT_DW/8)-1:0]  mm_act2conv_wstrb     ;
   wire                       mm_act2conv_wlast     ;
   wire                       mm_act2conv_wvalid    ;
@@ -449,8 +468,6 @@ module framework_afu (
   wire                       mm_act2conv_rready    ;
 
 `ifdef ENABLE_AXI_CARD_MEM
-  wire                                    memctl0_reset_m             ;
-
   wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]  act_axi_card_mem0_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_mem0_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_mem0_awsize    ;
@@ -491,6 +508,66 @@ module framework_afu (
   wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_bid       ;
   wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_rid       ;
 
+  `ifdef ENABLE_HBM
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]   hbm_ctrl_awaddr             ;
+  wire [ 7 : 0 ]                            hbm_ctrl_awlen              ;
+  wire [ 2 : 0 ]                            hbm_ctrl_awsize             ;
+  wire [ 1 : 0 ]                            hbm_ctrl_awburst            ;
+  wire                                      hbm_ctrl_awlock             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_awcache            ;
+  wire [ 2 : 0 ]                            hbm_ctrl_awprot             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_awregion           ;
+  wire [ 3 : 0 ]                            hbm_ctrl_awqos              ;
+  wire                                      hbm_ctrl_awvalid            ;
+  wire                                      hbm_ctrl_awready            ;
+  wire [255: 0 ]                            hbm_ctrl_wdata              ;
+  wire [31 : 0 ]                            hbm_ctrl_wstrb              ;
+  wire                                      hbm_ctrl_wlast              ;
+  wire                                      hbm_ctrl_wvalid             ;
+  wire                                      hbm_ctrl_wready             ;
+  wire [ 1 : 0 ]                            hbm_ctrl_bresp              ;
+  wire                                      hbm_ctrl_bvalid             ;
+  wire                                      hbm_ctrl_bready             ;
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]   hbm_ctrl_araddr             ;
+  wire [ 7 : 0 ]                            hbm_ctrl_arlen              ;
+  wire [ 2 : 0 ]                            hbm_ctrl_arsize             ;
+  wire [ 1 : 0 ]                            hbm_ctrl_arburst            ;
+  wire                                      hbm_ctrl_arlock             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_arcache            ;
+  wire [ 2 : 0 ]                            hbm_ctrl_arprot             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_arregion           ;
+  wire [ 3 : 0 ]                            hbm_ctrl_arqos              ;
+  wire                                      hbm_ctrl_arvalid            ;
+  wire                                      hbm_ctrl_arready            ;
+  wire [255: 0 ]                            hbm_ctrl_rdata              ;
+  wire [ 1 : 0 ]                            hbm_ctrl_rresp              ;
+  wire                                      hbm_ctrl_rlast              ;
+  wire                                      hbm_ctrl_rvalid             ;
+  wire                                      hbm_ctrl_rready             ;
+  wire                                      hbm_ctrl_reset_n            ;
+
+  wire [ 5 : 0 ]                            hbm_ctrl_arid               ;
+  wire [ 5 : 0 ]                            hbm_ctrl_awid               ;
+  wire [ 5 : 0 ]                            hbm_ctrl_bid                ;
+  wire [ 5 : 0 ]                            hbm_ctrl_rid                ;
+  wire [31 :  0]                            hbm_ctrl_wdata_parity       ;
+  wire [31 :  0]                            hbm_ctrl_rdata_parity       ;
+  wire [21 :  0]                            hbm_ctrl_apb_paddr          ;
+  wire [31 :  0]                            hbm_ctrl_apb_pwdata         ;
+  wire [31 :  0]                            hbm_ctrl_apb_prdata         ;
+  wire                                      hbm_ctrl_apb_penable        ;
+  wire                                      hbm_ctrl_apb_pready         ;
+  wire                                      hbm_ctrl_apb_psel           ;
+  wire                                      hbm_ctrl_apb_pslverr        ;
+  wire                                      hbm_ctrl_apb_pwrite         ;
+  wire                                      hbm_ctrl_apb_pclk           ;
+  wire                                      hbm_ctrl_apb_preset_n       ;
+  wire                                      hbm_ctrl_apb_complete       ;
+  wire                                      hbm_ctrl_dram_stat_cattrip  ;
+  wire [ 6 : 0 ]                            hbm_ctrl_dram_stat_temp     ;
+  wire                                      clock_hbm_ref               ;
+
+  `else
   wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]  memctl0_axi_awaddr          ;
   wire [ 7 : 0 ]                          memctl0_axi_awlen           ;
   wire [ 2 : 0 ]                          memctl0_axi_awsize          ;
@@ -549,9 +626,9 @@ module framework_afu (
   wire [31 : 0]                           memctl0_axi_ctrl_rdata      ;
   wire [1 : 0]                            memctl0_axi_ctrl_rresp      ;
   wire                                    memctl0_interrupt           ;
-  
-`endif
   wire                                    memctl0_axi_rst_n           ;
+  `endif
+`endif
 
 `ifdef ENABLE_DDR
 `ifdef AD9V3
@@ -588,7 +665,18 @@ module framework_afu (
   // // ********************************************************************************************************************************
   // // User clock
   // // ********************************************************************************************************************************
-  wire clock_usr; //Not in use.
+  `ifdef ACTION_USER_CLOCK
+  wire clock_usr;
+  wire user_clock_enabled;
+  
+  user_clock_gen muser_clock
+  (
+    .reset          ( reset    ),
+    .clk_in1        ( clock_afu),
+    .clk_out1       ( clock_usr),
+    .locked         ( user_clock_enabled)
+  );  
+  `endif
 
   wire clock_act;
   `ifdef ACTION_USER_CLOCK
@@ -639,10 +727,11 @@ module framework_afu (
   // To action_wrapper (sampled by clock_act)
   wire reset_action_d;
   assign reset_action_d = input_reset_q || vio_reset_action || soft_reset_action;
-  reg  reset_action_q;
-  always @ (posedge clock_act) 
-        reset_action_q <= reset_action_d;
-
+  reg  reset_action_tmp;
+  wire reset_action_q;
+  always @ (posedge clock_afu) 
+        reset_action_tmp <= reset_action_d;
+	
 
   // To mem controllers (sampled by clock_afu)
   // To Action attached converters
@@ -653,11 +742,13 @@ module framework_afu (
         reset_nest_q <= reset_action_d;
     end
 
+`ifdef ENABLE_AXI_CARD_MEM
   `ifdef ENABLE_DDR
      assign memctl0_axi_rst_n = ~memctl0_ui_clk_sync_rst;
   `else
      assign memctl0_axi_rst_n = ~reset_nest_q;
   `endif
+`endif
 
   // // ********************************************************************************************************************************
   // // AFU DESCRIPTOR TIES
@@ -915,6 +1006,7 @@ module framework_afu (
 
 `else
       // ODMA mode: AXI4-MM Interface to action
+   `ifndef ENABLE_ODMA_ST_MODE
       .axi_mm_awaddr                      ( axi_mm_awaddr  ),
       .axi_mm_awid                        ( axi_mm_awid    ),
       .axi_mm_awlen                       ( axi_mm_awlen   ),
@@ -959,6 +1051,22 @@ module framework_afu (
       .axi_mm_rresp                       ( axi_mm_rresp   ),
       .axi_mm_ruser                       ( axi_mm_ruser   ),
       .axi_mm_rvalid                      ( axi_mm_rvalid  ),
+   `else
+      .m_axis_tready                      ( m_axis_tready  ),
+      .m_axis_tlast                       ( m_axis_tlast   ),
+      .m_axis_tdata                       ( m_axis_tdata   ),
+      .m_axis_tkeep                       ( m_axis_tkeep   ),
+      .m_axis_tvalid                      ( m_axis_tvalid  ),
+      .m_axis_tid                         ( m_axis_tid     ),
+      .m_axis_tuser                       ( m_axis_tuser   ),
+      .s_axis_tready                      ( s_axis_tready  ),
+      .s_axis_tlast                       ( s_axis_tlast   ),
+      .s_axis_tdata                       ( s_axis_tdata   ),
+      .s_axis_tkeep                       ( s_axis_tkeep   ),
+      .s_axis_tvalid                      ( s_axis_tvalid  ),
+      .s_axis_tid                         ( s_axis_tid   ),
+      .s_axis_tuser                       ( s_axis_tuser   ),
+   `endif 
       // To Action: AXI_Lite Slave Interface
       .a_s_axi_arvalid                    ( a_s_axi_arvalid ),
       .a_s_axi_araddr                     ( a_s_axi_araddr  ),
@@ -1003,7 +1111,64 @@ module framework_afu (
   // // ********************************************************************************************************************************
   // // action_wrapper
   // // ********************************************************************************************************************************
+// async clock handle for reset and interrupt signals
+    wire                 action_int_req_ack;
+    wire                 action_int_req;
+    wire [`INT_BITS-1:0] action_int_src;
+    wire [`CTXW-1:0]     action_int_ctx;
+`ifdef ACTION_USER_CLOCK
+    assign reset_action_q = reset_action_tmp || (!user_clock_enabled);
 
+    reg                 action_int_req_level;
+    reg [`INT_BITS-1:0] action_int_src_level;
+    reg [`CTXW-1:0]     action_int_ctx_level;
+    reg                 int_req_q1;
+    reg                 int_req_q2;
+    reg [`INT_BITS-1:0] int_src_q1;
+    reg [`INT_BITS-1:0] int_src_q2;
+    reg [`CTXW-1:0]     int_ctx_q1;
+    reg [`CTXW-1:0]     int_ctx_q2;
+
+    always@(posedge clock_act or posedge reset_action_q)
+    begin
+        if(reset_action_q)
+            action_int_req_level <= 1'b0;
+        else if(action_int_req_ack)
+            action_int_req_level <= 1'b0;
+        else if(action_int_req)
+            action_int_req_level <= 1'b1;
+    end
+
+    always@(posedge clock_act)
+    begin
+        if(action_int_req)
+        begin
+            action_int_src_level <= action_int_src;
+            action_int_ctx_level <= action_int_ctx;
+        end
+    end
+
+    always@(posedge clock_afu)
+    begin
+        int_req_q1 <= action_int_req_level;
+        int_req_q2 <= int_req_q1;
+        int_src_q1 <= action_int_src_level;
+        int_src_q2 <= int_src_q1;
+        int_ctx_q1 <= action_int_ctx_level;
+        int_ctx_q2 <= int_ctx_q1;
+    end
+
+    assign int_req = int_req_q2;
+    assign int_src = int_src_q2;
+    assign int_ctx = int_ctx_q2;
+    assign action_int_req_ack = int_req_ack;
+`else
+    assign reset_action_q = reset_action_tmp;
+    assign int_req = action_int_req;
+    assign int_src = action_int_src;
+    assign int_ctx = action_int_ctx;
+    assign action_int_req_ack = int_req_ack;
+`endif
 
 `ifndef ENABLE_ODMA
 // Bridge Mode action_wrapper
@@ -1012,10 +1177,10 @@ module framework_afu (
      (
       .ap_clk                             ( clock_act                  ) ,
       .ap_rst_n                           ( ~reset_action_q            ) ,
-      .interrupt_ack                      ( int_req_ack                ) ,
-      .interrupt                          ( int_req                    ) ,
-      .interrupt_src                      ( int_src                    ) ,
-      .interrupt_ctx                      ( int_ctx                    ) ,
+      .interrupt_ack                      ( action_int_req_ack         ) ,
+      .interrupt                          ( action_int_req             ) ,
+      .interrupt_src                      ( action_int_src             ) ,
+      .interrupt_ctx                      ( action_int_ctx             ) ,
 
 `ifdef ENABLE_AXI_CARD_MEM
       //
@@ -1144,7 +1309,7 @@ module framework_afu (
       .interrupt                             ( int_req                 ) ,
       .interrupt_src                         ( int_src                 ) ,
       .interrupt_ctx                         ( int_ctx                 ) ,
-
+`ifndef ENABLE_ODMA_ST_MODE
       .axi_mm_araddr                         ( axi_mm_araddr           ) ,
       .axi_mm_arburst                        ( axi_mm_arburst          ) ,
       .axi_mm_arcache                        ( axi_mm_arcache          ) ,
@@ -1189,6 +1354,22 @@ module framework_afu (
       .axi_mm_buser                          ( axi_mm_buser            ) ,
       .axi_mm_bid                            ( axi_mm_bid              ) ,
       .axi_mm_bready                         ( axi_mm_bready           ) ,
+`else
+      .m_axis_tready                         ( m_axis_tready           ) ,
+      .m_axis_tlast                          ( m_axis_tlast            ) ,
+      .m_axis_tdata                          ( m_axis_tdata            ) ,
+      .m_axis_tkeep                          ( m_axis_tkeep            ) ,
+      .m_axis_tvalid                         ( m_axis_tvalid           ) ,
+      .m_axis_tid                            ( m_axis_tid              ) ,
+      .m_axis_tuser                          ( m_axis_tuser            ) ,
+      .s_axis_tready                         ( s_axis_tready           ) ,
+      .s_axis_tlast                          ( s_axis_tlast            ) ,
+      .s_axis_tdata                          ( s_axis_tdata            ) ,
+      .s_axis_tkeep                          ( s_axis_tkeep            ) ,
+      .s_axis_tvalid                         ( s_axis_tvalid           ) ,
+      .s_axis_tid                            ( s_axis_tid              ) ,
+      .s_axis_tuser                          ( s_axis_tuser            ) ,
+`endif
       .a_s_axi_arvalid                       ( a_m_axi_arvalid         ) ,
       .a_s_axi_araddr                        ( a_m_axi_araddr          ) ,
       .a_s_axi_arready                       ( a_m_axi_arready         ) ,
@@ -1320,6 +1501,7 @@ module framework_afu (
       .s_axi_aclk        ( clock_act             ) ,
       .s_axi_aresetn     ( ~reset_action_q       ) ,
       .s_axi_awaddr      ( mm_act2conv_awaddr    ) ,
+      .s_axi_awid        ( mm_act2conv_awid      ) ,
       .s_axi_awlen       ( mm_act2conv_awlen     ) ,
       .s_axi_awsize      ( mm_act2conv_awsize    ) ,
       .s_axi_awburst     ( mm_act2conv_awburst   ) ,
@@ -1337,8 +1519,10 @@ module framework_afu (
       .s_axi_wready      ( mm_conv2act_wready    ) ,
       .s_axi_bresp       ( mm_conv2act_bresp     ) ,
       .s_axi_bvalid      ( mm_conv2act_bvalid    ) ,
+      .s_axi_bid         ( mm_conv2act_bid       ) ,
       .s_axi_bready      ( mm_act2conv_bready    ) ,
       .s_axi_araddr      ( mm_act2conv_araddr    ) ,
+      .s_axi_arid        ( mm_act2conv_arid      ) ,
       .s_axi_arlen       ( mm_act2conv_arlen     ) ,
       .s_axi_arsize      ( mm_act2conv_arsize    ) ,
       .s_axi_arburst     ( mm_act2conv_arburst   ) ,
@@ -1350,6 +1534,7 @@ module framework_afu (
       .s_axi_arvalid     ( mm_act2conv_arvalid   ) ,
       .s_axi_arready     ( mm_conv2act_arready   ) ,
       .s_axi_rdata       ( mm_conv2act_rdata     ) ,
+      .s_axi_rid         ( mm_conv2act_rid       ) ,
       .s_axi_rresp       ( mm_conv2act_rresp     ) ,
       .s_axi_rlast       ( mm_conv2act_rlast     ) ,
       .s_axi_rvalid      ( mm_conv2act_rvalid    ) ,
@@ -1416,6 +1601,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       //
       // FROM ACTION
       .s_axi_araddr                       ( mm_act2conv_araddr    ) ,
+      .s_axi_aruser                       ( mm_act2conv_aruser    ) ,
       .s_axi_arburst                      ( mm_act2conv_arburst   ) ,
       .s_axi_arcache                      ( mm_act2conv_arcache   ) ,
       .s_axi_arid                         ( mm_act2conv_arid      ) ,
@@ -1428,6 +1614,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .s_axi_arsize                       ( mm_act2conv_arsize    ) ,
       .s_axi_arvalid                      ( mm_act2conv_arvalid   ) ,
       .s_axi_awaddr                       ( mm_act2conv_awaddr    ) ,
+      .s_axi_awuser                       ( mm_act2conv_awuser    ) ,
       .s_axi_awburst                      ( mm_act2conv_awburst   ) ,
       .s_axi_awcache                      ( mm_act2conv_awcache   ) ,
       .s_axi_awid                         ( mm_act2conv_awid      ) ,
@@ -1440,16 +1627,19 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .s_axi_awsize                       ( mm_act2conv_awsize    ) ,
       .s_axi_awvalid                      ( mm_act2conv_awvalid   ) ,
       .s_axi_bid                          ( mm_conv2act_bid       ) ,
+      .s_axi_buser                        ( mm_conv2act_buser     ) ,
       .s_axi_bready                       ( mm_act2conv_bready    ) ,
       .s_axi_bresp                        ( mm_conv2act_bresp     ) ,
       .s_axi_bvalid                       ( mm_conv2act_bvalid    ) ,
       .s_axi_rdata                        ( mm_conv2act_rdata     ) ,
       .s_axi_rid                          ( mm_conv2act_rid       ) ,
+      .s_axi_ruser                        ( mm_conv2act_ruser     ) ,
       .s_axi_rlast                        ( mm_conv2act_rlast     ) ,
       .s_axi_rready                       ( mm_act2conv_rready    ) ,
       .s_axi_rresp                        ( mm_conv2act_rresp     ) ,
       .s_axi_rvalid                       ( mm_conv2act_rvalid    ) ,
       .s_axi_wdata                        ( mm_act2conv_wdata     ) ,
+      .s_axi_wuser                        ( mm_act2conv_wuser     ) ,
       .s_axi_wlast                        ( mm_act2conv_wlast     ) ,
       .s_axi_wready                       ( mm_conv2act_wready    ) ,
       .s_axi_wstrb                        ( mm_act2conv_wstrb     ) ,
@@ -1457,6 +1647,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       //
       // TO SNAP
       .m_axi_araddr                       ( mm_conv2snap_araddr   ) ,
+      .m_axi_aruser                       ( mm_conv2snap_aruser   ) ,
       .m_axi_arburst                      ( mm_conv2snap_arburst  ) ,
       .m_axi_arcache                      ( mm_conv2snap_arcache  ) ,
       .m_axi_arid                         ( mm_conv2snap_arid     ) ,
@@ -1469,6 +1660,7 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .m_axi_arsize                       ( mm_conv2snap_arsize   ) ,
       .m_axi_arvalid                      ( mm_conv2snap_arvalid  ) ,
       .m_axi_awaddr                       ( mm_conv2snap_awaddr   ) ,
+      .m_axi_awuser                       ( mm_conv2snap_awuser   ) ,
       .m_axi_awburst                      ( mm_conv2snap_awburst  ) ,
       .m_axi_awcache                      ( mm_conv2snap_awcache  ) ,
       .m_axi_awid                         ( mm_conv2snap_awid     ) ,
@@ -1481,25 +1673,24 @@ assign  mm_conv2act_rid = mm_snap2conv_rid;
       .m_axi_awsize                       ( mm_conv2snap_awsize   ) ,
       .m_axi_awvalid                      ( mm_conv2snap_awvalid  ) ,
       .m_axi_bid                          ( mm_snap2conv_bid      ) ,
+      .m_axi_buser                        ( mm_snap2conv_buser    ) ,
       .m_axi_bready                       ( mm_conv2snap_bready   ) ,
       .m_axi_bresp                        ( mm_snap2conv_bresp    ) ,
       .m_axi_bvalid                       ( mm_snap2conv_bvalid   ) ,
       .m_axi_rdata                        ( mm_snap2conv_rdata    ) ,
       .m_axi_rid                          ( mm_snap2conv_rid      ) ,
+      .m_axi_ruser                        ( mm_snap2conv_ruser    ) ,
       .m_axi_rlast                        ( mm_snap2conv_rlast    ) ,
       .m_axi_rready                       ( mm_conv2snap_rready   ) ,
       .m_axi_rresp                        ( mm_snap2conv_rresp    ) ,
       .m_axi_rvalid                       ( mm_snap2conv_rvalid   ) ,
       .m_axi_wdata                        ( mm_conv2snap_wdata    ) ,
+      .m_axi_wuser                        ( mm_conv2snap_wuser    ) ,
       .m_axi_wlast                        ( mm_conv2snap_wlast    ) ,
       .m_axi_wready                       ( mm_snap2conv_wready   ) ,
       .m_axi_wstrb                        ( mm_conv2snap_wstrb    ) ,
       .m_axi_wvalid                       ( mm_conv2snap_wvalid   )
  ) ;
-    assign mm_conv2snap_aruser  = mm_act2conv_aruser;
-    assign mm_conv2snap_awuser = mm_act2conv_awuser;
-    assign mm_conv2act_buser = mm_snap2conv_buser;
-    assign mm_conv2act_ruser = mm_snap2conv_ruser;
 
   `else
   //No dwith converter, no clock convertor
@@ -1563,6 +1754,7 @@ assign mm_conv2snap_rready               = mm_act2conv_rready               ;
 
 
 `ifdef ENABLE_AXI_CARD_MEM
+`ifndef ENABLE_HBM
   //
   // AXI_CLOCK_CONVERTER_ACT2MEM
   //
@@ -1667,6 +1859,7 @@ assign  memctl0_axi_ctrl_arvalid   = 0;
 assign  memctl0_axi_ctrl_araddr    = 0;
 assign  memctl0_axi_ctrl_rready    = 0;
 
+`endif
 `endif
 
 
@@ -1842,6 +2035,185 @@ block_RAM block_ram_i1
       .sys_rst                     ( memctl0_reset_q             )
     );
 `endif
+`endif
+
+`ifdef ENABLE_HBM
+  //
+  // Action to HBM controller AXI data width converter
+  // HBM controller is 256b AXI3 interface
+  //
+ axi_hbm_dwidth_converter axi_dwidth_converter_act2hbm (
+      .s_axi_aclk        ( clock_act                   ) ,
+      .s_axi_aresetn     ( hbm_ctrl_reset_n            ) ,
+      .s_axi_awaddr      ( act_axi_card_mem0_awaddr    ) ,
+      .s_axi_awlen       ( act_axi_card_mem0_awlen     ) ,
+      .s_axi_awsize      ( act_axi_card_mem0_awsize    ) ,
+      .s_axi_awburst     ( act_axi_card_mem0_awburst   ) ,
+      .s_axi_awlock      ( act_axi_card_mem0_awlock[0] ) ,
+      .s_axi_awcache     ( act_axi_card_mem0_awcache   ) ,
+      .s_axi_awprot      ( act_axi_card_mem0_awprot    ) ,
+      .s_axi_awregion    ( act_axi_card_mem0_awregion  ) ,
+      .s_axi_awqos       ( act_axi_card_mem0_awqos     ) ,
+      .s_axi_awvalid     ( act_axi_card_mem0_awvalid   ) ,
+      .s_axi_awready     ( act_axi_card_mem0_awready   ) ,
+      .s_axi_wdata       ( act_axi_card_mem0_wdata     ) ,
+      .s_axi_wstrb       ( act_axi_card_mem0_wstrb     ) ,
+      .s_axi_wlast       ( act_axi_card_mem0_wlast     ) ,
+      .s_axi_wvalid      ( act_axi_card_mem0_wvalid    ) ,
+      .s_axi_wready      ( act_axi_card_mem0_wready    ) ,
+      .s_axi_bresp       ( act_axi_card_mem0_bresp     ) ,
+      .s_axi_bvalid      ( act_axi_card_mem0_bvalid    ) ,
+      .s_axi_bready      ( act_axi_card_mem0_bready    ) ,
+      .s_axi_araddr      ( act_axi_card_mem0_araddr    ) ,
+      .s_axi_arlen       ( act_axi_card_mem0_arlen     ) ,
+      .s_axi_arsize      ( act_axi_card_mem0_arsize    ) ,
+      .s_axi_arburst     ( act_axi_card_mem0_arburst   ) ,
+      .s_axi_arlock      ( act_axi_card_mem0_arlock[0] ) ,
+      .s_axi_arcache     ( act_axi_card_mem0_arcache   ) ,
+      .s_axi_arprot      ( act_axi_card_mem0_arprot    ) ,
+      .s_axi_arregion    ( act_axi_card_mem0_arregion  ) ,
+      .s_axi_arqos       ( act_axi_card_mem0_arqos     ) ,
+      .s_axi_arvalid     ( act_axi_card_mem0_arvalid   ) ,
+      .s_axi_arready     ( act_axi_card_mem0_arready   ) ,
+      .s_axi_rdata       ( act_axi_card_mem0_rdata     ) ,
+      .s_axi_rresp       ( act_axi_card_mem0_rresp     ) ,
+      .s_axi_rlast       ( act_axi_card_mem0_rlast     ) ,
+      .s_axi_rvalid      ( act_axi_card_mem0_rvalid    ) ,
+      .s_axi_rready      ( act_axi_card_mem0_rready    ) ,
+
+      .m_axi_awaddr      ( hbm_ctrl_awaddr             ) ,
+      .m_axi_awlen       ( hbm_ctrl_awlen              ) ,
+      .m_axi_awsize      ( hbm_ctrl_awsize             ) ,
+      .m_axi_awburst     ( hbm_ctrl_awburst            ) ,
+      .m_axi_awlock      ( hbm_ctrl_awlock             ) ,
+      .m_axi_awcache     ( hbm_ctrl_awcache            ) ,
+      .m_axi_awprot      ( hbm_ctrl_awprot             ) ,
+      .m_axi_awregion    ( hbm_ctrl_awregion           ) ,
+      .m_axi_awqos       ( hbm_ctrl_awqos              ) ,
+      .m_axi_awvalid     ( hbm_ctrl_awvalid            ) ,
+      .m_axi_awready     ( hbm_ctrl_awready            ) ,
+      .m_axi_wdata       ( hbm_ctrl_wdata              ) ,
+      .m_axi_wstrb       ( hbm_ctrl_wstrb              ) ,
+      .m_axi_wlast       ( hbm_ctrl_wlast              ) ,
+      .m_axi_wvalid      ( hbm_ctrl_wvalid             ) ,
+      .m_axi_wready      ( hbm_ctrl_wready             ) ,
+      .m_axi_bresp       ( hbm_ctrl_bresp              ) ,
+      .m_axi_bvalid      ( hbm_ctrl_bvalid             ) ,
+      .m_axi_bready      ( hbm_ctrl_bready             ) ,
+      .m_axi_araddr      ( hbm_ctrl_araddr             ) ,
+      .m_axi_arlen       ( hbm_ctrl_arlen              ) ,
+      .m_axi_arsize      ( hbm_ctrl_arsize             ) ,
+      .m_axi_arburst     ( hbm_ctrl_arburst            ) ,
+      .m_axi_arlock      ( hbm_ctrl_arlock             ) ,
+      .m_axi_arcache     ( hbm_ctrl_arcache            ) ,
+      .m_axi_arprot      ( hbm_ctrl_arprot             ) ,
+      .m_axi_arregion    ( hbm_ctrl_arregion           ) ,
+      .m_axi_arqos       ( hbm_ctrl_arqos              ) ,
+      .m_axi_arvalid     ( hbm_ctrl_arvalid            ) ,
+      .m_axi_arready     ( hbm_ctrl_arready            ) ,
+      .m_axi_rdata       ( hbm_ctrl_rdata              ) ,
+      .m_axi_rresp       ( hbm_ctrl_rresp              ) ,
+      .m_axi_rlast       ( hbm_ctrl_rlast              ) ,
+      .m_axi_rvalid      ( hbm_ctrl_rvalid             ) ,
+      .m_axi_rready      ( hbm_ctrl_rready             )
+) ; 
+
+assign  hbm_ctrl_awid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_mem0_awid;
+assign  hbm_ctrl_awid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
+assign  hbm_ctrl_arid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_mem0_arid;
+assign  hbm_ctrl_arid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
+assign  act_axi_card_mem0_bid = hbm_ctrl_bid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+assign  act_axi_card_mem0_rid = hbm_ctrl_rid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+
+assign hbm_ctrl_reset_n = hbm_ctrl_apb_complete & ~reset_action_q;
+
+// BUFG for HBM REF CLK and APB CLK
+BUFG u_HBM_REF_CLK_BUFG  (
+  .I (clock_act),
+  .O (clock_hbm_ref)
+);
+
+BUFGCE_DIV #(
+      .BUFGCE_DIVIDE(2)
+   )
+    u_APB_CLK_BUFG  (
+  .I (clock_act),
+  .CE (1'b1),
+  .CLR (1'b0),
+  .O (hbm_ctrl_apb_pclk)
+);
+
+  //
+  // HBM IP
+  //
+hbm_ctrl hbm_0
+(
+      .HBM_REF_CLK_0               ( clock_hbm_ref                 ),                  
+      .AXI_00_ACLK                 ( clock_act                     ),  
+      .AXI_00_ARESET_N             ( ~reset_action_q               ),  
+      .AXI_00_ARADDR               ( hbm_ctrl_araddr               ),  
+      .AXI_00_ARBURST              ( hbm_ctrl_arburst              ),  
+      .AXI_00_ARID                 ( hbm_ctrl_arid                 ),  
+      .AXI_00_ARLEN                ( hbm_ctrl_arlen[3:0]           ),  
+      .AXI_00_ARSIZE               ( hbm_ctrl_arsize               ),  
+      .AXI_00_ARVALID              ( hbm_ctrl_arvalid              ),  
+      .AXI_00_ARREADY              ( hbm_ctrl_arready              ),
+      .AXI_00_AWADDR               ( hbm_ctrl_awaddr               ),  
+      .AXI_00_AWBURST              ( hbm_ctrl_awburst              ),  
+      .AXI_00_AWID                 ( hbm_ctrl_awid                 ),  
+      .AXI_00_AWLEN                ( hbm_ctrl_awlen[3:0]           ),  
+      .AXI_00_AWSIZE               ( hbm_ctrl_awsize               ),  
+      .AXI_00_AWVALID              ( hbm_ctrl_awvalid              ),  
+      .AXI_00_AWREADY              ( hbm_ctrl_awready              ),
+      .AXI_00_WREADY               ( hbm_ctrl_wready               ),
+      .AXI_00_WDATA                ( hbm_ctrl_wdata                ),  
+      .AXI_00_WDATA_PARITY         ( hbm_ctrl_wdata_parity         ),  
+      .AXI_00_WLAST                ( hbm_ctrl_wlast                ),  
+      .AXI_00_WSTRB                ( hbm_ctrl_wstrb                ),  
+      .AXI_00_WVALID               ( hbm_ctrl_wvalid               ),
+      .AXI_00_RREADY               ( hbm_ctrl_rready               ),  
+      .AXI_00_RDATA                ( hbm_ctrl_rdata                ),
+      .AXI_00_RDATA_PARITY         ( hbm_ctrl_rdata_parity         ),
+      .AXI_00_RID                  ( hbm_ctrl_rid                  ),
+      .AXI_00_RLAST                ( hbm_ctrl_rlast                ),
+      .AXI_00_RRESP                ( hbm_ctrl_rresp                ),
+      .AXI_00_RVALID               ( hbm_ctrl_rvalid               ),
+      .AXI_00_BID                  ( hbm_ctrl_bid                  ),
+      .AXI_00_BRESP                ( hbm_ctrl_bresp                ),
+      .AXI_00_BVALID               ( hbm_ctrl_bvalid               ), 
+      .AXI_00_BREADY               ( hbm_ctrl_bready               ),
+      .APB_0_PWDATA                ( hbm_ctrl_apb_pwdata           ),
+      .APB_0_PADDR                 ( hbm_ctrl_apb_paddr            ),
+      .APB_0_PCLK                  ( hbm_ctrl_apb_pclk             ),
+      .APB_0_PENABLE               ( hbm_ctrl_apb_penable          ),
+      .APB_0_PRESET_N              ( hbm_ctrl_apb_preset_n         ),
+      .APB_0_PSEL                  ( hbm_ctrl_apb_psel             ),
+      .APB_0_PWRITE                ( hbm_ctrl_apb_pwrite           ),
+      .APB_0_PRDATA                ( hbm_ctrl_apb_prdata           ),
+      .APB_0_PREADY                ( hbm_ctrl_apb_pready           ),
+      .APB_0_PSLVERR               ( hbm_ctrl_apb_pslverr          ),
+      .apb_complete_0              ( hbm_ctrl_apb_complete         ),
+      .DRAM_0_STAT_CATTRIP         ( hbm_ctrl_dram_stat_cattrip    ),
+      .DRAM_0_STAT_TEMP            ( hbm_ctrl_dram_stat_temp       )
+);
+
+assign hbm_ctrl_apb_preset_n = ~reset_action_q;
+assign hbm_ctrl_apb_paddr    = 22'b0;
+assign hbm_ctrl_apb_penable  = 1'b0;
+assign hbm_ctrl_apb_psel     = 1'b0;
+assign hbm_ctrl_apb_pwrite   = 1'b0;
+assign hbm_ctrl_apb_pwdata   = 32'b0;
+
+
+// Calculating Write Data Parity
+assign hbm_ctrl_wdata_parity = {{^(hbm_ctrl_wdata[255:248])},{^(hbm_ctrl_wdata[247:240])},{^(hbm_ctrl_wdata[239:232])},{^(hbm_ctrl_wdata[231:224])},
+                                {^(hbm_ctrl_wdata[223:216])},{^(hbm_ctrl_wdata[215:208])},{^(hbm_ctrl_wdata[207:200])},{^(hbm_ctrl_wdata[199:192])},
+                                {^(hbm_ctrl_wdata[191:184])},{^(hbm_ctrl_wdata[183:176])},{^(hbm_ctrl_wdata[175:168])},{^(hbm_ctrl_wdata[167:160])},
+                                {^(hbm_ctrl_wdata[159:152])},{^(hbm_ctrl_wdata[151:144])},{^(hbm_ctrl_wdata[143:136])},{^(hbm_ctrl_wdata[135:128])},
+                                {^(hbm_ctrl_wdata[127:120])},{^(hbm_ctrl_wdata[119:112])},{^(hbm_ctrl_wdata[111:104])},{^(hbm_ctrl_wdata[103:96])},
+                                {^(hbm_ctrl_wdata[95:88])},  {^(hbm_ctrl_wdata[87:80])},  {^(hbm_ctrl_wdata[79:72])},  {^(hbm_ctrl_wdata[71:64])},
+                                {^(hbm_ctrl_wdata[63:56])},  {^(hbm_ctrl_wdata[55:48])},  {^(hbm_ctrl_wdata[47:40])},  {^(hbm_ctrl_wdata[39:32])},
+                                {^(hbm_ctrl_wdata[31:24])},  {^(hbm_ctrl_wdata[23:16])},  {^(hbm_ctrl_wdata[15:8])},   {^(hbm_ctrl_wdata[7:0])}};
 `endif
 
 endmodule

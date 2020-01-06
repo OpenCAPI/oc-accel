@@ -50,7 +50,7 @@ module fifo_sync
  wire [ADDR_WIDTH:0] ecnt_1 = {{ADDR_WIDTH{1'b0}}, 1'b1};
  wire [ADDR_WIDTH:0] ecnt_max = {1'b1, {ADDR_WIDTH{1'b0}}};
  wire [ADDR_WIDTH:0] ecnt_max_1 = {1'b0, {ADDR_WIDTH{1'b1}}};
- wire [ADDR_WIDTH:0] ecnt_max_2 = {1'b0, {(ADDR_WIDTH-1){1'b1}}, 1'b0};
+ wire [ADDR_WIDTH:0] ecnt_max_2 = {1'b0, {(ADDR_WIDTH-1){1'b1}},1'b0};
  reg [ADDR_WIDTH-1:0] wr_pnt, rd_pnt;
  reg [ADDR_WIDTH:0] valid_entry_cnt; 
  reg rd_en_sync;

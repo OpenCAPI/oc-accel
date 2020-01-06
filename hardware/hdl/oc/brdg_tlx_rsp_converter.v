@@ -135,6 +135,8 @@ module brdg_tlx_rsp_converter (
  wire         fifo_wr_rspcnv_ovfl;
  wire         fifo_dpdl_o_ovfl;
  wire         fifo_dpdl_e_ovfl;
+ wire         fifo_dpdl_o_udfl;
+ wire         fifo_dpdl_e_udfl;
  wire         fifo_datcnv_o_ovfl;
  wire         fifo_datcnv_e_ovfl;
 
@@ -365,14 +367,15 @@ module brdg_tlx_rsp_converter (
              .DATA_WIDTH (4),
              .ADDR_WIDTH (5) 
              ) mfifo_dpdl_o (
-                             .clk     (clk_tlx          ),
-                             .rst_n   (rst_n            ),
-                             .din     (fifo_dpdl_o_din  ),
-                             .wr_en   (fifo_dpdl_o_den  ),
-                             .rd_en   (fifo_dpdl_o_rdrq ),
-                             .dout    (fifo_dpdl_o_dout ),
-                             .valid   (fifo_dpdl_o_dv   ),
-                             .overflow(fifo_dpdl_o_ovfl )
+                             .clk      (clk_tlx          ),
+                             .rst_n    (rst_n            ),
+                             .din      (fifo_dpdl_o_din  ),
+                             .wr_en    (fifo_dpdl_o_den  ),
+                             .rd_en    (fifo_dpdl_o_rdrq ),
+                             .dout     (fifo_dpdl_o_dout ),
+                             .valid    (fifo_dpdl_o_dv   ),
+                             .overflow (fifo_dpdl_o_ovfl ),
+                             .underflow(fifo_dpdl_o_udfl )
                              );
 
 //---- FIFO for response dl/dp even ----
@@ -380,15 +383,19 @@ module brdg_tlx_rsp_converter (
              .DATA_WIDTH (4),
              .ADDR_WIDTH (5) 
              ) mfifo_dpdl_e (
-                             .clk     (clk_tlx          ),
-                             .rst_n   (rst_n            ),
-                             .din     (fifo_dpdl_e_din  ),
-                             .wr_en   (fifo_dpdl_e_den  ),
-                             .rd_en   (fifo_dpdl_e_rdrq ),
-                             .dout    (fifo_dpdl_e_dout ),
-                             .valid   (fifo_dpdl_e_dv   ),
-                             .overflow(fifo_dpdl_e_ovfl )
+                             .clk      (clk_tlx          ),
+                             .rst_n    (rst_n            ),
+                             .din      (fifo_dpdl_e_din  ),
+                             .wr_en    (fifo_dpdl_e_den  ),
+                             .rd_en    (fifo_dpdl_e_rdrq ),
+                             .dout     (fifo_dpdl_e_dout ),
+                             .valid    (fifo_dpdl_e_dv   ),
+                             .overflow (fifo_dpdl_e_ovfl ),
+                             .underflow(fifo_dpdl_e_udfl )
                              );
+
+
+
 
 //---- reflect good TLX read request to accept responsed data----
  always@(posedge clk_tlx or negedge rst_n)
@@ -560,6 +567,7 @@ module brdg_tlx_rsp_converter (
 
 
 
+
 //=================================================================================================================
 // STATUS output for SNAP registers
 //=================================================================================================================
@@ -645,5 +653,17 @@ module brdg_tlx_rsp_converter (
        fir_tlx_rsp_err   <= fir_tlx_rsp_deficient_or_delayed;
      end
 
+
+//==== PSL ASSERTION ==============================================================================
+ // psl DPDL_FIFO_UNDERFLOW : assert never (fifo_dpdl_o_udfl | fifo_dpdl_e_udfl) @(posedge clk_tlx) report "dpdl FIFO underflow! dpdl FIFOs are used to store response information of dp and dl, which comes earlier than response data. So when response data arrives to read dpdl FIFOs, either of them are expeced to be empty.";
+ 
+ // psl DL_IN_PAIR : assert always (((rdata_dl == 2'b10) && (rdata_dp == 2'b00)) -> next ((rdata_dl == 2'b10) && (rdata_dp == 2'b01))) @(posedge clk_tlx) report "the sequence of dp for dl=2 should always be dp=00 -> dp=01! Assertion fires under the following circumstances: 1) dl=1 -> dl=2,dp=1; 2) dl=2,dp=0 -> dl=1.";
+ 
+ // psl DL_IN_ERROR : assert never {(rdata_dl == 2'b01); ((rdata_dl == 2'b10) && (rdata_dp == 2'b01))} @(posedge clk_tlx) report "the sequence of dp for dl=2 should always be dp=00 -> dp=01! Assertion fires under the following circumstances: 1. dl=1 -> dl=2,dp=1; 2. dl=2,dp=0 -> dl=1.";
+//==== PSL ASSERTION ==============================================================================
+
+//==== PSL COVERAGE ==============================================================================
+ // psl RSP_FIFO_ALMOST_FULL : cover {(fifo_rd_rspcnv_wrcnt[4] || fifo_wr_rspcnv_wrcnt[4] || (fifo_datcnv_o_wrcnt > 4'd5))} @(posedge clk_tlx) ;
+//==== PSL COVERAGE ==============================================================================
 
 endmodule

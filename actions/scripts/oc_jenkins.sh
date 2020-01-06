@@ -20,14 +20,15 @@
 #
 
 # SNAP framework example
-function test_10140000
+function test_10142000
 {
 	local card=$1
 	local accel=$2
 	mytest="./actions/hdl_example"
 
 	echo "TEST HDL Example Action on Accel: $accel[$card] ..."
-	$mytest/tests/10140000_test.sh -C $card
+	#mytest/tests/10140000_test.sh -C $card
+	$mytest/tests/hw_test.sh -C $card
 	RC=$?
 	if [ $RC -ne 0 ]; then
 		return $RC
@@ -57,44 +58,27 @@ function test_all_actions() # $1 = card, $2 = accel
 
 	RC=0;
 	# Get SNAP Action number from Card
-	MY_ACTION=`./software/tools/snap_maint -C $card -m 1`
+
+	# MY_ACTION=`./software/tools/oc_maint -C $card -m 1`
+	# oc_maint -m1 not working for the moment ==> Using the following as a workaround
+	MY_ACTION=`./software/tools/oc_maint -C $card -v | grep -A10 -e "-+-" | grep -ve "-+-" | awk '{print $2}'`
+
 	for action in $MY_ACTION ; do
 		run_test=1;
 		case $action in
-		*"10140000")
-			test_10140000 $card $accel
+		*"10142000")
+			test_10142000 $card $accel
 			RC=$?
 			run_test=0
 		;;
-		*"10140001") # HDL NVMe example
-			cmd="./actions/hdl_nvme_example/tests/test_0x10140001.sh"
+		*"10142002") # HDL NVMe example
+			cmd="./actions/hdl_single_engine/tests/hw_general_test.sh"
 		;;
-		*"10141000") # HLS Memcopy
-			cmd="./actions/hls_memcopy/tests/test_0x10141000.sh"
+		*"1014300b") # HLS Memcopy
+			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
-		*"10141001") # HLS Sponge
-			cmd="./actions/hls_sponge/tests/test_0x10141001.sh"
-		;;
-		*"10141002") # HLS HashJoin
-			cmd="./actions/hls_hashjoin/tests/test_0x10141002.sh"
-		;;
-		*"10141003") # HLS Text Search
-			cmd="./actions/hls_search/tests/test_0x10141003.sh"
-		;;
-		*"10141004") # HLS BFS (Breadth First Search)
-			cmd="./actions/hls_bfs/tests/test_0x10141004.sh"
-		;;
-		*"10141005") # HLS Intersection (1)
-			cmd="./actions/hls_intersect/tests/test_0x10141005.sh"
-		;;
-		*"10141006") # HLS Intersection (2)
-			cmd="./actions/hls_intersect/tests/test_0x10141006.sh"
-		;;
-		*"10141007") # HLS NVMe memcopy
-			cmd="./actions/hls_nvme_memcopy/tests/test_0x10141007.sh"
-		;;
-		*"10141008") # HLS Hello World
-			cmd="./actions/hls_helloworld/tests/test_0x10141008.sh"
+		*"10143008") # HLS Hello World
+			cmd="./actions/hls_helloworld/tests/hw_test.sh"
 		;;
 		*)
 			echo "Error: Action: $action is not valid !"
@@ -116,6 +100,7 @@ function test_all_actions() # $1 = card, $2 = accel
 			fi
 		fi
 	done
+	echo "$0 return code is : RC=$RC"
 	return $RC
 }
 
@@ -125,7 +110,7 @@ function test_soft()
 	local card=$2
 
 	echo "Testing Software on Accel: $accel[$card] ..."
-	./software/tools/snap_maint -C $card -v
+	./software/tools/oc_maint -C $card -v
 	RC=$?
 	if [ $RC -ne 0 ]; then
 		return $RC
@@ -139,6 +124,7 @@ function test_hard()
 	local accel=$1
 	local card=$2
 	local IMAGE=$3
+	local IMAGE2=$4
 
 	echo "`date` UPDATING Start"
 	echo "         Accel: $accel[$card] Image: $IMAGE"
@@ -151,7 +137,13 @@ function test_hard()
 	try_to_flash=0
 	while [ 1 ]; do
 		wait_flag=0
-		sudo ./capi-flash-script.sh -f -C $card -f $IMAGE
+		if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
+		     echo "executing : sudo ./capi-flash-script.sh -f -C $card -f $IMAGE"
+		sudo ./oc-flash-script.sh -f -C $card -f $IMAGE
+		else 
+                     echo "executing : sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2"
+                     sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2
+	        fi
 		RC=$?
 		if [ $RC -eq 0 ]; then
 			break
@@ -184,58 +176,60 @@ function test_hard()
 		sleep 15          # Allow other test to Flash
 		echo "`date` Testing Accel: $accel[$card]"
 	fi
+        sleep 5          # Allow some time to recover cards
+
 	./software/tools/snap_peek -C $card 0x0 -d2
 	RC=$?
 	if [ $RC -ne 0 ]; then
+		echo "moving $IMAGE to $IMAGE.fault_peek"
 		mv $IMAGE $IMAGE.fault_peek
 		return $RC
 	fi
 	echo "CONFIG Accel: $accel[$card] ..."
-	./software/tools/snap_maint -C $card -v
+	./software/tools/oc_maint -C $card -v
 	RC=$?
 	if [ $RC -ne 0 ]; then
+		echo "moving $IMAGE to $IMAGE.fault_config"
 		mv $IMAGE $IMAGE.fault_config
 		return $RC
 	fi
 	test_all_actions $card $accel
 	RC=$?
 	if [ $RC -eq 0 ]; then
+		echo "moving $IMAGE to $IMAGE.good"
 		mv $IMAGE $IMAGE.good
 	else
+		echo "moving $IMAGE to $IMAGE.fault_test"
 		mv $IMAGE $IMAGE.fault_test
 	fi
 	return $RC
 }
 
 function usage() {
-	echo "Usage: $PROGRAM -D [] -A [] -F []"
+	echo "Usage: $PROGRAM -D [] -A [] -F [] -f []"
 	echo "    [-D <Target Dir>]"
-	echo "    [-A <ADKU3>  : Select AlphaData KU3 Card"
-	echo "        <AD8K5>  : Select AlphaData 8K5 Card"
-	echo "        <N250S>  : Select Nallatech 250S Card"
-	echo "        <N250SP> : Select Nallatech 250SP Card"
-	echo "        <S121B>  : Select Semptian NSA121B Card"
-	echo "        <RCXVUP> : Select ReflexCES XpressVUP Card"
-	echo "        <FX609>  : Select Flyslice 609 Card"
-	echo "        <S241>   : Select Semptian NSA241 Card"
+	echo "    [-A <OC-AD9V3>  : Select AlphaData OC-AD9V3 Card"
+	echo "    [-A <OC-AD9V3>  : Select AlphaData OC-AD9H3 Card"
+	echo "    [-A <OC-AD9V3>  : Select AlphaData OC-AD9H7 Card"
 	echo "        <ALL>    : Select ALL Cards"
 	echo "    [-F <Image>  : Set Image file for Accelerator -A"
+	echo "    [-f <Image>  : Set SPI secondary Image file for Accelerator -A"
 	echo "                   -A ALL is not valid if -F is used"
 	echo "    [-C <0,1,2,3]: Select Card 0,1,2 or 3"
-	echo "        Selct the Card# for test. The..."
+	echo "        Select the Card# for test."
 	echo "    [-h] Print this help"
 	echo "    Option -D must be set"
 	echo "    following combinations can happen"
-	echo "    1.) Option -A [N250S, N250SP, ADKU3, AD8K5, S121B, FX609, S241 or RCXVUP] and -F is set"
+	echo "    1.) Option -A [OC-AD9V3, OC-AD9H3, OC-AD9H7] and -F is set"
 	echo "        for Card in all Accelerators (-A)"
-	echo "           Image will be flashed on Card"
-	echo "           Software Test will run on Card"
-	echo "    2.) Option -A [N250S, N250SP, ADKU3, AD8K5, S121B, FX609, S241 or RCXVUP]"
+	echo "           => Image will be flashed on Card (using oc-flash-script and reset routines)"
+	echo "           => and Software Test will then run on Card"
+	echo "    2.) Option -A [OC-AD9V3, OC-AD9H3, OC-AD9H7]"
 	echo "        for Card in all given Accelerators (-A)"
-	echo "           Software Test will run on Card"
+	echo "           => Software Test will run on Card (using current FPGA content)"
 	echo "    3.) Option -A ALL"
 	echo "        for each Card and for all Accelerators"
-	echo "           Software Test will run on Accelerator and Card"
+	echo "           => Software Test will run on Accelerator and Card"
 }
 
 #
@@ -243,39 +237,48 @@ function usage() {
 #
 # Note: use bash option "set -f" when passing wildcards before
 #       starting this script.
-
+#
+# -------------------------------------------------------
+VERSION=1.0 # creation for OC-AD9V3, OC-AD9H3, OC-AD9H7 cards
+# --------------------------------------------------------
 PROGRAM=$0
 BINFILE=""
+BINFILE2=""
 accel="ALL"
 CARD="-1"   # Select all Cards in System
 
-echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< JENKINS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< OC-JENKINS TEST>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+echo "oc_jenkins.sh version : $VERSION"
 echo "`date` Test Starts On `hostname`"
+echo "Arg#='$#'"
+for i in "$@"
+do
+ echo "param'=$i"
+done
+echo ""
 
-while getopts "D:A:F:C:h" opt; do
+while getopts "D:A:F:f:C:h" opt; do
 	case $opt in
 	D)
 		TARGET_DIR=$OPTARG;
 		;;
 	A)
 		accel=$OPTARG;
-		if [[ $accel != "N250S"  ]] &&
-		   [[ $accel != "N250SP" ]] &&
-		   [[ $accel != "ADKU3"  ]] &&
-		   [[ $accel != "AD8K5"  ]] &&
-		   [[ $accel != "S121B"  ]] &&
-		   [[ $accel != "RCXVUP" ]] &&
-		   [[ $accel != "FX609"  ]] &&
-		   [[ $accel != "S241"   ]] &&
+		if [[ $accel != "OC-AD9V3"  ]] &&
+		   [[ $accel != "OC-AD9H3" ]] &&
+		   [[ $accel != "OC-AD9H7"  ]] &&
 		   [[ $accel != "ALL"    ]]; then
 			echo "Error:  Option -A $OPTARG is not valid !" >&2
-			echo "Expect: [N250S N250SP ADKU3 AD8K5 S121B FX609 S241 RCXVUP or ALL]" >&2
+			echo "Expect: [OC-AD9V3, OC-AD9H3, OC-AD9H7 or ALL]" >&2
 			exit 1
 		fi
 		;;
 	F)
 		BINFILE=$OPTARG;
 		;;
+	f)
+                BINFILE2=$OPTARG;
+                ;;	
 	C)
 		CARD=$OPTARG;
 		;;
@@ -294,6 +297,9 @@ echo "Testing in  : $MY_DIR"
 echo "Using Accel : $accel"
 echo "Using Card# : $CARD"
 echo "Using Image : $BINFILE"
+if [[ $accel == "OC-AD9V3" ]] || [[ $accel == "OC-AD9H3" ]] || [[ $accel == "OC-AD9H7" ]]; then
+echo "Using sec Image : $BINFILE2"
+fi
 
 if [[ $TARGET_DIR != $MY_DIR ]] ; then
 	echo "Target Dir:  $TARGET_DIR"
@@ -303,12 +309,6 @@ if [[ $TARGET_DIR != $MY_DIR ]] ; then
 fi
 echo "Source PATH and LD_LIBRARY_PATH"
 . ./snap_path.sh
-
-# accel can be:
-#     1: ADKU3 - flash and test AlphaData KU3
-#     2: N250S - flash and test Nallatech 250S
-#     3: S121B - flash and test Semptian NSA121B
-#     4: ALL   - test Software on all cards in this system
 
 test_done=0
 if [[ $accel != "ALL" ]]; then
@@ -322,13 +322,17 @@ if [[ $accel != "ALL" ]]; then
 			echo "---> Test Image# $test_done File: $IMAGE on $accel Card: $CARD"
 			if [ $CARD -eq "-1" ]; then
 				# Get all Cards in this System for Accel type i have to test
-				MY_CARDS=`./software/tools/snap_find_card -A $accel`
+				MY_CARDS=`./software/tools/oc_find_card -A $accel`
 				if [ $? -eq 0 ]; then
 					echo "Error: Can not find $accel Card in `hostname` !"
 					exit 1;
 				fi
 				for card in $MY_CARDS ; do
-					test_hard $accel $card $BINFILE
+					if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
+						test_hard $accel $card $BINFILE
+					else
+						test_hard $accel $card $BINFILE $BINFILE2
+					fi
 					if [ $? -ne 0 ]; then
 						exit 1
 					fi
@@ -337,7 +341,7 @@ if [[ $accel != "ALL" ]]; then
 			else
 				# -C Option was set.
 				# Make sure i did get the correct values for -A and -C
-				accel_to_use=`./software/tools/snap_find_card -C $CARD`
+				accel_to_use=`./software/tools/oc_find_card -C $CARD`
 				if [ "$accel_to_use" == "$accel" ]; then
 					test_hard $accel $CARD $BINFILE
 					if [ $? -ne 0 ]; then
@@ -345,8 +349,9 @@ if [[ $accel != "ALL" ]]; then
 					fi
 					test_done=$((test_done +1))
 				else
-					echo "Error: CAPI Card: $CARD is not Accel Type: $accel"
-					echo "       CAPI Card: $CARD Accel Type is : $accel_to_use"
+					echo "Error: OpenCAPI Card: $CARD is not Accel Type: $accel"
+					echo "       OpenCAPI Card: $CARD Accel Type is : $accel_to_use"
+                                        echo ""
 					exit 1
 				fi
 			fi
@@ -364,7 +369,7 @@ if [[ $accel != "ALL" ]]; then
 	echo "Test Software on: $accel Card: $CARD"
 	if [ $CARD -eq "-1" ]; then
 		# I will use all Cards if Card is set to -1
-		MY_CARDS=`./software/tools/snap_find_card -A $accel`
+		MY_CARDS=`./software/tools/oc_find_card -A $accel`
 		if [ $? -eq 0 ]; then
 			echo "Error: Can not find Accel: $accel"
 			exit 1;
@@ -381,16 +386,23 @@ if [[ $accel != "ALL" ]]; then
 	else
 		# -C Option was set:
 		# Make sure i did get the correct values for Card and Accel (-C and -A)
-		accel_to_use=`./software/tools/snap_find_card -C $CARD`
+		accel_to_use=`./software/tools/oc_find_card -C $CARD`
+                echo "accel_to_use=$accel_to_use"
+                echo "accel       =$accel"
+                echo "CARD        =$CARD"
 		if [ "$accel_to_use" == "$accel" ]; then
-			test_soft $accel $CARD
+		    if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H3" ]]; then
+			    test_hard $accel $CARD $BINFILE
+		    else
+			    test_hard $accel $CARD $BINFILE $BINFILE2
+					fi
 			if [ $? -ne 0 ]; then
 				exit 1
 			fi
 			test_done=$((test_done +1))
 		else
-			echo "Error: CAPI Card: $CARD is not Accel Type: $accel"
-			echo "       CAPI Card: $CARD Accel Type is : $accel_to_use"
+			echo "Error: OpenCAPI Card: $CARD is not Accel Type: $accel"
+			echo "       OpenCAPI Card: $CARD Accel Type is : $accel_to_use"
 			exit 1
 		fi
 	fi
@@ -411,20 +423,20 @@ if [[ $BINFILE != "" ]]; then
 fi
 
 echo "Test Software on: $accel"
-MY_CARDS=`./software/tools/snap_find_card -A ALL`
+MY_CARDS=`./software/tools/oc_find_card -A ALL`
 if [ $? -eq 0 ]; then
 	echo "Error: No Accelerator Cards found."
 	exit 1;
 fi
 echo "Found Accel#: [$MY_CARDS]"
 for card in $MY_CARDS ; do
-	accel=`./software/tools/snap_find_card -C $card`
+	accel=`./software/tools/oc_find_card -C $card`
 	if [ $? -eq 0 ]; then
 		echo "Can not find valid Accelerator for Card# $card"
 		continue
 	fi
-	# snap_find_card also detects GZIP cards, i will skip this cards
-	if [[ $accel != "N250S" ]]  && [[ $accel != "N250SP" ]] && [[ $accel != "ADKU3" ]] && [[ $accel != "S121B" ]]; then
+	# oc_find_card also detects GZIP cards, i will skip this cards
+	if [[ $accel != "OC-AD9V3" ]]  && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
 		echo "Invalid Accelerator $accel for Card $card, skip"
 		continue
 	fi

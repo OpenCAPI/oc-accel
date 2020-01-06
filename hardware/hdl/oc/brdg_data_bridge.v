@@ -498,7 +498,7 @@ module brdg_data_bridge
 
  assign buf_r_data_en   = (MODE == DMA_W)? retry_tag_out_valid : rd_valid;
  assign buf_r_data_addr = (MODE == DMA_W)? retry_tag_out       : rd_tag;
- assign buf_r_info_en   = retry_tag_out_valid || ((MODE == DMA_R) && rd_valid) || ((MODE == DMA_W) && ret_valid);
+ assign buf_r_info_en   = retry_tag_out_valid || ((MODE == DMA_R) && rd_valid) || ((MODE == DMA_W) && (ret_valid && ret_ready));
  assign buf_r_info_addr = retry_tag_out_valid? retry_tag_out : (((MODE == DMA_W) && ret_valid)? ret_tag : rd_tag);
  assign buf_r_be        = buf_r_info[127:0] & retry_be;
  assign buf_r_ea        = buf_r_info[191:128];
@@ -589,7 +589,7 @@ module brdg_data_bridge
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      ret_valid_sync <= 1'b0;
-   else if(ret_valid)
+   else if(ret_valid && ret_ready)
      ret_valid_sync <= 1'b1;
    else if(lcl_resp_ready)
      ret_valid_sync <= 1'b0;
@@ -600,7 +600,7 @@ module brdg_data_bridge
        ret_axi_id_sync <= {`IDW{1'd0}};
        ret_resp_sync <= 'd0;
      end
-   else if(ret_valid)
+   else if(ret_valid && ret_ready)
      begin
        ret_axi_id_sync <= ret_axi_id;
        ret_resp_sync <= ret_resp;
@@ -617,6 +617,7 @@ module brdg_data_bridge
  `ifdef ENABLE_ODMA
  assign ret_ready_hint    = lcl_resp_ready_hint;
  `endif
+
 
 
 //=================================================================================================================
@@ -708,8 +709,22 @@ module brdg_data_bridge
  // psl default clock = (posedge clk);
 
 //==== PSL ASSERTION ==============================================================================
- // psl NEW_CONTEXT_CONGESTED : assert always onehot0({retry_tag_out_valid, ((MODE == DMA_R) && rd_valid), ((MODE == DMA_W) && ret_valid);}) report "information buffer read conflict! Reading the infor BUF for TLX retry command and for AXI reclaim should never happen in the same time.";
+// psl NEW_CONTEXT_CONGESTED : assert always onehot0({retry_tag_out_valid, ((MODE == DMA_R) && rd_valid), ((MODE == DMA_W) && ret_valid)}) report "information buffer read conflict! Reading the infor BUF for TLX retry command and for AXI reclaim should never happen in the same time.";
 //==== PSL ASSERTION ==============================================================================
+
+//==== PSL ASSERTION ==============================================================================
+// psl DMA_COMMAND_RETRY_CONFLICT : assert never (retry_tag_out_valid_sync && local_cmd_valid_sync) report "retry and normal command conflict! It's not allowed to send both retry command from retry FIFO and normal command from AXI to command encoder simultanuously.";
+
+// psl SURPLUS_TLX_RSP : assert never (fifo_rcy_tag_full && dma_resp_valid) report "all buffer slots have been released, response from TLX is nevertheless received.";
+
+// psl SURPLUS_AXI_CMD : assert never (fifo_rcy_tag_empty && local_cmd_valid) report "buffer slots have been used up, command from AXI is nevertheless received.";
+//==== PSL ASSERTION ==============================================================================
+
+//==== PSL COVERAGE ==============================================================================
+ // psl RETRY_FIFO_ALMOST_FULL : cover {retry_intrpt};
+ // psl TAG_ALL_CLAIMED : cover {~fifo_rcy_tag_full; fifo_rcy_tag_full};
+ // psl TAG_ALL_SET_FREE : cover {~fifo_rcy_tag_empty; fifo_rcy_tag_empty};
+//==== PSL COVERAGE ==============================================================================
 
 
 endmodule
