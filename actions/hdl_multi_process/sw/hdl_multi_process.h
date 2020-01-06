@@ -31,5 +31,7 @@
 #define REG_MP_CONTROL          0x24
 #define REG_MP_INIT_ADDR_LO     0x28
 #define REG_MP_INIT_ADDR_HI     0x2C
+#define REG_MP_CMPL_ADDR_LO     0x30
+#define REG_MP_CMPL_ADDR_HI     0x34
 
 #endif  /* __HDL_MULTI_PROCESS__ */
