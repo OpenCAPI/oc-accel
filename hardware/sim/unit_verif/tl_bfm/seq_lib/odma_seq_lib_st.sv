@@ -2564,18 +2564,22 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k_st extends bfm_sequence_base;
 		`uvm_info("odma_seq_lib", $sformatf("Random delay time for channel 0-3 are separately %d, %d, %d, %dns\n", start_time[ 7: 0] * 10, start_time[15: 8] * 10, start_time[23:16] * 10, start_time[31:24] * 10), UVM_LOW)
 	fork
 	    begin
+	    	delay(start_time[ 7: 0]);
 	    	`uvm_info("odma_seq_lib", $sformatf("Channel 0 starts, delay time: %d ns", start_time[ 7: 0] * 10), UVM_LOW)
 	    	channel(0);
 	    end
 	    begin
+	    	delay(start_time[ 15: 8]);
 	    	`uvm_info("odma_seq_lib", $sformatf("Channel 1 starts, delay time: %d ns", start_time[15: 8] * 10), UVM_LOW)
 	    	channel(1);
 	    end
 	    begin
+	    	delay(start_time[ 23: 16]);
 	    	`uvm_info("odma_seq_lib", $sformatf("Channel 2 starts, delay time: %d ns", start_time[23:16] * 10), UVM_LOW)
 	    	channel(2);
 	    end
 	    begin
+	    	delay(start_time[ 31: 24]);
 	    	`uvm_info("odma_seq_lib", $sformatf("Channel 3 starts, delay time: %d ns", start_time[31:24] * 10), UVM_LOW)
 	    	channel(3);
 	    end
