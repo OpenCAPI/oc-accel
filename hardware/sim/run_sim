@@ -192,6 +192,9 @@
    elif [ "$SIMDIR" == "questa" ];then
      cp ../qu*.tcl  	      $SIMOUT 2>/dev/null
    else echo "cannot prepare simout for simdir=$SIMDIR"; exit 1; fi
+   if [ "$HBM_USED" == "TRUE" ];then # copy hbm mem files
+     cp *.mem                   $SIMOUT
+   fi
    cd $SIMOUT
 #  ln -s $SNAP_ROOT/hardware/support  support  	# to easier get to waveform signallists
    if   [ "$SIMDIR" == "ies" ];then
