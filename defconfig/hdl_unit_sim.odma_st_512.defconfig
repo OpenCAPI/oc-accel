@@ -54,7 +54,7 @@ OCSE_PATH="../ocse"
 SPEED_25G=y
 # SPEED_20G is not set
 PHY_SPEED="25.78125"
-AXI_ID_WIDTH=1
+AXI_ID_WIDTH=5
 # Action_clock_50MHz is not set
 # Action_clock_100MHz is not set
 # Action_clock_150MHz is not set

@@ -92,6 +92,7 @@ task axi_st_mst_agent::main_phase(uvm_phase phase);
     `uvm_info(tID, $sformatf("main_phase begin ..."), UVM_HIGH)
     axi_vip_st_master_mst = new("axi_vip_st_master_mst", st_mst_vif);
     axi_vip_st_master_mst.start_master();
+    axi_vip_st_master_mst.vif_proxy.set_dummy_drive_type(XIL_AXI4STREAM_VIF_DRIVE_NONE);
     fork
         get_st_trans();
         send_st_write();
@@ -111,8 +112,10 @@ endtask : get_st_trans
 task axi_st_mst_agent::send_st_write();
     forever begin
         if(axi_st_queue.size > 0)begin
-            `uvm_info(tID, $sformatf("zt_debug get st trans:\n%s", axi_st_queue[0].sprint()), UVM_LOW)
             vip_trans = axi_vip_st_master_mst.driver.create_transaction("write transaction");
+            vip_trans.set_delay_policy(XIL_AXI4STREAM_DELAY_INSERTION_FROM_IDLE);
+            vip_trans.set_driver_return_item_policy(XIL_AXI4STREAM_NO_RETURN);
+            vip_trans.set_delay(0);
             vip_trans.set_id(axi_st_queue[0].tid);
             vip_trans.set_user_beat(axi_st_queue[0].tuser);
             vip_trans.set_keep_beat(axi_st_queue[0].tkeep);
