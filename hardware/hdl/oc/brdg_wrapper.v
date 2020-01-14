@@ -1032,422 +1032,625 @@ brdg_axi_slave       axi_slv (
 
 
 `ifdef ILA_DEBUG
-    reg             s_axi_aw_ctx_valid_sync1;
-    reg [`CTXW-1:0] s_axi_aw_ctx_sync1;
-    reg             s_axi_ar_ctx_valid_sync1;
-    reg [`CTXW-1:0] s_axi_ar_ctx_sync1;
-    reg             lcl_wr_ctx_valid_sync1;
-    reg [`CTXW-1:0] lcl_wr_ctx_sync1;
-    reg             lcl_rd_ctx_valid_sync1;
-    reg [`CTXW-1:0] lcl_rd_ctx_sync1;
-    reg             dma_w_cmd_ctx_valid_sync1;
-    reg [`CTXW-1:0] dma_w_cmd_ctx_sync1;
-    reg             dma_r_cmd_ctx_valid_sync1;
-    reg [`CTXW-1:0] dma_r_cmd_ctx_sync1;
-    reg             tlx_w_cmd_valid_sync1;
-    reg [19:0]      tlx_w_cmd_pasid_sync1;
-    reg [11:0]      tlx_w_cmd_actag_sync1;
-    reg             tlx_r_cmd_valid_sync1;
-    reg [19:0]      tlx_r_cmd_pasid_sync1;
-    reg [11:0]      tlx_r_cmd_actag_sync1;
-    reg             afu_tlx_cmd_valid_sync1;
-    reg [07:0]      afu_tlx_cmd_opcode_sync1;
-    reg [19:0]      afu_tlx_cmd_pasid_sync1;
-    reg [11:0]      afu_tlx_cmd_actag_sync1;
-    reg [15:0]      afu_tlx_cmd_afutag_sync1;
-    reg             tlx_afu_resp_valid_sync1;
-    reg [15:0]      tlx_afu_resp_afutag_sync1;
-    reg [07:0]      tlx_afu_resp_opcode_sync1;
-    reg [03:0]      tlx_afu_resp_code_sync1;
-    reg [11:0]      cfg_actag_base_sync1;
-    reg [19:0]      cfg_pasid_base_sync1;
-    reg [04:0]      cfg_pasid_length_sync1;
+reg [15:0]   axi_read_count;
 
-    reg             s_axi_aw_ctx_valid_sync2;
-    reg [`CTXW-1:0] s_axi_aw_ctx_sync2;
-    reg             s_axi_ar_ctx_valid_sync2;
-    reg [`CTXW-1:0] s_axi_ar_ctx_sync2;
-    reg             lcl_wr_ctx_valid_sync2;
-    reg [`CTXW-1:0] lcl_wr_ctx_sync2;
-    reg             lcl_rd_ctx_valid_sync2;
-    reg [`CTXW-1:0] lcl_rd_ctx_sync2;
-    reg             dma_w_cmd_ctx_valid_sync2;
-    reg [`CTXW-1:0] dma_w_cmd_ctx_sync2;
-    reg             dma_r_cmd_ctx_valid_sync2;
-    reg [`CTXW-1:0] dma_r_cmd_ctx_sync2;
-    reg             tlx_w_cmd_valid_sync2;
-    reg [19:0]      tlx_w_cmd_pasid_sync2;
-    reg [11:0]      tlx_w_cmd_actag_sync2;
-    reg             tlx_r_cmd_valid_sync2;
-    reg [19:0]      tlx_r_cmd_pasid_sync2;
-    reg [11:0]      tlx_r_cmd_actag_sync2;
-    reg             afu_tlx_cmd_valid_sync2;
-    reg [07:0]      afu_tlx_cmd_opcode_sync2;
-    reg [19:0]      afu_tlx_cmd_pasid_sync2;
-    reg [11:0]      afu_tlx_cmd_actag_sync2;
-    reg [15:0]      afu_tlx_cmd_afutag_sync2;
-    reg             tlx_afu_resp_valid_sync2;
-    reg [15:0]      tlx_afu_resp_afutag_sync2;
-    reg [07:0]      tlx_afu_resp_opcode_sync2;
-    reg [03:0]      tlx_afu_resp_code_sync2;
-    reg [11:0]      cfg_actag_base_sync2;
-    reg [19:0]      cfg_pasid_base_sync2;
-    reg [04:0]      cfg_pasid_length_sync2;
+reg [15:0]   axi_read_count_sync1;
+reg          fir_fifo_rd_rspcnv_overflow_sync1     ;
+reg          fir_fifo_wr_rspcnv_overflow_sync1     ;
+reg          fir_fifo_dpdl_o_overflow_sync1        ;
+reg          fir_fifo_dpdl_e_overflow_sync1        ;
+reg          fir_fifo_datcnv_o_overflow_sync1      ;
+reg          fir_fifo_datcnv_e_overflow_sync1      ;
+reg          fir_tlx_rsp_deficient_or_delayed_sync1;
+reg          fir_cmd_credit_breach_sync1           ;
+reg          fir_cmd_credit_data_breach_sync1      ;
+reg          fir_fifo_a_cmdcnv_overflow_sync1      ; 
+reg          fir_fifo_r_cmdcnv_overflow_sync1      ; 
+reg          fir_fifo_w_datcnv_e_overflow_sync1    ; 
+reg          fir_fifo_w_datcnv_o_overflow_sync1    ; 
+reg          fir_fifo_w_cmdcnv_overflow_sync1      ;
+reg          rd_fir_fifo_rcy_tag_overflow_sync1       ;
+reg          rd_fir_fifo_rty_tag_overflow_sync1       ;
+reg          wr_fir_fifo_rcy_tag_overflow_sync1       ;
+reg          wr_fir_fifo_rty_tag_overflow_sync1       ;
+reg          rd_fir_fifo_prt_data_overflow_sync1      ;
+reg          rd_fir_fifo_prt_info_overflow_sync1      ;
+reg          wr_fir_fifo_prt_data_overflow_sync1      ;
+reg          wr_fir_fifo_prt_info_overflow_sync1      ;
+reg          rd_fir_fifo_rsp_good_overflow_sync1      ;
+reg          rd_fir_fifo_rsp_bad_overflow_sync1       ;
+reg          rd_fir_fifo_rspdat_o_overflow_sync1      ;
+reg          rd_fir_fifo_rspdat_e_overflow_sync1      ;
+reg [31:0]   rd_retry_count_sync1;
+reg [31:0]   rd_rsp_idle_count_sync1;
+reg          wr_fir_fifo_rsp_good_overflow_sync1      ;
+reg          wr_fir_fifo_rsp_bad_overflow_sync1       ;
+reg          wr_fir_fifo_rspdat_o_overflow_sync1      ;
+reg          wr_fir_fifo_rspdat_e_overflow_sync1      ;
+reg [31:0]   wr_retry_count_sync1;
+reg [31:0]   wr_rsp_idle_count_sync1;
+reg          afu_tlx_cmd_valid_sync1               ;
+reg [0007:0] afu_tlx_cmd_opcode_sync1              ;
+reg [0015:0] afu_tlx_cmd_afutag_sync1              ;
+reg [0063:0] afu_tlx_cmd_ea_sync1                  ;
+reg [0001:0] afu_tlx_cmd_dl_sync1                  ;//2+   //output     [0001:0]
+reg [0002:0] afu_tlx_cmd_pl_sync1                  ;//3+   //output     [0002:0]
+reg          afu_tlx_cdata_valid_sync1             ;//1+   //output
+reg [0015:0] afu_tlx_cdata_bus_sync1               ;//16+  //output
+reg          tlx_afu_cmd_credit_sync1              ;//1+   //input
+reg          tlx_afu_cmd_data_credit_sync1         ;//1+   //input
+reg          tlx_afu_resp_valid_sync1              ;//1+   //input
+reg [0015:0] tlx_afu_resp_afutag_sync1             ;//16+   //input      [0015:0]
+reg [0007:0] tlx_afu_resp_opcode_sync1             ;//8+   //input      [0007:0]
+reg [0003:0] tlx_afu_resp_code_sync1               ;//4+   //input      [0003:0]
+reg [0001:0] tlx_afu_resp_dl_sync1                 ;//2+   //input      [0001:0]
+reg [0001:0] tlx_afu_resp_dp_sync1                 ;//2+   //input      [0001:0]
+reg          afu_tlx_resp_rd_req_sync1             ;//1+   //output
+reg [0002:0] afu_tlx_resp_rd_cnt_sync1             ;//3+   //output     [0002:0]
+reg          tlx_afu_resp_data_valid_sync1         ;//1+   //input
+reg [0015:0] tlx_afu_resp_data_bus_sync1           ;//16+  //input
+reg          afu_tlx_resp_credit_sync1             ;//1+   //output
+reg [0007:0] s_axi_awlen_sync1                     ;//8+   //input      [0007:0]
+reg          s_axi_awvalid_sync1                   ;//1+   //input
+reg          s_axi_awready_sync1                   ;//1+   //output
+reg          s_axi_wlast_sync1                     ;//1+   //input
+reg          s_axi_wvalid_sync1                    ;//1+   //input
+reg          s_axi_wready_sync1                    ;//1+   //output
+reg          s_axi_bready_sync1                    ;//1+   //input
+reg          s_axi_bvalid_sync1                    ;//1+   //output
+reg [0007:0] s_axi_arlen_sync1                     ;//8+   //input      [0007:0]
+reg          s_axi_arvalid_sync1                   ;//1+   //input
+reg          s_axi_arready_sync1                   ;//1+   //output
+reg          s_axi_rready_sync1                    ;//1+   //input
+reg [0001:0] s_axi_rresp_sync1                     ;//2+   //output     [0001:0]
+reg          s_axi_rlast_sync1                     ;//1+   //output
+reg          s_axi_rvalid_sync1                    ;//1   //output
 
-    reg             s_axi_aw_ctx_valid_sync3;
-    reg [`CTXW-1:0] s_axi_aw_ctx_sync3;
-    reg             s_axi_ar_ctx_valid_sync3;
-    reg [`CTXW-1:0] s_axi_ar_ctx_sync3;
-    reg             lcl_wr_ctx_valid_sync3;
-    reg [`CTXW-1:0] lcl_wr_ctx_sync3;
-    reg             lcl_rd_ctx_valid_sync3;
-    reg [`CTXW-1:0] lcl_rd_ctx_sync3;
-    reg             dma_w_cmd_ctx_valid_sync3;
-    reg [`CTXW-1:0] dma_w_cmd_ctx_sync3;
-    reg             dma_r_cmd_ctx_valid_sync3;
-    reg [`CTXW-1:0] dma_r_cmd_ctx_sync3;
-    reg             tlx_w_cmd_valid_sync3;
-    reg [19:0]      tlx_w_cmd_pasid_sync3;
-    reg [11:0]      tlx_w_cmd_actag_sync3;
-    reg             tlx_r_cmd_valid_sync3;
-    reg [19:0]      tlx_r_cmd_pasid_sync3;
-    reg [11:0]      tlx_r_cmd_actag_sync3;
-    reg             afu_tlx_cmd_valid_sync3;
-    reg [07:0]      afu_tlx_cmd_opcode_sync3;
-    reg [19:0]      afu_tlx_cmd_pasid_sync3;
-    reg [11:0]      afu_tlx_cmd_actag_sync3;
-    reg [15:0]      afu_tlx_cmd_afutag_sync3;
-    reg             tlx_afu_resp_valid_sync3;
-    reg [15:0]      tlx_afu_resp_afutag_sync3;
-    reg [07:0]      tlx_afu_resp_opcode_sync3;
-    reg [03:0]      tlx_afu_resp_code_sync3;
-    reg [11:0]      cfg_actag_base_sync3;
-    reg [19:0]      cfg_pasid_base_sync3;
-    reg [04:0]      cfg_pasid_length_sync3;
+reg [15:0]   axi_read_count_sync2;
+reg          fir_fifo_rd_rspcnv_overflow_sync2     ;
+reg          fir_fifo_wr_rspcnv_overflow_sync2     ;
+reg          fir_fifo_dpdl_o_overflow_sync2        ;
+reg          fir_fifo_dpdl_e_overflow_sync2        ;
+reg          fir_fifo_datcnv_o_overflow_sync2      ;
+reg          fir_fifo_datcnv_e_overflow_sync2      ;
+reg          fir_tlx_rsp_deficient_or_delayed_sync2;
+reg          fir_cmd_credit_breach_sync2           ;
+reg          fir_cmd_credit_data_breach_sync2      ;
+reg          fir_fifo_a_cmdcnv_overflow_sync2      ; 
+reg          fir_fifo_r_cmdcnv_overflow_sync2      ; 
+reg          fir_fifo_w_datcnv_e_overflow_sync2    ; 
+reg          fir_fifo_w_datcnv_o_overflow_sync2    ; 
+reg          fir_fifo_w_cmdcnv_overflow_sync2      ;
+reg          rd_fir_fifo_rcy_tag_overflow_sync2       ;
+reg          rd_fir_fifo_rty_tag_overflow_sync2       ;
+reg          wr_fir_fifo_rcy_tag_overflow_sync2       ;
+reg          wr_fir_fifo_rty_tag_overflow_sync2       ;
+reg          rd_fir_fifo_prt_data_overflow_sync2      ;
+reg          rd_fir_fifo_prt_info_overflow_sync2      ;
+reg          wr_fir_fifo_prt_data_overflow_sync2      ;
+reg          wr_fir_fifo_prt_info_overflow_sync2      ;
+reg          rd_fir_fifo_rsp_good_overflow_sync2      ;
+reg          rd_fir_fifo_rsp_bad_overflow_sync2       ;
+reg          rd_fir_fifo_rspdat_o_overflow_sync2      ;
+reg          rd_fir_fifo_rspdat_e_overflow_sync2      ;
+reg [31:0]   rd_retry_count_sync2;
+reg [31:0]   rd_rsp_idle_count_sync2;
+reg          wr_fir_fifo_rsp_good_overflow_sync2      ;
+reg          wr_fir_fifo_rsp_bad_overflow_sync2       ;
+reg          wr_fir_fifo_rspdat_o_overflow_sync2      ;
+reg          wr_fir_fifo_rspdat_e_overflow_sync2      ;
+reg [31:0]   wr_retry_count_sync2;
+reg [31:0]   wr_rsp_idle_count_sync2;
+reg          afu_tlx_cmd_valid_sync2               ;
+reg [0007:0] afu_tlx_cmd_opcode_sync2              ;
+reg [0015:0] afu_tlx_cmd_afutag_sync2              ;
+reg [0063:0] afu_tlx_cmd_ea_sync2                  ;
+reg [0001:0] afu_tlx_cmd_dl_sync2                  ;//2+   //output     [0001:0]
+reg [0002:0] afu_tlx_cmd_pl_sync2                  ;//3+   //output     [0002:0]
+reg          afu_tlx_cdata_valid_sync2             ;//1+   //output
+reg [0015:0] afu_tlx_cdata_bus_sync2               ;//16+  //output
+reg          tlx_afu_cmd_credit_sync2              ;//1+   //input
+reg          tlx_afu_cmd_data_credit_sync2         ;//1+   //input
+reg          tlx_afu_resp_valid_sync2              ;//1+   //input
+reg [0015:0] tlx_afu_resp_afutag_sync2             ;//16+   //input      [0015:0]
+reg [0007:0] tlx_afu_resp_opcode_sync2             ;//8+   //input      [0007:0]
+reg [0003:0] tlx_afu_resp_code_sync2               ;//4+   //input      [0003:0]
+reg [0001:0] tlx_afu_resp_dl_sync2                 ;//2+   //input      [0001:0]
+reg [0001:0] tlx_afu_resp_dp_sync2                 ;//2+   //input      [0001:0]
+reg          afu_tlx_resp_rd_req_sync2             ;//1+   //output
+reg [0002:0] afu_tlx_resp_rd_cnt_sync2             ;//3+   //output     [0002:0]
+reg          tlx_afu_resp_data_valid_sync2         ;//1+   //input
+reg [0015:0] tlx_afu_resp_data_bus_sync2           ;//16+  //input
+reg          afu_tlx_resp_credit_sync2             ;//1+   //output
+reg [0007:0] s_axi_awlen_sync2                     ;//8+   //input      [0007:0]
+reg          s_axi_awvalid_sync2                   ;//1+   //input
+reg          s_axi_awready_sync2                   ;//1+   //output
+reg          s_axi_wlast_sync2                     ;//1+   //input
+reg          s_axi_wvalid_sync2                    ;//1+   //input
+reg          s_axi_wready_sync2                    ;//1+   //output
+reg          s_axi_bready_sync2                    ;//1+   //input
+reg          s_axi_bvalid_sync2                    ;//1+   //output
+reg [0007:0] s_axi_arlen_sync2                     ;//8+   //input      [0007:0]
+reg          s_axi_arvalid_sync2                   ;//1+   //input
+reg          s_axi_arready_sync2                   ;//1+   //output
+reg          s_axi_rready_sync2                    ;//1+   //input
+reg [0001:0] s_axi_rresp_sync2                     ;//2+   //output     [0001:0]
+reg          s_axi_rlast_sync2                     ;//1+   //output
+reg          s_axi_rvalid_sync2                    ;//1   //output
 
-    reg             s_axi_aw_ctx_valid_sync4;
-    reg [`CTXW-1:0] s_axi_aw_ctx_sync4;
-    reg             s_axi_ar_ctx_valid_sync4;
-    reg [`CTXW-1:0] s_axi_ar_ctx_sync4;
-    reg             lcl_wr_ctx_valid_sync4;
-    reg [`CTXW-1:0] lcl_wr_ctx_sync4;
-    reg             lcl_rd_ctx_valid_sync4;
-    reg [`CTXW-1:0] lcl_rd_ctx_sync4;
-    reg             dma_w_cmd_ctx_valid_sync4;
-    reg [`CTXW-1:0] dma_w_cmd_ctx_sync4;
-    reg             dma_r_cmd_ctx_valid_sync4;
-    reg [`CTXW-1:0] dma_r_cmd_ctx_sync4;
-    reg             tlx_w_cmd_valid_sync4;
-    reg [19:0]      tlx_w_cmd_pasid_sync4;
-    reg [11:0]      tlx_w_cmd_actag_sync4;
-    reg             tlx_r_cmd_valid_sync4;
-    reg [19:0]      tlx_r_cmd_pasid_sync4;
-    reg [11:0]      tlx_r_cmd_actag_sync4;
-    reg             afu_tlx_cmd_valid_sync4;
-    reg [07:0]      afu_tlx_cmd_opcode_sync4;
-    reg [19:0]      afu_tlx_cmd_pasid_sync4;
-    reg [11:0]      afu_tlx_cmd_actag_sync4;
-    reg [15:0]      afu_tlx_cmd_afutag_sync4;
-    reg             tlx_afu_resp_valid_sync4;
-    reg [15:0]      tlx_afu_resp_afutag_sync4;
-    reg [07:0]      tlx_afu_resp_opcode_sync4;
-    reg [03:0]      tlx_afu_resp_code_sync4;
-    reg [11:0]      cfg_actag_base_sync4;
-    reg [19:0]      cfg_pasid_base_sync4;
-    reg [04:0]      cfg_pasid_length_sync4;
+reg [15:0]   axi_read_count_sync3;
+reg          fir_fifo_rd_rspcnv_overflow_sync3     ;
+reg          fir_fifo_wr_rspcnv_overflow_sync3     ;
+reg          fir_fifo_dpdl_o_overflow_sync3        ;
+reg          fir_fifo_dpdl_e_overflow_sync3        ;
+reg          fir_fifo_datcnv_o_overflow_sync3      ;
+reg          fir_fifo_datcnv_e_overflow_sync3      ;
+reg          fir_tlx_rsp_deficient_or_delayed_sync3;
+reg          fir_cmd_credit_breach_sync3           ;
+reg          fir_cmd_credit_data_breach_sync3      ;
+reg          fir_fifo_a_cmdcnv_overflow_sync3      ; 
+reg          fir_fifo_r_cmdcnv_overflow_sync3      ; 
+reg          fir_fifo_w_datcnv_e_overflow_sync3    ; 
+reg          fir_fifo_w_datcnv_o_overflow_sync3    ; 
+reg          fir_fifo_w_cmdcnv_overflow_sync3      ;
+reg          rd_fir_fifo_rcy_tag_overflow_sync3       ;
+reg          rd_fir_fifo_rty_tag_overflow_sync3       ;
+reg          wr_fir_fifo_rcy_tag_overflow_sync3       ;
+reg          wr_fir_fifo_rty_tag_overflow_sync3       ;
+reg          rd_fir_fifo_prt_data_overflow_sync3      ;
+reg          rd_fir_fifo_prt_info_overflow_sync3      ;
+reg          wr_fir_fifo_prt_data_overflow_sync3      ;
+reg          wr_fir_fifo_prt_info_overflow_sync3      ;
+reg          rd_fir_fifo_rsp_good_overflow_sync3      ;
+reg          rd_fir_fifo_rsp_bad_overflow_sync3       ;
+reg          rd_fir_fifo_rspdat_o_overflow_sync3      ;
+reg          rd_fir_fifo_rspdat_e_overflow_sync3      ;
+reg [31:0]   rd_retry_count_sync3;
+reg [31:0]   rd_rsp_idle_count_sync3;
+reg          wr_fir_fifo_rsp_good_overflow_sync3      ;
+reg          wr_fir_fifo_rsp_bad_overflow_sync3       ;
+reg          wr_fir_fifo_rspdat_o_overflow_sync3      ;
+reg          wr_fir_fifo_rspdat_e_overflow_sync3      ;
+reg [31:0]   wr_retry_count_sync3;
+reg [31:0]   wr_rsp_idle_count_sync3;
+reg          afu_tlx_cmd_valid_sync3               ;
+reg [0007:0] afu_tlx_cmd_opcode_sync3              ;
+reg [0015:0] afu_tlx_cmd_afutag_sync3              ;
+reg [0063:0] afu_tlx_cmd_ea_sync3                  ;
+reg [0001:0] afu_tlx_cmd_dl_sync3                  ;//2+   //output     [0001:0]
+reg [0002:0] afu_tlx_cmd_pl_sync3                  ;//3+   //output     [0002:0]
+reg          afu_tlx_cdata_valid_sync3             ;//1+   //output
+reg [0015:0] afu_tlx_cdata_bus_sync3               ;//16+  //output
+reg          tlx_afu_cmd_credit_sync3              ;//1+   //input
+reg          tlx_afu_cmd_data_credit_sync3         ;//1+   //input
+reg          tlx_afu_resp_valid_sync3              ;//1+   //input
+reg [0015:0] tlx_afu_resp_afutag_sync3             ;//16+   //input      [0015:0]
+reg [0007:0] tlx_afu_resp_opcode_sync3             ;//8+   //input      [0007:0]
+reg [0003:0] tlx_afu_resp_code_sync3               ;//4+   //input      [0003:0]
+reg [0001:0] tlx_afu_resp_dl_sync3                 ;//2+   //input      [0001:0]
+reg [0001:0] tlx_afu_resp_dp_sync3                 ;//2+   //input      [0001:0]
+reg          afu_tlx_resp_rd_req_sync3             ;//1+   //output
+reg [0002:0] afu_tlx_resp_rd_cnt_sync3             ;//3+   //output     [0002:0]
+reg          tlx_afu_resp_data_valid_sync3         ;//1+   //input
+reg [0015:0] tlx_afu_resp_data_bus_sync3           ;//16+  //input
+reg          afu_tlx_resp_credit_sync3             ;//1+   //output
+reg [0007:0] s_axi_awlen_sync3                     ;//8+   //input      [0007:0]
+reg          s_axi_awvalid_sync3                   ;//1+   //input
+reg          s_axi_awready_sync3                   ;//1+   //output
+reg          s_axi_wlast_sync3                     ;//1+   //input
+reg          s_axi_wvalid_sync3                    ;//1+   //input
+reg          s_axi_wready_sync3                    ;//1+   //output
+reg          s_axi_bready_sync3                    ;//1+   //input
+reg          s_axi_bvalid_sync3                    ;//1+   //output
+reg [0007:0] s_axi_arlen_sync3                     ;//8+   //input      [0007:0]
+reg          s_axi_arvalid_sync3                   ;//1+   //input
+reg          s_axi_arready_sync3                   ;//1+   //output
+reg          s_axi_rready_sync3                    ;//1+   //input
+reg [0001:0] s_axi_rresp_sync3                     ;//2+   //output     [0001:0]
+reg          s_axi_rlast_sync3                     ;//1+   //output
+reg          s_axi_rvalid_sync3                    ;//1   //output
+
+reg [15:0]   axi_read_count_sync4;
+reg          afu_tlx_cmd_valid_sync4               ;
+reg [0007:0] afu_tlx_cmd_opcode_sync4              ;
+reg [0015:0] afu_tlx_cmd_afutag_sync4              ;
+reg [0063:0] afu_tlx_cmd_ea_sync4                  ;
+reg [0001:0] afu_tlx_cmd_dl_sync4                  ;//2+   //output     [0001:0]
+reg [0002:0] afu_tlx_cmd_pl_sync4                  ;//3+   //output     [0002:0]
+reg          afu_tlx_cdata_valid_sync4             ;//1+   //output
+reg [0015:0] afu_tlx_cdata_bus_sync4               ;//16+  //output
+reg          tlx_afu_cmd_credit_sync4              ;//1+   //input
+reg          tlx_afu_cmd_data_credit_sync4         ;//1+   //input
+reg          tlx_afu_resp_valid_sync4              ;//1+   //input
+reg [0015:0] tlx_afu_resp_afutag_sync4             ;//16+   //input      [0015:0]
+reg [0007:0] tlx_afu_resp_opcode_sync4             ;//8+   //input      [0007:0]
+reg [0003:0] tlx_afu_resp_code_sync4               ;//4+   //input      [0003:0]
+reg [0001:0] tlx_afu_resp_dl_sync4                 ;//2+   //input      [0001:0]
+reg [0001:0] tlx_afu_resp_dp_sync4                 ;//2+   //input      [0001:0]
+reg          afu_tlx_resp_rd_req_sync4             ;//1+   //output
+reg [0002:0] afu_tlx_resp_rd_cnt_sync4             ;//3+   //output     [0002:0]
+reg          tlx_afu_resp_data_valid_sync4         ;//1+   //input
+reg [0015:0] tlx_afu_resp_data_bus_sync4           ;//16+  //input
+reg          afu_tlx_resp_credit_sync4             ;//1+   //output
+reg [0007:0] s_axi_awlen_sync4                     ;//8+   //input      [0007:0]
+reg          s_axi_awvalid_sync4                   ;//1+   //input
+reg          s_axi_awready_sync4                   ;//1+   //output
+reg          s_axi_wlast_sync4                     ;//1+   //input
+reg          s_axi_wvalid_sync4                    ;//1+   //input
+reg          s_axi_wready_sync4                    ;//1+   //output
+reg          s_axi_bready_sync4                    ;//1+   //input
+reg          s_axi_bvalid_sync4                    ;//1+   //output
+reg [0007:0] s_axi_arlen_sync4                     ;//8+   //input      [0007:0]
+reg          s_axi_arvalid_sync4                   ;//1+   //input
+reg          s_axi_arready_sync4                   ;//1+   //output
+reg          s_axi_rready_sync4                    ;//1+   //input
+reg [0001:0] s_axi_rresp_sync4                     ;//2+   //output     [0001:0]
+reg          s_axi_rlast_sync4                     ;//1+   //output
+reg          s_axi_rvalid_sync4                    ;//1   //output
+
+
+    always@(posedge clk_afu or negedge rst_n)
+    begin
+        if(~rst_n)
+            axi_read_count <= 0;
+        else if(s_axi_arvalid && s_axi_arready)
+            axi_read_count <= axi_read_count + 1'b1;
+    end
 
     always@(posedge clk_tlx or negedge rst_n)
     begin
         if(~rst_n)
         begin
-            s_axi_aw_ctx_valid_sync1   <= 0;
-            s_axi_aw_ctx_sync1         <= 0;
-            s_axi_ar_ctx_valid_sync1   <= 0;
-            s_axi_ar_ctx_sync1         <= 0;
-            lcl_wr_ctx_valid_sync1     <= 0;
-            lcl_wr_ctx_sync1           <= 0;
-            lcl_rd_ctx_valid_sync1     <= 0;
-            lcl_rd_ctx_sync1           <= 0;
-            dma_w_cmd_ctx_valid_sync1  <= 0;
-            dma_w_cmd_ctx_sync1        <= 0;
-            dma_r_cmd_ctx_valid_sync1  <= 0;
-            dma_r_cmd_ctx_sync1        <= 0;
-            tlx_w_cmd_valid_sync1      <= 0;
-            tlx_w_cmd_pasid_sync1      <= 0;
-            tlx_w_cmd_actag_sync1      <= 0;
-            tlx_r_cmd_valid_sync1      <= 0;
-            tlx_r_cmd_pasid_sync1      <= 0;
-            tlx_r_cmd_actag_sync1      <= 0;
-            afu_tlx_cmd_valid_sync1    <= 0;
-            afu_tlx_cmd_opcode_sync1   <= 0;
-            afu_tlx_cmd_pasid_sync1    <= 0;
-            afu_tlx_cmd_actag_sync1    <= 0;
-            afu_tlx_cmd_afutag_sync1   <= 0;
-            tlx_afu_resp_valid_sync1   <= 0;
-            tlx_afu_resp_afutag_sync1  <= 0;
-            tlx_afu_resp_opcode_sync1  <= 0;
-            tlx_afu_resp_code_sync1    <= 0;
-            cfg_actag_base_sync1       <= 0;
-            cfg_pasid_base_sync1       <= 0;
-            cfg_pasid_length_sync1     <= 0;
+            axi_read_count_sync1                  <= 0;
+            afu_tlx_cmd_valid_sync1               <= 0;
+            afu_tlx_cmd_opcode_sync1              <= 0;
+            afu_tlx_cmd_afutag_sync1              <= 0;
+            afu_tlx_cmd_ea_sync1                  <= 0;
+            afu_tlx_cmd_dl_sync1                  <= 0;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync1                  <= 0;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync1             <= 0;//1+   //output
+            afu_tlx_cdata_bus_sync1               <= 0;//16+  //output
+            tlx_afu_cmd_credit_sync1              <= 0;//1+   //input
+            tlx_afu_cmd_data_credit_sync1         <= 0;//1+   //input
+            tlx_afu_resp_valid_sync1              <= 0;//1+   //input
+            tlx_afu_resp_afutag_sync1             <= 0;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync1             <= 0;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync1               <= 0;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync1                 <= 0;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync1                 <= 0;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync1             <= 0;//1+   //output
+            afu_tlx_resp_rd_cnt_sync1             <= 0;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync1         <= 0;//1+   //input
+            tlx_afu_resp_data_bus_sync1           <= 0;//16+  //input
+            afu_tlx_resp_credit_sync1             <= 0;//1+   //output
+            s_axi_awlen_sync1                     <= 0;//8+   //input      [0007:0]
+            s_axi_awvalid_sync1                   <= 0;//1+   //input
+            s_axi_awready_sync1                   <= 0;//1+   //output
+            s_axi_wlast_sync1                     <= 0;//1+   //input
+            s_axi_wvalid_sync1                    <= 0;//1+   //input
+            s_axi_wready_sync1                    <= 0;//1+   //output
+            s_axi_bready_sync1                    <= 0;//1+   //input
+            s_axi_bvalid_sync1                    <= 0;//1+   //output
+            s_axi_arlen_sync1                     <= 0;//8+   //input      [0007:0]
+            s_axi_arvalid_sync1                   <= 0;//1+   //input
+            s_axi_arready_sync1                   <= 0;//1+   //output
+            s_axi_rready_sync1                    <= 0;//1+   //input
+            s_axi_rresp_sync1                     <= 0;//2+   //output     [0001:0]
+            s_axi_rlast_sync1                     <= 0;//1+   //output
+            s_axi_rvalid_sync1                    <= 0;//1   //output
 
-            s_axi_aw_ctx_valid_sync2   <= 0;
-            s_axi_aw_ctx_sync2         <= 0;
-            s_axi_ar_ctx_valid_sync2   <= 0;
-            s_axi_ar_ctx_sync2         <= 0;
-            lcl_wr_ctx_valid_sync2     <= 0;
-            lcl_wr_ctx_sync2           <= 0;
-            lcl_rd_ctx_valid_sync2     <= 0;
-            lcl_rd_ctx_sync2           <= 0;
-            dma_w_cmd_ctx_valid_sync2  <= 0;
-            dma_w_cmd_ctx_sync2        <= 0;
-            dma_r_cmd_ctx_valid_sync2  <= 0;
-            dma_r_cmd_ctx_sync2        <= 0;
-            tlx_w_cmd_valid_sync2      <= 0;
-            tlx_w_cmd_pasid_sync2      <= 0;
-            tlx_w_cmd_actag_sync2      <= 0;
-            tlx_r_cmd_valid_sync2      <= 0;
-            tlx_r_cmd_pasid_sync2      <= 0;
-            tlx_r_cmd_actag_sync2      <= 0;
-            afu_tlx_cmd_valid_sync2    <= 0;
-            afu_tlx_cmd_opcode_sync2   <= 0;
-            afu_tlx_cmd_pasid_sync2    <= 0;
-            afu_tlx_cmd_actag_sync2    <= 0;
-            afu_tlx_cmd_afutag_sync2   <= 0;
-            tlx_afu_resp_valid_sync2   <= 0;
-            tlx_afu_resp_afutag_sync2  <= 0;
-            tlx_afu_resp_opcode_sync2  <= 0;
-            tlx_afu_resp_code_sync2    <= 0;
-            cfg_actag_base_sync2       <= 0;
-            cfg_pasid_base_sync2       <= 0;
-            cfg_pasid_length_sync2     <= 0;
+            axi_read_count_sync2                  <= 0;
+            afu_tlx_cmd_valid_sync2               <= 0;
+            afu_tlx_cmd_opcode_sync2              <= 0;
+            afu_tlx_cmd_afutag_sync2              <= 0;
+            afu_tlx_cmd_ea_sync2                  <= 0;
+            afu_tlx_cmd_dl_sync2                  <= 0;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync2                  <= 0;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync2             <= 0;//1+   //output
+            afu_tlx_cdata_bus_sync2               <= 0;//16+  //output
+            tlx_afu_cmd_credit_sync2              <= 0;//1+   //input
+            tlx_afu_cmd_data_credit_sync2         <= 0;//1+   //input
+            tlx_afu_resp_valid_sync2              <= 0;//1+   //input
+            tlx_afu_resp_afutag_sync2             <= 0;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync2             <= 0;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync2               <= 0;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync2                 <= 0;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync2                 <= 0;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync2             <= 0;//1+   //output
+            afu_tlx_resp_rd_cnt_sync2             <= 0;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync2         <= 0;//1+   //input
+            tlx_afu_resp_data_bus_sync2           <= 0;//16+  //input
+            afu_tlx_resp_credit_sync2             <= 0;//1+   //output
+            s_axi_awlen_sync2                     <= 0;//8+   //input      [0007:0]
+            s_axi_awvalid_sync2                   <= 0;//1+   //input
+            s_axi_awready_sync2                   <= 0;//1+   //output
+            s_axi_wlast_sync2                     <= 0;//1+   //input
+            s_axi_wvalid_sync2                    <= 0;//1+   //input
+            s_axi_wready_sync2                    <= 0;//1+   //output
+            s_axi_bready_sync2                    <= 0;//1+   //input
+            s_axi_bvalid_sync2                    <= 0;//1+   //output
+            s_axi_arlen_sync2                     <= 0;//8+   //input      [0007:0]
+            s_axi_arvalid_sync2                   <= 0;//1+   //input
+            s_axi_arready_sync2                   <= 0;//1+   //output
+            s_axi_rready_sync2                    <= 0;//1+   //input
+            s_axi_rresp_sync2                     <= 0;//2+   //output     [0001:0]
+            s_axi_rlast_sync2                     <= 0;//1+   //output
+            s_axi_rvalid_sync2                    <= 0;//1   //output
 
-            s_axi_aw_ctx_valid_sync3   <= 0;
-            s_axi_aw_ctx_sync3         <= 0;
-            s_axi_ar_ctx_valid_sync3   <= 0;
-            s_axi_ar_ctx_sync3         <= 0;
-            lcl_wr_ctx_valid_sync3     <= 0;
-            lcl_wr_ctx_sync3           <= 0;
-            lcl_rd_ctx_valid_sync3     <= 0;
-            lcl_rd_ctx_sync3           <= 0;
-            dma_w_cmd_ctx_valid_sync3  <= 0;
-            dma_w_cmd_ctx_sync3        <= 0;
-            dma_r_cmd_ctx_valid_sync3  <= 0;
-            dma_r_cmd_ctx_sync3        <= 0;
-            tlx_w_cmd_valid_sync3      <= 0;
-            tlx_w_cmd_pasid_sync3      <= 0;
-            tlx_w_cmd_actag_sync3      <= 0;
-            tlx_r_cmd_valid_sync3      <= 0;
-            tlx_r_cmd_pasid_sync3      <= 0;
-            tlx_r_cmd_actag_sync3      <= 0;
-            afu_tlx_cmd_valid_sync3    <= 0;
-            afu_tlx_cmd_opcode_sync3   <= 0;
-            afu_tlx_cmd_pasid_sync3    <= 0;
-            afu_tlx_cmd_actag_sync3    <= 0;
-            afu_tlx_cmd_afutag_sync3   <= 0;
-            tlx_afu_resp_valid_sync3   <= 0;
-            tlx_afu_resp_afutag_sync3  <= 0;
-            tlx_afu_resp_opcode_sync3  <= 0;
-            tlx_afu_resp_code_sync3    <= 0;
-            cfg_actag_base_sync3       <= 0;
-            cfg_pasid_base_sync3       <= 0;
-            cfg_pasid_length_sync3     <= 0;
+            axi_read_count_sync3                  <= 0;
+            afu_tlx_cmd_valid_sync3               <= 0;
+            afu_tlx_cmd_opcode_sync3              <= 0;
+            afu_tlx_cmd_afutag_sync3              <= 0;
+            afu_tlx_cmd_ea_sync3                  <= 0;
+            afu_tlx_cmd_dl_sync3                  <= 0;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync3                  <= 0;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync3             <= 0;//1+   //output
+            afu_tlx_cdata_bus_sync3               <= 0;//16+  //output
+            tlx_afu_cmd_credit_sync3              <= 0;//1+   //input
+            tlx_afu_cmd_data_credit_sync3         <= 0;//1+   //input
+            tlx_afu_resp_valid_sync3              <= 0;//1+   //input
+            tlx_afu_resp_afutag_sync3             <= 0;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync3             <= 0;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync3               <= 0;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync3                 <= 0;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync3                 <= 0;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync3             <= 0;//1+   //output
+            afu_tlx_resp_rd_cnt_sync3             <= 0;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync3         <= 0;//1+   //input
+            tlx_afu_resp_data_bus_sync3           <= 0;//16+  //input
+            afu_tlx_resp_credit_sync3             <= 0;//1+   //output
+            s_axi_awlen_sync3                     <= 0;//8+   //input      [0007:0]
+            s_axi_awvalid_sync3                   <= 0;//1+   //input
+            s_axi_awready_sync3                   <= 0;//1+   //output
+            s_axi_wlast_sync3                     <= 0;//1+   //input
+            s_axi_wvalid_sync3                    <= 0;//1+   //input
+            s_axi_wready_sync3                    <= 0;//1+   //output
+            s_axi_bready_sync3                    <= 0;//1+   //input
+            s_axi_bvalid_sync3                    <= 0;//1+   //output
+            s_axi_arlen_sync3                     <= 0;//8+   //input      [0007:0]
+            s_axi_arvalid_sync3                   <= 0;//1+   //input
+            s_axi_arready_sync3                   <= 0;//1+   //output
+            s_axi_rready_sync3                    <= 0;//1+   //input
+            s_axi_rresp_sync3                     <= 0;//2+   //output     [0001:0]
+            s_axi_rlast_sync3                     <= 0;//1+   //output
+            s_axi_rvalid_sync3                    <= 0;//1   //output
 
-            s_axi_aw_ctx_valid_sync4   <= 0;
-            s_axi_aw_ctx_sync4         <= 0;
-            s_axi_ar_ctx_valid_sync4   <= 0;
-            s_axi_ar_ctx_sync4         <= 0;
-            lcl_wr_ctx_valid_sync4     <= 0;
-            lcl_wr_ctx_sync4           <= 0;
-            lcl_rd_ctx_valid_sync4     <= 0;
-            lcl_rd_ctx_sync4           <= 0;
-            dma_w_cmd_ctx_valid_sync4  <= 0;
-            dma_w_cmd_ctx_sync4        <= 0;
-            dma_r_cmd_ctx_valid_sync4  <= 0;
-            dma_r_cmd_ctx_sync4        <= 0;
-            tlx_w_cmd_valid_sync4      <= 0;
-            tlx_w_cmd_pasid_sync4      <= 0;
-            tlx_w_cmd_actag_sync4      <= 0;
-            tlx_r_cmd_valid_sync4      <= 0;
-            tlx_r_cmd_pasid_sync4      <= 0;
-            tlx_r_cmd_actag_sync4      <= 0;
-            afu_tlx_cmd_valid_sync4    <= 0;
-            afu_tlx_cmd_opcode_sync4   <= 0;
-            afu_tlx_cmd_pasid_sync4    <= 0;
-            afu_tlx_cmd_actag_sync4    <= 0;
-            afu_tlx_cmd_afutag_sync4   <= 0;
-            tlx_afu_resp_valid_sync4   <= 0;
-            tlx_afu_resp_afutag_sync4  <= 0;
-            tlx_afu_resp_opcode_sync4  <= 0;
-            tlx_afu_resp_code_sync4    <= 0;
-            cfg_actag_base_sync4       <= 0;
-            cfg_pasid_base_sync4       <= 0;
-            cfg_pasid_length_sync4     <= 0;
+            axi_read_count_sync4                  <= 0;
+            afu_tlx_cmd_valid_sync4               <= 0;
+            afu_tlx_cmd_opcode_sync4              <= 0;
+            afu_tlx_cmd_afutag_sync4              <= 0;
+            afu_tlx_cmd_ea_sync4                  <= 0;
+            afu_tlx_cmd_dl_sync4                  <= 0;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync4                  <= 0;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync4             <= 0;//1+   //output
+            afu_tlx_cdata_bus_sync4               <= 0;//16+  //output
+            tlx_afu_cmd_credit_sync4              <= 0;//1+   //input
+            tlx_afu_cmd_data_credit_sync4         <= 0;//1+   //input
+            tlx_afu_resp_valid_sync4              <= 0;//1+   //input
+            tlx_afu_resp_afutag_sync4             <= 0;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync4             <= 0;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync4               <= 0;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync4                 <= 0;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync4                 <= 0;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync4             <= 0;//1+   //output
+            afu_tlx_resp_rd_cnt_sync4             <= 0;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync4         <= 0;//1+   //input
+            tlx_afu_resp_data_bus_sync4           <= 0;//16+  //input
+            afu_tlx_resp_credit_sync4             <= 0;//1+   //output
+            s_axi_awlen_sync4                     <= 0;//8+   //input      [0007:0]
+            s_axi_awvalid_sync4                   <= 0;//1+   //input
+            s_axi_awready_sync4                   <= 0;//1+   //output
+            s_axi_wlast_sync4                     <= 0;//1+   //input
+            s_axi_wvalid_sync4                    <= 0;//1+   //input
+            s_axi_wready_sync4                    <= 0;//1+   //output
+            s_axi_bready_sync4                    <= 0;//1+   //input
+            s_axi_bvalid_sync4                    <= 0;//1+   //output
+            s_axi_arlen_sync4                     <= 0;//8+   //input      [0007:0]
+            s_axi_arvalid_sync4                   <= 0;//1+   //input
+            s_axi_arready_sync4                   <= 0;//1+   //output
+            s_axi_rready_sync4                    <= 0;//1+   //input
+            s_axi_rresp_sync4                     <= 0;//2+   //output     [0001:0]
+            s_axi_rlast_sync4                     <= 0;//1+   //output
+            s_axi_rvalid_sync4                    <= 0;//1   //output
         end
         else
         begin
-            s_axi_aw_ctx_valid_sync1   <= s_axi_awvalid && s_axi_awready;
-            s_axi_aw_ctx_sync1         <= s_axi_awuser;
-            s_axi_ar_ctx_valid_sync1   <= s_axi_arvalid && s_axi_arready;
-            s_axi_ar_ctx_sync1         <= s_axi_aruser;
-            lcl_wr_ctx_valid_sync1     <= lcl_wr_ctx_valid;
-            lcl_wr_ctx_sync1           <= lcl_wr_ctx;
-            lcl_rd_ctx_valid_sync1     <= lcl_rd_ctx_valid;
-            lcl_rd_ctx_sync1           <= lcl_rd_ctx;
-            dma_w_cmd_ctx_valid_sync1  <= dma_w_cmd_valid;
-            dma_w_cmd_ctx_sync1        <= dma_w_cmd_ctx;
-            dma_r_cmd_ctx_valid_sync1  <= dma_r_cmd_valid;
-            dma_r_cmd_ctx_sync1        <= dma_r_cmd_ctx;
-            tlx_w_cmd_valid_sync1      <= tlx_w_cmd_valid;
-            tlx_w_cmd_pasid_sync1      <= tlx_w_cmd_pasid;
-            tlx_w_cmd_actag_sync1      <= tlx_w_cmd_actag;
-            tlx_r_cmd_valid_sync1      <= tlx_r_cmd_valid;
-            tlx_r_cmd_pasid_sync1      <= tlx_r_cmd_pasid;
-            tlx_r_cmd_actag_sync1      <= tlx_r_cmd_actag;
-            afu_tlx_cmd_valid_sync1    <= afu_tlx_cmd_valid;
-            afu_tlx_cmd_opcode_sync1   <= afu_tlx_cmd_opcode;
-            afu_tlx_cmd_pasid_sync1    <= afu_tlx_cmd_pasid;
-            afu_tlx_cmd_actag_sync1    <= afu_tlx_cmd_actag;
-            afu_tlx_cmd_afutag_sync1   <= afu_tlx_cmd_afutag;
-            tlx_afu_resp_valid_sync1   <= tlx_afu_resp_valid;
-            tlx_afu_resp_afutag_sync1  <= tlx_afu_resp_afutag;
-            tlx_afu_resp_opcode_sync1  <= tlx_afu_resp_opcode;
-            tlx_afu_resp_code_sync1    <= tlx_afu_resp_code;
-            cfg_actag_base_sync1       <= cfg_actag_base;
-            cfg_pasid_base_sync1       <= cfg_pasid_base;
-            cfg_pasid_length_sync1     <= cfg_pasid_length;
+            axi_read_count_sync1                  <= axi_read_count;
+            afu_tlx_cmd_valid_sync1               <= afu_tlx_cmd_valid;
+            afu_tlx_cmd_opcode_sync1              <= afu_tlx_cmd_opcode;
+            afu_tlx_cmd_afutag_sync1              <= afu_tlx_cmd_afutag;
+            afu_tlx_cmd_ea_sync1                  <= afu_tlx_cmd_ea_or_obj[63:0];
+            afu_tlx_cmd_dl_sync1                  <= afu_tlx_cmd_dl;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync1                  <= afu_tlx_cmd_pl;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync1             <= afu_tlx_cdata_valid;//1+   //output
+            afu_tlx_cdata_bus_sync1               <= afu_tlx_cdata_bus[15:0];//16+  //output
+            tlx_afu_cmd_credit_sync1              <= tlx_afu_cmd_credit;//1+   //input
+            tlx_afu_cmd_data_credit_sync1         <= tlx_afu_cmd_data_credit;//1+   //input
+            tlx_afu_resp_valid_sync1              <= tlx_afu_resp_valid;//1+   //input
+            tlx_afu_resp_afutag_sync1             <= tlx_afu_resp_afutag;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync1             <= tlx_afu_resp_opcode;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync1               <= tlx_afu_resp_code;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync1                 <= tlx_afu_resp_dl;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync1                 <= tlx_afu_resp_dp;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync1             <= afu_tlx_resp_rd_req;//1+   //output
+            afu_tlx_resp_rd_cnt_sync1             <= afu_tlx_resp_rd_cnt;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync1         <= tlx_afu_resp_data_valid;//1+   //input
+            tlx_afu_resp_data_bus_sync1           <= tlx_afu_resp_data_bus;//16+  //input
+            afu_tlx_resp_credit_sync1             <= afu_tlx_resp_credit;//1+   //output
+            s_axi_awlen_sync1                     <= s_axi_awlen;//8+   //input      [0007:0]
+            s_axi_awvalid_sync1                   <= s_axi_awvalid;//1+   //input
+            s_axi_awready_sync1                   <= s_axi_awready;//1+   //output
+            s_axi_wlast_sync1                     <= s_axi_wlast;//1+   //input
+            s_axi_wvalid_sync1                    <= s_axi_wvalid;//1+   //input
+            s_axi_wready_sync1                    <= s_axi_wready;//1+   //output
+            s_axi_bready_sync1                    <= s_axi_bready;//1+   //input
+            s_axi_bvalid_sync1                    <= s_axi_bvalid;//1+   //output
+            s_axi_arlen_sync1                     <= s_axi_arlen;//8+   //input      [0007:0]
+            s_axi_arvalid_sync1                   <= s_axi_arvalid;//1+   //input
+            s_axi_arready_sync1                   <= s_axi_arready;//1+   //output
+            s_axi_rready_sync1                    <= s_axi_rready;//1+   //input
+            s_axi_rresp_sync1                     <= s_axi_rresp;//2+   //output     [0001:0]
+            s_axi_rlast_sync1                     <= s_axi_rlast;//1+   //output
+            s_axi_rvalid_sync1                    <= s_axi_rvalid;//1   //output
 
-            s_axi_aw_ctx_valid_sync2   <= s_axi_aw_ctx_valid_sync1 ;
-            s_axi_aw_ctx_sync2         <= s_axi_aw_ctx_sync1       ;
-            s_axi_ar_ctx_valid_sync2   <= s_axi_ar_ctx_valid_sync1 ;
-            s_axi_ar_ctx_sync2         <= s_axi_ar_ctx_sync1       ;
-            lcl_wr_ctx_valid_sync2     <= lcl_wr_ctx_valid_sync1   ;
-            lcl_wr_ctx_sync2           <= lcl_wr_ctx_sync1         ;
-            lcl_rd_ctx_valid_sync2     <= lcl_rd_ctx_valid_sync1   ;
-            lcl_rd_ctx_sync2           <= lcl_rd_ctx_sync1         ;
-            dma_w_cmd_ctx_valid_sync2  <= dma_w_cmd_ctx_valid_sync1;
-            dma_w_cmd_ctx_sync2        <= dma_w_cmd_ctx_sync1      ;
-            dma_r_cmd_ctx_valid_sync2  <= dma_r_cmd_ctx_valid_sync1;
-            dma_r_cmd_ctx_sync2        <= dma_r_cmd_ctx_sync1      ;
-            tlx_w_cmd_valid_sync2      <= tlx_w_cmd_valid_sync1    ;
-            tlx_w_cmd_pasid_sync2      <= tlx_w_cmd_pasid_sync1    ;
-            tlx_w_cmd_actag_sync2      <= tlx_w_cmd_actag_sync1    ;
-            tlx_r_cmd_valid_sync2      <= tlx_r_cmd_valid_sync1    ;
-            tlx_r_cmd_pasid_sync2      <= tlx_r_cmd_pasid_sync1    ;
-            tlx_r_cmd_actag_sync2      <= tlx_r_cmd_actag_sync1    ;
-            afu_tlx_cmd_valid_sync2    <= afu_tlx_cmd_valid_sync1  ;
-            afu_tlx_cmd_opcode_sync2   <= afu_tlx_cmd_opcode_sync1 ;
-            afu_tlx_cmd_pasid_sync2    <= afu_tlx_cmd_pasid_sync1  ;
-            afu_tlx_cmd_actag_sync2    <= afu_tlx_cmd_actag_sync1  ;
-            afu_tlx_cmd_afutag_sync2   <= afu_tlx_cmd_afutag_sync1 ;
-            tlx_afu_resp_valid_sync2   <= tlx_afu_resp_valid_sync1 ;
-            tlx_afu_resp_afutag_sync2  <= tlx_afu_resp_afutag_sync1;
-            tlx_afu_resp_opcode_sync2  <= tlx_afu_resp_opcode_sync1;
-            tlx_afu_resp_code_sync2    <= tlx_afu_resp_code_sync1  ;
-            cfg_actag_base_sync2       <= cfg_actag_base_sync1     ;
-            cfg_pasid_base_sync2       <= cfg_pasid_base_sync1     ;
-            cfg_pasid_length_sync2     <= cfg_pasid_length_sync1   ;
+            axi_read_count_sync2                  <= axi_read_count_sync1;
+            afu_tlx_cmd_valid_sync2               <= afu_tlx_cmd_valid_sync1               ;
+            afu_tlx_cmd_opcode_sync2              <= afu_tlx_cmd_opcode_sync1              ;
+            afu_tlx_cmd_afutag_sync2              <= afu_tlx_cmd_afutag_sync1              ;
+            afu_tlx_cmd_ea_sync2                  <= afu_tlx_cmd_ea_sync1                  ;
+            afu_tlx_cmd_dl_sync2                  <= afu_tlx_cmd_dl_sync1                  ;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync2                  <= afu_tlx_cmd_pl_sync1                  ;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync2             <= afu_tlx_cdata_valid_sync1             ;//1+   //output
+            afu_tlx_cdata_bus_sync2               <= afu_tlx_cdata_bus_sync1               ;//16+  //output
+            tlx_afu_cmd_credit_sync2              <= tlx_afu_cmd_credit_sync1              ;//1+   //input
+            tlx_afu_cmd_data_credit_sync2         <= tlx_afu_cmd_data_credit_sync1         ;//1+   //input
+            tlx_afu_resp_valid_sync2              <= tlx_afu_resp_valid_sync1              ;//1+   //input
+            tlx_afu_resp_afutag_sync2             <= tlx_afu_resp_afutag_sync1             ;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync2             <= tlx_afu_resp_opcode_sync1             ;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync2               <= tlx_afu_resp_code_sync1               ;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync2                 <= tlx_afu_resp_dl_sync1                 ;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync2                 <= tlx_afu_resp_dp_sync1                 ;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync2             <= afu_tlx_resp_rd_req_sync1             ;//1+   //output
+            afu_tlx_resp_rd_cnt_sync2             <= afu_tlx_resp_rd_cnt_sync1             ;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync2         <= tlx_afu_resp_data_valid_sync1         ;//1+   //input
+            tlx_afu_resp_data_bus_sync2           <= tlx_afu_resp_data_bus_sync1           ;//16+  //input
+            afu_tlx_resp_credit_sync2             <= afu_tlx_resp_credit_sync1             ;//1+   //output
+            s_axi_awlen_sync2                     <= s_axi_awlen_sync1                     ;//8+   //input      [0007:0]
+            s_axi_awvalid_sync2                   <= s_axi_awvalid_sync1                   ;//1+   //input
+            s_axi_awready_sync2                   <= s_axi_awready_sync1                   ;//1+   //output
+            s_axi_wlast_sync2                     <= s_axi_wlast_sync1                     ;//1+   //input
+            s_axi_wvalid_sync2                    <= s_axi_wvalid_sync1                    ;//1+   //input
+            s_axi_wready_sync2                    <= s_axi_wready_sync1                    ;//1+   //output
+            s_axi_bready_sync2                    <= s_axi_bready_sync1                    ;//1+   //input
+            s_axi_bvalid_sync2                    <= s_axi_bvalid_sync1                    ;//1+   //output
+            s_axi_arlen_sync2                     <= s_axi_arlen_sync1                     ;//8+   //input      [0007:0]
+            s_axi_arvalid_sync2                   <= s_axi_arvalid_sync1                   ;//1+   //input
+            s_axi_arready_sync2                   <= s_axi_arready_sync1                   ;//1+   //output
+            s_axi_rready_sync2                    <= s_axi_rready_sync1                    ;//1+   //input
+            s_axi_rresp_sync2                     <= s_axi_rresp_sync1                     ;//2+   //output     [0001:0]
+            s_axi_rlast_sync2                     <= s_axi_rlast_sync1                     ;//1+   //output
+            s_axi_rvalid_sync2                    <= s_axi_rvalid_sync1                    ;//1   //output
 
-            s_axi_aw_ctx_valid_sync3   <= s_axi_aw_ctx_valid_sync2 ;
-            s_axi_aw_ctx_sync3         <= s_axi_aw_ctx_sync2       ;
-            s_axi_ar_ctx_valid_sync3   <= s_axi_ar_ctx_valid_sync2 ;
-            s_axi_ar_ctx_sync3         <= s_axi_ar_ctx_sync2       ;
-            lcl_wr_ctx_valid_sync3     <= lcl_wr_ctx_valid_sync2   ;
-            lcl_wr_ctx_sync3           <= lcl_wr_ctx_sync2         ;
-            lcl_rd_ctx_valid_sync3     <= lcl_rd_ctx_valid_sync2   ;
-            lcl_rd_ctx_sync3           <= lcl_rd_ctx_sync2         ;
-            dma_w_cmd_ctx_valid_sync3  <= dma_w_cmd_ctx_valid_sync2;
-            dma_w_cmd_ctx_sync3        <= dma_w_cmd_ctx_sync2      ;
-            dma_r_cmd_ctx_valid_sync3  <= dma_r_cmd_ctx_valid_sync2;
-            dma_r_cmd_ctx_sync3        <= dma_r_cmd_ctx_sync2      ;
-            tlx_w_cmd_valid_sync3      <= tlx_w_cmd_valid_sync2    ;
-            tlx_w_cmd_pasid_sync3      <= tlx_w_cmd_pasid_sync2    ;
-            tlx_w_cmd_actag_sync3      <= tlx_w_cmd_actag_sync2    ;
-            tlx_r_cmd_valid_sync3      <= tlx_r_cmd_valid_sync2    ;
-            tlx_r_cmd_pasid_sync3      <= tlx_r_cmd_pasid_sync2    ;
-            tlx_r_cmd_actag_sync3      <= tlx_r_cmd_actag_sync2    ;
-            afu_tlx_cmd_valid_sync3    <= afu_tlx_cmd_valid_sync2  ;
-            afu_tlx_cmd_opcode_sync3   <= afu_tlx_cmd_opcode_sync2 ;
-            afu_tlx_cmd_pasid_sync3    <= afu_tlx_cmd_pasid_sync2  ;
-            afu_tlx_cmd_actag_sync3    <= afu_tlx_cmd_actag_sync2  ;
-            afu_tlx_cmd_afutag_sync3   <= afu_tlx_cmd_afutag_sync2 ;
-            tlx_afu_resp_valid_sync3   <= tlx_afu_resp_valid_sync2 ;
-            tlx_afu_resp_afutag_sync3  <= tlx_afu_resp_afutag_sync2;
-            tlx_afu_resp_opcode_sync3  <= tlx_afu_resp_opcode_sync2;
-            tlx_afu_resp_code_sync3    <= tlx_afu_resp_code_sync2  ;
-            cfg_actag_base_sync3       <= cfg_actag_base_sync2     ;
-            cfg_pasid_base_sync3       <= cfg_pasid_base_sync2     ;
-            cfg_pasid_length_sync3     <= cfg_pasid_length_sync2   ;
+            axi_read_count_sync3                  <= axi_read_count_sync2;
+            afu_tlx_cmd_valid_sync3               <= afu_tlx_cmd_valid_sync2               ;
+            afu_tlx_cmd_opcode_sync3              <= afu_tlx_cmd_opcode_sync2              ;
+            afu_tlx_cmd_afutag_sync3              <= afu_tlx_cmd_afutag_sync2              ;
+            afu_tlx_cmd_ea_sync3                  <= afu_tlx_cmd_ea_sync2                  ;
+            afu_tlx_cmd_dl_sync3                  <= afu_tlx_cmd_dl_sync2                  ;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync3                  <= afu_tlx_cmd_pl_sync2                  ;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync3             <= afu_tlx_cdata_valid_sync2             ;//1+   //output
+            afu_tlx_cdata_bus_sync3               <= afu_tlx_cdata_bus_sync2               ;//16+  //output
+            tlx_afu_cmd_credit_sync3              <= tlx_afu_cmd_credit_sync2              ;//1+   //input
+            tlx_afu_cmd_data_credit_sync3         <= tlx_afu_cmd_data_credit_sync2         ;//1+   //input
+            tlx_afu_resp_valid_sync3              <= tlx_afu_resp_valid_sync2              ;//1+   //input
+            tlx_afu_resp_afutag_sync3             <= tlx_afu_resp_afutag_sync2             ;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync3             <= tlx_afu_resp_opcode_sync2             ;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync3               <= tlx_afu_resp_code_sync2               ;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync3                 <= tlx_afu_resp_dl_sync2                 ;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync3                 <= tlx_afu_resp_dp_sync2                 ;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync3             <= afu_tlx_resp_rd_req_sync2             ;//1+   //output
+            afu_tlx_resp_rd_cnt_sync3             <= afu_tlx_resp_rd_cnt_sync2             ;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync3         <= tlx_afu_resp_data_valid_sync2         ;//1+   //input
+            tlx_afu_resp_data_bus_sync3           <= tlx_afu_resp_data_bus_sync2           ;//16+  //input
+            afu_tlx_resp_credit_sync3             <= afu_tlx_resp_credit_sync2             ;//1+   //output
+            s_axi_awlen_sync3                     <= s_axi_awlen_sync2                     ;//8+   //input      [0007:0]
+            s_axi_awvalid_sync3                   <= s_axi_awvalid_sync2                   ;//1+   //input
+            s_axi_awready_sync3                   <= s_axi_awready_sync2                   ;//1+   //output
+            s_axi_wlast_sync3                     <= s_axi_wlast_sync2                     ;//1+   //input
+            s_axi_wvalid_sync3                    <= s_axi_wvalid_sync2                    ;//1+   //input
+            s_axi_wready_sync3                    <= s_axi_wready_sync2                    ;//1+   //output
+            s_axi_bready_sync3                    <= s_axi_bready_sync2                    ;//1+   //input
+            s_axi_bvalid_sync3                    <= s_axi_bvalid_sync2                    ;//1+   //output
+            s_axi_arlen_sync3                     <= s_axi_arlen_sync2                     ;//8+   //input      [0007:0]
+            s_axi_arvalid_sync3                   <= s_axi_arvalid_sync2                   ;//1+   //input
+            s_axi_arready_sync3                   <= s_axi_arready_sync2                   ;//1+   //output
+            s_axi_rready_sync3                    <= s_axi_rready_sync2                    ;//1+   //input
+            s_axi_rresp_sync3                     <= s_axi_rresp_sync2                     ;//2+   //output     [0001:0]
+            s_axi_rlast_sync3                     <= s_axi_rlast_sync2                     ;//1+   //output
+            s_axi_rvalid_sync3                    <= s_axi_rvalid_sync2                    ;//1   //output
 
-            s_axi_aw_ctx_valid_sync4   <= s_axi_aw_ctx_valid_sync3 ;
-            s_axi_aw_ctx_sync4         <= s_axi_aw_ctx_sync3       ;
-            s_axi_ar_ctx_valid_sync4   <= s_axi_ar_ctx_valid_sync3 ;
-            s_axi_ar_ctx_sync4         <= s_axi_ar_ctx_sync3       ;
-            lcl_wr_ctx_valid_sync4     <= lcl_wr_ctx_valid_sync3   ;
-            lcl_wr_ctx_sync4           <= lcl_wr_ctx_sync3         ;
-            lcl_rd_ctx_valid_sync4     <= lcl_rd_ctx_valid_sync3   ;
-            lcl_rd_ctx_sync4           <= lcl_rd_ctx_sync3         ;
-            dma_w_cmd_ctx_valid_sync4  <= dma_w_cmd_ctx_valid_sync3;
-            dma_w_cmd_ctx_sync4        <= dma_w_cmd_ctx_sync3      ;
-            dma_r_cmd_ctx_valid_sync4  <= dma_r_cmd_ctx_valid_sync3;
-            dma_r_cmd_ctx_sync4        <= dma_r_cmd_ctx_sync3      ;
-            tlx_w_cmd_valid_sync4      <= tlx_w_cmd_valid_sync3    ;
-            tlx_w_cmd_pasid_sync4      <= tlx_w_cmd_pasid_sync3    ;
-            tlx_w_cmd_actag_sync4      <= tlx_w_cmd_actag_sync3    ;
-            tlx_r_cmd_valid_sync4      <= tlx_r_cmd_valid_sync3    ;
-            tlx_r_cmd_pasid_sync4      <= tlx_r_cmd_pasid_sync3    ;
-            tlx_r_cmd_actag_sync4      <= tlx_r_cmd_actag_sync3    ;
-            afu_tlx_cmd_valid_sync4    <= afu_tlx_cmd_valid_sync3  ;
-            afu_tlx_cmd_opcode_sync4   <= afu_tlx_cmd_opcode_sync3 ;
-            afu_tlx_cmd_pasid_sync4    <= afu_tlx_cmd_pasid_sync3  ;
-            afu_tlx_cmd_actag_sync4    <= afu_tlx_cmd_actag_sync3  ;
-            afu_tlx_cmd_afutag_sync4   <= afu_tlx_cmd_afutag_sync3 ;
-            tlx_afu_resp_valid_sync4   <= tlx_afu_resp_valid_sync3 ;
-            tlx_afu_resp_afutag_sync4  <= tlx_afu_resp_afutag_sync3;
-            tlx_afu_resp_opcode_sync4  <= tlx_afu_resp_opcode_sync3;
-            tlx_afu_resp_code_sync4    <= tlx_afu_resp_code_sync3  ;
-            cfg_actag_base_sync4       <= cfg_actag_base_sync3     ;
-            cfg_pasid_base_sync4       <= cfg_pasid_base_sync3     ;
-            cfg_pasid_length_sync4     <= cfg_pasid_length_sync3   ;
+            axi_read_count_sync4                  <= axi_read_count_sync3;
+            afu_tlx_cmd_valid_sync4               <= afu_tlx_cmd_valid_sync3               ;
+            afu_tlx_cmd_opcode_sync4              <= afu_tlx_cmd_opcode_sync3              ;
+            afu_tlx_cmd_afutag_sync4              <= afu_tlx_cmd_afutag_sync3              ;
+            afu_tlx_cmd_ea_sync4                  <= afu_tlx_cmd_ea_sync3                  ;
+            afu_tlx_cmd_dl_sync4                  <= afu_tlx_cmd_dl_sync3                  ;//2+   //output     [0001:0]
+            afu_tlx_cmd_pl_sync4                  <= afu_tlx_cmd_pl_sync3                  ;//3+   //output     [0002:0]
+            afu_tlx_cdata_valid_sync4             <= afu_tlx_cdata_valid_sync3             ;//1+   //output
+            afu_tlx_cdata_bus_sync4               <= afu_tlx_cdata_bus_sync3               ;//16+  //output
+            tlx_afu_cmd_credit_sync4              <= tlx_afu_cmd_credit_sync3              ;//1+   //input
+            tlx_afu_cmd_data_credit_sync4         <= tlx_afu_cmd_data_credit_sync3         ;//1+   //input
+            tlx_afu_resp_valid_sync4              <= tlx_afu_resp_valid_sync3              ;//1+   //input
+            tlx_afu_resp_afutag_sync4             <= tlx_afu_resp_afutag_sync3             ;//16+   //input      [0015:0]
+            tlx_afu_resp_opcode_sync4             <= tlx_afu_resp_opcode_sync3             ;//8+   //input      [0007:0]
+            tlx_afu_resp_code_sync4               <= tlx_afu_resp_code_sync3               ;//4+   //input      [0003:0]
+            tlx_afu_resp_dl_sync4                 <= tlx_afu_resp_dl_sync3                 ;//2+   //input      [0001:0]
+            tlx_afu_resp_dp_sync4                 <= tlx_afu_resp_dp_sync3                 ;//2+   //input      [0001:0]
+            afu_tlx_resp_rd_req_sync4             <= afu_tlx_resp_rd_req_sync3             ;//1+   //output
+            afu_tlx_resp_rd_cnt_sync4             <= afu_tlx_resp_rd_cnt_sync3             ;//3+   //output     [0002:0]
+            tlx_afu_resp_data_valid_sync4         <= tlx_afu_resp_data_valid_sync3         ;//1+   //input
+            tlx_afu_resp_data_bus_sync4           <= tlx_afu_resp_data_bus_sync3           ;//16+  //input
+            afu_tlx_resp_credit_sync4             <= afu_tlx_resp_credit_sync3             ;//1+   //output
+            s_axi_awlen_sync4                     <= s_axi_awlen_sync3                     ;//8+   //input      [0007:0]
+            s_axi_awvalid_sync4                   <= s_axi_awvalid_sync3                   ;//1+   //input
+            s_axi_awready_sync4                   <= s_axi_awready_sync3                   ;//1+   //output
+            s_axi_wlast_sync4                     <= s_axi_wlast_sync3                     ;//1+   //input
+            s_axi_wvalid_sync4                    <= s_axi_wvalid_sync3                    ;//1+   //input
+            s_axi_wready_sync4                    <= s_axi_wready_sync3                    ;//1+   //output
+            s_axi_bready_sync4                    <= s_axi_bready_sync3                    ;//1+   //input
+            s_axi_bvalid_sync4                    <= s_axi_bvalid_sync3                    ;//1+   //output
+            s_axi_arlen_sync4                     <= s_axi_arlen_sync3                     ;//8+   //input      [0007:0]
+            s_axi_arvalid_sync4                   <= s_axi_arvalid_sync3                   ;//1+   //input
+            s_axi_arready_sync4                   <= s_axi_arready_sync3                   ;//1+   //output
+            s_axi_rready_sync4                    <= s_axi_rready_sync3                    ;//1+   //input
+            s_axi_rresp_sync4                     <= s_axi_rresp_sync3                     ;//2+   //output     [0001:0]
+            s_axi_rlast_sync4                     <= s_axi_rlast_sync3                     ;//1+   //output
+            s_axi_rvalid_sync4                    <= s_axi_rvalid_sync3                    ;//1   //output
         end
     end
 
- ila_p250 mila_for_multi_process
+ ila_p199 mila_for_multi_process
  (
   .clk(clk_tlx),
   .probe0(
     {
-     rst_n                       ,//1+  
-     s_axi_aw_ctx_valid_sync4    ,//1+
-     s_axi_aw_ctx_sync4          ,//9+
-     s_axi_ar_ctx_valid_sync4    ,//1+
-     s_axi_ar_ctx_sync4          ,//9+
-     lcl_wr_ctx_valid_sync4      ,//1+
-     lcl_wr_ctx_sync4            ,//9+
-     lcl_rd_ctx_valid_sync4      ,//1+
-     lcl_rd_ctx_sync4            ,//9+
-     dma_w_cmd_ctx_valid_sync4   ,//1+
-     dma_w_cmd_ctx_sync4         ,//9+
-     dma_r_cmd_ctx_valid_sync4   ,//1+
-     dma_r_cmd_ctx_sync4         ,//9+
-     tlx_w_cmd_valid_sync4       ,//1+
-     tlx_w_cmd_pasid_sync4       ,//20+
-     tlx_w_cmd_actag_sync4       ,//12+
-     tlx_r_cmd_valid_sync4       ,//1+
-     tlx_r_cmd_pasid_sync4       ,//20+
-     tlx_r_cmd_actag_sync4       ,//12+
-     afu_tlx_cmd_valid_sync4     ,//1+
-     afu_tlx_cmd_opcode_sync4    ,//8+
-     afu_tlx_cmd_pasid_sync4     ,//20+
-     afu_tlx_cmd_actag_sync4     ,//12+
-     afu_tlx_cmd_afutag_sync4    ,//16+
-     tlx_afu_resp_valid_sync4    ,//1+
-     tlx_afu_resp_afutag_sync4   ,//16+
-     tlx_afu_resp_opcode_sync4   ,//8+
-     tlx_afu_resp_code_sync4     ,//4+
-     cfg_actag_base_sync4        ,//12+
-     cfg_pasid_base_sync4        ,//20+
-     cfg_pasid_length_sync4       //5+
+     rst_n                       ,//1+ 
+     afu_tlx_cmd_valid_sync4              ,//1+   //output
+     afu_tlx_cmd_opcode_sync4             ,//8+   //output     [0007:0]
+     afu_tlx_cmd_afutag_sync4             ,//16+   //output     [0015:0]
+     afu_tlx_cmd_ea_sync4                 ,//64+  //output 
+     afu_tlx_cmd_dl_sync4                 ,//2+   //output     [0001:0]
+     afu_tlx_cmd_pl_sync4                 ,//3+   //output     [0002:0]
+     afu_tlx_cdata_valid_sync4            ,//1+   //output
+     afu_tlx_cdata_bus_sync4        ,//16+  //output
+     tlx_afu_cmd_credit_sync4             ,//1+   //input
+     tlx_afu_cmd_data_credit_sync4        ,//1+   //input
+     tlx_afu_resp_valid_sync4             ,//1+   //input
+     tlx_afu_resp_afutag_sync4            ,//16+   //input      [0015:0]
+     tlx_afu_resp_opcode_sync4            ,//8+   //input      [0007:0]
+     tlx_afu_resp_code_sync4              ,//4+   //input      [0003:0]
+     tlx_afu_resp_dl_sync4                ,//2+   //input      [0001:0]
+     tlx_afu_resp_dp_sync4                ,//2+   //input      [0001:0]
+     afu_tlx_resp_rd_req_sync4            ,//1+   //output
+     afu_tlx_resp_rd_cnt_sync4            ,//3+   //output     [0002:0]
+     tlx_afu_resp_data_valid_sync4        ,//1+   //input
+     tlx_afu_resp_data_bus_sync4    ,//16+  //input
+     afu_tlx_resp_credit_sync4            ,//1+   //output
+     s_axi_awlen_sync4                    ,//8+   //input      [0007:0]
+     s_axi_awvalid_sync4                  ,//1+   //input
+     s_axi_awready_sync4                  ,//1+   //output
+     s_axi_wlast_sync4                    ,//1+   //input
+     s_axi_wvalid_sync4                   ,//1+   //input
+     s_axi_wready_sync4                   ,//1+   //output
+     s_axi_bready_sync4                   ,//1+   //input
+     s_axi_bvalid_sync4                   ,//1+   //output
+     s_axi_arlen_sync4                    ,//8+   //input      [0007:0]
+     s_axi_arvalid_sync4                  ,//1+   //input
+     s_axi_arready_sync4                  ,//1+   //output
+     s_axi_rready_sync4                   ,//1+   //input
+     s_axi_rresp_sync4                    ,//2+   //output     [0001:0]
+     s_axi_rlast_sync4                    ,//1+   //output
+     s_axi_rvalid_sync4                    //1   //output
     }
   )
  );
