@@ -34,14 +34,7 @@ class action_agent extends uvm_agent;
     axi_lite_slv_agent   lite_slv_agt;
     action_seqr          act_sqr;
     action_seqr_st       act_sqr_st;
-    //tl_tx_driver     tx_drv;
-    //tl_tx_monitor    tx_mon;
-    //tl_rx_monitor    rx_mon;
-    //tl_scoreboard    sbd;
-    //tl_manager       mgr;
-    //tl_cfg_obj       cfg_obj;
-    //tl_mem_model     mem_model;
-    ////lane_width_agent lane_agt;
+    act_cfg_obj          act_cfg;
 
     int             agent_id;
 
@@ -58,8 +51,10 @@ class action_agent extends uvm_agent;
         lite_slv_agt = axi_lite_slv_agent::type_id::create("lite_slv_agt", this);
         act_sqr = action_seqr::type_id::create("act_sqr", this);
         act_sqr_st = action_seqr_st::type_id::create("act_sqr_st", this);
+        act_cfg = act_cfg_obj::type_id::create("act_cfg", this);
         `ifndef ENABLE_ODMA
             mm_mst_agt = axi_mm_mst_agent::type_id::create("mm_mst_agt", this);
+            uvm_config_db #(act_cfg_obj)::set(this, "mm_mst_agt", "act_cfg", act_cfg);
         `else
             `ifndef ENABLE_ODMA_ST_MODE
                 mm_slv_agt = axi_mm_slv_agent::type_id::create("mm_slv_agt", this);
@@ -80,16 +75,6 @@ class action_agent extends uvm_agent;
                 st_mst_agt.seq_item_port.connect(act_sqr_st.seq_item_export);
             `endif
         `endif
-        ////tx_drv.seq_item_port.connect(tx_sqr.seq_item_export);
-        //mgr.mgr_output_trans_port.connect(tx_drv.tl_mgr_imp);
-        //mgr.mgr_output_credit_port.connect(tx_drv.tl_credit_imp);
-        //tx_mon.tl_tx_trans_ap.connect(mgr.mgr_input_tx_port);
-        //tx_mon.tl_tx_trans_ap.connect(sbd.scoreboard_input_tx_port);
-        //rx_mon.tl_rx_ap.connect(mgr.mgr_input_rx_port);
-        //rx_mon.tl_rx_ap.connect(sbd.scoreboard_input_rx_port);
-        //rx_mon.tl_rx2mgr_ap.connect(mgr.mgr_input_credit_port);
-        //tx_drv.mgr = this.mgr;
-        //sbd.tl_drv_resp_ap.connect(tx_drv.tl_sbd_resp_imp);
     endfunction: connect_phase
 
 endclass: action_agent

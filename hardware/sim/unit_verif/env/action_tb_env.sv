@@ -140,6 +140,7 @@ function void action_tb_env::connect_phase(uvm_phase phase);
     vsqr.brdg_cfg = brdg_cfg;
     vsqr.tx_sqr = bfm_agt.tx_sqr;
     vsqr.cfg_obj = bfm_agt.cfg_obj;
+    vsqr.act_cfg = action_agt.act_cfg;
     vsqr.tl_agt = bfm_agt;
     vsqr.host_mem = bfm_agt.mgr.host_mem;
     vsqr.action_agt = action_agt;
