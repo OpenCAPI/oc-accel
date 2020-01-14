@@ -1842,6 +1842,9 @@ class bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly extends bfm_sequence_base;
         p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
         p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
 
+        //Set max delays for AXI interface
+        p_sequencer.act_cfg.mst_dly_mode = act_cfg_obj::MAX_DELAY;
+
         //Initial read/write address
         void'(axi_item.randomize());
         read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
@@ -1908,6 +1911,9 @@ class bfm_seq_rd_wr_10_randsize_randlen_unaligned_dly0 extends bfm_sequence_base
         //Enable/Disable check read/write 256B in bridge check scorboard
         p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
         p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
+
+        //Set min delays for AXI interface
+        p_sequencer.act_cfg.mst_dly_mode = act_cfg_obj::MIN_DELAY;
 
         //Initial read/write address
         void'(axi_item.randomize());
