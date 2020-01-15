@@ -929,7 +929,7 @@ class bfm_seq_rd_wr_10_size7_len31_randid_rand_resp extends bfm_sequence_base;
                                                              act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
-        #100000ns;
+        #1000000ns;
     endtask: body
 endclass
 
@@ -1112,7 +1112,7 @@ class bfm_seq_rd_wr_1024_size7_len31_randid_rand_resp extends bfm_sequence_base;
                                                              act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
-        #20000us;
+        #25000us;
     endtask: body
 endclass
 

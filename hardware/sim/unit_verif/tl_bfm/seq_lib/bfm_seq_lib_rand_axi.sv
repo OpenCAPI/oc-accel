@@ -48,7 +48,7 @@ class bfm_seq_rd_10_size7_len31 extends bfm_sequence_base;
         //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
         p_sequencer.brdg_cfg.total_read_num = 10;
-        p_sequencer.brdg_cfg.total_write_num = 10;
+        p_sequencer.brdg_cfg.total_write_num = 0;
 
         //Enable/Disable check read/write 256B in bridge check scorboard
         p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
@@ -70,7 +70,7 @@ class bfm_seq_rd_10_size7_len31 extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;})
+                                                             act_trans.axi_usr==0; act_trans.addr==read_addr;act_trans.act_intrp==0;})
         end
         #100000ns;
     endtask: body
@@ -107,7 +107,7 @@ class bfm_seq_wr_10_size7_len31 extends bfm_sequence_base;
 
         //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
-        p_sequencer.brdg_cfg.total_read_num = 10;
+        p_sequencer.brdg_cfg.total_read_num = 0;
         p_sequencer.brdg_cfg.total_write_num = 10;
 
         //Enable/Disable check read/write 256B in bridge check scorboard
@@ -130,7 +130,7 @@ class bfm_seq_wr_10_size7_len31 extends bfm_sequence_base;
             p_sequencer.host_mem.set_memory_by_length(read_addr, 4096, init_host_mem_item.init_data_queue(4096));
 
             `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==8'h1f; act_trans.axi_size==3'h7; act_trans.axi_id==0;
-                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
+                                                             act_trans.axi_usr==0; act_trans.addr==write_addr; foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;act_trans.act_intrp==0;})
         end
 
         #100000ns;
@@ -1043,7 +1043,7 @@ class bfm_seq_rd_wr_20_size7_randlen_id0to3 extends bfm_sequence_base; //Twenty 
         read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
         write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
-        for(int num=0; num<=20; num++)begin
+        for(int num=0; num<20; num++)begin
             void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_id<4;wr_id<4;});
             read_addr+=axi_item.rd_adr_var;
             write_addr+=axi_item.wr_adr_var;
@@ -1635,8 +1635,8 @@ class bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid extends bfm_sequence_
 
         //Set resd/write/interrupt number
         p_sequencer.brdg_cfg.total_intrp_num = 0;
-        p_sequencer.brdg_cfg.total_read_num = 100;
-        p_sequencer.brdg_cfg.total_write_num = 100;
+        p_sequencer.brdg_cfg.total_read_num = 1000;
+        p_sequencer.brdg_cfg.total_write_num = 1000;
 
         //Enable/Disable check read/write 256B in bridge check scorboard
         p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;

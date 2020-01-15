@@ -77,7 +77,7 @@ class axi_mm_mst_agent extends uvm_driver #(axi_mm_transaction);
     extern task          wait_read_resp();
     extern task          wait_write_resp();
     extern task          send_intrp();
-    extern function axi_transaction set_trans_delay(axi_transaction tr);
+    extern function void get_trans_delay(input axi_transaction tr, output int addr_delay, output int data_ins_delay, output int beat_delay, output int dbc_delay);
 
 endclass : axi_mm_mst_agent
 
@@ -121,8 +121,8 @@ task axi_mm_mst_agent::main_phase(uvm_phase phase);
         get_axi_trans();
         send_axi_read();
         send_axi_write();
-        //wait_read_resp();
-        //wait_write_resp();
+        wait_read_resp();
+        wait_write_resp();
         send_intrp();
     join
 endtask : main_phase
@@ -150,6 +150,10 @@ endtask : get_axi_trans
 
 //Drive axi read
 task axi_mm_mst_agent::send_axi_read();
+    int addr_delay;
+    int data_ins_delay;
+    int beat_delay;
+    int dbc_delay;
     forever begin
         if(axi_read_queue.size > 0)begin
             vip_rd_trans=axi_vip_mm_master_mst.rd_driver.create_transaction("read transaction");
@@ -158,9 +162,28 @@ task axi_mm_mst_agent::send_axi_read();
             vip_rd_trans.size=axi_read_queue[0].axi_size;
             vip_rd_trans.len=axi_read_queue[0].axi_len;
             vip_rd_trans.addr=axi_read_queue[0].addr;
-            vip_rd_trans.set_driver_return_item_policy(XIL_AXI_NO_RETURN);
-            //Set delays
-            vip_wr_trans=set_trans_delay(vip_wr_trans);
+            vip_rd_trans.set_driver_return_item_policy(XIL_AXI_PAYLOAD_RETURN);
+            //Get delays
+            get_trans_delay(vip_rd_trans, addr_delay, data_ins_delay, beat_delay, dbc_delay);
+            //Set the address delay
+            if(act_cfg.mst_dly_adr_enable==1)begin
+                vip_rd_trans.set_addr_delay(addr_delay);
+            end
+            //Set the data insertion delay
+            if(act_cfg.mst_dly_data_ins_enable==1)begin
+                vip_rd_trans.set_data_insertion_delay(data_ins_delay);
+            end
+            //Set the beat delay
+            if(act_cfg.mst_dly_beat_enable==1)begin
+                for(int beat=0; beat<vip_rd_trans.get_len()+1; beat++)begin
+                    vip_rd_trans.set_beat_delay(beat, beat_delay);
+                end
+            end
+            //Set the data before command delay
+            if(act_cfg.mst_allow_dbc==1)begin
+                vip_rd_trans.set_xfer_wrcmd_order(XIL_AXI_WRCMD_ORDER_DATA_BEFORE_CMD);
+                vip_rd_trans.set_allow_data_before_cmd(dbc_delay);
+            end
             //Send
             axi_vip_mm_master_mst.rd_driver.send(vip_rd_trans);
             //Issue interrupts
@@ -169,7 +192,7 @@ task axi_mm_mst_agent::send_axi_read();
             end else begin
                 void'(axi_read_queue.pop_front());
             end
-            //rd_wait_q.push_back(vip_rd_trans);
+            rd_wait_q.push_back(vip_rd_trans);
         end
         else begin
             @(posedge mm_mst_vif.ACLK);
@@ -192,11 +215,14 @@ endtask : wait_read_resp
 
 //Drive axi write
 task axi_mm_mst_agent::send_axi_write();
+    int addr_delay;
+    int data_ins_delay;
+    int beat_delay;
+    int dbc_delay;
     forever begin
         if(axi_write_queue.size > 0)begin
             vip_wr_trans = axi_vip_mm_master_mst.wr_driver.create_transaction("write transaction");
-            //vip_wr_trans.set_driver_return_item_policy(XIL_AXI_PAYLOAD_RETURN);
-            vip_wr_trans.set_driver_return_item_policy(XIL_AXI_NO_RETURN);
+            vip_wr_trans.set_driver_return_item_policy(XIL_AXI_PAYLOAD_RETURN);
             vip_wr_trans.size=axi_write_queue[0].axi_size;
             vip_wr_trans.len=axi_write_queue[0].axi_len;
             vip_wr_trans.addr=axi_write_queue[0].addr;
@@ -209,8 +235,27 @@ task axi_mm_mst_agent::send_axi_write();
                 vip_wr_trans.set_data_beat(beat, axi_write_queue[0].data[beat]);
                 vip_wr_trans.set_strb_beat(beat, axi_write_queue[0].data_strobe[beat]);
             end
-            //Set delays
-            vip_wr_trans=set_trans_delay(vip_wr_trans);
+            //Get delays
+            get_trans_delay(vip_wr_trans, addr_delay, data_ins_delay, beat_delay, dbc_delay);
+            //Set the address delay
+            if(act_cfg.mst_dly_adr_enable==1)begin
+                vip_wr_trans.set_addr_delay(addr_delay);
+            end
+            //Set the data insertion delay
+            if(act_cfg.mst_dly_data_ins_enable==1)begin
+                vip_wr_trans.set_data_insertion_delay(data_ins_delay);
+            end
+            //Set the beat delay
+            if(act_cfg.mst_dly_beat_enable==1)begin
+                for(int beat=0; beat<vip_wr_trans.get_len()+1; beat++)begin
+                    vip_wr_trans.set_beat_delay(beat, beat_delay);
+                end
+            end
+            //Set the data before command delay
+            if(act_cfg.mst_allow_dbc==1)begin
+                vip_wr_trans.set_xfer_wrcmd_order(XIL_AXI_WRCMD_ORDER_DATA_BEFORE_CMD);
+                vip_wr_trans.set_allow_data_before_cmd(dbc_delay);
+            end
             // Send
             axi_vip_mm_master_mst.wr_driver.send(vip_wr_trans);
             //Issue interrupts
@@ -219,7 +264,7 @@ task axi_mm_mst_agent::send_axi_write();
             end else begin
                 void'(axi_write_queue.pop_front());
             end
-            //wr_wait_q.push_back(vip_wr_trans);
+            wr_wait_q.push_back(vip_wr_trans);
         end
         else begin
             @(posedge mm_mst_vif.ACLK);
@@ -243,23 +288,23 @@ endtask : wait_write_resp
 //Send action interrupt
 task axi_mm_mst_agent::send_intrp();
     forever begin
-        if(intrp_vif.action_rst_n==0)begin
-            @(posedge mm_mst_vif.ACLK);
+        @(posedge mm_mst_vif.ACLK);
+        if(!intrp_vif.action_rst_n)begin
+            intrp_vif.intrp_req <= 1'b0;
+            intrp_vif.intrp_src <= 64'b0;
+            intrp_vif.intrp_ctx <= 9'b0;
         end
         else if(intrp_vif.intrp_ack == 1'b1 && intrp_vif.intrp_req == 1'b1)
             intrp_vif.intrp_req <= 1'b0;
         else if(intrp_vif.intrp_ack == 1'b0 && intrp_vif.intrp_req == 1'b0 && axi_intrp_queue.size > 0)begin
             intrp_vif.intrp_req <= 1'b1;
             void'(axi_intrp_queue.pop_front());
-        end        
-        else begin
-            @(posedge mm_mst_vif.ACLK);
         end
     end
 endtask : send_intrp
 
 //Set delays for the transaction
-function axi_transaction axi_mm_mst_agent::set_trans_delay(axi_transaction tr);
+function void axi_mm_mst_agent::get_trans_delay(input axi_transaction tr, output int addr_delay, output int data_ins_delay, output int beat_delay, output int dbc_delay);
     int min_addr_delay;
     int max_addr_delay;
     int min_data_insertion_delay;
@@ -274,6 +319,7 @@ function axi_transaction axi_mm_mst_agent::set_trans_delay(axi_transaction tr);
     tr.get_data_insertion_delay_range(min_data_insertion_delay, max_data_insertion_delay);
     tr.get_beat_delay_range(min_beat_delay, max_beat_delay);
     tr.get_allow_data_before_cmd_range(min_dbc, max_dbc);
+    //if(max_dbc>tr.get_len()+1)
     max_dbc=tr.get_len()+1;
 
     //Set the range of delay
@@ -306,31 +352,8 @@ function axi_transaction axi_mm_mst_agent::set_trans_delay(axi_transaction tr);
                                      data_ins_delay>=min_data_insertion_delay;data_ins_delay<=max_data_insertion_delay;
                                      beat_delay>=min_beat_delay;beat_delay<=max_beat_delay;
                                      dbc_delay>=min_dbc;dbc_delay<=max_dbc;});
+    //`uvm_info(tID, $sformatf("Set master delays. addr_delay:%d, data_ins_delay:%d, beat_delay:%d, dbc:%d",mst_mm_dly.addr_delay, mst_mm_dly.data_ins_delay, mst_mm_dly.beat_delay, mst_mm_dly.dbc_delay), UVM_HIGH)
 
-    //Set the address delay
-    if(act_cfg.mst_dly_adr_enable==1)begin
-        tr.set_addr_delay(mst_mm_dly.addr_delay);
-    end
-    //Set the data insertion delay
-    if(act_cfg.mst_dly_data_ins_enable==1)begin
-        tr.set_data_insertion_delay(mst_mm_dly.data_ins_delay);
-    end
-    //Set the beat delay
-    if(act_cfg.mst_dly_beat_enable==1)begin
-        for(int beat=0; beat<tr.get_len()+1; beat++)begin
-            tr.set_beat_delay(beat, mst_mm_dly.beat_delay);
-        end
-    end
-    //Set the data before command
-    if(act_cfg.mst_allow_dbc==1)begin
-        tr.set_xfer_wrcmd_order(XIL_AXI_WRCMD_ORDER_DATA_BEFORE_CMD);
-        tr.set_allow_data_before_cmd(mst_mm_dly.dbc_delay);
-    end
-
-    `uvm_info(tID, $sformatf("Set master delays. addr_delay:%d, data_ins_delay:%d, beat_delay:%d, dbc:%d",mst_mm_dly.addr_delay, mst_mm_dly.data_ins_delay, mst_mm_dly.beat_delay, mst_mm_dly.dbc_delay), UVM_HIGH)
-
-    return tr;
-
-endfunction : set_trans_delay
+endfunction : get_trans_delay
 
 `endif // _AXI_MM_MST_AGENT_SV_

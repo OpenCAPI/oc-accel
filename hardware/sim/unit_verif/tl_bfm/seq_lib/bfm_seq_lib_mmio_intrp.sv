@@ -288,7 +288,7 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_20 extends bfm_sequence_base; //Te
                                                              act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==1;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
-        #8000000ns;
+        #3000000ns;
     endtask: body
 endclass
 
@@ -510,7 +510,7 @@ class bfm_seq_rd_wr_10_randsize_randlen_intrp_20_rty extends bfm_sequence_base; 
                                                                  act_trans.axi_id==0; act_trans.axi_usr==0; act_trans.addr==write_addr;act_trans.act_intrp==1;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
         
-        #10000000ns;
+        #5000000ns;
     endtask: body
 endclass
 
