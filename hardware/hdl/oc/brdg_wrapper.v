@@ -1609,12 +1609,13 @@ reg          s_axi_rvalid_sync4                    ;//1   //output
         end
     end
 
- ila_p199 mila_for_multi_process
+ ila_p215 mila_for_multi_process
  (
   .clk(clk_tlx),
   .probe0(
     {
-     rst_n                       ,//1+ 
+     rst_n                       ,//1+
+     axi_read_count_sync4                 ,//16+
      afu_tlx_cmd_valid_sync4              ,//1+   //output
      afu_tlx_cmd_opcode_sync4             ,//8+   //output     [0007:0]
      afu_tlx_cmd_afutag_sync4             ,//16+   //output     [0015:0]

@@ -517,7 +517,7 @@ if { $ila_debug == "TRUE" } {
 
 # create simple ILA
 #
-  set ila_width "199 4 190"
+  set ila_width "215 4 190"
   set ila_depth "2048 2048 2048"
 
   set i 0
