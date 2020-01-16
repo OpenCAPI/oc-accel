@@ -410,7 +410,7 @@ assign dsc_dst_align_length   = dsc_dst_end_align_addr - dsc_dst_align_addr;
 
 //---Descriptor FIFO(256b width x 8 depth)
 // Xilinx IP: standard fifo
-fifo_sync_256x8 dsc_fifo (
+fifo_sync_std_256x8 dsc_fifo (
   .clk          (clk           ),
   .srst         (~rst_n        ),
   .din          (dsc_fifo_din  ),

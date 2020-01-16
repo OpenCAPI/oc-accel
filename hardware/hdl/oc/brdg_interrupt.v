@@ -47,6 +47,7 @@ module brdg_interrupt (
  reg [07:00] cstate, nstate;
  reg [23:00] cfg_short_backoff_timer;
  reg [23:00] backoff_countdown;
+ reg [063:0] interrupt_src_sync;
  wire        backoff_timeup;
  wire        int_rsp_done;    
  wire        int_rsp_retry;   
@@ -62,9 +63,8 @@ module brdg_interrupt (
            WAIT_FOR_RSP =  8'h04, 
            INT_PENDING  =  8'h08,
            INT_BACKOFF  =  8'h10,
-           INT_RETRY    =  8'h20,
-           UNEXP_RESP   =  8'h40,
-           ACK_INT      =  8'h80;
+           UNEXP_RESP   =  8'h20,
+           ACK_INT      =  8'h40;
 
 
  // TLX AP command encodes
@@ -86,6 +86,12 @@ module brdg_interrupt (
  localparam    [3:0] TLX_AFU_RESP_CODE_BAD_HANDLE             = 4'b1011;      // -- Machine Check
  localparam    [3:0] TLX_AFU_RESP_CODE_FAILED                 = 4'b1110;      // -- Machine Check
 
+//store interrupt_src to interrupt_src_sync when interrupt is set, this signal is stored for reuse when retry
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n)
+     interrupt_src_sync <= 0;
+   else if(interrupt)
+     interrupt_src_sync <= interrupt_src;
 
 //---- TLX command ----
  always@(posedge clk or negedge rst_n)
@@ -98,8 +104,8 @@ module brdg_interrupt (
      end
    else
      begin
-       tlx_cmd_valid  <= ((cstate == NEW_INT) && interrupt_enable) || (cstate == INT_RETRY);
-       tlx_cmd_obj    <= {4'd0, interrupt_src};
+       tlx_cmd_valid  <= ((cstate == NEW_INT) && interrupt_enable);
+       tlx_cmd_obj    <= {4'd0, interrupt_src_sync};
        tlx_cmd_afutag <= {2'b11, 14'd0};
        tlx_cmd_opcode <= AFU_TLX_CMD_ENCODE_INTRP_REQ;
      end
@@ -150,18 +156,16 @@ module brdg_interrupt (
                       
      INT_PENDING : 
                     if(int_rsp_rdy_done)
-                      nstate = INT_RETRY;
+                      nstate = NEW_INT;
                     else if(int_rsp_rdy_retry)
                       nstate = INT_BACKOFF;
                     else
                       nstate = INT_PENDING;
      INT_BACKOFF : 
                    if(backoff_timeup)
-                     nstate = INT_RETRY;
+                     nstate = NEW_INT;
                    else
                      nstate = INT_BACKOFF;
-     INT_RETRY   : 
-                     nstate = NEW_INT;
      UNEXP_RESP  : 
                    if(~interrupt)
                      nstate = IDLE;
