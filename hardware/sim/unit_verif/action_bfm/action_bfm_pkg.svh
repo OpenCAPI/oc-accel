@@ -18,6 +18,9 @@
 
 `include "../../../hdl/core/snap_global_vars.v"
 
+//CONFIG
+`include "act_cfg_obj.sv"
+
 //SEQUENCE
 `include "action_seqr.sv"
 `include "action_seqr_st.sv"

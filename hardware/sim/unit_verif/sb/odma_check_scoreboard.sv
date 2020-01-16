@@ -1338,7 +1338,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                 list_mm_format_ch0.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 0:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 0:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 0. The descriptor head address is 0x%16h.", address))                       
@@ -1348,7 +1348,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                 list_mm_format_ch1.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 1:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 1:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 1. The descriptor head address is 0x%16h.", address))                       
@@ -1358,7 +1358,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                  list_mm_format_ch2.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 2:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 2:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 2. The descriptor head address is 0x%16h.", address))                       
@@ -1368,7 +1368,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                 list_mm_format_ch3.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 3:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 3:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 3. The descriptor head address is 0x%16h.", address))                       
@@ -1696,7 +1696,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_error(get_type_name(), $psprintf("H2A: Data mismatch in the src_adr=0x%16h with data=0x%2h, dst_adr=0x%16h with data=0x%2h, for the descriptor:\n%s", desp_item.src_adr+i, brdg_read_memory[desp_item.src_adr+i], desp_item.dst_adr+i, axi_write_memory[desp_item.dst_adr+i], desp_item.sprint()))                    
             end
         end
-        `uvm_info(tID, $sformatf("H2A: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_LOW)
+        `uvm_info(tID, $sformatf("H2A: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_MEDIUM)
     `else
         //Check collected data from AXI-Stream interface
         if(st_h2a_data[chnl_num].data_queue.size == 0)begin
@@ -1758,7 +1758,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_error(get_type_name(), $psprintf("A2H: Data mismatch in the src_adr=0x%16h with data=0x%2h, dst_adr=0x%16h with data=0x%2h, for the descriptor:\n%s", desp_item.src_adr+i, axi_read_memory[desp_item.src_adr+i], desp_item.dst_adr+i, brdg_write_memory[desp_item.dst_adr+i], desp_item.sprint()))                    
             end
         end
-        `uvm_info(tID, $sformatf("A2H: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_LOW)
+        `uvm_info(tID, $sformatf("A2H: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_MEDIUM)
     `else
         //Check collected data from AXI-Stream interface
         if(st_a2h_data[chnl_num].data_queue.size == 0)begin
