@@ -785,8 +785,6 @@ function void bridge_check_scoreboard::write_tlx_afu(tlx_afu_transaction tlx_afu
                     brdg_intrp.intrp_status=1;
                     flight_afu_tlx_intrp.delete(tlx_afu_tran.tlx_afu_afutag);
                 end
-                //else if(tlx_afu_tran.tlx_afu_resp_code == 4'he)begin
-                //end
                 else begin
                     `uvm_error(tID, $sformatf("Get an illegal resp_code of intrp_rdy from tlx.\n%s", tlx_afu_tran.sprint()))                    
                 end
@@ -804,7 +802,7 @@ function void bridge_check_scoreboard::write_intrp(intrp_transaction intrp_tran)
         brdg_intrp.intrp_trans=intrp_tran;
     end
     else if((brdg_intrp.intrp_status == 3) && (intrp_tran.intrp_item == intrp_transaction::INTRP_ACK))begin
-        brdg_intrp.intrp_status=0.;
+        brdg_intrp.intrp_status=0;
         intrp_num++;
     end
     else begin

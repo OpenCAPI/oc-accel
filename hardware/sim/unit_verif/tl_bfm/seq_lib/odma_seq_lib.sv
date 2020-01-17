@@ -211,7 +211,7 @@ class odma_reg_addr;
     64'h0000_0008_8000_008c, //host memory address high 32-bit for write back status
     64'h0000_0008_8000_0080, //write back status buffer size: 1KB
     64'h0000_0008_8000_0008, //Set run bit
-	64'h0000_0008_8000_000c  //Set clear bit
+    64'h0000_0008_8000_000c  //Set clear bit
     };
     
     bit [63:0]  mmio_a2h_addr [7:0] = '{
@@ -222,7 +222,7 @@ class odma_reg_addr;
     64'h0000_0008_8000_108c, //host memory address high 32-bit for write back status
     64'h0000_0008_8000_1080, //write back status buffer size: 1KB
     64'h0000_0008_8000_1008, //Set run bit
-	64'h0000_0008_8000_100c  //Set clear bit
+    64'h0000_0008_8000_100c  //Set clear bit
     };
 
     function new(string name = "odma_reg_addr");

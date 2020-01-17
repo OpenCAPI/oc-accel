@@ -30,20 +30,30 @@ class axi_mm_transaction extends uvm_sequence_item;
     rand bit [63:0]           addr;
     rand bit [255:0][1023:0]  data;
     rand bit [255:0][127:0]   data_strobe;
-    rand bit [7:0]            axi_id;
+    rand bit [4:0]            axi_id;
     rand bit [8:0]            axi_usr;
+    rand bit [2:0]            axi_size;
+    rand bit [7:0]            axi_len;
     rand int                  byte_size;           // value of 2^arsize/awsize
     rand int                  burst_length;        // arlen/awlen+1
     rand uvm_axi_txn_e        trans;
+    rand bit                  act_intrp;
+    rand bit [63:0]           intrp_src;
+    rand bit [8:0]            intrp_ctx;
 
     `uvm_object_utils_begin(axi_mm_transaction)
         `uvm_field_int             (addr,                       UVM_ALL_ON)
         `uvm_field_sarray_int      (data,                       UVM_ALL_ON)
         `uvm_field_sarray_int      (data_strobe,                UVM_ALL_ON)
         `uvm_field_int             (axi_id,                     UVM_ALL_ON)        
+        `uvm_field_int             (axi_usr,                    UVM_ALL_ON)        
+        `uvm_field_int             (axi_len,                    UVM_ALL_ON)        
         `uvm_field_int             (byte_size,                  UVM_ALL_ON)
         `uvm_field_int             (burst_length,               UVM_ALL_ON)                
-        `uvm_field_enum            (uvm_axi_txn_e, trans, UVM_ALL_ON)        
+        `uvm_field_enum            (uvm_axi_txn_e, trans,       UVM_ALL_ON)        
+        `uvm_field_int             (act_intrp,                  UVM_ALL_ON)
+        `uvm_field_int             (intrp_src,                  UVM_ALL_ON)
+        `uvm_field_int             (intrp_ctx,                  UVM_ALL_ON)
     `uvm_object_utils_end
 
     // new - constructor

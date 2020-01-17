@@ -653,13 +653,16 @@ module brdg_tlx_rsp_converter (
        fir_tlx_rsp_err   <= fir_tlx_rsp_deficient_or_delayed;
      end
 
-
+ wire check_dpdl;
+ wire clk_check;
+ assign check_dpdl = fifo_dpdl_e_dv || fifo_dpdl_o_dv;
+ assign clk_check  = clk_check && clk_tlx;
 //==== PSL ASSERTION ==============================================================================
  // psl DPDL_FIFO_UNDERFLOW : assert never (fifo_dpdl_o_udfl | fifo_dpdl_e_udfl) @(posedge clk_tlx) report "dpdl FIFO underflow! dpdl FIFOs are used to store response information of dp and dl, which comes earlier than response data. So when response data arrives to read dpdl FIFOs, either of them are expeced to be empty.";
  
- // psl DL_IN_PAIR : assert always (((rdata_dl == 2'b10) && (rdata_dp == 2'b00)) -> next ((rdata_dl == 2'b10) && (rdata_dp == 2'b01))) @(posedge clk_tlx) report "the sequence of dp for dl=2 should always be dp=00 -> dp=01! Assertion fires under the following circumstances: 1) dl=1 -> dl=2,dp=1; 2) dl=2,dp=0 -> dl=1.";
+ // psl DL_IN_PAIR : assert always (((rdata_dl == 2'b10) && (rdata_dp == 2'b00)) -> next ((rdata_dl == 2'b10) && (rdata_dp == 2'b01))) @(posedge clk_check) report "the sequence of dp for dl=2 should always be dp=00 -> dp=01! Assertion fires under the following circumstances: 1) dl=1 -> dl=2,dp=1; 2) dl=2,dp=0 -> dl=1.";
  
- // psl DL_IN_ERROR : assert never {(rdata_dl == 2'b01); ((rdata_dl == 2'b10) && (rdata_dp == 2'b01))} @(posedge clk_tlx) report "the sequence of dp for dl=2 should always be dp=00 -> dp=01! Assertion fires under the following circumstances: 1. dl=1 -> dl=2,dp=1; 2. dl=2,dp=0 -> dl=1.";
+ // psl DL_IN_ERROR : assert never {(rdata_dl == 2'b01); ((rdata_dl == 2'b10) && (rdata_dp == 2'b01))} @(posedge clk_check) report "the sequence of dp for dl=2 should always be dp=00 -> dp=01! Assertion fires under the following circumstances: 1. dl=1 -> dl=2,dp=1; 2. dl=2,dp=0 -> dl=1.";
 //==== PSL ASSERTION ==============================================================================
 
 //==== PSL COVERAGE ==============================================================================
