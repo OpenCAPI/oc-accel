@@ -683,7 +683,7 @@ task tlx_afu_monitor::collect_interrupt();
             else if((intrp_vif.intrp_req == 0) && (intrp_vif.intrp_ack == 0))begin
             end
             else begin
-                `uvm_error(get_type_name(), "Get illegal interrupt signals in INTRP_IDLE statsu.")
+                `uvm_error(get_type_name(), "Get illegal interrupt signals in INTRP_IDLE status.")
             end
         end
         else if(intrp_status_item == INTRP_WAIT_ACK)begin
@@ -697,7 +697,7 @@ task tlx_afu_monitor::collect_interrupt();
             else if((intrp_vif.intrp_req == 1) && (intrp_vif.intrp_ack == 0))begin
             end
             else begin
-                `uvm_error(get_type_name(), "Get illegal interrupt signals in INTRP_WAIT_ACK statsu.")
+                `uvm_error(get_type_name(), "Get illegal interrupt signals in INTRP_WAIT_ACK status.")
             end
         end
         else begin
@@ -705,7 +705,7 @@ task tlx_afu_monitor::collect_interrupt();
                 intrp_status_item = INTRP_IDLE;
             end
             else begin
-                `uvm_error(get_type_name(), "Get illegal interrupt signals in INTRP_FINISH statsu.")
+                `uvm_error(get_type_name(), "Get illegal interrupt signals in INTRP_FINISH status.")
             end
         end
     end

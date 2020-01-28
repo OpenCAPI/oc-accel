@@ -101,14 +101,20 @@ snap_config:
 
 check_snap_settings:
 	@if [ -z `which git 2> /dev/null` ]; then \
-		echo "                        The SNAP framework make process relies on git."; \
+		echo "                        The OC-Accel framework make process relies on git."; \
 		echo "                        Please make sure that you have installed git and that"; \
 		echo "                        the environment variable PATH points to its executable."; \
+		echo "                        If github is really not accessible, remove 'exit -1' here in 'hardware/Makefile' to continue and"; \
+		echo "                        (1) Make sure the submodule of 'hardware/oc-bip' has been copied"; \
+		echo "                        (2) Comment git related strings in 'hardware/setup/patch_version.sh' and redefine 'IMP_VERSION_DAT'"; \
 		exit -1; \
 	fi
 	@cd $(SNAP_HARDWARE_ROOT); if [ -z `git describe --all HEAD 2> /dev/null` ]; then \
 		echo "                        $(SNAP_HARDWARE_ROOT) does not belong to a git repository."; \
-		echo "                        Please check out the SNAP framework as git clone from git@github.com:open-power/snap.git"; \
+		echo "                        Please check out the SNAP framework as git clone from https://github.com/OpenCAPI/oc-accel"; \
+		echo "                        If github is really not accessible, remove 'exit -1' here in 'hardware/Makefile' to continue and"; \
+		echo "                        (1) Make sure the submodule of 'hardware/oc-bip' has been copied"; \
+		echo "                        (2) Comment git related strings in 'hardware/setup/patch_version.sh' and redefine 'IMP_VERSION_DAT'"; \
 		exit -1; \
 	fi
 	@if [ ! -e "$(snap_config_sh)" ]; then \

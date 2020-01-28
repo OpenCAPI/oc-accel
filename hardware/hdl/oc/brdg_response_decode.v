@@ -870,7 +870,7 @@ module brdg_response_decode
  // psl default clock = (posedge clk);
 
 //==== PSL ASSERTION ==============================================================================
- // psl TLX_RESPONSE_DATA_SYNC : assert always ((MODE)? (all_fifos_emptied ? (fifo_rsp_good_empty && fifo_rspdat_o_empty && fifo_rspdat_e_empty) : 1'b1) : 1'b1) report "TLX response and data not synced! Response info and data FIFO should always be in the same status because good TLX response info and response data are expected to come in pairs.";
+ //// psl TLX_RESPONSE_DATA_SYNC : assert always ((MODE)? (all_fifos_emptied ? (fifo_rsp_good_empty && fifo_rspdat_o_empty && fifo_rspdat_e_empty) : 1'b1) : 1'b1) report "TLX response and data not synced! Response info and data FIFO should always be in the same status because good TLX response info and response data are expected to come in pairs.";
  
  // psl DATA_BRIDGE_RESPONSE_CONFLICT : assert always ((MODE)? onehot0({fifo_rsp_good_full_dv, fifo_rsp_bad_full_dv, rty_valid, prt_valid}) : onehot0({rsp_good_full_valid, rsp_bad_full_valid, rty_valid, prt_valid})) report "there should be only one response among good, bad, retry and partial responses committed to data bridge each time!";
 //==== PSL ASSERTION ==============================================================================

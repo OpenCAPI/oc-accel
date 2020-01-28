@@ -687,6 +687,19 @@ int snap_action_is_idle (struct snap_action* action, int* rc)
     return (action_data & ACTION_CONTROL_IDLE) == ACTION_CONTROL_IDLE;
 }
 
+int snap_action_wait_interrupt(struct snap_action *action, int *rc, int timeout)
+{
+    //uint32_t action_data = 0;
+    struct snap_card *card = (struct snap_card *)action;
+    //int _rc = hw_wait_irq(card, timeout, SNAP_ACTION_IRQ_NUM);
+    int _rc = hw_wait_irq(card, timeout /*, SNAP_ACTION_IRQ_NUM*/);
+
+    if (NULL != rc)
+        *rc = _rc;
+
+    return _rc;
+}
+
 int snap_action_completed (struct snap_action* action, int* rc, int timeout)
 {
     int _rc = 0;
