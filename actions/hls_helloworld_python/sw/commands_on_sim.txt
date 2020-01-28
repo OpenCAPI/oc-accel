@@ -13,8 +13,10 @@ import snap_helloworld_python
 input = "Hello world. This is my first CAPI SNAP experience with Python. It's extremely fun"
 output = "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
 
-snap_helloworld_python.uppercase(input, output)
+#snap_helloworld_python.uppercase(input, output)
 out, output = snap_helloworld_python.uppercase(input)
 
-print(output)
+print("Output from FPGA:"+output)
+
+print("Output from CPU :"+input.upper())
 
