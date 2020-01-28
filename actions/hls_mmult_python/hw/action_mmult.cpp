@@ -44,10 +44,10 @@ static void mbus_to_mat_elmt_t(snap_membus_t *data_read, uint64_t addr_in_index,
 	   loop_m2d2: for(unsigned int j = 0; j < MAX_NB_OF_DECIMAL_PERDW; j++)
 	   {
 		unsigned int index = i*MAX_NB_OF_DECIMAL_PERDW + j;
-		if ((index >= min_index) && (index <= max_index)) {
-			value_u = (uint64_t)data_read[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j));	
+		//if ((index >= min_index) && (index <= max_index)) {
+			value_u = (uint64_t)data_read[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j));
 			table_decimal_in[index_incr++] = value_d;
-		}
+		//}
 		//printf("DEBUG mbus_to_mat_elmt_t: i=%d, j=%d, value_u=%u, value_d=%d\n", i, j, value_u, value_d);
 		printf("DEBUG mbus_to_mat_elmt_t: index=%u, min_index=%u, max_index=%u\n", index, min_index, max_index);
 	   }
@@ -348,7 +348,7 @@ int main(void)
 
     //Allocate Memory in Host Memory
     if (DATA_SIZE > MAX_SIZE) {
-        printf( "Size is bigger than internal buffer size, please use a size smaller than %u !\n", 
+        printf( "Size is bigger than internal buffer size, please use a size smaller than %u !\n",
                   MAX_SIZE);
         return EXIT_FAILURE;
     }
