@@ -20,3 +20,20 @@ print("Output from FPGA:"+output)
 
 print("Output from CPU :"+input.upper())
 
+
+
+
+
+
+
+
+
+Jupyter
+
+oc_maint -vvv
+
+cp -r ../../../../actions/hls_helloworld_python/sw/* .
+
+jupyter notebook
+
+(then follow instrunctions on notebook)
