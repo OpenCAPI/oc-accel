@@ -25,8 +25,8 @@
 
 class axi_mm_monitor extends uvm_monitor;
 
-    virtual interface                          axi_vip_if `AXI_VIP_MM_CHECK_PARAMS mm_check_vif;
-    axi_vip_mm_check_passthrough_t             axi_vip_mm_check_passthrough;
+    virtual interface                          axi_vip_if `AXI_VIP_MM_PASSTHROUGH_PARAMS mm_check_vif;
+    axi_vip_mm_passthrough_passthrough_t       axi_vip_mm_check_passthrough;
     uvm_analysis_port #(axi_mm_transaction)    axi_mm_tran_port;
     uvm_analysis_port #(axi_mm_transaction)    axi_mm_cmd_rd_port;
     uvm_analysis_port #(axi_mm_transaction)    axi_mm_cmd_wr_port;
@@ -376,8 +376,8 @@ endfunction : build_phase
 function void axi_mm_monitor::connect_phase(uvm_phase phase);
     super.connect_phase(phase);
     `uvm_info(tID, $sformatf("connect_phase begin ..."), UVM_MEDIUM)
-    if(!uvm_config_db#(virtual axi_vip_if `AXI_VIP_MM_CHECK_PARAMS)::get(this, "", "mm_check_vif", mm_check_vif)) begin
-        `uvm_fatal(tID, "No virtual interface mm_check_vif specified fo axi_mm_monitor")
+    if(!uvm_config_db#(virtual axi_vip_if `AXI_VIP_MM_PASSTHROUGH_PARAMS)::get(this, "", "axi_vip_mm_passthrough_vif", mm_check_vif)) begin
+        `uvm_fatal(tID, "No virtual interface axi_vip_mm_passthrough_vif fo axi_mm_monitor")
     end
     axi_vip_mm_check_passthrough = new("axi_vip_mm_check_passthrough", mm_check_vif);
     endfunction : connect_phase

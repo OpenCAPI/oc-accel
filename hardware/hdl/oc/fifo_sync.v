@@ -50,6 +50,7 @@ module fifo_sync
  wire [ADDR_WIDTH:0] ecnt_1 = {{ADDR_WIDTH{1'b0}}, 1'b1};
  wire [ADDR_WIDTH:0] ecnt_max = {1'b1, {ADDR_WIDTH{1'b0}}};
  wire [ADDR_WIDTH:0] ecnt_max_1 = {1'b0, {ADDR_WIDTH{1'b1}}};
+ wire [ADDR_WIDTH:0] ecnt_max_2 = {1'b0, {(ADDR_WIDTH-1){1'b1}},1'b0};
  reg [ADDR_WIDTH-1:0] wr_pnt, rd_pnt;
  reg [ADDR_WIDTH:0] valid_entry_cnt; 
  reg rd_en_sync;
@@ -111,7 +112,7 @@ module fifo_sync
 
  assign full = (valid_entry_cnt == ecnt_max);
  assign empty = (valid_entry_cnt == ecnt_0);
- assign almost_full = (valid_entry_cnt == ecnt_max_1);
+ assign almost_full = ((valid_entry_cnt == ecnt_max_1) || (valid_entry_cnt == ecnt_max_2));
  assign almost_empty = (valid_entry_cnt == ecnt_1);
  assign count = valid_entry_cnt[ADDR_WIDTH-1:0];
  assign valid = (FWFT)? ~empty : (rd_en_sync && ~underflow);

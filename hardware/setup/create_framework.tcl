@@ -46,6 +46,7 @@ set nvme_used           $::env(NVME_USED)
 set bram_used           $::env(BRAM_USED)
 set sdram_used          $::env(SDRAM_USED)
 set hbm_used            $::env(HBM_USED)
+set user_clock          $::env(USER_CLOCK)
 set ila_debug           [string toupper $::env(ILA_DEBUG)]
 set simulator           $::env(SIMULATOR)
 set denali_used         $::env(DENALI_USED)
@@ -164,6 +165,8 @@ if { $hls_support == "TRUE" } {
   add_files -scan_for_includes $hdl_dir/hls/ >> $log_file
 }
 
+add_files -scan_for_includes $action_hw_dir/ >> $log_file
+
 # Action Specific tcl
 if { [file exists $action_tcl] == 1 } {
   set tcl_exists [exec find $action_tcl -name *.tcl]
@@ -176,8 +179,6 @@ if { [file exists $action_tcl] == 1 } {
   }
 }
 
-
-add_files -scan_for_includes $action_hw_dir/ >> $log_file
 
 
 # Sim Files
@@ -248,6 +249,12 @@ puts "                        importing other XDCs"
 
 # Bitstream XDC
 #  add_files -fileset constrs_1 -norecurse $top_xdc_dir/config_bitstream.xdc
+# set false between action clock and snap clock if action clock frequency is different from snap clock
+if { $user_clock == "TRUE" } {
+  add_files -fileset constrs_1 -norecurse $root_dir/setup/snap_timing.xdc
+  set_property used_in_synthesis true [get_files $root_dir/setup/snap_timing.xdc]
+  set_property used_in_implementation true [get_files $root_dir/setup/snap_timing.xdc]
+}
 
 # DDR XDCs
 if { $fpga_card == "AD9V3" } {

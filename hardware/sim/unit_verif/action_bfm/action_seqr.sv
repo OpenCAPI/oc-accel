@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-(function(){
-hljs.configure({languages: []});
-//hljs.initHighlightingOnLoad();
+`ifndef _ACTION_SEQR_SV
+`define _ACTION_SEQR_SV
 
- /*   $('.dropdown').each(function (key, dropdown) {
-        var $dropdown = $(dropdown);
-        $dropdown.find('.dropdown-menu a').on('click', function () {
-			alert($(this).text());
-            $dropdown.find('button').text($(this).text()).append(' <span class="caret"></span>');
-        });
-    });
- */
+class action_seqr extends uvm_sequencer #(axi_mm_transaction);
 
+    `uvm_component_utils(action_seqr)
 
-}).call(this);
+    function new (string name="action_seqr", uvm_component parent);
+        super.new(name, parent);
+    endfunction: new
+
+endclass: action_seqr
+
+`endif
