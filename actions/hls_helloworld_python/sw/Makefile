@@ -46,8 +46,27 @@ projs += snap_helloworld_python
 
 PyCFLAGS=$(shell python3-config --includes)
 PyCFLAGS+=-fPIC -O2 -DPY_WRAP
+#PyCFLAGS+=-fPIC -O2
+
 VERSION:=$(GIT_BRANCH)
 PyCFLAGS += -DGIT_VERSION=\"$(VERSION)\" \
+
+FILE1 = $(OCSE_ROOT)/libocxl/libocxl.a
+ifeq ($(shell test -e $(FILE1) && echo -n yes),yes)
+    RESULT1=$(FILE1) exists.
+    LIBOCXL=$(FILE1)
+else
+    RESULT1=$(FILE1) does not exist.
+endif
+
+#ldconfig -p | grep libocxl | awk -F'> ' '{print $2}' | tail -n 1
+FILE2 = /usr/lib/powerpc64le-linux-gnu/libocxl.so
+ifeq ($(shell test -e $(FILE2) && echo -n yes),yes)
+    RESULT2=$(FILE2) exists.
+    LIBOCXL=$(FILE2)
+else
+    RESULT2=$(FILE2) does not exist.
+endif
 
 PREREQ_EXECUTABLES = ld swig
 K := $(foreach exec,$(PREREQ_EXECUTABLES),\
@@ -64,9 +83,15 @@ K := $(foreach exec,$(PREREQ_EXECUTABLES),\
 # 4. c++ -shared XXX.o XXX_wrap.o -o XXX.so
 
 pywrap:
+	@echo INFO:$(RESULT1)
+	@echo INFO:$(RESULT2)
+	@echo INFO:Compiling using LIBOCXL=$(LIBOCXL)
 	swig -python snap_helloworld_python.i
 	$(CC) -c -fpic snap_helloworld_python.c snap_helloworld_python_wrap.c $(PyCFLAGS) -I$(SNAP_ROOT)/software/include/ -I$(SNAP_ROOT)/actions/hls_helloworld_python/include
-	$(CC) -shared snap_helloworld_python.o snap_helloworld_python_wrap.o $(SNAP_ROOT)/software/lib/libosnap.a $(OCSE_ROOT)/libocxl/libocxl.a -o _snap_helloworld_python.so
+	$(CC) -shared snap_helloworld_python.o snap_helloworld_python_wrap.o $(SNAP_ROOT)/software/lib/libosnap.a $(LIBOCXL) -o _snap_helloworld_python.so
+
+#	$(CC) -shared snap_helloworld_python.o snap_helloworld_python_wrap.o $(SNAP_ROOT)/software/lib/libosnap.a $(OCSE_ROOT)/libocxl/libocxl.a -o _snap_helloworld_python.so
+
 
 #LD_LIBRARY_PATH=/tools/projects/ocse/libocxl/ python3 -c "import snap_helloworld_python"
 

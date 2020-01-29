@@ -7,6 +7,10 @@ import sys
 
 sys.path.append("/tools/projects/oc-accel_did/actions/hls_helloworld_python/sw")
 sys.path.append("/home/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
+sys.path.append("/dataL/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
+sys.path.append("/dataL/did9/oc-accel_did/actions/hls_helloworld_python/sw")
+
+
 
 import snap_helloworld_python
  
