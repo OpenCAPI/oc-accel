@@ -54,7 +54,7 @@ module command_encode
                            input                      tlx_cmd_rdy      ,
 
                            //---- control and status ---------------------
-                           input                      debug_cnt_clear  ,
+                           input                      debug_info_clear  ,
                            output reg [0031:0]        debug_tlx_cnt_cmd,
                            output reg [0001:0]        fir_fifo_overflow
                            );
@@ -449,7 +449,7 @@ module command_encode
      begin
        debug_tlx_cnt_cmd <= 32'd0;
      end
-   else if (debug_cnt_clear)
+   else if (debug_info_clear)
      begin
        debug_tlx_cnt_cmd <= 32'd0;
      end

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 `timescale 1ns/1ps
-
+`define OPENCAPI30
 
 module mmio_axilite_master
             # (
@@ -24,7 +24,7 @@ module mmio_axilite_master
                 parameter CARD_TYPE = 8'h31
               )
               (
-                     input                 clk_afu                          ,
+                     input                 clk                          ,
                      input                 rst_n                            ,
 
 
@@ -47,9 +47,9 @@ module mmio_axilite_master
                      input                mmio_dw                    ,
                      input         [31:0] mmio_addr                  ,
                      input         [63:0] mmio_din                   ,
-                     output reg    [63:0] mmio_dout                  ,
-                     output reg           mmio_done                  ,
-                     output reg           mmio_failed                ,
+                     output        [63:0] mmio_dout                  ,
+                     output               mmio_done                  ,
+                     output               mmio_failed                ,
 
 
                      //---- master side AXI Lite bus ----
@@ -84,14 +84,14 @@ module mmio_axilite_master
                      );
 
 
- wire          lcl_wr     ;
- wire          lcl_rd     ;
- wire  [31:0]  lcl_addr   ;
- wire  [31:0]  lcl_din    ;
- wire          lcl_ack    ;
- wire          lcl_rsp    ;
- wire  [31:0]  lcl_dout   ;
- wire          lcl_dv     ;
+ wire          lcl_mmio_wr     ;
+ wire          lcl_mmio_rd     ;
+ wire  [31:0]  lcl_mmio_addr   ;
+ wire  [31:0]  lcl_mmio_din    ;
+ wire          lcl_mmio_ack    ;
+ wire          lcl_mmio_rsp    ;
+ wire  [31:0]  lcl_mmio_dout   ;
+ wire          lcl_mmio_dv     ;
 
 
 //---- route TLX access to local SNAP registers or action register space ---- 
@@ -102,7 +102,7 @@ module mmio_axilite_master
                 .CARD_TYPE (CARD_TYPE )
               )
         mmio_path_and_regs (
-             .clk                        (clk_afu                    ),
+             .clk                        (clk                    ),
              .rst_n                      (rst_n                      ),
              .debug_info_clear           (debug_info_clear            ),
              .debug_bus_trans_protocol   (debug_bus_trans_protocol   ),
@@ -117,20 +117,20 @@ module mmio_axilite_master
              .mmio_dout                  (mmio_dout                  ),
              .mmio_done                  (mmio_done                  ),
              .mmio_failed                (mmio_failed                ),
-             .lcl_wr                     (lcl_wr                     ),
-             .lcl_rd                     (lcl_rd                     ),
-             .lcl_addr                   (lcl_addr                   ),
-             .lcl_din                    (lcl_din                    ),
-             .lcl_ack                    (lcl_ack                    ),
-             .lcl_rsp                    (lcl_rsp                    ),
-             .lcl_dout                   (lcl_dout                   ),
-             .lcl_dv                     (lcl_dv                     ) 
+             .lcl_mmio_wr                     (lcl_mmio_wr                     ),
+             .lcl_mmio_rd                     (lcl_mmio_rd                     ),
+             .lcl_mmio_addr                   (lcl_mmio_addr                   ),
+             .lcl_mmio_din                    (lcl_mmio_din                    ),
+             .lcl_mmio_ack                    (lcl_mmio_ack                    ),
+             .lcl_mmio_rsp                    (lcl_mmio_rsp                    ),
+             .lcl_mmio_dout                   (lcl_mmio_dout                   ),
+             .lcl_mmio_dv                     (lcl_mmio_dv                     ) 
              );
 
 
 //---- AXI lite interface to action as master ----
  axilite_shim axilite_shim (
-                                   .clk           (clk_afu      ),
+                                   .clk           (clk      ),
                                    .rst_n         (rst_n        ),
                                    .m_axi_awready (m_axi_awready),   
                                    .m_axi_awaddr  (m_axi_awaddr ),
@@ -151,14 +151,14 @@ module mmio_axilite_master
                                    .m_axi_rresp   (m_axi_rresp  ),
                                    .m_axi_rready  (m_axi_rready ),
                                    .m_axi_rvalid  (m_axi_rvalid ),
-                                   .lcl_wr        (lcl_wr       ), // write enable
-                                   .lcl_rd        (lcl_rd       ), // read enable
-                                   .lcl_addr      (lcl_addr     ), // write/read address
-                                   .lcl_din       (lcl_din      ), // write data
-                                   .lcl_ack       (lcl_ack      ), // write data acknowledgement
-                                   .lcl_rsp       (lcl_rsp      ), // write/read response: 0: good; 1: bad
-                                   .lcl_dout      (lcl_dout     ), // read data
-                                   .lcl_dv        (lcl_dv       )  // read data valid
+                                   .lcl_mmio_wr        (lcl_mmio_wr       ), // write enable
+                                   .lcl_mmio_rd        (lcl_mmio_rd       ), // read enable
+                                   .lcl_mmio_addr      (lcl_mmio_addr     ), // write/read address
+                                   .lcl_mmio_din       (lcl_mmio_din      ), // write data
+                                   .lcl_mmio_ack       (lcl_mmio_ack      ), // write data acknowledgement
+                                   .lcl_mmio_rsp       (lcl_mmio_rsp      ), // write/read response: 0: good; 1: bad
+                                   .lcl_mmio_dout      (lcl_mmio_dout     ), // read data
+                                   .lcl_mmio_dv        (lcl_mmio_dv       )  // read data valid
                                   );
 
 

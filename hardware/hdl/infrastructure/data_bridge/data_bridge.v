@@ -39,7 +39,7 @@ module data_bridge #(
                 )
                 (
                    //---- synchronous clocks and reset ----------------------
-                   input                 clk_afu                        ,
+                   input                 clk                        ,
                    input                 rst_n                          ,
 
 
@@ -81,11 +81,11 @@ module data_bridge #(
 
                    // dma interface
                    input                dma_wr_cmd_ready                 ,
-                   output reg           dma_wr_cmd_valid                 ,
-                   output reg [1023:0]  dma_wr_cmd_data                  ,
-                   output reg [0127:0]  dma_wr_cmd_be                    ,
-                   output reg [0063:0]  dma_wr_cmd_ea                    ,
-                   output reg [0005:0]  dma_wr_cmd_tag                   ,
+                   output               dma_wr_cmd_valid                 ,
+                   output     [1023:0]  dma_wr_cmd_data                  ,
+                   output     [0127:0]  dma_wr_cmd_be                    ,
+                   output     [0063:0]  dma_wr_cmd_ea                    ,
+                   output     [0005:0]  dma_wr_cmd_tag                   ,
 
                    input                dma_wr_resp_valid                ,
                    input      [1023:0]  dma_wr_resp_data                 ,//N/A
@@ -94,11 +94,11 @@ module data_bridge #(
                    input      [0002:0]  dma_wr_resp_code                 ,
                 
                    input                dma_rd_cmd_ready                 ,
-                   output reg           dma_rd_cmd_valid                 ,
-                   output reg [1023:0]  dma_rd_cmd_data                  ,
-                   output reg [0127:0]  dma_rd_cmd_be                    ,
-                   output reg [0063:0]  dma_rd_cmd_ea                    ,
-                   output reg [0005:0]  dma_rd_cmd_tag                   ,
+                   output               dma_rd_cmd_valid                 ,
+                   output     [1023:0]  dma_rd_cmd_data                  ,
+                   output     [0127:0]  dma_rd_cmd_be                    ,
+                   output     [0063:0]  dma_rd_cmd_ea                    ,
+                   output     [0005:0]  dma_rd_cmd_tag                   ,
 
                    input                dma_rd_resp_valid                ,
                    input      [1023:0]  dma_rd_resp_data                 ,
@@ -153,7 +153,7 @@ data_bridge_channel
                      .MODE  (1'b0) //0: write; 1: read
                      )
                  data_brg_w (
-                /*input                */   .clk                 ( clk_afu             ),
+                /*input                */   .clk                 ( clk             ),
                 /*input                */   .rst_n               ( rst_n               ),
                 /*output               */   .buf_empty           ( wbuf_empty          ),
 
@@ -215,7 +215,7 @@ data_bridge_channel
                      .MODE  (1'b1) //0: write; 1: read
                      )
                 data_brg_r (
-                /*input                */   .clk                 ( clk_afu             ),
+                /*input                */   .clk                 ( clk             ),
                 /*input                */   .rst_n               ( rst_n               ),
                 /*output               */   .buf_empty           ( rbuf_empty          ),
 

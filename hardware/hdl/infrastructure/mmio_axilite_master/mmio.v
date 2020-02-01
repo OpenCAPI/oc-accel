@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 `timescale 1ns/1ps
-
+`define OPENCAPI30
 
 module mmio # (
                 parameter IMP_VERSION = 64'h1000_0000_0000_0000,
@@ -335,8 +335,6 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
      begin
        REG_command            <= 64'd0;
        REG_debug_clear        <= 64'd0;
-       REG_debug_tlx_idle_lim <= 64'd0;
-       REG_debug_axi_idle_lim <= 64'd0;
 
        waddr_decode_error <= 1'b0;
      end

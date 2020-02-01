@@ -56,7 +56,7 @@ module response_decode
                        input      [0511:0]   tlx_rdata_e               ,
 
                        //---- control and status ---------------------
-                       input                 debug_cnt_clear           ,
+                       input                 debug_info_clear           ,
                        output reg [0031:0]   debug_tlx_cnt_rsp         ,
                        output reg [0031:0]   debug_tlx_cnt_retry       ,
                        output reg [0031:0]   debug_tlx_cnt_fail        ,
@@ -812,7 +812,7 @@ module response_decode
        debug_tlx_cnt_xlt_done  <= 32'b0;
        debug_tlx_cnt_xlt_retry <= 32'b0;
      end
-   else if(debug_cnt_clear)
+   else if(debug_info_clear)
      begin
        debug_tlx_cnt_rsp       <= 32'b0;
        debug_tlx_cnt_retry     <= 32'b0;
