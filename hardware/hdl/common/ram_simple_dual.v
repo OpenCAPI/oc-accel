@@ -17,7 +17,7 @@
 
 module ram_simple_dual #(parameter DATA_WIDTH = 8, parameter ADDR_WIDTH = 5, parameter DISTR = 0) (clk,ena,enb,wea,addra,addrb,dia,dob);
 
-   parameter DEPTH = 2**ADDR_WIDTH;
+   localparam DEPTH = 2**ADDR_WIDTH;
 
    input clk,ena,enb,wea;
    input [ADDR_WIDTH-1:0] addra,addrb;

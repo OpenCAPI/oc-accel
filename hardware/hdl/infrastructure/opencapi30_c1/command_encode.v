@@ -111,7 +111,7 @@ module command_encode
  wire            fifo_prt_data_ovfl;
  wire            fifo_prt_info_ovfl;
 
- parameter IDLE          = 5'h01, 
+ localparam IDLE          = 5'h01, 
            RD_PRT_FIFO   = 5'h02,
            CHECK_PARTIAL = 5'h04,
            PARTIAL_L64B  = 5'h08,

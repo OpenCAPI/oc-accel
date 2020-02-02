@@ -108,12 +108,12 @@ module opencapi30_c1
                    input     [1023:0]    dma_wr_cmd_data        ,
                    input     [0127:0]    dma_wr_cmd_be          ,
                    input     [0063:0]    dma_wr_cmd_ea          ,
-                   input     [0005:0]    dma_wr_cmd_tag         ,
+                   input   [TAGW-1:0]    dma_wr_cmd_tag         ,
 
                           //---- response decoder --------------
                    output                dma_wr_resp_valid      ,
                    output      [1023:0]  dma_wr_resp_data       ,//N/A
-                   output      [0005:0]  dma_wr_resp_tag        ,
+                   output    [TAGW-1:0]  dma_wr_resp_tag        ,
                    output      [0001:0]  dma_wr_resp_pos        ,
                    output      [0002:0]  dma_wr_resp_code       ,
                           //---- command encoder ---------------
@@ -122,12 +122,12 @@ module opencapi30_c1
                    input     [1023:0]    dma_rd_cmd_data      ,
                    input     [0127:0]    dma_rd_cmd_be        ,
                    input     [0063:0]    dma_rd_cmd_ea        ,
-                   input     [0005:0]    dma_rd_cmd_tag       ,
+                   input   [TAGW-1:0]    dma_rd_cmd_tag       ,
 
                           //---- response decoder --------------
                    output                dma_rd_resp_valid    ,
                    output      [1023:0]  dma_rd_resp_data     ,
-                   output      [0005:0]  dma_rd_resp_tag      ,
+                   output    [TAGW-1:0]  dma_rd_resp_tag      ,
                    output      [0001:0]  dma_rd_resp_pos      ,
                    output      [0002:0]  dma_rd_resp_code     ,
 
@@ -137,7 +137,7 @@ module opencapi30_c1
                    input                 lcl_wr_ctx_valid      ,
                    input                 lcl_rd_ctx_valid      ,
                    input                 last_context_cleared  ,   // both write buffer and read buffer are empty
-                   output reg            context_update_ongoing,   // screen local burst request
+                   output                context_update_ongoing,   // screen local burst request
 
 
                    // interrupt

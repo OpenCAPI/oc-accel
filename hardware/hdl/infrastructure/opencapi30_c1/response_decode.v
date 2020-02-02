@@ -37,7 +37,7 @@ module response_decode
                        //---- DMA interface --------------------------
                        output reg            dma_resp_valid            ,
                        output reg [1023:0]   dma_resp_data             , 
-                       output reg [TAGW-1:0]dma_resp_tag              , 
+                       output reg [TAGW-1:0] dma_resp_tag              , 
                        output reg [0001:0]   dma_resp_pos              , 
                        output reg [0002:0]   dma_resp_code             ,     
 

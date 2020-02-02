@@ -36,6 +36,7 @@ make_bd_pins_external  [get_bd_pins flash_vpd_wrapper_0/FPGA_FLASH_DQ6]
 make_bd_pins_external  [get_bd_pins flash_vpd_wrapper_0/FPGA_FLASH_DQ7]
 make_bd_pins_external  [get_bd_pins oc_host_if_0/ocde]
 # To Action Wrapper
+make_bd_intf_pins_external  [get_bd_intf_pins mmio_axilite_master_0/m_axi]
 make_bd_intf_pins_external  [get_bd_intf_pins bridge_axi_slave_0/s_axi]
 make_bd_pins_external  [get_bd_pins mmio_axilite_master_0/soft_reset_action]
 make_bd_pins_external  [get_bd_pins opencapi30_c1_0/interrupt]

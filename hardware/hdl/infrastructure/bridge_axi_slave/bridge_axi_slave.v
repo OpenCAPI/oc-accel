@@ -197,6 +197,7 @@ localparam AXI_OKAY=2'b00,
  reg [1:0]   rd_burst_q;
  reg [127:0] rd_be1_q;
  wire        rd_addr_present;
+wire [CTXW-1:0] lcl_ctx_aruser;
 
 axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  ar_cf(
         .clk            (clk             ),
@@ -267,6 +268,7 @@ localparam WR_IDLE           = 6'b000001,
  wire         wr_data_present;
  reg [1023:0] wdata_q;
  reg [127:0]  wstrb_q;
+wire [CTXW-1:0] lcl_ctx_awuser;
 
 
 axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
@@ -636,8 +638,6 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
 
 //=============================================================================================
 //      Match ctx width with the AXI ARUSER/AWUSER width
-wire [CTXW-1:0] lcl_ctx_aruser;
-wire [CTXW-1:0] lcl_ctx_awuser;
 
 assign lcl_rd_ctx[CTXW-1:0] = lcl_ctx_aruser;
 assign lcl_wr_ctx[CTXW-1:0] = lcl_ctx_awuser;

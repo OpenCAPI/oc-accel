@@ -124,7 +124,8 @@ module data_bridge #(
 //===============================================================================================================
 
 wire wbuf_empty, rbuf_empty;
-wire last_context_cleared = wbuf_empty && rbuf_empty;
+wire last_context_cleared;
+assign last_context_cleared = wbuf_empty && rbuf_empty;
 
 wire [31:0] debug_axi_cnt_cmd_w;
 wire [31:0] debug_axi_cnt_cmd_r;
