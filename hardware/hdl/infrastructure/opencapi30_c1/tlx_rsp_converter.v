@@ -17,8 +17,8 @@
 
 
 module tlx_rsp_converter (
-                               input                      clk_tlx                        ,
-                               input                      clk_afu                        ,
+                               input                      clock_tlx                        ,
+                               input                      clock_afu                        ,
                                input                      rst_n                          ,
 
                                //---- TLX side interface --------------------------------
@@ -147,7 +147,7 @@ module tlx_rsp_converter (
 //---- set response initial credit number with almost half capacity of response FIFO ----
  assign afu_tlx_resp_initial_credit = 7'b0000111;
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      rsp_credit_cnt <= 4'd0;
    else
@@ -157,7 +157,7 @@ module tlx_rsp_converter (
      endcase
 
 //---- give response credit back when response is received, withdraw credit when response FIFO is more than half full ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      afu_tlx_resp_credit <= 1'b0;
    else if(fifo_rd_rspcnv_wrcnt[4] || fifo_wr_rspcnv_wrcnt[4] || (fifo_datcnv_o_wrcnt > 4'd5))
@@ -212,7 +212,7 @@ module tlx_rsp_converter (
 //----------------------------------------------------------------------------------------------------------
 
 //---- FIFO input from TLX info ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        fifo_rd_rspcnv_den <= 1'b0;
@@ -230,8 +230,8 @@ module tlx_rsp_converter (
               .ADDR_WIDTH(5),
               .DISTR(1)
               ) mfifo_rd_rspcnv (
-                                 .wr_clk       (clk_tlx               ),
-                                 .rd_clk       (clk_afu               ),
+                                 .wr_clk       (clock_tlx               ),
+                                 .rd_clk       (clock_afu               ),
                                  .wr_rst       (~rst_n                ),
                                  .rd_rst       (~rst_n                ),
                                  .din          (fifo_rd_rspcnv_din    ),
@@ -245,7 +245,7 @@ module tlx_rsp_converter (
                                  .empty        (fifo_rd_rspcnv_empty  )
                                  );
 
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      fifo_rd_rspcnv_rdrq <= 1'b0;
    else if((fifo_rd_rspcnv_alempty && fifo_rd_rspcnv_rdrq) || fifo_rd_rspcnv_empty)  // make sure no residual data in FIFO
@@ -260,7 +260,7 @@ module tlx_rsp_converter (
 //----------------------------------------------------------------------------------------------------------
 
 //---- FIFO input from TLX info ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        fifo_wr_rspcnv_den <= 1'b0;
@@ -278,8 +278,8 @@ module tlx_rsp_converter (
               .ADDR_WIDTH(5),
               .DISTR(1)
               ) mfifo_wr_rspcnv (
-                                 .wr_clk       (clk_tlx               ),
-                                 .rd_clk       (clk_afu               ),
+                                 .wr_clk       (clock_tlx               ),
+                                 .rd_clk       (clock_afu               ),
                                  .wr_rst       (~rst_n                ),
                                  .rd_rst       (~rst_n                ),
                                  .din          (fifo_wr_rspcnv_din    ),
@@ -293,7 +293,7 @@ module tlx_rsp_converter (
                                  .empty        (fifo_wr_rspcnv_empty  )
                                  );
 
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      fifo_wr_rspcnv_rdrq <= 1'b0;
    else if((fifo_wr_rspcnv_alempty && fifo_wr_rspcnv_rdrq) || fifo_wr_rspcnv_empty)  // make sure no residual data in FIFO
@@ -312,14 +312,14 @@ module tlx_rsp_converter (
  localparam [7:0] TLX_AFU_RESP_OPCODE_READ_RESPONSE = 8'b00000100;  // -- Read Response
 
 //---- toggle write position for FIFO with 64B response ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      tlx_dpdl_wr_toggle <= 1'b0;
    else if((tlx_afu_resp_valid) && (tlx_afu_resp_dl == 2'd1) && (tlx_afu_resp_opcode == TLX_AFU_RESP_OPCODE_READ_RESPONSE))
      tlx_dpdl_wr_toggle <= ~tlx_dpdl_wr_toggle;
 
 //---- for 128B response, write dl and dp in both even and odd FIFO; for 64B response, write alternately in even or odd FIFO, starting from even ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        fifo_dpdl_o_den <= 1'b0;
@@ -349,7 +349,7 @@ module tlx_rsp_converter (
  assign real_dp_din_o = (tlx_afu_resp_dl == 2'd2)? {1'b0,~tlx_dpdl_wr_toggle} : pos_64B;
  assign real_dp_din_e = (tlx_afu_resp_dl == 2'd2)? {1'b0, tlx_dpdl_wr_toggle} : pos_64B;
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        fifo_dpdl_e_din <= 4'd0;
@@ -366,7 +366,7 @@ module tlx_rsp_converter (
              .DATA_WIDTH (4),
              .ADDR_WIDTH (5) 
              ) mfifo_dpdl_o (
-                             .clk      (clk_tlx          ),
+                             .clk      (clock_tlx          ),
                              .rst_n    (rst_n            ),
                              .din      (fifo_dpdl_o_din  ),
                              .wr_en    (fifo_dpdl_o_den  ),
@@ -382,7 +382,7 @@ module tlx_rsp_converter (
              .DATA_WIDTH (4),
              .ADDR_WIDTH (5) 
              ) mfifo_dpdl_e (
-                             .clk      (clk_tlx          ),
+                             .clk      (clock_tlx          ),
                              .rst_n    (rst_n            ),
                              .din      (fifo_dpdl_e_din  ),
                              .wr_en    (fifo_dpdl_e_den  ),
@@ -397,7 +397,7 @@ module tlx_rsp_converter (
 
 
 //---- reflect good TLX read request to accept responsed data----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        afu_tlx_resp_rd_req <= 1'b0;
@@ -411,7 +411,7 @@ module tlx_rsp_converter (
 
 //---- always pop dp/dl out when response data is available, from even or odd FIFO alternatively. MUST always starts from even ----
 // assuming that the dpdl FIFO can never be empty when valid data comes
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      tlx_dpdl_rd_toggle <= 1'b0;
    else if(tlx_afu_resp_data_valid)
@@ -425,7 +425,7 @@ module tlx_rsp_converter (
  assign rdata_dp = (fifo_dpdl_e_dv)? fifo_dpdl_e_dout[3:2] : fifo_dpdl_o_dout[3:2];
 
 //---- delay once to sync with dp and dl output ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        rdata_valid <= 1'b0;
@@ -440,7 +440,7 @@ module tlx_rsp_converter (
      end
 
 //---- split 64B TLX resp data into even and odd lanes to prepare for AFU time domain conversion ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        tlx_e_data <= 512'd0;
@@ -454,7 +454,7 @@ module tlx_rsp_converter (
        2'b00 : begin tlx_e_data <= rdata_bus; tlx_e_bdi <= rdata_bdi; tlx_o_bdi <= 1'b0; end
      endcase 
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        tlx_e_dv <= 1'b0;
@@ -482,8 +482,8 @@ module tlx_rsp_converter (
               .ADDR_WIDTH(4),
               .DISTR(1)
               ) mfifo_datcnv_o (
-                                .wr_clk       (clk_tlx              ),
-                                .rd_clk       (clk_afu              ),
+                                .wr_clk       (clock_tlx              ),
+                                .rd_clk       (clock_afu              ),
                                 .wr_rst       (~rst_n               ),
                                 .rd_rst       (~rst_n               ),
                                 .din          (fifo_datcnv_o_din    ),
@@ -497,7 +497,7 @@ module tlx_rsp_converter (
                                 );
 
 //---- FIFO read request, making sure no residual data in FIFO ----
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      fifo_datcnv_o_rdrq <= 1'b0;
    else 
@@ -513,8 +513,8 @@ module tlx_rsp_converter (
               .ADDR_WIDTH(4),
               .DISTR(1)
               ) mfifo_datcnv_e (
-                                .wr_clk      (clk_tlx              ),
-                                .rd_clk      (clk_afu              ),
+                                .wr_clk      (clock_tlx              ),
+                                .rd_clk      (clock_afu              ),
                                 .wr_rst      (~rst_n               ),
                                 .rd_rst      (~rst_n               ),
                                 .din         (fifo_datcnv_e_din    ),
@@ -527,7 +527,7 @@ module tlx_rsp_converter (
                                 );
 
 //---- FIFO read request, making sure no residual data in FIFO ----
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      fifo_datcnv_e_rdrq <= 1'b0;
    else 
@@ -576,7 +576,7 @@ module tlx_rsp_converter (
  reg [31:0] rsp_idle_lim;
 
 //---- DEBUG registers ----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      rsp_idle <= 1'b0;
    else if(tlx_afu_resp_valid)
@@ -584,7 +584,7 @@ module tlx_rsp_converter (
    else if(rsp_idle_cnt == rsp_idle_lim)
      rsp_idle <= 1'b1;
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      rsp_idle_cnt <= 32'd0;
    else if(tlx_afu_resp_valid)
@@ -592,13 +592,13 @@ module tlx_rsp_converter (
    else 
      rsp_idle_cnt <= rsp_idle_cnt + 32'd1;
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      rsp_idle_lim <= 32'd0;
    else
      rsp_idle_lim <= debug_tlx_rsp_idle_lim;
 
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      debug_tlx_rsp_idle <= 1'b0;
    else
@@ -614,7 +614,7 @@ module tlx_rsp_converter (
  reg fir_fifo_datcnv_e_overflow;
  reg fir_tlx_rsp_deficient_or_delayed;
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        fir_fifo_rd_rspcnv_overflow <= 1'b0; 
@@ -640,7 +640,7 @@ module tlx_rsp_converter (
          end
      end
 
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      begin
        fir_fifo_overflow <= 6'd0;
@@ -655,9 +655,9 @@ module tlx_rsp_converter (
  wire check_dpdl;
  wire clk_check;
  assign check_dpdl = fifo_dpdl_e_dv || fifo_dpdl_o_dv;
- assign clk_check  = clk_check && clk_tlx;
+ assign clk_check  = clk_check && clock_tlx;
 //==== PSL ASSERTION ==============================================================================
- // psl DPDL_FIFO_UNDERFLOW : assert never (fifo_dpdl_o_udfl | fifo_dpdl_e_udfl) @(posedge clk_tlx) report "dpdl FIFO underflow! dpdl FIFOs are used to store response information of dp and dl, which comes earlier than response data. So when response data arrives to read dpdl FIFOs, either of them are expeced to be empty.";
+ // psl DPDL_FIFO_UNDERFLOW : assert never (fifo_dpdl_o_udfl | fifo_dpdl_e_udfl) @(posedge clock_tlx) report "dpdl FIFO underflow! dpdl FIFOs are used to store response information of dp and dl, which comes earlier than response data. So when response data arrives to read dpdl FIFOs, either of them are expeced to be empty.";
  
  // psl DL_IN_PAIR : assert always (((rdata_dl == 2'b10) && (rdata_dp == 2'b00)) -> next ((rdata_dl == 2'b10) && (rdata_dp == 2'b01))) @(posedge clk_check) report "the sequence of dp for dl=2 should always be dp=00 -> dp=01! Assertion fires under the following circumstances: 1) dl=1 -> dl=2,dp=1; 2) dl=2,dp=0 -> dl=1.";
  
@@ -665,7 +665,7 @@ module tlx_rsp_converter (
 //==== PSL ASSERTION ==============================================================================
 
 //==== PSL COVERAGE ==============================================================================
- // psl RSP_FIFO_ALMOST_FULL : cover {(fifo_rd_rspcnv_wrcnt[4] || fifo_wr_rspcnv_wrcnt[4] || (fifo_datcnv_o_wrcnt > 4'd5))} @(posedge clk_tlx) ;
+ // psl RSP_FIFO_ALMOST_FULL : cover {(fifo_rd_rspcnv_wrcnt[4] || fifo_wr_rspcnv_wrcnt[4] || (fifo_datcnv_o_wrcnt > 4'd5))} @(posedge clock_tlx) ;
 //==== PSL COVERAGE ==============================================================================
 
 endmodule

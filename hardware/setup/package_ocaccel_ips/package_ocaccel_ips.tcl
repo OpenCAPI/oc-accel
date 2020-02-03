@@ -25,9 +25,9 @@ set fpga_part           $::env(FPGACHIP)
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 
-set tcl_dir             $root_dir/setup/create_ip_packages
-source $tcl_dir/common_funcs.tcl
-source $tcl_dir/define_interfaces.tcl
+set tcl_dir             $root_dir/setup/package_ocaccel_ips
+source $root_dir/setup/common_funcs.tcl
+source $root_dir/setup/define_interfaces.tcl
 
 
 #set ip_list [ dict create  \

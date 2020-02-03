@@ -85,11 +85,11 @@ module data_bridge #(
                    output     [1023:0]  dma_wr_cmd_data                  ,
                    output     [0127:0]  dma_wr_cmd_be                    ,
                    output     [0063:0]  dma_wr_cmd_ea                    ,
-                   output     [0005:0]  dma_wr_cmd_tag                   ,
+                   output     [TAGW-1:0]  dma_wr_cmd_tag                   ,
 
                    input                dma_wr_resp_valid                ,
                    input      [1023:0]  dma_wr_resp_data                 ,//N/A
-                   input      [0005:0]  dma_wr_resp_tag                  ,
+                   input      [TAGW-1:0]  dma_wr_resp_tag                  ,
                    input      [0001:0]  dma_wr_resp_pos                  ,
                    input      [0002:0]  dma_wr_resp_code                 ,
                 
@@ -98,11 +98,11 @@ module data_bridge #(
                    output     [1023:0]  dma_rd_cmd_data                  ,
                    output     [0127:0]  dma_rd_cmd_be                    ,
                    output     [0063:0]  dma_rd_cmd_ea                    ,
-                   output     [0005:0]  dma_rd_cmd_tag                   ,
+                   output     [TAGW-1:0]  dma_rd_cmd_tag                   ,
 
                    input                dma_rd_resp_valid                ,
                    input      [1023:0]  dma_rd_resp_data                 ,
-                   input      [0005:0]  dma_rd_resp_tag                  ,
+                   input      [TAGW-1:0]  dma_rd_resp_tag                  ,
                    input      [0001:0]  dma_rd_resp_pos                  ,
                    input      [0002:0]  dma_rd_resp_code                 ,
 

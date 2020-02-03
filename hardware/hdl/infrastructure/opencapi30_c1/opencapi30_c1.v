@@ -47,9 +47,9 @@ module opencapi30_c1
                   )
                   (
                    //---- synchronous clocks and reset ----------------------
-                   input                 clk_tlx                        ,
-                   input                 clk_afu                        ,
-                   input                 rst_n                          ,
+                   input                 clock_tlx                        ,
+                   input                 clock_afu                        ,
+                   input                 rst_n                            ,
 
                    //---- configurations ------------------------------------
                    input      [0003:0]   cfg_infra_backoff_timer              ,
@@ -293,8 +293,8 @@ wire  [0003:0] tlx_i_rsp_code   ;
 
 
 tlx_cmd_converter tlx_cmd_conv (
-                /*input                 */   .clk_tlx                         ( clk_tlx                         ),
-                /*input                 */   .clk_afu                         ( clk_afu                         ),
+                /*input                 */   .clock_tlx                         ( clock_tlx                         ),
+                /*input                 */   .clock_afu                         ( clock_afu                         ),
                 /*input                 */   .rst_n                           ( rst_n                           ),
 
                 //---- configuration ---------------------------------
@@ -371,8 +371,8 @@ tlx_cmd_converter tlx_cmd_conv (
 
 
 tlx_rsp_converter tlx_rsp_conv(
-                /*input                 */   .clk_tlx                         ( clk_tlx                         ),
-                /*input                 */   .clk_afu                         ( clk_afu                         ),
+                /*input                 */   .clock_tlx                         ( clock_tlx                         ),
+                /*input                 */   .clock_afu                         ( clock_afu                         ),
                 /*input                 */   .rst_n                           ( rst_n                           ),
 
                 //---- TLX side interface --------------------------------
@@ -446,7 +446,7 @@ command_encode
                   .MODE (1'b0) //0: write; 1: read
                   )
                 cmd_enc_w (
-                /*input                 */   .clk                          ( clk_afu                      ),
+                /*input                 */   .clk                          ( clock_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
 
                 //---- communication with command decoder -----
@@ -490,7 +490,7 @@ command_encode
                   .MODE  (1'b1) //0: write; 1: read
                   )
                 cmd_enc_r  (
-                /*input                 */   .clk                          ( clk_afu                      ),
+                /*input                 */   .clk                          ( clock_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
 
                 //---- communication with command decoder -----
@@ -539,7 +539,7 @@ response_decode
                  .MODE  (1'b0) //0: write; 1: read
                  )
                 rsp_dec_w (
-                /*input                 */   .clk               ( clk_afu           ),
+                /*input                 */   .clk               ( clock_afu           ),
                 /*input                 */   .rst_n             ( rst_n             ),
 
                 //---- configuration --------------------------------------
@@ -591,7 +591,7 @@ response_decode
                   .MODE  (1'b1) //0: write; 1: read
                   )
                 rsp_dec_r (
-                /*input                */   .clk               ( clk_afu           ),
+                /*input                */   .clk               ( clock_afu           ),
                 /*input                */   .rst_n             ( rst_n             ),
 
                 //---- configuration --------------------------------------
@@ -643,7 +643,7 @@ response_decode
 //===============================================================================================================
 
 context_surveil ctx_surveil(
-                /*input                 */   .clk                    ( clk_afu                ),
+                /*input                 */   .clk                    ( clock_afu                ),
                 /*input            if()     */   .rst_n                  ( rst_n                  ),
 
                 //---- configuration ---------------------------------
@@ -677,7 +677,7 @@ context_surveil ctx_surveil(
 //===============================================================================================================
 
  interrupt_tlx interrupt_tlx (
-                       /*input              */  .clk              (clk_afu             ),
+                       /*input              */  .clk              (clock_afu             ),
                        /*input              */  .rst_n            (rst_n               ),
                        /*input      [003:0] */  .backoff_limit    (cfg_infra_backoff_timer   ),
                        /*input              */  .interrupt_enable (last_context_cleared),

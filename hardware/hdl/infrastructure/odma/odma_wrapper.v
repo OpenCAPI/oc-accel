@@ -60,8 +60,8 @@ module odma_wrapper #(
                          )
                    (
                    //---- synchronous clocks and reset ----------------------
-                   input                 clk_tlx                        ,
-                   input                 clk_afu                        ,
+                   input                 clock_tlx                        ,
+                   input                 clock_afu                        ,
                    input                 rst_n                          ,
                    
                    // interrupt
@@ -424,8 +424,8 @@ brdg_tlx_cmd_converter tlx_cmd_conv (
                                              .fir_fifo_w_cmdcnv_overflow      (fir_fifo_w_cmdcnv_overflow       ),
                                              `endif
 
-                /*input                 */   .clk_tlx                         ( clk_tlx                         ),
-                /*input                 */   .clk_afu                         ( clk_afu                         ),
+                /*input                 */   .clock_tlx                         ( clock_tlx                         ),
+                /*input                 */   .clock_afu                         ( clock_afu                         ),
                 /*input                 */   .rst_n                           ( rst_n                           ),
 
                 //---- configuration ---------------------------------
@@ -506,8 +506,8 @@ brdg_tlx_rsp_converter tlx_rsp_conv(
                                              .fir_tlx_rsp_deficient_or_delayed (fir_tlx_rsp_deficient_or_delayed ),
                                              `endif
 
-                /*input                 */   .clk_tlx                         ( clk_tlx                         ),
-                /*input                 */   .clk_afu                         ( clk_afu                         ),
+                /*input                 */   .clock_tlx                         ( clock_tlx                         ),
+                /*input                 */   .clock_afu                         ( clock_afu                         ),
                 /*input                 */   .rst_n                           ( rst_n                           ),
 
                 //---- TLX side interface --------------------------------
@@ -580,7 +580,7 @@ brdg_command_encode
                                              .fir_fifo_prt_info_overflow   (wr_fir_fifo_prt_info_overflow   ),
                                              `endif
 
-                /*input                 */   .clk                          ( clk_afu                      ),
+                /*input                 */   .clk                          ( clock_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
                 //---- communication with command decoder -----
                 /*output                */   .prt_cmd_valid                ( w_prt_cmd_valid              ),
@@ -623,7 +623,7 @@ brdg_command_encode
                                              .fir_fifo_prt_info_overflow   (rd_fir_fifo_prt_info_overflow   ),
                                              `endif
 
-                /*input                 */   .clk                          ( clk_afu                      ),
+                /*input                 */   .clk                          ( clock_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
 
                 //---- communication with command decoder -----
@@ -676,7 +676,7 @@ brdg_response_decode
                                              .rsp_idle_count             (wr_rsp_idle_count),
                                              `endif
 
-                /*input                 */   .clk               ( clk_afu           ),
+                /*input                 */   .clk               ( clock_afu           ),
                 /*input                 */   .rst_n             ( rst_n             ),
 
                 //---- configuration --------------------------------------
@@ -724,7 +724,7 @@ brdg_response_decode
                                              .rsp_idle_count             (rd_rsp_idle_count),
                                              `endif
 
-                /*input                */   .clk               ( clk_afu           ),
+                /*input                */   .clk               ( clock_afu           ),
                 /*input                */   .rst_n             ( rst_n             ),
 
                 //---- configuration --------------------------------------
@@ -774,7 +774,7 @@ brdg_data_bridge
                                             .fir_fifo_rty_tag_overflow (wr_fir_fifo_rty_tag_overflow),
                                             `endif
 
-                /*input                */   .clk                 ( clk_afu             ),
+                /*input                */   .clk                 ( clock_afu             ),
                 /*input                */   .rst_n               ( rst_n               ),
                 /*output               */   .buf_empty           ( wbuf_empty          ),
 
@@ -830,7 +830,7 @@ brdg_data_bridge
                                             .fir_fifo_rty_tag_overflow (rd_fir_fifo_rty_tag_overflow),
                                             `endif
 
-                /*input                */   .clk                 ( clk_afu             ),
+                /*input                */   .clk                 ( clock_afu             ),
                 /*input                */   .rst_n               ( rst_n               ),
                 /*output               */   .buf_empty           ( rbuf_empty          ),
 
@@ -882,7 +882,7 @@ brdg_data_bridge
 //===============================================================================================================
 
 brdg_context_surveil ctx_surveil(
-                /*input                 */   .clk                    ( clk_afu                ),
+                /*input                 */   .clk                    ( clock_afu                ),
                 /*input            if()     */   .rst_n                  ( rst_n                  ),
 
                 //---- configuration ---------------------------------
@@ -916,7 +916,7 @@ brdg_context_surveil ctx_surveil(
 //===============================================================================================================
 
  brdg_interrupt mbrdg_interrupt ( 
-                       /*input              */  .clk              (clk_afu             ),
+                       /*input              */  .clk              (clock_afu             ),
                        /*input              */  .rst_n            (rst_n               ),
                        /*input      [003:0] */  .backoff_limit    (cfg_backoff_timer   ),
                        /*input              */  .interrupt_enable (last_context_cleared),
@@ -956,7 +956,7 @@ odma
                     .AXI_ST_USER   (AXI_ST_USER)
                    )
                 odma (
-                /*input                 */   .clk                      ( clk_afu            ),
+                /*input                 */   .clk                      ( clock_afu            ),
                 /*input                 */   .rst_n                    ( rst_n              ),
                 /*input                 */   .action_interrupt         ( interrupt          ),
                 /*input [0008:0]        */   .action_interrupt_ctx     ( interrupt_ctx      ),
