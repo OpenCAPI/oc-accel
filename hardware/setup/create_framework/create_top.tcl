@@ -67,7 +67,7 @@ connect_bd_net [get_bd_pins /oc_host_if_0/ocde] [get_bd_ports ocde]
 regenerate_bd_layout
 validate_bd_design
 save_bd_design [current_bd_design]
-make_wrapper -files [get_files $project_dir/${project}.srcs/sources_1/bd/$bd_name/$bd_name/bd] -top
+make_wrapper -files [get_files $project_dir/${project}.srcs/sources_1/bd/$bd_name/$bd_name.bd] -top -force
 add_files -norecurse $project_dir/${project}.srcs/sources_1/bd/$bd_name/hdl/${bd_name}_wrapper.v
 
 # Do we need to add constraint files here? 
