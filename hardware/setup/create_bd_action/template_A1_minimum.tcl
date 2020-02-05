@@ -2,7 +2,7 @@
 set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_part        $::env(FPGACHIP)
 set project "A1_minimum"
-set project_dir      $root_dir/temp_bd/$project
+set project_dir      $root_dir/build/temp_bd/$project
 
 set ip_repo_dir     $root_dir/ip_repo
 set interfaces_dir  $root_dir/interfaces

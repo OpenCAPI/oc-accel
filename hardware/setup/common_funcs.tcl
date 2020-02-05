@@ -65,5 +65,31 @@ proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_s
    close_project
 }
 
+proc my_get_build_date {} {
+    set build_date [exec date "+%Y%m%d%H%M"]
+    puts "build_date is $build_date"
+    return "0x$build_date"
+}
 
+proc my_get_imp_version {} {
+    set imp_version [exec git describe --tags --always]
+    return "0x$imp_version"
+}
+
+proc my_get_card_type {} {
+    set fpgacard $::env(FPGACARD)
+    if { $fpgacard eq "AD9V3" } {
+        set card_type "0x31"
+    }
+    if { $fpgacard eq "AD9H3" } {
+        set card_type "0x32"
+    }
+    if { $fpgacard eq "AD9H7" } {
+        set card_type "0x33"
+    }
+    if { $fpgacard eq "N250SOC" } {
+        set card_type "0x34"
+    }
+    return $card_type
+}
 

@@ -25,16 +25,39 @@ set fpga_part           $::env(FPGACHIP)
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 
-set tcl_dir             $root_dir/setup/package_action_wrapper
+set tcl_dir             $root_dir/setup/package_hostside_ips
 source $root_dir/setup/common_funcs.tcl
-#source $tcl_dir/define_interfaces.tcl
+#source $root_dir/setup/define_interfaces.tcl
 
-set bus_array ""
+
+
+
+##proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
+#############################################################################
+set bus_array [dict create tlx_afu "master" \
+                          afu_tlx "slave"   \
+                          cfg_flsh "master" \
+                          cfg_vpd "master"  \
+                          cfg_infra_c1 "master"  \
+                          oc_phy  ""        \
+             ]
 my_package_custom_ip $root_dir/build/temp_projs \
                      $root_dir/ip_repo    \
                      $root_dir/interfaces \
                      $fpga_part           \
-                     action_wrapper           \
-                     $tcl_dir/add_action_wrapper.tcl      \
+                     oc_host_if           \
+                     $tcl_dir/add_opencapi30_host_if.tcl      \
+                     $bus_array
+
+############################################################################
+set bus_array [dict create cfg_flsh "slave"   \
+                           cfg_vpd "slave"     \
+             ]
+my_package_custom_ip $root_dir/build/temp_projs \
+                     $root_dir/ip_repo    \
+                     $root_dir/interfaces \
+                     $fpga_part           \
+                     flash_vpd_wrapper    \
+                     $fpga_card_dir/tcl/add_flash_vpd_wrapper.tcl      \
                      $bus_array
 

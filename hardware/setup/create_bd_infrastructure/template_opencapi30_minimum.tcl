@@ -1,12 +1,20 @@
 
 set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_part        $::env(FPGACHIP)
-set project "opencapi30_minimum"
-set project_dir      $root_dir/temp_bd/$project
+set project "T1_minimum"
+set project_dir      $root_dir/build/temp_bd/$project
 
 set ip_repo_dir     $root_dir/ip_repo
 set interfaces_dir  $root_dir/interfaces
 set bd_name         "T1"
+
+source $root_dir/setup/common_funcs.tcl
+set imp_version [eval my_get_imp_version]
+set build_date [eval my_get_build_date]
+set card_type [eval my_get_card_type]
+
+###############################################################################
+# Create project and bd
 
 create_project $project $project_dir -part $fpga_part
 create_bd_design $bd_name
@@ -18,6 +26,10 @@ update_ip_catalog
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:bridge_axi_slave:1.0 bridge_axi_slave_0
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:data_bridge:1.0 data_bridge_0
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:mmio_axilite_master:1.0 mmio_axilite_master_0
+set_property -dict [list CONFIG.IMP_VERSION $imp_version ] [get_bd_cells mmio_axilite_master_0]
+set_property -dict [list CONFIG.BUILD_DATE $build_date ] [get_bd_cells mmio_axilite_master_0]
+set_property -dict [list CONFIG.CARD_TYPE $card_type ] [get_bd_cells mmio_axilite_master_0]
+
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_c1:1.0 opencapi30_c1_0
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_mmio:1.0 opencapi30_mmio_0
 
