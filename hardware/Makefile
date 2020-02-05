@@ -31,9 +31,9 @@ export LOGS_DIR=$(OCACCEL_HARDWARE_ROOT)/logs
 export MAKE_TARGET=$(MAKECMDGOALS)
 export OCACCEL_CFLAGS
 
-OCACCEL_config_cflags = $(OCACCEL_ROOT)/.ocaccel_config.cflags
-OCACCEL_config_sh     = $(OCACCEL_ROOT)/.ocaccel_config.sh
-OCACCEL_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
+ocaccel_config_cflags = $(OCACCEL_ROOT)/.ocaccel_config.cflags
+ocaccel_config_sh     = $(OCACCEL_ROOT)/.ocaccel_config.sh
+ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 
 -include $(OCACCEL_config_cflags)
 -include $(OCACCEL_config_sh)
@@ -46,11 +46,12 @@ SIMULATOR ?= nosim
 
 ## variables just for this Makefile
 SETUP_DIR=$(OCACCEL_HARDWARE_ROOT)/setup
-BUILD_DIR=$(OCACCEL_HARDWARE_ROOT)/build
 SIM_DIR=$(OCACCEL_HARDWARE_ROOT)/sim
 
-IP_REPO_DIR=$(OCACCEL_HARDWARE_ROOT)/ip_repo
-INTERFACE_DIR=$(OCACCEL_HARDWARE_ROOT)/interfaces
+BUILD_DIR=$(OCACCEL_HARDWARE_ROOT)/build
+IP_REPO_DIR=$(BUILD_DIR)/ip_repo
+INTERFACES_DIR=$(BUILD_DIR)/interfaces
+VIV_PROJ_DIR=$(BUILD_DIR)/viv_project
 
 
 OCACCEL_SIMULATORS += xsim xcelium
@@ -64,7 +65,7 @@ endif
 
 
 #OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/oc-bip/sim/src/$(sim_top).sv
-OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)hdl/common/ocaccel_global_vars.v
+OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/snap_global_vars.v
 
 
 
@@ -84,7 +85,7 @@ all: model image
 ocaccel_config:
 	@$(MAKE) -C $(OCACCEL_ROOT) OCACCEL_config
 
-check_ocaccel_Settings:
+check_ocaccel_settings:
 	@if [ -z `which git 2> /dev/null` ]; then \
 		echo "                        The OC-Accel framework make process relies on git."; \
 		echo "                        Please make sure that you have installed git and"; \
@@ -148,8 +149,9 @@ prepare_logs:
 
 prepare_project: check_ocaccel_settings prepare_logs
 	@echo -e "[PREPARE PROJECT.....] start `date +"%T %a %b %d %Y"`";
-	@mkdir -p $(INTERFACE_DIR);
 	@mkdir -p $(BUILD_DIR);
+	@mkdir -p $(INTERFACES_DIR);
+	@mkdir -p $(IP_REPO_DIR);
 	@mkdir -p $(BUILD_DIR)/Reports;
 	@mkdir -p $(BUILD_DIR)/Images;
 	@mkdir -p $(BUILD_DIR)/Checkpoints;
@@ -157,7 +159,7 @@ prepare_project: check_ocaccel_settings prepare_logs
 		cd $(OCACCEL_ROOT); \
 		git submodule update --init --recursive hardware/oc-accel-bsp; \
 	fi;
-	@echo "write_cfgmem -force -format bin -size $(FLASH_SIZE) -interface $(FLASH_INTERFACE) -loadbit \"up 0x0 $(OCACCEL_HARDWARE_ROOT)/viv_project/fpga_top.runs/impl_1/fpga_top.bit\" $(OCACCEL_HARDWARE_ROOT)/viv_project/fpga_top.runs/impl_1/$(CAPI_VER)_fpga_top_$(PHY_SPEED)_`date +%H%M_%b_%d`" > $(ocaccel_HARDWARE_ROOT)/setup/ocaccel_bitstream_post.tcl;
+	@echo "write_cfgmem -force -format bin -size $(FLASH_SIZE) -interface $(FLASH_INTERFACE) -loadbit \"up 0x0 $(OCACCEL_HARDWARE_ROOT)/viv_project/fpga_top.runs/impl_1/fpga_top.bit\" $(OCACCEL_HARDWARE_ROOT)/viv_project/fpga_top.runs/impl_1/$(CAPI_VER)_fpga_top_$(PHY_SPEED)_`date +%H%M_%b_%d`" > $(OCACCEL_HARDWARE_ROOT)/setup/ocaccel_bitstream_post.tcl;
 	@echo -e "[PREPARE PROJECT.....] done  `date +"%T %a %b %d %Y"`";
 
 ################################# Preprocess files  #######################
@@ -210,35 +212,28 @@ action_hw: prepare_logs
 	@echo -e "[CONFIG ACTION HW....] done  `date +"%T %a %b %d %Y"`";
 
 ###############################################################################
-# Usually no need to update, use the hidden file .package_hostside_ips_done to 
+# Usually no need to update, use the hidden file .package_hostside_done to 
 # indicate that this step has been executed 
-.package_hostside_ips_done:
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_hostside_ips/package_hostside_ips.tcl -notrace -log $(LOGS_DIR)/package_hostside_ips.log -journal $(LOGS_DIR)/package_hostside_ips.jou
-	@touch .package_hostside_ips_done
+define_interface:
+	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/common/define_interfaces.tcl -notrace -log $(LOGS_DIR)/define_interfaces.log  -journal $(LOGS_DIR)/define_interfaces.jou
 
+package_hostside:
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_hostside/package_hostside_ips.tcl -notrace -log $(LOGS_DIR)/package_hostside_ips.log -journal $(LOGS_DIR)/package_hostside_ips.jou
 
-.package_infrastructure_ips_done:
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure_ips/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou
-	@touch .package_infrastructure_ips_done
+package_infrastructure:
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_1.tcl -notrace -log $(LOGS_DIR)/bd_infra_template_1.log -journal $(LOGS_DIR)/bd_infra_template_1.jou
 
-create_bd_infrastructure:
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_bd_infrastructure/create_bd_infrastructure.tcl -notrace -log $(LOGS_DIR)/create_bd_infrastructure.log -journal $(LOGS_DIR)/create_bd_infrastructure.jou
+package_action:
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_10.tcl -notrace -log $(LOGS_DIR)/bd_action_template_10.log -journal $(LOGS_DIR)/bd_action_template_10.jou
 
-create_bd_action:
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_bd_action/create_bd_action.tcl -notrace -log $(LOGS_DIR)/create_bd_action.log -journal $(LOGS_DIR)/create_bd_action.jou
-
-hw_project: ocaccel_preprocess action_hw
+hw_project: ocaccel_preprocess action_hw define_interface package_hostside package_infrastructure package_action
 	@echo -e "[CREATE HW_PROJECT......] start `date +"%T %a %b %d %Y"`";
 	@echo -e "                        using `vivado -version |grep Vivado`"
 	@echo -e "                        CAPI_VER=$(CAPI_VER)"
-	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/define_interface.tcl -notrace -log $(LOGS_DIR)/define_interface.log  -journal $(LOGS_DIR)/define_interface.jou
-	@$(MAKE) -s .package_hostside_ips_done
-	@$(MAKE) -s .package_infrastructure_ips_done
-	@$(MAKE) -s create_bd_infrastructure
-	@$(MAKE) -s create_bd_action
-	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_bd_top/create_top.tcl -notrace -log $(LOGS_DIR)/create_top.log  -journal $(LOGS_DIR)/create_top.jou
+	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_framework.log  -journal $(LOGS_DIR)/create_framework.jou
 	@echo -e "[CREATE HW_PROJECT......] done  `date +"%T %a %b %d %Y"`"
-	touch .hw_project_done
 
 
 ###############################################################################
@@ -385,11 +380,11 @@ clean:
 	          *build
 	@$(RM) $(OCACCEL_ROOT)/hardware/hdl/core/*_tmp
 	@echo -e "                        vivado project" 1>/dev/null 2>/dev/null; 
-	@$(RM) -r viv_project*
+	@$(RM) -r $(VIV_PROJ_DIR)*
 	@echo -e "                        IPs" 1>/dev/null 2>/dev/null;
-	@$(RM) -r ip_repo
+	@$(RM) -r $(IP_REPO_DIR)
 	@echo -e "                        Interface definitions" 1>/dev/null 2>/dev/null;
-	@$(RM) -r interfaces
+	@$(RM) -r $(INTERFACES_DIR)
 	@echo -e "                        sim files" 1>/dev/null 2>/dev/null;
 	@$(RM) -r sim/ies sim/xsim sim/modelsim sim/questa sim/xcelium 
 	@echo -e "                        log files" 1>/dev/null 2>/dev/null;

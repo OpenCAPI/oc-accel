@@ -25,9 +25,8 @@ set fpga_part           $::env(FPGACHIP)
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 
-set tcl_dir             $root_dir/setup/package_hostside_ips
-source $root_dir/setup/common_funcs.tcl
-#source $root_dir/setup/define_interfaces.tcl
+set tcl_dir             $root_dir/setup/package_hostside
+source $root_dir/setup/common/common_funcs.tcl
 
 
 
@@ -42,8 +41,8 @@ set bus_array [dict create tlx_afu "master" \
                           oc_phy  ""        \
              ]
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      oc_host_if           \
                      $tcl_dir/add_opencapi30_host_if.tcl      \
@@ -54,8 +53,8 @@ set bus_array [dict create cfg_flsh "slave"   \
                            cfg_vpd "slave"     \
              ]
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      flash_vpd_wrapper    \
                      $fpga_card_dir/tcl/add_flash_vpd_wrapper.tcl      \

@@ -6,11 +6,11 @@ all:
 
 .PHONY += help
 help:
-	@echo "SNAP configuration system"
+	@echo "OCACCEL configuration system"
 	@echo
 	@echo "  Please ensure that you have installed your Linux kernel"
 	@echo "  sources and the tools to build and configure it. We are"
-	@echo "  using the same infrastructure to generate the SNAP"
+	@echo "  using the same infrastructure to generate the OCACCEL"
 	@echo "  configuration files."
 	@echo
 	@echo "Possible targets are:"
@@ -23,7 +23,7 @@ help:
 
 .PHONY += menuconfig gconfig xconfig config oldconfig silentoldconfig prepare clean distclean
 menuconfig gconfig xconfig config oldconfig silentoldconfig prepare:
-	./snap_cfg -o $@ 2>/dev/null
+	./ocaccel_cfg -o $@ 2>/dev/null
 
 install:
 

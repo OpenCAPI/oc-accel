@@ -1,18 +1,9 @@
 `timescale 1ns/1ps
 `define DEBUG
 `define FRAMEWORK
-`define OPENCAPI30
-
-
-
-
-`define AD9V3
-`define ENABLE_AXI_CARD_MEM
-`define ENABLE_BRAM
-`define ACTION_HALF_WIDTH
-  `define IMP_VERSION_DAT 64'h10_00_46FF_516C_8706
-  `define BUILD_DATE_DAT 64'h0000_2019_1223_0903
-  `define CARD_TYPE 8'h31
+  `define IMP_VERSION_DAT 64'h0
+  `define BUILD_DATE_DAT 64'h0
+  `define CARD_TYPE 8'h0
 
 
   `define HLS_ACTION_TYPE 32'h0
@@ -28,7 +19,7 @@
 
 
 
-`define IDW 1
+
 
   `define CTXW 9
   `define TAGW 7

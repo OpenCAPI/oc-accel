@@ -25,14 +25,14 @@ set fpga_part           $::env(FPGACHIP)
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 
-set tcl_dir             $root_dir/setup/package_action_wrapper
-source $root_dir/setup/common_funcs.tcl
-#source $tcl_dir/define_interfaces.tcl
+set tcl_dir             $root_dir/setup/package_action
+source $root_dir/setup/common/common_funcs.tcl
+#source $tcl_dir/define_build/interfaces/g.tcl
 
 set bus_array ""
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      action_wrapper           \
                      $tcl_dir/add_action_wrapper.tcl      \

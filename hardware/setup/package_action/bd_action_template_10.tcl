@@ -1,12 +1,12 @@
 
 set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_part        $::env(FPGACHIP)
-set project "A1_minimum"
-set project_dir      $root_dir/build/temp_bd/$project
+set project "bd_action"
+set project_dir      $root_dir/build/temp_projs/$project
 
-set ip_repo_dir     $root_dir/ip_repo
-set interfaces_dir  $root_dir/interfaces
-set bd_name         "A1"
+set ip_repo_dir     $root_dir/build/ip_repo
+set interfaces_dir  $root_dir/build/interfaces
+set bd_name         "action_template_10"
 
 create_project $project $project_dir -part $fpga_part
 create_bd_design $bd_name
@@ -41,7 +41,7 @@ regenerate_bd_layout
 save_bd_design [current_bd_design]
 make_wrapper -files [get_files $project_dir/${project}.srcs/sources_1/bd/$bd_name/$bd_name/bd] -top
 
-ipx::package_project -root_dir $root_dir/ip_repo -vendor opencapi.org -library ocaccel -taxonomy /UserIP -module $bd_name -import_files
+ipx::package_project -root_dir $ip_repo_dir/$bd_name -vendor opencapi.org -library ocaccel -taxonomy /UserIP -module $bd_name -import_files
 
 set_property core_revision 2 [ipx::find_open_core opencapi.org:ocaccel:$bd_name:1.0]
 ipx::create_xgui_files [ipx::find_open_core opencapi.org:ocaccel:$bd_name:1.0]

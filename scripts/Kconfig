@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# SNAP Configuration Assistant
+# OCACCEL Configuration Assistant
 #   Please select card and appropriate options
 #
 ###############################################################################
@@ -84,7 +84,7 @@ config NUM_OF_ACTIONS
 #        prompt "Number Of Actions"
 	range 1 1
 	help
-	  SNAP currently supports one action.
+	  OCACCEL currently supports one action.
 
 choice
 	bool "Action Type"
@@ -97,21 +97,21 @@ choice
 	default HDL_EXAMPLE
 
 	config HLS_ACTION
-		bool "HLS Action - manually set ACTION_ROOT in snap_env.sh!"
+		bool "HLS Action - manually set ACTION_ROOT in ocaccel_env.sh!"
 		select ENABLE_HLS_SUPPORT
 		help
 		  This option is a placeholder for an action written by the user in HLS.
 		  Please remember to set the environment variable "ACTION_ROOT"
-		  in snap_env.sh to the directory of the action source code.
+		  in ocaccel_env.sh to the directory of the action source code.
 		  Also need to select the AXI data width to host is 512b or 1024b.
 
 	config HDL_ACTION
-		bool "HDL Action - manually set ACTION_ROOT in snap_env.sh!"
+		bool "HDL Action - manually set ACTION_ROOT in ocaccel_env.sh!"
 		help
 		  This option is a placeholder for an action written by the user in a
 		  hardware description language such as VHDL or Verilog.
 		  Please remember to set the environment variable "ACTION_ROOT"
-		  in snap_env.sh to the directory of the action source code.
+		  in ocaccel_env.sh to the directory of the action source code.
 		  Also need to select the AXI data width to host is 512b or 1024b.
 
 	config HDL_EXAMPLE
@@ -231,7 +231,7 @@ config ENABLE_DDR
 	depends on (AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
 	help
 	  This option enables the on-card SDRAM.
-	  SNAP supports FIXME GB DDR4
+	  OCACCEL supports FIXME GB DDR4
 	#FIXME
 
 config SDRAM_USED
@@ -547,7 +547,7 @@ config ENABLE_ILA
 	  Used for debugging the design by inserting probes into the FPGA
 	  Enable the usage of Vivado's integrated logic analyzer. There are
 	  two ways: 
-	  (1) Use xdc file. Please make sure that $ILA_SETUP_FILE in snap_env.sh
+	  (1) Use xdc file. Please make sure that $ILA_SETUP_FILE in ocaccel_env.sh
 	  points to the .xdc file (See example in hardware/setup/ila_example.xdc).
 	  (2) Create an ILA ip core and instantiate it in your design. Put the "create_ip"
 	  commands in your tcl file, and include the ila core in your Verilog design

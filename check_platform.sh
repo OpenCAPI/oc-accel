@@ -15,24 +15,24 @@
 ## limitations under the License.
 ##
 
-if [[ -z ${SNAP_ROOT} ]]; then
-    echo "err: SNAP_ROOT not set!"
+if [[ -z ${OCACCEL_ROOT} ]]; then
+    echo "err: OCACCEL_ROOT not set!"
     exit 1
 fi
 
-SNAP_MAINT="${SNAP_ROOT}/software/tools/snap_maint"
+OCACCEL_MAINT="${OCACCEL_ROOT}/software/tools/ocaccel_maint"
 
-# echo -n "Checking ${SNAP_MAINT} ... "
-if [ ! -x ${SNAP_MAINT} ]; then
+# echo -n "Checking ${OCACCEL_MAINT} ... "
+if [ ! -x ${OCACCEL_MAINT} ]; then
     # echo "Not build yet!"
     exit 0
 fi
 # echo "OK"
 
 # Software seems to be build, check if it is properly executable
-# echo -n "Trying out ${SNAP_MAINT} ... "
+# echo -n "Trying out ${OCACCEL_MAINT} ... "
 error=0
-${SNAP_MAINT} -h &> /dev/null || error=1
+${OCACCEL_MAINT} -h &> /dev/null || error=1
 if [ $error -eq 1 ]; then
     # echo "Not executable!"
     exit 1

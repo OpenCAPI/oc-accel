@@ -2,9 +2,7 @@
 
 #------------------------------------------------------------------------------
 proc my_create_bus_interface {bus_path bus_name port_list} {
-   puts "    <<<"
    puts "    <<< Creating bus_interface $bus_name to $bus_path"
-   puts "    <<<"
    set vendor "opencapi.org"
    set lib "ocaccel"
    set ver "1.0"
@@ -27,9 +25,7 @@ proc my_create_bus_interface {bus_path bus_name port_list} {
 #------------------------------------------------------------------------------
 proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
 
-   puts "    <<<"
    puts "    <<< Package customer design $ip_name to $ip_path"
-   puts "    <<<"
    set vendor "opencapi.org"
    set lib "ocaccel"
    set ver "1.0"

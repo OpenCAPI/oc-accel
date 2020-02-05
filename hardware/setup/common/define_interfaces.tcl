@@ -2,7 +2,8 @@
 # This script has one argument: root_dir
 
 set root_dir $::env(OCACCEL_HARDWARE_ROOT)
-set interface_repo "$root_dir/interfaces"
+source $root_dir/setup/common/common_funcs.tcl
+set interface_repo "$root_dir/build/interfaces"
 puts "interface_repo is set to $interface_repo"
 
 # Add interfaces

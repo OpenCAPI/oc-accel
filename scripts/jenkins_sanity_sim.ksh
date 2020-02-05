@@ -12,7 +12,7 @@ else
     IESL=$2
 fi
 
-SNAP_ROOT=`pwd`
+OCACCEL_ROOT=`pwd`
 . ./setup_tools.ksh
 
 export IES_LIBS=$IESL

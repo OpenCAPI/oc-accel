@@ -25,9 +25,9 @@ set fpga_part           $::env(FPGACHIP)
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 
-set tcl_dir             $root_dir/setup/package_infrastructure_ips
-source $root_dir/setup/common_funcs.tcl
-#source $root_dir/setup/define_interfaces.tcl
+set tcl_dir             $root_dir/setup/package_infrastructure
+source $root_dir/setup/common/common_funcs.tcl
+#source $root_dir/setup/define_build/interfaces.tcl
 
 
 #set ip_list [ dict create  \
@@ -43,8 +43,8 @@ source $root_dir/setup/common_funcs.tcl
 #foreach ip_name [dict keys $ip_list ] {
 #    set tcl_file [dict get $ip_list $ip_name]
 #    my_package_custom_ip $root_dir/build/temp_projs \
-#                         $root_dir/ip_repo    \
-#                         $root_dir/interfaces \
+#                         $root_dir/build/ip_repo    \
+#                         $root_dir/build/interfaces \
 #                         $fpga_part           \
 #                         $ip_name             \
 #                         $tcl_file            
@@ -60,8 +60,8 @@ set bus_array [dict create dma_wr "master"   \
                            lcl_rd "slave"    \
              ]
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      data_bridge    \
                      $tcl_dir/add_data_bridge.tcl      \
@@ -72,8 +72,8 @@ set bus_array [dict create                   \
                            lcl_rd "master"    \
              ]
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      bridge_axi_slave    \
                      $tcl_dir/add_bridge_axi_slave.tcl      \
@@ -83,8 +83,8 @@ my_package_custom_ip $root_dir/build/temp_projs \
 set bus_array [dict create mmio "slave"   \
              ]
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      mmio_axilite_master    \
                      $tcl_dir/add_mmio_axilite_master.tcl      \
@@ -95,8 +95,8 @@ set bus_array [dict create tlx_afu "slave"   \
                            mmio "master"     \
              ]
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      opencapi30_mmio    \
                      $tcl_dir/add_opencapi30_mmio.tcl      \
@@ -109,8 +109,8 @@ set bus_array [dict create afu_tlx "master"   \
                            cfg_infra_c1 "slave"     \
              ]
 my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/ip_repo    \
-                     $root_dir/interfaces \
+                     $root_dir/build/ip_repo    \
+                     $root_dir/build/interfaces \
                      $fpga_part           \
                      opencapi30_c1    \
                      $tcl_dir/add_opencapi30_c1.tcl      \
