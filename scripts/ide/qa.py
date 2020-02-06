@@ -33,7 +33,7 @@ Hints:
 You can:    1) type 'terminal' to have a pop up window and
                you can manually input any testcase in that window.
 or you can: 2) type any kind of command line you would like to run as testcase.
-               for example, 'snap_example -vv -a 6'
+               for example, 'ocaccel_example -vv -a 6'
 Please type the testcase: 
 '''
 ask_make_image_str = "Do you want to make FPGA image?"
@@ -82,11 +82,11 @@ class QuestionAndAnswer():
                                      choice_str)))
 
             if a.upper() == "Y":
-                msg.header_msg("Got Yes! Proceed to configure SNAP.")
+                msg.header_msg("Got Yes! Proceed to configure OCACCEL.")
                 self.options.no_configure = False
                 return self.options
 
-        msg.header_msg("Got No! Skip configuring SNAP.")
+        msg.header_msg("Got No! Skip configuring OCACCEL.")
         self.options.no_configure = True
         return self.options
 

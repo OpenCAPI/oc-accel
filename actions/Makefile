@@ -19,8 +19,8 @@ subdirs += $(wildcard hls_*) $(wildcard hdl_*)
 software_subdirs = $(addsuffix /sw,$(subdirs))
 hardware_subdirs = $(addsuffix /hw,$(subdirs))
 
--include ../snap_env.sh
--include ../.snap_config.sh
+-include ../ocaccel_env.sh
+-include ../.ocaccel_config.sh
 
 # Build all subdirs is normally not needed, but useful to check if
 # all HLS code synthesizes well.

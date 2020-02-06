@@ -17,7 +17,7 @@
 #
 
 #
-# Figure out SNAP supported cards in the system. We have AlphaData KU3
+# Figure out OCACCEL supported cards in the system. We have AlphaData KU3
 # and Nallatech 250S cards. This script should help automatic testing of
 # any available cards in one system. It should print out a list of
 # available cards of each type.
@@ -100,7 +100,7 @@ function wait_no_flash_oc() {
 # which is the unique id the card has. The combination of both, should
 # be more or less bullet prove.
 #
-function detect_snap_cards() {
+function detect_ocaccel_cards() {
 	local check_dev=$1
 	local check_sub=$2
 	local card_name=$3
@@ -354,108 +354,108 @@ RC=0
 case ${accel} in
 	# KU3 Card from AlphaData
 	"ADKU3")
-		detect_snap_cards "0x0632" "0x0605" "ADKU3"
+		detect_ocaccel_cards "0x0632" "0x0605" "ADKU3"
 		RC=$?
 		;;
 	# NSA121B Card from Semptian BPIx16
 	"S121B_BPIx16")
-		detect_snap_cards "0x0632" "0x0607" "S121B_v16.1_BPIx16"
+		detect_ocaccel_cards "0x0632" "0x0607" "S121B_v16.1_BPIx16"
 		RC=$?
 		;;
 	# NSA121B Card from Semptian SPIx4
 	"S121B_SPIx4")
-		detect_snap_cards "0x0632" "0x0664" "S121B_v16.2_SPIx4"
+		detect_ocaccel_cards "0x0632" "0x0664" "S121B_v16.2_SPIx4"
 		RC=$?
 		;;
 	# 250s Card from Nallatech
 	"N250S")
-		detect_snap_cards "0x0632" "0x060a" "N250S"
+		detect_ocaccel_cards "0x0632" "0x060a" "N250S"
 		RC=$?
 		;;
 	# AD8K5 Card from AlphaData
 	"AD8K5")
-		detect_snap_cards "0x0632" "0x0608" "AD8K5"
+		detect_ocaccel_cards "0x0632" "0x0608" "AD8K5"
 		RC=$?
 		;;
 	# RCXVUP CAPI 2.0 card from ReflexCES
 	"RCXVUP")
-		detect_snap_cards "0x0632" "0x060c" "RCXVUP"
+		detect_ocaccel_cards "0x0632" "0x060c" "RCXVUP"
 		RC=$?
 		;;
-	# N250SP CAPI 2.0 card from Nallatech (SNAP mode)
+	# N250SP CAPI 2.0 card from Nallatech (OCACCEL mode)
 	"N250SP")
-		detect_snap_cards "0x0632" "0x060d" "N250SP"
+		detect_ocaccel_cards "0x0632" "0x060d" "N250SP"
 		RC=$?
 		;;
 	# S241 CAPI 2.0 card from Semptian
 	"S241")
-		detect_snap_cards "0x0632" "0x0660" "S241"
+		detect_ocaccel_cards "0x0632" "0x0660" "S241"
 		RC=$?
 		;;
 	# FX609 CAPI 2.0 card from Flyslice
 	"FX609")
-		detect_snap_cards "0x0632" "0x0661" "FX609"
+		detect_ocaccel_cards "0x0632" "0x0661" "FX609"
 		RC=$?
 		;;
 	# N250SP CAPI 2.0 card from Nallatech (FlashGT+ mode)
 	"N250SP")
-		detect_snap_cards "0x0632" "0x04dd" "N250SP"
+		detect_ocaccel_cards "0x0632" "0x04dd" "N250SP"
 		RC=$?
 		;;
 	# AD9V3 CAPI 3.0 card from Alphadata
 	"OC-AD9V3")
-		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
+		detect_ocaccel_cards "0x062b" "0x060f" "OC-AD9V3"
 		RC=$?
 		;;
 	# U200 CAPI 2.0 card from Xilinx
 	"U200")
-		detect_snap_cards "0x0632" "0x0665" "U200"
+		detect_ocaccel_cards "0x0632" "0x0665" "U200"
 		RC=$?
 		;;
 	# AD9V3 CAPI 2.0 card from Alphadata
         "AD9V3")
-                detect_snap_cards "0x0632" "0x060f" "AD9V3"
+                detect_ocaccel_cards "0x0632" "0x060f" "AD9V3"
                 RC=$?
                 ;;
 	"ALL")
 		# detect all cards and add Number of Cards
-		detect_snap_cards "0x0632" "0x0605" "ADKU3"
+		detect_ocaccel_cards "0x0632" "0x0605" "ADKU3"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x0607" "S121B_v16.1_BPIx16"
+		detect_ocaccel_cards "0x0632" "0x0607" "S121B_v16.1_BPIx16"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x0664" "S121B_v16.2_SPIx4"
+		detect_ocaccel_cards "0x0632" "0x0664" "S121B_v16.2_SPIx4"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x060a" "N250S"
+		detect_ocaccel_cards "0x0632" "0x060a" "N250S"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x0608" "AD8K5"
+		detect_ocaccel_cards "0x0632" "0x0608" "AD8K5"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x060c" "RCXVUP"
+		detect_ocaccel_cards "0x0632" "0x060c" "RCXVUP"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x060d" "N250SP"
+		detect_ocaccel_cards "0x0632" "0x060d" "N250SP"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x0661" "FX609"
+		detect_ocaccel_cards "0x0632" "0x0661" "FX609"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x0660" "S241"
+		detect_ocaccel_cards "0x0632" "0x0660" "S241"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x04dd" "N250SP"
+		detect_ocaccel_cards "0x0632" "0x04dd" "N250SP"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x060f" "AD9V3"
+		detect_ocaccel_cards "0x0632" "0x060f" "AD9V3"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x0665" "U200"
+		detect_ocaccel_cards "0x0632" "0x0665" "U200"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
+		detect_ocaccel_cards "0x062b" "0x060f" "OC-AD9V3"
 		RC=$((RC + $?))
 		echo -e "\nTotal $RC cards detected \n"
  		;;

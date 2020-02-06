@@ -18,7 +18,7 @@ $ git config --global user.email johndoe@example.com
 ```
 Then, for every commit, use `git commit -s` to add the "Signed-off by ..." message.
 
-By default the git repository is read-only. Users can fork the snap repository, make the changes there and issue a pull request.
+By default the git repository is read-only. Users can fork the ocaccel repository, make the changes there and issue a pull request.
 Even members with write access to this repository can't commit directly into the protected master branch. To contribute changes, please create a branch, make the changes there and issue a pull request.
 
 Pull requests to merge into the master branch must be reviewed before they will be merged.

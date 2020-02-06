@@ -15,7 +15,7 @@
  */
 
 /*
- * SNAP HLS_HELLOWORLD EXAMPLE
+ * OCACCEL HLS_HELLOWORLD EXAMPLE
  *
  * Tasks for the user:
  *   1. Explore HLS pragmas to get better timing behavior.
@@ -29,9 +29,9 @@
 //----------------------------------------------------------------------
 //--- MAIN PROGRAM -----------------------------------------------------
 //----------------------------------------------------------------------
-static int process_action(snap_membus_t *din_gmem,
-	      snap_membus_t *dout_gmem,
-	      /* snap_membus_t *d_ddrmem, *//* not needed */
+static int process_action(ocaccel_membus_t *din_gmem,
+	      ocaccel_membus_t *dout_gmem,
+	      /* ocaccel_membus_t *d_ddrmem, *//* not needed */
 	      action_reg *act_reg)
 {
     uint32_t size, bytes_to_transfer;
@@ -70,14 +70,14 @@ static int process_action(snap_membus_t *din_gmem,
 	o_idx++;
     }
 
-    act_reg->Control.Retc = SNAP_RETC_SUCCESS;
+    act_reg->Control.Retc = OCACCEL_RETC_SUCCESS;
     return 0;
 }
 
 //--- TOP LEVEL MODULE -------------------------------------------------
-void hls_action(snap_membus_t *din_gmem,
-	snap_membus_t *dout_gmem,
-	/* snap_membus_t *d_ddrmem, // CAN BE COMMENTED IF UNUSED */
+void hls_action(ocaccel_membus_t *din_gmem,
+	ocaccel_membus_t *dout_gmem,
+	/* ocaccel_membus_t *d_ddrmem, // CAN BE COMMENTED IF UNUSED */
 	action_reg *act_reg)
 {
     // Host Memory AXI Interface - CANNOT BE REMOVED - NO CHANGE BELOW
@@ -113,8 +113,8 @@ int main(void)
 #define MEMORY_LINES 1
     int rc = 0;
     unsigned int i;
-    static snap_membus_t  din_gmem[MEMORY_LINES];
-    static snap_membus_t  dout_gmem[MEMORY_LINES];
+    static ocaccel_membus_t  din_gmem[MEMORY_LINES];
+    static ocaccel_membus_t  dout_gmem[MEMORY_LINES];
 
     action_reg act_reg;
 
@@ -129,15 +129,15 @@ int main(void)
 
     act_reg.Data.in.addr = 0;
     act_reg.Data.in.size = 64;
-    act_reg.Data.in.type = SNAP_ADDRTYPE_HOST_DRAM;
+    act_reg.Data.in.type = OCACCEL_ADDRTYPE_HOST_DRAM;
 
     act_reg.Data.out.addr = 0;
     act_reg.Data.out.size = 64;
-    act_reg.Data.out.type = SNAP_ADDRTYPE_HOST_DRAM;
+    act_reg.Data.out.type = OCACCEL_ADDRTYPE_HOST_DRAM;
 
     printf("Action call \n");
     hls_action(din_gmem, dout_gmem, &act_reg);
-    if (act_reg.Control.Retc == SNAP_RETC_FAILURE) {
+    if (act_reg.Control.Retc == OCACCEL_RETC_FAILURE) {
 	fprintf(stderr, " ==> RETURN CODE FAILURE <==\n");
 	return 1;
     }

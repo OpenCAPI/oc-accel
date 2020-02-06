@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef __SNAP_FW_EXA__
-#define __SNAP_FW_EXA__
+#ifndef __OCACCEL_FW_EXA__
+#define __OCACCEL_FW_EXA__
 
 /*
  * This makes it obvious that we are influenced by HLS details ...
  * The ACTION control bits are defined in the following file.
  */
-#include <osnap_hls_if.h>
+#include <ocaccel_hls_if.h>
 
-/* Header file for SNAP Framework example code */
+/* Header file for OCACCEL Framework example code */
 #define ACTION_TYPE_EXAMPLE     0x10142000	/* Action Type */
 
 #define ACTION_CONFIG           0x30
@@ -47,4 +47,4 @@
 #define ACTION_IRQ_SRC_HIGH     0x48    /* Interrupt source high */
 #define ACTION_IRQ_SRC_LOW      0x4C    /* Interrupt source low */
 
-#endif	/* __SNAP_FW_EXA__ */
+#endif	/* __OCACCEL_FW_EXA__ */

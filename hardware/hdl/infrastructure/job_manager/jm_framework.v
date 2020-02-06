@@ -92,7 +92,7 @@ module jm_framework #(
         output      [003:0]             job_m_axi_arregion ,
         output                          job_m_axi_arvalid  ,
         input                           job_m_axi_arready  ,
-          // axi_snap read data channel
+          // axi_ocaccel read data channel
         output                          job_m_axi_rready   ,
         input       [ARUSER_WIDTH-1:0]  job_m_axi_ruser    ,// no use
         input       [ID_WIDTH-1:0]      job_m_axi_rid      ,
@@ -171,7 +171,7 @@ job_manager #(
         .dsc0_ready_o               ( dsc0_ready_w          ),
         .dsc0_data_o                ( dsc0_data_w           ),
 
-        //---- AXI bus interfaced with SNAP core ----
+        //---- AXI bus interfaced with OCACCEL core ----
         // AXI read address channel
         .m_axi_arid                 ( job_m_axi_arid        ),
         .m_axi_araddr               ( job_m_axi_araddr      ),

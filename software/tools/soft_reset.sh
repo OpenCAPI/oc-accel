@@ -13,4 +13,4 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
-snap_poke 0x00000010 0x00000003
+ocaccel_poke 0x00000010 0x00000003

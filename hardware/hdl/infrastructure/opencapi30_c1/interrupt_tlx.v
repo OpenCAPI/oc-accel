@@ -23,7 +23,7 @@ module interrupt_tlx (
                        //---- backoff time countdown time limit ------------------
                        input      [003:0]    backoff_limit    ,
 
-                       //---- enable interrupt when SNAP is idle -----------------
+                       //---- enable interrupt when OCACCEL is idle -----------------
                        input                 interrupt_enable ,
 
                        //---- AXI interface --------------------------------------

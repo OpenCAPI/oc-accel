@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __SNAP_ACTIONS_H__
-#define __SNAP_ACTIONS_H__
+#ifndef __OCACCEL_ACTIONS_H__
+#define __OCACCEL_ACTIONS_H__
 
 #include <stdint.h>
 
@@ -25,7 +25,7 @@ struct actions_tab {
     const char* description;
 };
 
-static const struct actions_tab snap_actions[] = {
+static const struct actions_tab ocaccel_actions[] = {
 /* KEEP names without space as they as reused in test */
 /* Recommended Usage OC HDL examples use 0x10142xxx IDs */
     { "IBM", 0x10142000, "hdl_example in VHDL  (512b)"                           },
@@ -37,4 +37,4 @@ static const struct actions_tab snap_actions[] = {
     { "IBM", 0x1014300B, "HLS_Memcopy_1024     (1024b)"                          },
 };
 
-#endif  /* __SNAP_ACTIONS_H__ */
+#endif  /* __OCACCEL_ACTIONS_H__ */

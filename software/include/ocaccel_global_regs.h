@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OSNAP_GLOBAL_REGS_H__
-#define __OSNAP_GLOBAL_REGS_H__
+#ifndef __OCACCEL_GLOBAL_REGS_H__
+#define __OCACCEL_GLOBAL_REGS_H__
 
 /**
  * Copyright 2017 International Business Machines
@@ -39,7 +39,7 @@ extern "C" {
 //***************************************************************************
 //***************************************************************************
 //
-//This file defines the registers in Global MMIO space, or snap registers.
+//This file defines the registers in Global MMIO space, or ocaccel registers.
 //
 //***************************************************************************
 //***************************************************************************
@@ -48,24 +48,24 @@ extern "C" {
 #define DEBUG_BASE_ADDR 0x1A000
 #define   FIR_BASE_ADDR 0x1C000
 
-#define SNAP_M_FIR_NUM  5
+#define OCACCEL_M_FIR_NUM  5
 //***************************************************************************
 //***************************************************************************
 /*
  * Implementation Version Register (IVR)
  * =====================================
- * 63..40 RO: SNAP Release
+ * 63..40 RO: OCACCEL Release
  * 63..56 Major release number
  * 55..48 Intermediate release number
  * 47..40 Minor release number
- * 39..32 RO: Distance of commit to SNAP release
+ * 39..32 RO: Distance of commit to OCACCEL release
  * 31.. 0 RO: First eight digits of SHA ID for commit
  *
  * POR value depends on source for the build.
  * Example for build based on commit with SHA ID eb43f4d80334d6a127af150345fed12dc5f45b7c
- * and with distance 13 to SNAP Release v1.25.4: 0x0119040D_EB43F4D8
+ * and with distance 13 to OCACCEL Release v1.25.4: 0x0119040D_EB43F4D8
  */
-#define        SNAP_IVR        (CORE_BASE_ADDR + 0)
+#define        OCACCEL_IVR        (CORE_BASE_ADDR + 0)
 
 /*
  * Build Date Register (BDR)
@@ -81,19 +81,19 @@ extern "C" {
  *   POR value depends on build date and time.
  *   Example for build on January 12th, 2017 at 15:27: 0x00002017_01121527
  */
-#define SNAP_BDR               (CORE_BASE_ADDR + 0x8)
+#define OCACCEL_BDR               (CORE_BASE_ADDR + 0x8)
 
 /*
- * SNAP Command Register (SCR) (commands <Reset>, <Abort>, <Stop> are not yet implemente)
+ * OCACCEL Command Register (SCR) (commands <Reset>, <Abort>, <Stop> are not yet implemente)
  * ===========================
  * 63..48 RW: Argument
  * 47.. 8 RO: Reserved
  *  7.. 0 RW: Command
  *  Legal commands are:
- *        0x10 Exploration Done: Set Exploration Done bit in SNAP status register
+ *        0x10 Exploration Done: Set Exploration Done bit in OCACCEL status register
  *                                Argument bits 63..52: Don't care
  *                                Argument bits 51..48: Maximum Short Action Type
- *        0x08 Reset:            Reset the complete SNAP framework including all actions immediately
+ *        0x08 Reset:            Reset the complete OCACCEL framework including all actions immediately
  *                                Argument: Don't care
  *        0x04 Abort:            Abort current jobs and set accelerator to finished immediately (asserting aXh_jdone)
  *                                Argument: Don't care
@@ -101,10 +101,10 @@ extern "C" {
  *                                Argument: Don't care
  *        0x00 NOP
  */
-#define SNAP_SCR               (CORE_BASE_ADDR + 0x10)
+#define OCACCEL_SCR               (CORE_BASE_ADDR + 0x10)
 
 /*
- * SNAP Status Register (SSR)
+ * OCACCEL Status Register (SSR)
  * =========================
  * 63..9  RO: Reserved
  *     8  RO: Exploration Done
@@ -114,11 +114,11 @@ extern "C" {
  *
  *  POR value: 0x0000000000000000
  */
-#define SNAP_SSR               (CORE_BASE_ADDR + 0x18)
+#define OCACCEL_SSR               (CORE_BASE_ADDR + 0x18)
 
 
 /*
- *  SNAP Capability Register (CAP)
+ *  OCACCEL Capability Register (CAP)
  *  ===================================
  *   63..40 RO: Reserved
  *   39..36 RO: Minimum size for DMA transfers to/from Host
@@ -131,9 +131,9 @@ extern "C" {
  *    7..0  RO: Card type:
  *              0x31 : AD9V3
  */
-#define SNAP_CAP               (CORE_BASE_ADDR + 0x30)
+#define OCACCEL_CAP               (CORE_BASE_ADDR + 0x30)
 
-#define SNAP_NVME_ENA   0x100
+#define OCACCEL_NVME_ENA   0x100
 #define AD9V3_OC_CARD   0x031     /* OpenCAPI 3.0*/
 #define AD9H3_OC_CARD   0x032     /* OpenCAPI 3.0*/
 #define AD9H7_OC_CARD   0x033     /* OpenCAPI 3.0*/
@@ -144,7 +144,7 @@ extern "C" {
  * 63..0  RO: Counter counting the number of clock cycles since reset (afu open)
  *            This counter increments with the 250MHz PSL clock
  */
-#define SNAP_FRT               (CORE_BASE_ADDR + 0x40)
+#define OCACCEL_FRT               (CORE_BASE_ADDR + 0x40)
 
 //***************************************************************************
 //***************************************************************************
@@ -277,4 +277,4 @@ extern "C" {
 }
 #endif
 
-#endif        /* __OSNAP_GLOBAL_REGS_H__ */
+#endif        /* __OCACCEL_GLOBAL_REGS_H__ */

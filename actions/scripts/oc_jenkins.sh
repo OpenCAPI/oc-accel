@@ -16,10 +16,10 @@
 ##
 
 #
-# Jenkins Test for SNAP
+# Jenkins Test for OCACCEL
 #
 
-# SNAP framework example
+# OCACCEL framework example
 function test_10142000
 {
 	local card=$1
@@ -57,7 +57,7 @@ function test_all_actions() # $1 = card, $2 = accel
 	local accel=$2
 
 	RC=0;
-	# Get SNAP Action number from Card
+	# Get OCACCEL Action number from Card
 
 	# MY_ACTION=`./software/tools/oc_maint -C $card -m 1`
 	# oc_maint -m1 not working for the moment ==> Using the following as a workaround
@@ -178,7 +178,7 @@ function test_hard()
 	fi
         sleep 5          # Allow some time to recover cards
 
-	./software/tools/snap_peek -C $card 0x0 -d2
+	./software/tools/ocaccel_peek -C $card 0x0 -d2
 	RC=$?
 	if [ $RC -ne 0 ]; then
 		echo "moving $IMAGE to $IMAGE.fault_peek"
@@ -308,7 +308,7 @@ if [[ $TARGET_DIR != $MY_DIR ]] ; then
 	exit 1;
 fi
 echo "Source PATH and LD_LIBRARY_PATH"
-. ./snap_path.sh
+. ./ocaccel_path.sh
 
 test_done=0
 if [[ $accel != "ALL" ]]; then

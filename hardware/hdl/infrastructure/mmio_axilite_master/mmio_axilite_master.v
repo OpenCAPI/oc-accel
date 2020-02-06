@@ -94,7 +94,7 @@ module mmio_axilite_master
  wire          lcl_mmio_dv     ;
 
 
-//---- route TLX access to local SNAP registers or action register space ---- 
+//---- route TLX access to local OCACCEL registers or action register space ---- 
  mmio # (
                 .IMP_VERSION (IMP_VERSION ),
                 .BUILD_DATE (BUILD_DATE ),

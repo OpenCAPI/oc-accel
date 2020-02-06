@@ -65,8 +65,8 @@ def env_check(options):
     if isdir(pathjoin(options.ocaccel_root, "actions")) and\
        isdir(pathjoin(options.ocaccel_root, "hardware")) and\
        isdir(pathjoin(options.ocaccel_root, "software")):
-        msg.ok_msg_blue("SNAP ROOT %s is valid" % options.ocaccel_root)
+        msg.ok_msg_blue("OCACCEL ROOT %s is valid" % options.ocaccel_root)
     else:
-        msg.fail_msg("SNAP ROOT %s is not valid! Exiting ... " % options.ocaccel_root)
+        msg.fail_msg("OCACCEL ROOT %s is not valid! Exiting ... " % options.ocaccel_root)
 
     msg.ok_msg("Environment check PASSED")

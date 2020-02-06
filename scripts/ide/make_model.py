@@ -25,7 +25,7 @@ def make_model(log, timeout = 2592000):
     rc = run_and_poll_with_progress(cmd = "make model", work_dir = ".", log = log, max_log_len = 150, timeout = timeout)
 
     if rc == 0:
-        msg.ok_msg("SNAP simulation model generated")
+        msg.ok_msg("OCACCEL simulation model generated")
     else:
         msg.warn_msg("Failed to make simulation model, check log in %s" % log)
         msg.fail_msg("Failed to make simulation model! Exiting ... ")

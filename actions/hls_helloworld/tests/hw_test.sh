@@ -17,16 +17,16 @@
 ##
 
 verbose=0
-snap_card=0
+ocaccel_card=0
 duration="NORMAL"
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
 ACTION_ROOT=$(dirname ${THIS_DIR})
-SNAP_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
+OCACCEL_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
 
 echo "Starting :    $0"
-echo "SNAP_ROOT :   ${SNAP_ROOT}"
+echo "OCACCEL_ROOT :   ${OCACCEL_ROOT}"
 echo "ACTION_ROOT : ${ACTION_ROOT}"
 
 function usage() {
@@ -41,10 +41,10 @@ function usage() {
 while getopts ":C:t:d:h" opt; do
     case $opt in
 	C)
-	snap_card=$OPTARG;
+	ocaccel_card=$OPTARG;
 	;;
 	t)
-	export SNAP_TRACE=$OPTARG;
+	export OCACCEL_TRACE=$OPTARG;
 	;;
 	d)
 	duration=$OPTARG;
@@ -59,22 +59,22 @@ while getopts ":C:t:d:h" opt; do
     esac
 done
 
-export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
+export PATH=$PATH:${OCACCEL_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 ####iHELLOWORLD ##########################################################
 
 function test_helloworld {
-    cmd="echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\" > tin"
+    cmd="echo \"Hello world. This is my first CAPI OCACCEL experience. It's real fun.\" > tin"
     echo "cmd: ${cmd}"
     eval ${cmd}
-    cmd="echo \"HELLO WORLD. THIS IS MY FIRST CAPI SNAP EXPERIENCE. IT'S REAL FUN.\" > tCAP"
+    cmd="echo \"HELLO WORLD. THIS IS MY FIRST CAPI OCACCEL EXPERIENCE. IT'S REAL FUN.\" > tCAP"
     echo "cmd: ${cmd}"
     eval ${cmd}
-    echo -n "Doing snap_helloworld "
-    cmd="snap_helloworld -C${snap_card} -i tin -o tout >> snap_helloworld.log 2>&1"
+    echo -n "Doing ocaccel_helloworld "
+    cmd="ocaccel_helloworld -C${ocaccel_card} -i tin -o tout >> ocaccel_helloworld.log 2>&1"
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_helloworld.log
+	cat ocaccel_helloworld.log
 	echo "cmd: ${cmd}"
 	echo "failed"
 	exit 1
@@ -95,8 +95,8 @@ function test_helloworld {
 
 }
 
-rm -f snap_helloworld.log
-touch snap_helloworld.log
+rm -f ocaccel_helloworld.log
+touch ocaccel_helloworld.log
 
 # Whatever duration is, we run the test
 # duration is used to run short test in simulation for example

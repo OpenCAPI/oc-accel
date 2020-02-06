@@ -26,11 +26,11 @@
 #define ACTION_REG_ENG_RANGE           0x100
 #define reg(_reg,_id) ((ACTION_REG_BASE + (_id * ACTION_REG_ENG_RANGE)) + _reg)
 
-#define REG_SNAP_CONTROL        0x00
-#define REG_SNAP_INT_ENABLE     0x04
-#define REG_SNAP_ACTION_TYPE    0x10
-#define REG_SNAP_ACTION_VERSION 0x14
-#define REG_SNAP_CONTEXT        0x20
+#define REG_OCACCEL_CONTROL        0x00
+#define REG_OCACCEL_INT_ENABLE     0x04
+#define REG_OCACCEL_ACTION_TYPE    0x10
+#define REG_OCACCEL_ACTION_VERSION 0x14
+#define REG_OCACCEL_CONTEXT        0x20
 // User defined below
 #define REG_USER_STATUS         0x30
 #define REG_USER_CONTROL        0x34

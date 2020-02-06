@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OSNAP_HLS_IF_H__
-#define __OSNAP_HLS_IF_H__
+#ifndef __OCACCEL_HLS_IF_H__
+#define __OCACCEL_HLS_IF_H__
 
 /**
  * Copyright 2017 International Business Machines
@@ -59,12 +59,12 @@ extern "C" {
 #define ACTION_IRQ_STATUS_READY    0x00000002        /* Channel 1 (ap_ready) FIXME: not implemented yet*/
 
 
-#define ACTION_TYPE_REG            0x10              /* SNAP Action Type Register */
-#define ACTION_RELEASE_REG         0x14              /* SNAP Action Release version Register */
+#define ACTION_TYPE_REG            0x10              /* OCACCEL Action Type Register */
+#define ACTION_RELEASE_REG         0x14              /* OCACCEL Action Release version Register */
 
 
-#define ACTION_IRQ_SRC_LO          0x18              /* SNAP Action interrupt src (low 32bits) (obj_handler) */
-#define ACTION_IRQ_SRC_HI          0x1C              /* SNAP Action interrupt src (high 32bits) (obj_handler) */
+#define ACTION_IRQ_SRC_LO          0x18              /* OCACCEL Action interrupt src (low 32bits) (obj_handler) */
+#define ACTION_IRQ_SRC_HI          0x1C              /* OCACCEL Action interrupt src (high 32bits) (obj_handler) */
 
 /* ACTION Specific register setup: Input */
 #define ACTION_PARAMS_IN           0x100
@@ -75,17 +75,17 @@ extern "C" {
 #define ACTION_RETC_OUT            (ACTION_PARAMS_OUT + 4)
 
 
-#define SNAP_MEMBUS_WIDTH          128                /* bytes */
-#define SNAP_ROUND_UP(x, width) (((x) + (width) - 1) & ~((width) - 1))
+#define OCACCEL_MEMBUS_WIDTH          128                /* bytes */
+#define OCACCEL_ROUND_UP(x, width) (((x) + (width) - 1) & ~((width) - 1))
 
-static inline void* snap_malloc (size_t size)
+static inline void* ocaccel_malloc (size_t size)
 {
     unsigned int page_size = sysconf (_SC_PAGESIZE);
-    return memalign (page_size, SNAP_ROUND_UP (size, SNAP_MEMBUS_WIDTH));
+    return memalign (page_size, OCACCEL_ROUND_UP (size, OCACCEL_MEMBUS_WIDTH));
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*__OSNAP_HLS_IF_H__ */
+#endif /*__OCACCEL_HLS_IF_H__ */

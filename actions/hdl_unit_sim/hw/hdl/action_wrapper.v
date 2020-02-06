@@ -15,7 +15,7 @@
  */
 
 `timescale 1ns/1ps
-`include "snap_global_vars.v"
+`include "ocaccel_global_vars.v"
 
 `ifndef ENABLE_ODMA
 module action_wrapper #(

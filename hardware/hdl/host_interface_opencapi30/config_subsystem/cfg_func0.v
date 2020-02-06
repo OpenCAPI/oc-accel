@@ -41,9 +41,9 @@
   `define CFG_FUNC0_VERSION        04_Oct_2019   //            Added image reload enable register/bit in OVSEC0
 // -------------------------------------------------------------------
 
-// This define contains the snapshot version of the CFG implementation. Overlay it each time a version snapshot is made.
+// This define contains the ocaccelshot version of the CFG implementation. Overlay it each time a version ocaccelshot is made.
 // Format is: yymmddvv where yy = year (i.e. 17 = 2017), mm = month, dd = day, vv = version made on that day, starting with 00
-// Note: The line below should remain untouched, else the script making CFG snapshots will not find it. 
+// Note: The line below should remain untouched, else the script making CFG ocaccelshots will not find it. 
 `define OVSEC0_CFG_VERSION 32'h18011600
 
 // ******************************************************************************************************************************

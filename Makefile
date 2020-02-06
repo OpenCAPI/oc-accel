@@ -181,6 +181,6 @@ clean_env: clean_config
 	@$(RM) $(ocaccel_env_sh)
 
 gitclean:
-	@echo -e "[GITCLEAN............] cleaning and resetting snap git";
+	@echo -e "[GITCLEAN............] cleaning and resetting ocaccel git";
 	git clean -f -d -x
 	git reset --hard

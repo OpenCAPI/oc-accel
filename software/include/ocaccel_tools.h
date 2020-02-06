@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __OSNAP_TOOLS_H__
-#define __OSNAP_TOOLS_H__
+#ifndef __OCACCEL_TOOLS_H__
+#define __OCACCEL_TOOLS_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define SNAP_TOOL_VERS_STRING        "3.0.25"
+#define OCACCEL_TOOL_VERS_STRING        "3.0.25"
 
 /*****************************************************************************/
 /** Useful macros in case they are not defined somewhere else                     */
@@ -305,4 +305,4 @@ static inline void __free (void* ptr)
 }
 #endif
 
-#endif                /* __OSNAP_TOOLS_H__ */
+#endif                /* __OCACCEL_TOOLS_H__ */

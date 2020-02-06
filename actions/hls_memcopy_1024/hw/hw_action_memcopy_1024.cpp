@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-/* SNAP HLS_MEMCOPY EXAMPLE */
+/* OCACCEL HLS_MEMCOPY EXAMPLE */
 
 #include <string.h>
 #include "ap_int.h"
 #include "hw_action_memcopy_1024.H"
 
 // WRITE DATA TO MEMORY
-short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
-				 snap_membus_512_t *d_ddrmem,
-				 snapu16_t memory_in_type,
-				 snapu16_t memory_out_type,
-				 snapu64_t output_address_1024,
-				 snapu64_t output_address,
-				 snap_membus_1024_t *buffer_gmem,
-				 snap_membus_512_t *buffer_ddrmem,
-				 snapu64_t size_in_bytes_to_transfer)
+short write_burst_of_data_to_mem(ocaccel_membus_1024_t *dout_gmem,
+				 ocaccel_membus_512_t *d_ddrmem,
+				 ocaccelu16_t memory_in_type,
+				 ocaccelu16_t memory_out_type,
+				 ocaccelu64_t output_address_1024,
+				 ocaccelu64_t output_address,
+				 ocaccel_membus_1024_t *buffer_gmem,
+				 ocaccel_membus_512_t *buffer_ddrmem,
+				 ocaccelu64_t size_in_bytes_to_transfer)
 {
 	short rc;
     ap_int<MEMDW_512> mask_full = -1;
-    snap_membus_1024_t mask_512 = snap_membus_512_t(mask_full);
-    snap_membus_1024_t data_entry = 0;
+    ocaccel_membus_1024_t mask_512 = ocaccel_membus_512_t(mask_full);
+    ocaccel_membus_1024_t data_entry = 0;
 
 	// Prepare Patch to the issue#652 - memcopy doesn't handle small packets
 	int size_in_words_1024;
@@ -50,8 +50,8 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 		size_in_words_512 = (size_in_bytes_to_transfer/BPERDW_512) + 1;
 	//end of patch
 //========================data from buffer_gmem======================================//
-	if (memory_in_type == SNAP_ADDRTYPE_HOST_DRAM) {
-           if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
+	if (memory_in_type == OCACCEL_ADDRTYPE_HOST_DRAM) {
+           if(memory_out_type == OCACCEL_ADDRTYPE_HOST_DRAM) {
 		      // Patch to the issue#652 - memcopy doesn't handle small packets
 		      // Do not insert anything more in this loop to not break the burst
 		      wb_dout2dout_loop: for (int k=0; k<size_in_words_1024; k++)
@@ -60,11 +60,11 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 		      // end of patch
        	      rc = 0;
            }
-           else if(memory_out_type == SNAP_ADDRTYPE_CARD_DRAM) {
+           else if(memory_out_type == OCACCEL_ADDRTYPE_CARD_DRAM) {
 		     wb_gbuf2dbuf_loop: for (int k=0; k<size_in_words_1024; k++) {
                                   for (int j=0; j<MEMDW_1024/MEMDW_512; j++) {
 		     #pragma HLS PIPELINE
-                                    buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j] = (snap_membus_512_t)((buffer_gmem[k] >> j*MEMDW_512) & mask_512);
+                                    buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j] = (ocaccel_membus_512_t)((buffer_gmem[k] >> j*MEMDW_512) & mask_512);
                                   }
                                }
 		     wb_dbuf2ddr_loop: for (int k=0; k<size_in_words_512; k++)
@@ -72,18 +72,18 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
                          (d_ddrmem + output_address)[k] = buffer_ddrmem[k];
              rc = 0;
            }
-           else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
+           else if(memory_out_type == OCACCEL_ADDRTYPE_UNUSED)
              rc = 0;
            else
              rc = 1;
 	}
 //=========================data from buffer_ddrmem=====================================//
-	else if (memory_in_type == SNAP_ADDRTYPE_CARD_DRAM) {
-           if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
+	else if (memory_in_type == OCACCEL_ADDRTYPE_CARD_DRAM) {
+           if(memory_out_type == OCACCEL_ADDRTYPE_HOST_DRAM) {
 		     wb_dbuf2gbuf_loop: for (int k=0; k<size_in_words_1024; k++) {
                                   for (int j=0; j<MEMDW_1024/MEMDW_512; j++) {
 		     #pragma HLS PIPELINE
-                                    data_entry |= ((snap_membus_1024_t)(buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j])) << j*MEMDW_512;
+                                    data_entry |= ((ocaccel_membus_1024_t)(buffer_ddrmem[k*MEMDW_1024/MEMDW_512+j])) << j*MEMDW_512;
                                   }
                                   buffer_gmem[k] = data_entry;
                                   data_entry = 0;
@@ -93,32 +93,32 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
                          (dout_gmem + output_address_1024)[k] = buffer_gmem[k];
              rc = 0;
            }
-           else if(memory_out_type == SNAP_ADDRTYPE_CARD_DRAM) {
+           else if(memory_out_type == OCACCEL_ADDRTYPE_CARD_DRAM) {
 		     wb_ddr2ddr_loop: for (int k=0; k<size_in_words_512; k++)
 		     #pragma HLS PIPELINE
                         (d_ddrmem + output_address)[k] = buffer_ddrmem[k];
              rc = 0;
            }
-           else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
+           else if(memory_out_type == OCACCEL_ADDRTYPE_UNUSED)
              rc = 0;
            else
              rc = 1;
 	}
 //========================no data from specified=======================================//
-	else if (memory_in_type == SNAP_ADDRTYPE_UNUSED) {
-           if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
+	else if (memory_in_type == OCACCEL_ADDRTYPE_UNUSED) {
+           if(memory_out_type == OCACCEL_ADDRTYPE_HOST_DRAM) {
 		      wb_dout_loop: for (int k=0; k<size_in_words_1024; k++)
 		      #pragma HLS PIPELINE
                           (dout_gmem + output_address_1024)[k] = buffer_gmem[k];
        	      rc = 0;
            }
-           else if(memory_out_type == SNAP_ADDRTYPE_CARD_DRAM) {
+           else if(memory_out_type == OCACCEL_ADDRTYPE_CARD_DRAM) {
 		     wb_ddr_loop: for (int k=0; k<size_in_words_512; k++)
 		     #pragma HLS PIPELINE
                         (d_ddrmem + output_address)[k] = buffer_ddrmem[k];
              rc = 0;
            }
-           else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
+           else if(memory_out_type == OCACCEL_ADDRTYPE_UNUSED)
              rc = 0;
            else
              rc = 1;
@@ -131,31 +131,31 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 }
 
 // READ DATA FROM MEMORY
-short read_burst_of_data_from_mem(snap_membus_1024_t *din_gmem,
-				  snap_membus_512_t *d_ddrmem,
-				  snapu16_t memory_type,
-				  snapu64_t input_address_1024,
-				  snapu64_t input_address,
-				  snap_membus_1024_t *buffer_gmem,
-				  snap_membus_512_t *buffer_ddrmem,
-				  snapu64_t size_in_bytes_to_transfer)
+short read_burst_of_data_from_mem(ocaccel_membus_1024_t *din_gmem,
+				  ocaccel_membus_512_t *d_ddrmem,
+				  ocaccelu16_t memory_type,
+				  ocaccelu64_t input_address_1024,
+				  ocaccelu64_t input_address,
+				  ocaccel_membus_1024_t *buffer_gmem,
+				  ocaccel_membus_512_t *buffer_ddrmem,
+				  ocaccelu64_t size_in_bytes_to_transfer)
 {
 	short rc;
         int i;
 
 	switch (memory_type) {
 
-	case SNAP_ADDRTYPE_HOST_DRAM:
-		memcpy(buffer_gmem, (snap_membus_1024_t  *) (din_gmem + input_address_1024),
+	case OCACCEL_ADDRTYPE_HOST_DRAM:
+		memcpy(buffer_gmem, (ocaccel_membus_1024_t  *) (din_gmem + input_address_1024),
 		       size_in_bytes_to_transfer);
        		rc =  0;
 		break;
-	case SNAP_ADDRTYPE_CARD_DRAM:
-		memcpy(buffer_ddrmem, (snap_membus_512_t  *) (d_ddrmem + input_address),
+	case OCACCEL_ADDRTYPE_CARD_DRAM:
+		memcpy(buffer_ddrmem, (ocaccel_membus_512_t  *) (d_ddrmem + input_address),
 		       size_in_bytes_to_transfer);
        		rc =  0;
 		break;
-	case SNAP_ADDRTYPE_UNUSED: /* no copy but with rc =0 */
+	case OCACCEL_ADDRTYPE_UNUSED: /* no copy but with rc =0 */
        		rc =  0;
 		break;
 	default:
@@ -168,26 +168,26 @@ short read_burst_of_data_from_mem(snap_membus_1024_t *din_gmem,
 //----------------------------------------------------------------------
 //--- MAIN PROGRAM -----------------------------------------------------
 //----------------------------------------------------------------------
-static void process_action(snap_membus_1024_t *din_gmem,
-                           snap_membus_1024_t *dout_gmem,
-                           snap_membus_512_t *d_ddrmem,
+static void process_action(ocaccel_membus_1024_t *din_gmem,
+                           ocaccel_membus_1024_t *dout_gmem,
+                           ocaccel_membus_512_t *d_ddrmem,
                            action_reg *act_reg)
 {
 	// VARIABLES
-	snapu32_t xfer_size;
-	snapu32_t action_xfer_size;
-	snapu32_t nb_blocks_to_xfer;
-	snapu16_t i;
+	ocaccelu32_t xfer_size;
+	ocaccelu32_t action_xfer_size;
+	ocaccelu32_t nb_blocks_to_xfer;
+	ocaccelu16_t i;
 	short rc = 0;
-	snapu32_t ReturnCode = SNAP_RETC_SUCCESS;
-	snapu64_t InputAddress_1024;
-	snapu64_t OutputAddress_1024;
-	snapu64_t address_xfer_offset_1024;
-	snapu64_t InputAddress_512;
-	snapu64_t OutputAddress_512;
-	snapu64_t address_xfer_offset_512;
-	snap_membus_1024_t  buf_gmem[MAX_NB_OF_WORDS_READ_1024];
-	snap_membus_512_t   buf_ddrmem[MAX_NB_OF_WORDS_READ_512];
+	ocaccelu32_t ReturnCode = OCACCEL_RETC_SUCCESS;
+	ocaccelu64_t InputAddress_1024;
+	ocaccelu64_t OutputAddress_1024;
+	ocaccelu64_t address_xfer_offset_1024;
+	ocaccelu64_t InputAddress_512;
+	ocaccelu64_t OutputAddress_512;
+	ocaccelu64_t address_xfer_offset_512;
+	ocaccel_membus_1024_t  buf_gmem[MAX_NB_OF_WORDS_READ_1024];
+	ocaccel_membus_512_t   buf_ddrmem[MAX_NB_OF_WORDS_READ_512];
 	// if 4096 bytes max => 64 words
 
 	// byte address received need to be aligned with port width
@@ -202,14 +202,14 @@ static void process_action(snap_membus_1024_t *din_gmem,
 	action_xfer_size = MIN(act_reg->Data.in.size,
 			       act_reg->Data.out.size);
 
-	if (act_reg->Data.in.type == SNAP_ADDRTYPE_CARD_DRAM and
+	if (act_reg->Data.in.type == OCACCEL_ADDRTYPE_CARD_DRAM and
 	    act_reg->Data.in.size > CARD_DRAM_SIZE) {
-	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
+	        act_reg->Control.Retc = OCACCEL_RETC_FAILURE;
 		return;
         }
-	if (act_reg->Data.out.type == SNAP_ADDRTYPE_CARD_DRAM and
+	if (act_reg->Data.out.type == OCACCEL_ADDRTYPE_CARD_DRAM and
 	    act_reg->Data.out.size > CARD_DRAM_SIZE) {
-	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
+	        act_reg->Control.Retc = OCACCEL_RETC_FAILURE;
 		return;
         }
 
@@ -225,7 +225,7 @@ static void process_action(snap_membus_1024_t *din_gmem,
 #pragma HLS UNROLL		// cannot completely unroll a loop with a variable trip count
 
 		xfer_size = MIN(action_xfer_size,
-				(snapu32_t)MAX_NB_OF_BYTES_READ);
+				(ocaccelu32_t)MAX_NB_OF_BYTES_READ);
 
 		rc |= read_burst_of_data_from_mem(din_gmem, d_ddrmem,
 			act_reg->Data.in.type,
@@ -238,21 +238,21 @@ static void process_action(snap_membus_1024_t *din_gmem,
             buf_gmem, buf_ddrmem, xfer_size);
 
 		action_xfer_size -= xfer_size;
-		address_xfer_offset_1024 += (snapu64_t)(xfer_size >> ADDR_RIGHT_SHIFT_1024);
-		address_xfer_offset_512 += (snapu64_t)(xfer_size >> ADDR_RIGHT_SHIFT_512);
+		address_xfer_offset_1024 += (ocaccelu64_t)(xfer_size >> ADDR_RIGHT_SHIFT_1024);
+		address_xfer_offset_512 += (ocaccelu64_t)(xfer_size >> ADDR_RIGHT_SHIFT_512);
 	} // end of L0 loop
 
 	if (rc != 0)
-		ReturnCode = SNAP_RETC_FAILURE;
+		ReturnCode = OCACCEL_RETC_FAILURE;
 
 	act_reg->Control.Retc = ReturnCode;
 	return;
 }
 
 //--- TOP LEVEL MODULE -------------------------------------------------
-void hls_action(snap_membus_1024_t *din_gmem,
-		snap_membus_1024_t *dout_gmem,
-		snap_membus_512_t *d_ddrmem,
+void hls_action(ocaccel_membus_1024_t *din_gmem,
+		ocaccel_membus_1024_t *dout_gmem,
+		ocaccel_membus_512_t *d_ddrmem,
 		action_reg *act_reg)
 {
 	// Host Memory AXI Interface
@@ -289,9 +289,9 @@ int main(void)
 #define MEMORY_LINES_1024 512  /* 64 KiB */
     int rc = 0;
     unsigned int i;
-    static snap_membus_1024_t  din_gmem[MEMORY_LINES_1024];
-    static snap_membus_1024_t  dout_gmem[MEMORY_LINES_1024];
-    static snap_membus_512_t   d_ddrmem[MEMORY_LINES_512];
+    static ocaccel_membus_1024_t  din_gmem[MEMORY_LINES_1024];
+    static ocaccel_membus_1024_t  dout_gmem[MEMORY_LINES_1024];
+    static ocaccel_membus_512_t   d_ddrmem[MEMORY_LINES_512];
 
     action_reg act_reg;
 
@@ -305,14 +305,14 @@ int main(void)
 
     act_reg.Data.in.addr = 0;
     act_reg.Data.in.size = 4096;
-    act_reg.Data.in.type = SNAP_ADDRTYPE_HOST_DRAM;
+    act_reg.Data.in.type = OCACCEL_ADDRTYPE_HOST_DRAM;
 
     act_reg.Data.out.addr = 4096;
     act_reg.Data.out.size = 4096;
-    act_reg.Data.out.type = SNAP_ADDRTYPE_HOST_DRAM;
+    act_reg.Data.out.type = OCACCEL_ADDRTYPE_HOST_DRAM;
 
     hls_action(din_gmem, dout_gmem, d_ddrmem, &act_reg);
-    if (act_reg.Control.Retc == SNAP_RETC_FAILURE) {
+    if (act_reg.Control.Retc == OCACCEL_RETC_FAILURE) {
 	    fprintf(stderr, " ==> RETURN CODE FAILURE <==\n");
 	    return 1;
     }

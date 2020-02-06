@@ -65,7 +65,7 @@ endif
 
 
 #OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/oc-bip/sim/src/$(sim_top).sv
-OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/snap_global_vars.v
+OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/ocaccel_global_vars.v
 
 
 

@@ -26,7 +26,7 @@ module mmio # (
              input                clk                        ,
              input                rst_n                      ,
 
-             //---- SNAP debug -----------------------------
+             //---- OCACCEL debug -----------------------------
              input         [195:0]  debug_bus_data_bridge    ,
 `ifdef OPENCAPI30
              input         [476:0]  debug_bus_trans_protocol ,
@@ -37,7 +37,7 @@ module mmio # (
 
 
              //---- local control output -------------------
-             output reg           soft_reset_brdg_odma       , // soft reset SNAP logic
+             output reg           soft_reset_brdg_odma       , // soft reset OCACCEL logic
              output reg           soft_reset_action          , // soft reset action logic
 
              //---- MMIO side interface --------------------
@@ -254,7 +254,7 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
    else
      mmio_failed <= (data_width_incompatible )                        ||  // 1. access with unwarrented data widths
                     ((lcl_mmio_ack || lcl_mmio_dv) && (lcl_mmio_rsp == 1'b0))        ||  // 2. receive bad response from action
-                    (global_area_wr_ack && waddr_decode_error)               ||  // 3. not able to locate defined SNAP register, or access illegally
+                    (global_area_wr_ack && waddr_decode_error)               ||  // 3. not able to locate defined OCACCEL register, or access illegally
                     (global_area_rd_ack && raddr_decode_error);
 
 //---- return done when... ----
@@ -263,7 +263,7 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
      mmio_done <= 1'b0;
    else
      mmio_done <= ((lcl_mmio_ack || lcl_mmio_dv) && (lcl_mmio_rsp == 1'b1)) || // 1. receive good response from action
-                  (global_area_wr_ack && ~waddr_decode_error)       || // 2. done with SNAP register access
+                  (global_area_wr_ack && ~waddr_decode_error)       || // 2. done with OCACCEL register access
                   (global_area_rd_ack && ~raddr_decode_error);
 
 
@@ -369,7 +369,7 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
    end
 
 
-//---- SNAP/ACTION REGISTER reading ----
+//---- OCACCEL/ACTION REGISTER reading ----
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      begin
@@ -384,7 +384,7 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
        raddr_decode_error <= 1'b0;
      end
 
-   // read from SNAP registers
+   // read from OCACCEL registers
    else if (global_area_access) begin
      case(global_area_base)
 
@@ -427,7 +427,7 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
      endcase
    end
 
-//---- SNAP registers acknowledgement ----
+//---- OCACCEL registers acknowledgement ----
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      begin
@@ -441,21 +441,21 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
      end
 
 //---- local control signals output ----
- reg [3:0] snap_reset_cnt;
+ reg [3:0] ocaccel_reset_cnt;
  reg [3:0] action_reset_cnt;
  always@(posedge clk or negedge rst_n)   // soft reset lasts 16 cycles
    if(~rst_n)
      soft_reset_brdg_odma <= 1'b0;
-   else if(&snap_reset_cnt)
+   else if(&ocaccel_reset_cnt)
      soft_reset_brdg_odma <= 1'b0;
    else if(REG_command[0])
      soft_reset_brdg_odma <= 1'b1;
 
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
-     snap_reset_cnt <= 4'd0;
+     ocaccel_reset_cnt <= 4'd0;
    else if(soft_reset_brdg_odma)
-     snap_reset_cnt <= snap_reset_cnt + 4'd1;
+     ocaccel_reset_cnt <= ocaccel_reset_cnt + 4'd1;
 
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
@@ -484,7 +484,7 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
      end
    else
      begin
-       bridge_idle <= (debug_buf_cnt == 64'd0); // SNAP considered in IDLE when both data BUF are empty
+       bridge_idle <= (debug_buf_cnt == 64'd0); // OCACCEL considered in IDLE when both data BUF are empty
        tlx_busy    <= (debug_tlx_cnt_cmd != debug_tlx_cnt_rsp); // only count read and write command/response pair, not viable for split responses
        axi_busy    <= (debug_axi_cnt_cmd != debug_axi_cnt_rsp);
        fatal_error <= |{fir_data_bridge, fir_trans_protocol};

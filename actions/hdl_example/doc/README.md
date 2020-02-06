@@ -15,27 +15,27 @@
 │       action_example.vhd        This file is the result of the make process (once source files have been used)
 │       action_example.vhd_source Source file for the generation of action_example.vhd enabling only the configured
 |                                 hardware options
-│       action_wrapper.vhd_source Wrapper connecting the action with the SNAP framework
+│       action_wrapper.vhd_source Wrapper connecting the action with the OCACCEL framework
 │       Makefile                  Makefile used to automatically and selectively prepare the .vhd hardware files
 │
 ├───sw                            Software directory containing the application called from POWER host
 │       Makefile
-│       snap_example.c            Basic application (runs on POWER) including several examples (counter, memory
+│       ocaccel_example.c            Basic application (runs on POWER) including several examples (counter, memory
 |                                 transfers, etc ...)
-│       snap_example.h            
+│       ocaccel_example.h            
 │
 └───tests                         Test directory containing all automated tests
-        10140000_test.sh          Basic test shell running snap_example application
+        10140000_test.sh          Basic test shell running ocaccel_example application
         README.md                 TBD
 ```
 ## Hardware Details
 The following block diagrams show an overview of main blocks interconnections.
 
 On the following diagram we have the top view showing:
-- FPGA pins, connected to PCIe and to configuration flash memory (this directly depends on card schematic and is included in the card PSL_DCP file, see [../../../hardware/README.md](../../../hardware/README.md#snap_env))
+- FPGA pins, connected to PCIe and to configuration flash memory (this directly depends on card schematic and is included in the card PSL_DCP file, see [../../../hardware/README.md](../../../hardware/README.md#ocaccel_env))
 - the PSL block (providing PCIe interface and flash controller)
 - the action wrapper block
-![Top block_diagram](./top_blocks.png "SNAP")
+![Top block_diagram](./top_blocks.png "OCACCEL")
 
-The following diagram details the interconnection between the PSL (which is external to psl_accel), the SNAP core and the action wrapper.
-![Main block_diagram](./main_blocks.png "SNAP")
+The following diagram details the interconnection between the PSL (which is external to psl_accel), the OCACCEL core and the action wrapper.
+![Main block_diagram](./main_blocks.png "OCACCEL")

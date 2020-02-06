@@ -28,7 +28,7 @@ module axi_master_rd #(
                       (
                        input                          clk               ,
                        input                          rst_n             , 
-                       input     [031:0]              i_snap_context    ,
+                       input     [031:0]              i_ocaccel_context    ,
                                                         
                        //---- AXI bus ----               
                          // AXI read address channel       
@@ -84,7 +84,7 @@ module axi_master_rd #(
  assign m_axi_arsize   = rd_pattern[2:0]; // 2^6=512
  assign m_axi_arburst  = 2'd1; // INCR mode for memory access
  assign m_axi_arcache  = 4'd3; // Normal Non-cacheable Bufferable
- assign m_axi_aruser   = i_snap_context[ARUSER_WIDTH - 1:0]; 
+ assign m_axi_aruser   = i_ocaccel_context[ARUSER_WIDTH - 1:0]; 
  assign m_axi_arprot   = 3'd0;
  assign m_axi_arqos    = 4'd0;
  assign m_axi_arregion = 4'd0; //?

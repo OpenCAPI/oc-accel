@@ -24,52 +24,52 @@
 #include <endian.h>
 #include <sys/time.h>
 
-#include <libosnap.h>
+#include <libocaccel.h>
 #include <libocxl.h>
-#include <osnap_tools.h>
-#include <osnap_internal.h>
-#include <osnap_queue.h>
-#include <osnap_global_regs.h>    /* Include SNAP Core (global) Regs */
-#include <osnap_hls_if.h>    /* Include SNAP -> HLS */
+#include <ocaccel_tools.h>
+#include <ocaccel_internal.h>
+#include <ocaccel_queue.h>
+#include <ocaccel_global_regs.h>    /* Include OCACCEL Core (global) Regs */
+#include <ocaccel_hls_if.h>    /* Include OCACCEL -> HLS */
 
 
 /* Trace hardware implementation */
-static unsigned int snap_trace = 0x0;
+static unsigned int ocaccel_trace = 0x0;
 
-#define snap_trace_enabled()  (snap_trace & 0x0001)
-#define reg_trace_enabled()   (snap_trace & 0x0002)
-#define sim_trace_enabled()   (snap_trace & 0x0004)
-#define poll_trace_enabled()  (snap_trace & 0x0010)
+#define ocaccel_trace_enabled()  (ocaccel_trace & 0x0001)
+#define reg_trace_enabled()   (ocaccel_trace & 0x0002)
+#define sim_trace_enabled()   (ocaccel_trace & 0x0004)
+#define poll_trace_enabled()  (ocaccel_trace & 0x0010)
 
 int action_trace_enabled (void)
 {
-    return snap_trace & 0x0008;
+    return ocaccel_trace & 0x0008;
 }
 
 int block_trace_enabled (void)
 {
-    return snap_trace & 0x0020;
+    return ocaccel_trace & 0x0020;
 }
 
 int cache_trace_enabled (void)
 {
-    return snap_trace & 0x0040;
+    return ocaccel_trace & 0x0040;
 }
 
 int stat_trace_enabled (void)
 {
-    return snap_trace & 0x0080;
+    return ocaccel_trace & 0x0080;
 }
 
 int pp_trace_enabled (void)
 {
-    return snap_trace & 0x0100;
+    return ocaccel_trace & 0x0100;
 }
 
-#define software_action_enabled()  (snap_config & 0x01)
+#define software_action_enabled()  (ocaccel_config & 0x01)
 
-#define snap_trace(fmt, ...) do { \
-        if (snap_trace_enabled()) \
+#define ocaccel_trace(fmt, ...) do { \
+        if (ocaccel_trace_enabled()) \
             fprintf(stderr, "D " fmt, ## __VA_ARGS__); \
     } while (0)
 
@@ -90,7 +90,7 @@ int pp_trace_enabled (void)
 
 #define        INVALID_SAT 0x0ffffffff
 
-struct snap_card {
+struct ocaccel_card {
     void* priv;
     ocxl_afu_h afu_h;
     bool master;                    /* True if this is Master Device */
@@ -102,15 +102,15 @@ struct snap_card {
     uint32_t action_base;
     uint16_t vendor_id;
     uint16_t device_id;
-    snap_action_type_t action_type; /* Action Type for attach */
-    snap_action_flag_t action_flags;
+    ocaccel_action_type_t action_type; /* Action Type for attach */
+    ocaccel_action_flag_t action_flags;
     uint32_t sat;                   /* Short Action Type */
     bool start_attach;
-    snap_action_flag_t flags;       /* Flags from Application */
+    ocaccel_action_flag_t flags;       /* Flags from Application */
     uint16_t seq;                   /* Seq Number */
     int afu_fd;
 
-    struct snap_sim_action* action; /* software simulation mode */
+    struct ocaccel_sim_action* action; /* software simulation mode */
     size_t errinfo_size;            /* Size of errinfo */
     void* errinfo;                  /* Err info Buffer */
     ocxl_event event;               /* Buffer to keep event from IRQ */
@@ -129,20 +129,20 @@ struct card_2_name {
 };
 
 /* Limit Card names to max of 15 Bytes */
-struct card_2_name snap_card_2_name_tab[] = {
+struct card_2_name ocaccel_card_2_name_tab[] = {
 	{.card_id = AD9V3_OC_CARD,  .card_name = "AD9V3"},
 	{.card_id = AD9H3_OC_CARD,  .card_name = "AD9H3"},
 	{.card_id = AD9H7_OC_CARD,  .card_name = "AD9H7"},
 	{.card_id = -1,             .card_name = "INVALID"}
 };
 
-/* Search snap_card_2_name_tab to for card name */
-static const char* snap_card_id_2_name (int card_id)
+/* Search ocaccel_card_2_name_tab to for card name */
+static const char* ocaccel_card_id_2_name (int card_id)
 {
     int i = 0;
 
-    while (-1 != snap_card_2_name_tab[i].card_id) {
-        if (card_id == snap_card_2_name_tab[i].card_id) {
+    while (-1 != ocaccel_card_2_name_tab[i].card_id) {
+        if (card_id == ocaccel_card_2_name_tab[i].card_id) {
             break;
         }
 
@@ -150,7 +150,7 @@ static const char* snap_card_id_2_name (int card_id)
     }
 
     /* Return card name */
-    return snap_card_2_name_tab[i].card_name;
+    return ocaccel_card_2_name_tab[i].card_name;
 }
 
 
@@ -166,11 +166,11 @@ static unsigned long tget_ms (void)
     return tms;
 }
 
-static void* hw_snap_card_alloc_dev (const char* path,
+static void* hw_ocaccel_card_alloc_dev (const char* path,
                                      uint16_t vendor_id,
                                      uint16_t device_id)
 {
-    struct snap_card* dn;
+    struct ocaccel_card* dn;
     uint64_t reg;
     int rc;
     ocxl_err err;
@@ -178,12 +178,12 @@ static void* hw_snap_card_alloc_dev (const char* path,
     dn = calloc (1, sizeof (*dn));
 
     if (NULL == dn) {
-        goto __snap_alloc_err;
+        goto __ocaccel_alloc_err;
     }
 
     dn->priv = NULL;
 
-    snap_trace ("%s Enter %s\n", __func__, path);
+    ocaccel_trace ("%s Enter %s\n", __func__, path);
 
     // Device path, two choices:
     // /dev/ocxl/IBM,oc-snap.0007:00:00.1.0
@@ -196,7 +196,7 @@ static void* hw_snap_card_alloc_dev (const char* path,
 
 
     if (err != OCXL_OK) {
-        goto __snap_alloc_err;
+        goto __ocaccel_alloc_err;
     }
 
     dn->sat = INVALID_SAT;        // Invalid Short Action Type stands for not attached
@@ -207,7 +207,7 @@ static void* hw_snap_card_alloc_dev (const char* path,
     //Create Err Buffer (not used)
     dn->errinfo = NULL;
     dn->errinfo_size = 0;
-    snap_trace ("  %s: errinfo_size: %d VendorID: %x DeviceID: %x\n", __func__,
+    ocaccel_trace ("  %s: errinfo_size: %d VendorID: %x DeviceID: %x\n", __func__,
                 (int)dn->errinfo_size, (int)vendor_id, (int)device_id);
 
     //Set afu handle and call ocxl attach
@@ -215,36 +215,36 @@ static void* hw_snap_card_alloc_dev (const char* path,
     rc = ocxl_afu_attach (dn->afu_h, 0);
 
     if (0 != rc) {
-        goto __snap_alloc_err;
+        goto __ocaccel_alloc_err;
     }
 
     //mmap
     dn->mmio_endian = OCXL_MMIO_HOST_ENDIAN;
 
     if (ocxl_mmio_map (dn->afu_h, OCXL_PER_PASID_MMIO, &dn->mmio_per_pasid) == -1) {
-        snap_trace ("  %s: Error Can not mmap\n", __func__);
-        goto __snap_alloc_err;
+        ocaccel_trace ("  %s: Error Can not mmap\n", __func__);
+        goto __ocaccel_alloc_err;
     }
 
     if (ocxl_mmio_map (dn->afu_h, OCXL_GLOBAL_MMIO, &dn->mmio_global) == -1) {
-        snap_trace ("  %s: Error Can not mmap\n", __func__);
-        goto __snap_alloc_err;
+        ocaccel_trace ("  %s: Error Can not mmap\n", __func__);
+        goto __ocaccel_alloc_err;
     }
 
-    snap_trace ("mmio_mapped\n");
+    ocaccel_trace ("mmio_mapped\n");
 
 
     // Read and save Capability reg
-    ocxl_mmio_read64 (dn->mmio_global, SNAP_CAP, dn->mmio_endian, &reg);
+    ocxl_mmio_read64 (dn->mmio_global, OCACCEL_CAP, dn->mmio_endian, &reg);
     dn->cap_reg = reg;
-    // Get SNAP Card Name
-    dn->name = snap_card_id_2_name ((int) (reg & 0xff));
+    // Get OCACCEL Card Name
+    dn->name = ocaccel_card_id_2_name ((int) (reg & 0xff));
 
-    snap_trace ("%s Exit %p OK Context: %d Master: %d Card: %s\n", __func__,
+    ocaccel_trace ("%s Exit %p OK Context: %d Master: %d Card: %s\n", __func__,
                 dn, dn->cir, dn->master, dn->name);
-    return (struct snap_card*)dn;
+    return (struct ocaccel_card*)dn;
 
-__snap_alloc_err:
+__ocaccel_alloc_err:
 
     if (dn->errinfo) {
         free (dn->errinfo);
@@ -258,13 +258,13 @@ __snap_alloc_err:
         free (dn);
     }
 
-    snap_trace ("%s Exit Err\n", __func__);
+    ocaccel_trace ("%s Exit Err\n", __func__);
     return NULL;
 }
 
 // Register Access
 // Action registers are 32bits and in PER_PASID space
-static int hw_mmio_per_pasid_write32 (struct snap_card* card,
+static int hw_mmio_per_pasid_write32 (struct ocaccel_card* card,
                                       uint64_t offset, uint32_t data)
 {
     int rc = -1;
@@ -282,7 +282,7 @@ static int hw_mmio_per_pasid_write32 (struct snap_card* card,
     return rc;
 }
 
-static int hw_mmio_per_pasid_read32 (struct snap_card* card,
+static int hw_mmio_per_pasid_read32 (struct ocaccel_card* card,
                                      uint64_t offset, uint32_t* data)
 {
     int rc = -1;
@@ -300,8 +300,8 @@ static int hw_mmio_per_pasid_read32 (struct snap_card* card,
     return rc;
 }
 
-// Snap_core registers are 64bits and in GLOBAL space
-static int hw_mmio_global_write64 (struct snap_card* card,
+// ocaccel registers are 64bits and in GLOBAL space
+static int hw_mmio_global_write64 (struct ocaccel_card* card,
                                    uint64_t offset, uint64_t data)
 {
     int rc = -1;
@@ -319,7 +319,7 @@ static int hw_mmio_global_write64 (struct snap_card* card,
     return rc;
 }
 
-static int hw_mmio_global_read64 (struct snap_card* card,
+static int hw_mmio_global_read64 (struct ocaccel_card* card,
                                   uint64_t offset, uint64_t* data)
 {
     int rc = -1;
@@ -337,7 +337,7 @@ static int hw_mmio_global_read64 (struct snap_card* card,
     return rc;
 }
 
-static void hw_snap_card_free (struct snap_card* card)
+static void hw_ocaccel_card_free (struct ocaccel_card* card)
 {
     if (!card) {
         return;
@@ -357,11 +357,11 @@ static void hw_snap_card_free (struct snap_card* card)
 }
 
 //FIXME: irq procedure needs to be revised
-static int hw_wait_irq (struct snap_card* card, int timeout_sec/*, int expect_irq*/)
+static int hw_wait_irq (struct ocaccel_card* card, int timeout_sec/*, int expect_irq*/)
 {
     int rc = 0;
 
-    snap_trace ("  %s: Enter fd: %d Flags: 0x%x  Timeout: %d sec\n",
+    ocaccel_trace ("  %s: Enter fd: %d Flags: 0x%x  Timeout: %d sec\n",
                 __func__, card->afu_fd,
                 card->flags, timeout_sec);
 
@@ -369,16 +369,16 @@ __hw_wait_irq_retry:
 
     if (!ocxl_afu_event_check (card->afu_h, -1, &card->event, 1)) {
 	rc = EINTR;
-        snap_trace ("    Timeout......\n");
+        ocaccel_trace ("    Timeout......\n");
     } else {
-        snap_trace ("    Event is Pending ......\n");
+        ocaccel_trace ("    Event is Pending ......\n");
     }
 
     if (0 == rc) {
         switch (card->event.type) {
 
         case OCXL_EVENT_IRQ:
-            snap_trace ("  %s: OCXL_EVENT_IRQ\n"
+            ocaccel_trace ("  %s: OCXL_EVENT_IRQ\n"
                         "      irq=%d,  count=%lld\n", __func__,
                         (int)card->event.irq.irq,
                         (long long)card->event.irq.count);
@@ -386,7 +386,7 @@ __hw_wait_irq_retry:
             // TODO: expect_irq is useless
             //if (expect_irq != card->event.irq.irq) {
             if (card->irq_ea != card->event.irq.handle) {
-                snap_trace ("  %s:     Wrong IRQ.. Retry ! Get: %lx, expect: %lx\n", __func__,
+                ocaccel_trace ("  %s:     Wrong IRQ.. Retry ! Get: %lx, expect: %lx\n", __func__,
                         card->event.irq.handle, card->irq_ea);
                 goto __hw_wait_irq_retry;
             }
@@ -398,8 +398,8 @@ __hw_wait_irq_retry:
             ocxl_event_translation_fault* ds =
                 &card->event.translation_fault;
 
-            snap_trace ("  %s: OCXL_EVENT_TRANSLATION_FAULT\n", __func__);
-            snap_trace ("      addr=%08llx, dsisr=%08llx\n",
+            ocaccel_trace ("  %s: OCXL_EVENT_TRANSLATION_FAULT\n", __func__);
+            ocaccel_trace ("      addr=%08llx, dsisr=%08llx\n",
                         (long long)ds->addr,
                         (long long)ds->dsisr);
             rc = EFAULT;
@@ -407,32 +407,32 @@ __hw_wait_irq_retry:
         }
 
         default:
-            snap_trace ("  %s: AFU_ERROR type=%d\n",
+            ocaccel_trace ("  %s: AFU_ERROR type=%d\n",
                         __func__, card->event.type);
             rc = EINTR;
             break;
         }
     }
 
-    snap_trace ("  %s: Exit fd: %d rc: %d\n", __func__,
+    ocaccel_trace ("  %s: Exit fd: %d rc: %d\n", __func__,
                 card->afu_fd, rc);
     return rc;
 }
 
-static struct snap_action* hw_attach_action (struct snap_card* card,
-        snap_action_type_t action_type,
-        snap_action_flag_t action_flags,
+static struct ocaccel_action* hw_attach_action (struct ocaccel_card* card,
+        ocaccel_action_type_t action_type,
+        ocaccel_action_flag_t action_flags,
         int timeout_sec)
 {
     int rc = 0;
-    struct snap_action* action = NULL;
+    struct ocaccel_action* action = NULL;
 
     if (card == NULL) {
         errno = EINVAL;
         return NULL;
     }
 
-    snap_trace ("%s Enter Action: 0x%x Old Action: %x "
+    ocaccel_trace ("%s Enter Action: 0x%x Old Action: %x "
                 "Flags: 0x%x Base: %x timeout: %d sec Seq: %x\n",
                 __func__, action_type, card->action_type, action_flags,
                 card->action_base, timeout_sec, card->seq);
@@ -444,37 +444,37 @@ static struct snap_action* hw_attach_action (struct snap_card* card,
 
     card->flags = action_flags;
 
-    snap_trace ("Set start_attach\n");
+    ocaccel_trace ("Set start_attach\n");
 
     // TODO: Attach IRQ is currently not supported in oc-accel
-    if (SNAP_ATTACH_IRQ & card->flags) {
+    if (OCACCEL_ATTACH_IRQ & card->flags) {
         rc = hw_wait_irq (card, timeout_sec );
     }
 
     /* Return Pointer if all went well */
     if (0 == rc) {
-        action = (struct snap_action*)card;
+        action = (struct ocaccel_action*)card;
     }
 
-    snap_trace ("%s Exit rc: %d Action: %p Base: 0x%x\n", __func__,
+    ocaccel_trace ("%s Exit rc: %d Action: %p Base: 0x%x\n", __func__,
                 rc, action, card->action_base);
 
     return action;
 }
 
-static int hw_detach_action (struct snap_action* action)
+static int hw_detach_action (struct ocaccel_action* action)
 {
     int rc = 0;
-    struct snap_card* card;
+    struct ocaccel_card* card;
 
     if (action == NULL) {
-        snap_trace ("%s Error NULL Action\n", __func__);
+        ocaccel_trace ("%s Error NULL Action\n", __func__);
         errno = EINVAL;
         return -1;
     }
 
-    card = (struct snap_card*)action;
-    snap_trace ("%s Enter Action: 0x%x "
+    card = (struct ocaccel_card*)action;
+    ocaccel_trace ("%s Enter Action: 0x%x "
                 "Base: %x timeout: %d sec Seq: 0x%x\n",
                 __func__, card->action_type, card->action_base,
                 card->attach_timeout_sec, card->seq);
@@ -483,39 +483,39 @@ static int hw_detach_action (struct snap_action* action)
     return rc;
 }
 
-static int hw_card_ioctl (struct snap_card* card, unsigned int cmd, unsigned long parm)
+static int hw_card_ioctl (struct ocaccel_card* card, unsigned int cmd, unsigned long parm)
 {
     int rc = 0;
     unsigned long rc_val = 0;
     unsigned long* arg = (unsigned long*)parm;
 
     if (NULL == arg) {
-        snap_trace ("  %s Error Missing parm\n", __func__);
+        ocaccel_trace ("  %s Error Missing parm\n", __func__);
         return -1;
     }
 
     switch (cmd) {
     case GET_CARD_TYPE:
         rc_val = (unsigned long) (card->cap_reg & 0xff);
-        snap_trace ("  %s GET CARD_TYPE: %d\n", __func__, (int)rc_val);
+        ocaccel_trace ("  %s GET CARD_TYPE: %d\n", __func__, (int)rc_val);
         *arg = rc_val;
         break;
 
     case GET_NVME_ENABLED:
-        if (card->cap_reg & SNAP_NVME_ENA) {
+        if (card->cap_reg & OCACCEL_NVME_ENA) {
             rc_val = 1;
         } else {
             rc_val = 0;
         }
 
-        snap_trace ("  %s GET NVME: %d\n", __func__, (int)rc_val);
+        ocaccel_trace ("  %s GET NVME: %d\n", __func__, (int)rc_val);
         *arg = rc_val;
         break;
 
     case GET_SDRAM_SIZE:
         rc_val = (unsigned long) (card->cap_reg >> 16);  /* in MB */
         rc_val = rc_val & 0xffff;    /* Mask bits 16 ... 31 */
-        snap_trace ("  %s Get MEM: %d MB\n", __func__, (int)rc_val);
+        ocaccel_trace ("  %s Get MEM: %d MB\n", __func__, (int)rc_val);
         *arg = rc_val;
         break;
 
@@ -524,7 +524,7 @@ static int hw_card_ioctl (struct snap_card* card, unsigned int cmd, unsigned lon
         /* Value a means that transfers need to be 2^a B aligned */
         rc_val = (unsigned long) (card->cap_reg >> 32) & 0xf; /* Get Bits 32 .. 35 */
         rc_val = 1 << rc_val;
-        snap_trace ("  %s Get DMA align: %d Bytes\n", __func__, (int)rc_val);
+        ocaccel_trace ("  %s Get DMA align: %d Bytes\n", __func__, (int)rc_val);
         *arg = rc_val;
         break;
 
@@ -533,22 +533,22 @@ static int hw_card_ioctl (struct snap_card* card, unsigned int cmd, unsigned lon
         /* Value t means that minimum transfer size is 2^t B */
         rc_val = (unsigned long) (card->cap_reg >> 36) & 0xf; /* Get Bits 36 .. 39 */
         rc_val = 1 << rc_val;
-        snap_trace ("  %s Get DMA Min Size: %d Bytes\n", __func__, (int)rc_val);
+        ocaccel_trace ("  %s Get DMA Min Size: %d Bytes\n", __func__, (int)rc_val);
         *arg = rc_val;
         break;
 
     case GET_CARD_NAME:
-        snap_trace ("  %s Get Card name: %s\n", __func__, card->name);
+        ocaccel_trace ("  %s Get Card name: %s\n", __func__, card->name);
         strcpy ((char*)parm, card->name);
         break;
 
     case SET_SDRAM_SIZE:
         card->cap_reg = (card->cap_reg & 0xffff) | (parm << 16);
-        snap_trace ("  %s Set MEM: %d MB\n", __func__, (int)parm);
+        ocaccel_trace ("  %s Set MEM: %d MB\n", __func__, (int)parm);
         break;
 
     default:
-        snap_trace ("  %s Invalid CMD %d Error\n", __func__, cmd);
+        ocaccel_trace ("  %s Invalid CMD %d Error\n", __func__, cmd);
         *arg = 0;
         rc = -1;
         break;
@@ -558,47 +558,47 @@ static int hw_card_ioctl (struct snap_card* card, unsigned int cmd, unsigned lon
 }
 
 /* Hardware version of the lowlevel functions */
-static struct snap_funcs hardware_funcs = {
-    .card_alloc_dev = hw_snap_card_alloc_dev,
+static struct ocaccel_funcs hardware_funcs = {
+    .card_alloc_dev = hw_ocaccel_card_alloc_dev,
     .attach_action = hw_attach_action,       /* attach Action */
     .detach_action = hw_detach_action,       /* detach Action */
     .mmio_per_pasid_write32 = hw_mmio_per_pasid_write32,
     .mmio_per_pasid_read32 = hw_mmio_per_pasid_read32,
     .mmio_global_write64 = hw_mmio_global_write64,
     .mmio_global_read64 = hw_mmio_global_read64,
-    .card_free = hw_snap_card_free,
+    .card_free = hw_ocaccel_card_free,
     .card_ioctl = hw_card_ioctl,
 };
 
 /* We access the hardware via this function pointer struct */
-static struct snap_funcs* df = &hardware_funcs;
+static struct ocaccel_funcs* df = &hardware_funcs;
 
-struct snap_card* snap_card_alloc_dev (const char* path,
+struct ocaccel_card* ocaccel_card_alloc_dev (const char* path,
                                        uint16_t vendor_id,
                                        uint16_t device_id)
 {
     return df->card_alloc_dev (path, vendor_id, device_id);
 }
 
-struct snap_action* snap_attach_action (struct snap_card* card,
-                                        snap_action_type_t action_type,
-                                        snap_action_flag_t action_flags,
+struct ocaccel_action* ocaccel_attach_action (struct ocaccel_card* card,
+                                        ocaccel_action_type_t action_type,
+                                        ocaccel_action_flag_t action_flags,
                                         int timeout_ms)
 {
     return df->attach_action (card, action_type, action_flags, timeout_ms);
 }
 
-int snap_detach_action (struct snap_action* action)
+int ocaccel_detach_action (struct ocaccel_action* action)
 {
     int rc;
 
-    snap_trace ("%s Enter\n", __func__);
+    ocaccel_trace ("%s Enter\n", __func__);
     rc = df->detach_action (action);
-    snap_trace ("%s Exit rc: %d\n", __func__, rc);
+    ocaccel_trace ("%s Exit rc: %d\n", __func__, rc);
     return rc;
 }
 
-int snap_action_write32 (struct snap_card* _card,
+int ocaccel_action_write32 (struct ocaccel_card* _card,
                          uint64_t offset, uint32_t data)
 {
     int rc;
@@ -606,7 +606,7 @@ int snap_action_write32 (struct snap_card* _card,
     return rc;
 }
 
-int snap_action_read32 (struct snap_card* _card,
+int ocaccel_action_read32 (struct ocaccel_card* _card,
                         uint64_t offset, uint32_t* data)
 {
     int rc;
@@ -615,7 +615,7 @@ int snap_action_read32 (struct snap_card* _card,
 }
 
 
-int snap_global_write64 (struct snap_card* _card,
+int ocaccel_global_write64 (struct ocaccel_card* _card,
                          uint64_t offset, uint64_t data)
 {
     int rc;
@@ -624,7 +624,7 @@ int snap_global_write64 (struct snap_card* _card,
     return rc;
 }
 
-int snap_global_read64 (struct snap_card* _card,
+int ocaccel_global_read64 (struct ocaccel_card* _card,
                         uint64_t offset, uint64_t* data)
 {
     int rc;
@@ -634,51 +634,51 @@ int snap_global_read64 (struct snap_card* _card,
 }
 
 
-void snap_card_free (struct snap_card* _card)
+void ocaccel_card_free (struct ocaccel_card* _card)
 {
     df->card_free (_card);
 }
 
-int snap_card_ioctl (struct snap_card* _card, unsigned int cmd, unsigned long arg)
+int ocaccel_card_ioctl (struct ocaccel_card* _card, unsigned int cmd, unsigned long arg)
 {
     return df->card_ioctl (_card, cmd, arg);
 }
 
 /*****************************************************************************
  *        Below are functions defined for HLS action.
- *        For HDL actions, you can use "snap_action_start" and "snap_action_complete"
+ *        For HDL actions, you can use "ocaccel_action_start" and "ocaccel_action_complete"
  *        if you have implemented the same register of ACTION_CONTROL which is defined
- *        in snap_hls_if.h
+ *        in ocaccel_hls_if.h
  ****************************************************************************/
 
-int snap_action_start (struct snap_action* action)
+int ocaccel_action_start (struct ocaccel_action* action)
 {
-    struct snap_card* card = (struct snap_card*)action;
+    struct ocaccel_card* card = (struct ocaccel_card*)action;
 
-    snap_trace ("%s: START Action 0x%x Flags %x\n", __func__, card->action_type, card->flags);
+    ocaccel_trace ("%s: START Action 0x%x Flags %x\n", __func__, card->action_type, card->flags);
 
     /* Enable Ready IRQ if set by application */
-    if (SNAP_ACTION_DONE_IRQ  & card->flags) {
-        snap_action_write32 (card, ACTION_IRQ_APP, ACTION_IRQ_APP_DONE);
-        snap_action_write32 (card, ACTION_IRQ_CONTROL, ACTION_IRQ_CONTROL_ON);
+    if (OCACCEL_ACTION_DONE_IRQ  & card->flags) {
+        ocaccel_action_write32 (card, ACTION_IRQ_APP, ACTION_IRQ_APP_DONE);
+        ocaccel_action_write32 (card, ACTION_IRQ_CONTROL, ACTION_IRQ_CONTROL_ON);
     }
 
-    return snap_action_write32 (card, ACTION_CONTROL, ACTION_CONTROL_START);
+    return ocaccel_action_write32 (card, ACTION_CONTROL, ACTION_CONTROL_START);
 }
 
-int snap_action_stop (struct snap_action* action __unused)
+int ocaccel_action_stop (struct ocaccel_action* action __unused)
 {
     /* FIXME Missing */
     return 0;
 }
 
-int snap_action_is_idle (struct snap_action* action, int* rc)
+int ocaccel_action_is_idle (struct ocaccel_action* action, int* rc)
 {
     int _rc = 0;
     uint32_t action_data = 0;
-    struct snap_card* card = (struct snap_card*)action;
+    struct ocaccel_card* card = (struct ocaccel_card*)action;
 
-    _rc = snap_action_read32 (card, ACTION_CONTROL, &action_data);
+    _rc = ocaccel_action_read32 (card, ACTION_CONTROL, &action_data);
 
     if (rc) {
         *rc = _rc;
@@ -687,12 +687,12 @@ int snap_action_is_idle (struct snap_action* action, int* rc)
     return (action_data & ACTION_CONTROL_IDLE) == ACTION_CONTROL_IDLE;
 }
 
-int snap_action_wait_interrupt(struct snap_action *action, int *rc, int timeout)
+int ocaccel_action_wait_interrupt(struct ocaccel_action *action, int *rc, int timeout)
 {
     //uint32_t action_data = 0;
-    struct snap_card *card = (struct snap_card *)action;
-    //int _rc = hw_wait_irq(card, timeout, SNAP_ACTION_IRQ_NUM);
-    int _rc = hw_wait_irq(card, timeout /*, SNAP_ACTION_IRQ_NUM*/);
+    struct ocaccel_card *card = (struct ocaccel_card *)action;
+    //int _rc = hw_wait_irq(card, timeout, OCACCEL_ACTION_IRQ_NUM);
+    int _rc = hw_wait_irq(card, timeout /*, OCACCEL_ACTION_IRQ_NUM*/);
 
     if (NULL != rc)
         *rc = _rc;
@@ -700,30 +700,30 @@ int snap_action_wait_interrupt(struct snap_action *action, int *rc, int timeout)
     return _rc;
 }
 
-int snap_action_completed (struct snap_action* action, int* rc, int timeout)
+int ocaccel_action_completed (struct ocaccel_action* action, int* rc, int timeout)
 {
     int _rc = 0;
     uint32_t action_data = 0;
-    struct snap_card* card = (struct snap_card*)action;
+    struct ocaccel_card* card = (struct ocaccel_card*)action;
     unsigned long t0;
     int dt, timeout_ms;
 
-    if (SNAP_ACTION_DONE_IRQ & card->flags) {
-        snap_trace ("Wait for IRQ\n");
+    if (OCACCEL_ACTION_DONE_IRQ & card->flags) {
+        ocaccel_trace ("Wait for IRQ\n");
         hw_wait_irq (card, timeout);
-        snap_action_write32 (card, ACTION_IRQ_STATUS, ACTION_IRQ_STATUS_DONE);
-        snap_action_write32 (card, ACTION_IRQ_APP, 0);
-        snap_action_write32 (card, ACTION_IRQ_CONTROL, ACTION_IRQ_CONTROL_OFF);
-        _rc = snap_action_read32 (card, ACTION_CONTROL, &action_data);
+        ocaccel_action_write32 (card, ACTION_IRQ_STATUS, ACTION_IRQ_STATUS_DONE);
+        ocaccel_action_write32 (card, ACTION_IRQ_APP, 0);
+        ocaccel_action_write32 (card, ACTION_IRQ_CONTROL, ACTION_IRQ_CONTROL_OFF);
+        _rc = ocaccel_action_read32 (card, ACTION_CONTROL, &action_data);
     } else {
-        snap_trace ("Poll until timeout\n");
+        ocaccel_trace ("Poll until timeout\n");
         /* Busy poll timout sec */
         t0 = tget_ms();
         dt = 0;
         timeout_ms = timeout * 1000;
 
         while (dt < timeout_ms) {
-            _rc = snap_action_read32 (card, ACTION_CONTROL, &action_data);
+            _rc = ocaccel_action_read32 (card, ACTION_CONTROL, &action_data);
 
             if ((action_data & ACTION_CONTROL_IDLE) == ACTION_CONTROL_IDLE) {
                 break;
@@ -741,27 +741,27 @@ int snap_action_completed (struct snap_action* action, int* rc, int timeout)
     return (action_data & ACTION_CONTROL_IDLE) == ACTION_CONTROL_IDLE;
 }
 
-int snap_action_assign_irq (struct snap_action* action, uint32_t action_irq_ea_reg_addr)
+int ocaccel_action_assign_irq (struct ocaccel_action* action, uint32_t action_irq_ea_reg_addr)
 {
-    struct snap_card* card = (struct snap_card*)action;
+    struct ocaccel_card* card = (struct ocaccel_card*)action;
     int rc = -1;
 
-    snap_trace ("%s: Assign IRQ EA on reg 0x%x\n", __func__, action_irq_ea_reg_addr);
+    ocaccel_trace ("%s: Assign IRQ EA on reg 0x%x\n", __func__, action_irq_ea_reg_addr);
 
     // TODO: need to discuss if this is the best way to handle IRQ
     rc = ocxl_irq_alloc(card->afu_h, NULL, &(card->afu_irq));
 
     if (OCXL_OK != rc) {
-        snap_trace ("%s: Failed to allocate IRQ handler.\n", __func__);
+        ocaccel_trace ("%s: Failed to allocate IRQ handler.\n", __func__);
         return -1;
     }
 
     // TODO: Need to write EA to AFU's register.
     card->irq_ea = ocxl_irq_get_handle(card->afu_h, card->afu_irq);
-    snap_trace ("%s: IRQ EA: %lx.\n", __func__, card->irq_ea);
+    ocaccel_trace ("%s: IRQ EA: %lx.\n", __func__, card->irq_ea);
 
-    snap_action_write32 (card, (action_irq_ea_reg_addr + 4), (uint32_t) ((card->irq_ea & 0xFFFFFFFF00000000) >> 32));
-    snap_action_write32 (card, action_irq_ea_reg_addr,  (uint32_t) (card->irq_ea & 0x00000000FFFFFFFF));
+    ocaccel_action_write32 (card, (action_irq_ea_reg_addr + 4), (uint32_t) ((card->irq_ea & 0xFFFFFFFF00000000) >> 32));
+    ocaccel_action_write32 (card, action_irq_ea_reg_addr,  (uint32_t) (card->irq_ea & 0x00000000FFFFFFFF));
 
     return 0;
 }
@@ -776,24 +776,24 @@ int snap_action_assign_irq (struct snap_action* action, uint32_t action_irq_ea_r
  * @return        0 on success.
  */
 
-int snap_action_sync_execute_job_set_regs (struct snap_action* action,
-        struct snap_job* cjob)
+int ocaccel_action_sync_execute_job_set_regs (struct ocaccel_action* action,
+        struct ocaccel_job* cjob)
 {
     int rc = 0;
     unsigned int i;
-    struct snap_card* card = (struct snap_card*)action;
-    struct snap_queue_workitem job;
+    struct ocaccel_card* card = (struct ocaccel_card*)action;
+    struct ocaccel_queue_workitem job;
     uint32_t action_addr;
     uint32_t* job_data;
     unsigned int mmio_in, mmio_out;
 
     /* Size must be less than addr[6] */
-    if (cjob->wout_size > SNAP_JOBSIZE) {
-        snap_trace ("  %s: err: wout_size too large %d > %d\n", __func__,
-                    cjob->wout_size, SNAP_JOBSIZE);
-        snap_trace ("      win_addr  = %llx size = %d\n",
+    if (cjob->wout_size > OCACCEL_JOBSIZE) {
+        ocaccel_trace ("  %s: err: wout_size too large %d > %d\n", __func__,
+                    cjob->wout_size, OCACCEL_JOBSIZE);
+        ocaccel_trace ("      win_addr  = %llx size = %d\n",
                     (long long)cjob->win_addr, cjob->win_size);
-        snap_trace ("      wout_addr = %llx size = %d\n",
+        ocaccel_trace ("      wout_addr = %llx size = %d\n",
                     (long long)cjob->wout_addr, cjob->wout_size);
 
         errno = EINVAL;
@@ -814,21 +814,21 @@ int snap_action_sync_execute_job_set_regs (struct snap_action* action,
     } else {
         job.user.ext.addr  = cjob->win_addr;
         job.user.ext.size  = cjob->win_size;
-        job.user.ext.type  = SNAP_ADDRTYPE_HOST_DRAM;
-        job.user.ext.flags = (SNAP_ADDRFLAG_EXT |
-                              SNAP_ADDRFLAG_END);
+        job.user.ext.type  = OCACCEL_ADDRTYPE_HOST_DRAM;
+        job.user.ext.flags = (OCACCEL_ADDRFLAG_EXT |
+                              OCACCEL_ADDRFLAG_END);
         mmio_out = sizeof (job.user.ext) / sizeof (uint32_t);
     }
 
     mmio_in = 16 / sizeof (uint32_t) + mmio_out;
 
-    snap_trace ("    win_size: %d wout_size: %d mmio_in: %d mmio_out: %d\n",
+    ocaccel_trace ("    win_size: %d wout_size: %d mmio_in: %d mmio_out: %d\n",
                 cjob->win_size, cjob->wout_size, mmio_in, mmio_out);
 
     job.short_action = card->sat;/* Set correct Value after attach */
     job.seq = card->seq++; /* Set correct Value after attach */
 
-    snap_trace ("%s: PASS PARAMETERS to Short Action %d Seq: %x\n",
+    ocaccel_trace ("%s: PASS PARAMETERS to Short Action %d Seq: %x\n",
                 __func__, job.short_action, job.seq);
 
     /* __hexdump(stderr, &job, sizeof(job)); */
@@ -839,15 +839,15 @@ int snap_action_sync_execute_job_set_regs (struct snap_action* action,
 
     for (i = 0, action_addr = ACTION_PARAMS_IN; i < mmio_in;
          i++, action_addr += sizeof (uint32_t)) {
-        rc = snap_action_write32 (card, action_addr, job_data[i]);
+        rc = ocaccel_action_write32 (card, action_addr, job_data[i]);
 
         if (rc != 0) {
-            goto __snap_action_sync_execute_job_exit;
+            goto __ocaccel_action_sync_execute_job_exit;
         }
     }
 
-__snap_action_sync_execute_job_exit:
-    snap_action_stop (action);
+__ocaccel_action_sync_execute_job_exit:
+    ocaccel_action_stop (action);
     return rc;
 }
 
@@ -862,39 +862,39 @@ __snap_action_sync_execute_job_exit:
  * @return        0 on success.
  */
 
-int snap_action_sync_execute_job_check_completion (struct snap_action* action,
-        struct snap_job* cjob,
+int ocaccel_action_sync_execute_job_check_completion (struct ocaccel_action* action,
+        struct ocaccel_job* cjob,
         unsigned int timeout_sec)
 {
     int rc;
     unsigned int i;
     int completed;
-    struct snap_card* card = (struct snap_card*)action;
-    struct snap_queue_workitem job;
+    struct ocaccel_card* card = (struct ocaccel_card*)action;
+    struct ocaccel_queue_workitem job;
     uint32_t action_addr;
     uint32_t* job_data;
     unsigned int mmio_out;
 
-    completed = snap_action_completed (action, &rc, timeout_sec);
+    completed = ocaccel_action_completed (action, &rc, timeout_sec);
 
     /* Issue #360 */
     if (rc != 0) {
-        snap_trace ("%s: EIO rc=%d completed=%d\n", __func__,
+        ocaccel_trace ("%s: EIO rc=%d completed=%d\n", __func__,
                     rc, completed);
-        rc = SNAP_EIO;
-        goto __snap_action_sync_execute_job_exit;
+        rc = OCACCEL_EIO;
+        goto __ocaccel_action_sync_execute_job_exit;
     }
 
     if (completed == 0) {
         /* Not done */
-        snap_trace ("%s: rc=%d\n", __func__, rc);
+        ocaccel_trace ("%s: rc=%d\n", __func__, rc);
 
         if (rc == 0) {
             errno = ETIME;
-            rc = SNAP_ETIMEDOUT;
+            rc = OCACCEL_ETIMEDOUT;
         }
 
-        goto __snap_action_sync_execute_job_exit;
+        goto __ocaccel_action_sync_execute_job_exit;
     }
 
     /* job.short_action = 0x00; */        /* Set later */
@@ -911,20 +911,20 @@ int snap_action_sync_execute_job_check_completion (struct snap_action* action,
     } else {
         job.user.ext.addr  = cjob->win_addr;
         job.user.ext.size  = cjob->win_size;
-        job.user.ext.type  = SNAP_ADDRTYPE_HOST_DRAM;
-        job.user.ext.flags = (SNAP_ADDRFLAG_EXT |
-                              SNAP_ADDRFLAG_END);
+        job.user.ext.type  = OCACCEL_ADDRTYPE_HOST_DRAM;
+        job.user.ext.flags = (OCACCEL_ADDRFLAG_EXT |
+                              OCACCEL_ADDRFLAG_END);
         mmio_out = sizeof (job.user.ext) / sizeof (uint32_t);
     }
 
     /* Get RETC (0x184) back to the caller */
-    rc = snap_action_read32 (card, ACTION_RETC_OUT, &cjob->retc);
+    rc = ocaccel_action_read32 (card, ACTION_RETC_OUT, &cjob->retc);
 
     if (rc != 0) {
-        goto __snap_action_sync_execute_job_exit;
+        goto __ocaccel_action_sync_execute_job_exit;
     }
 
-    snap_trace ("%s: RETURN RESULTS %ld bytes (%d)\n", __func__,
+    ocaccel_trace ("%s: RETURN RESULTS %ld bytes (%d)\n", __func__,
                 mmio_out * sizeof (uint32_t), mmio_out);
 
     /* Get job results max 6*16 bytes back to the caller */
@@ -939,18 +939,18 @@ int snap_action_sync_execute_job_check_completion (struct snap_action* action,
     /* No need to read back 0x190, 0x194, 0x198 and 0x19c .... */
     for (i = 0, action_addr = ACTION_PARAMS_OUT + 0x10; i < mmio_out;
          i++, action_addr += sizeof (uint32_t)) {
-        rc = snap_action_read32 (card, action_addr, &job_data[i]);
+        rc = ocaccel_action_read32 (card, action_addr, &job_data[i]);
 
         if (rc != 0) {
-            goto __snap_action_sync_execute_job_exit;
+            goto __ocaccel_action_sync_execute_job_exit;
         }
 
-        snap_trace ("  %s: %d Addr: %x Data: %x\n", __func__, i,
+        ocaccel_trace ("  %s: %d Addr: %x Data: %x\n", __func__, i,
                     action_addr, job_data[i]);
     }
 
-__snap_action_sync_execute_job_exit:
-    snap_action_stop (action);
+__ocaccel_action_sync_execute_job_exit:
+    ocaccel_action_stop (action);
     return rc;
 }
 
@@ -968,37 +968,37 @@ __snap_action_sync_execute_job_exit:
  * @return        0 on success.
  */
 
-int snap_action_sync_execute_job (struct snap_action* action,
-                                  struct snap_job* cjob,
+int ocaccel_action_sync_execute_job (struct ocaccel_action* action,
+                                  struct ocaccel_job* cjob,
                                   unsigned int timeout_sec)
 {
     int rc;
 
     /* Set action registers through MMIO */
-    rc = snap_action_sync_execute_job_set_regs (action, cjob);
+    rc = ocaccel_action_sync_execute_job_set_regs (action, cjob);
 
     if (rc != 0) {
         return rc;
     }
 
     /* Start Action */
-    snap_action_start (action);
+    ocaccel_action_start (action);
 
     /* Wait for finish */
-    rc = snap_action_sync_execute_job_check_completion (action, cjob,
+    rc = ocaccel_action_sync_execute_job_check_completion (action, cjob,
             timeout_sec);
     return rc;
 }
 
 
-uint32_t snap_action_get_pasid(struct snap_card *card)
+uint32_t ocaccel_action_get_pasid(struct ocaccel_card *card)
 {
     return ocxl_afu_get_pasid(card->afu_h);
 }
 
 /* Software version of the lowlevel functions */
 /* Abandoned */
-//static struct snap_funcs software_funcs = {
+//static struct ocaccel_funcs software_funcs = {
 //        .card_alloc_dev = NULL,
 //        .attach_action = NULL, /* attach Action */
 //        .detach_action = NULL, /* detach Action */
@@ -1020,9 +1020,9 @@ static void _init (void)
 {
     const char* trace_env;
 
-    trace_env = getenv ("SNAP_TRACE");
+    trace_env = getenv ("OCACCEL_TRACE");
 
     if (trace_env != NULL) {
-        snap_trace = strtol (trace_env, (char**)NULL, 0);
+        ocaccel_trace = strtol (trace_env, (char**)NULL, 0);
     }
 }

@@ -28,10 +28,10 @@
 #include <getopt.h>
 #include <ctype.h>
 
-#include <libosnap.h>
+#include <libocaccel.h>
 #include <libocxl.h>
-#include <osnap_tools.h>
-#include <osnap_global_regs.h>
+#include <ocaccel_tools.h>
+#include <ocaccel_global_regs.h>
 
 #include "hdl_single_engine.h"
 
@@ -66,7 +66,7 @@
     printf(fmt, ## __VA_ARGS__);    \
 } while (0)
 
-//struct snap_card {
+//struct ocaccel_card {
 //    void* priv;
 //    ocxl_afu_h afu_h;
 //    bool master;                    /* True if this is Master Device */
@@ -78,15 +78,15 @@
 //    uint32_t action_base;
 //    uint16_t vendor_id;
 //    uint16_t device_id;
-//    snap_action_type_t action_type; /* Action Type for attach */
-//    snap_action_flag_t action_flags;
+//    ocaccel_action_type_t action_type; /* Action Type for attach */
+//    ocaccel_action_flag_t action_flags;
 //    uint32_t sat;                   /* Short Action Type */
 //    bool start_attach;
-//    snap_action_flag_t flags;       /* Flags from Application */
+//    ocaccel_action_flag_t flags;       /* Flags from Application */
 //    uint16_t seq;                   /* Seq Number */
 //    int afu_fd;
 //
-//    struct snap_sim_action* action; /* software simulation mode */
+//    struct ocaccel_sim_action* action; /* software simulation mode */
 //    size_t errinfo_size;            /* Size of errinfo */
 //    void* errinfo;                  /* Err info Buffer */
 //    ocxl_event event;               /* Buffer to keep event from IRQ */
@@ -137,11 +137,11 @@ static void free_mem (void* a)
 
 
 /* Action or Kernel Write and Read are 32 bit MMIO */
-static void action_write (struct snap_card* h, uint32_t addr, uint32_t data)
+static void action_write (struct ocaccel_card* h, uint32_t addr, uint32_t data)
 {
     int rc;
 
-    rc = snap_action_write32 (h, (uint64_t)addr, data);
+    rc = ocaccel_action_write32 (h, (uint64_t)addr, data);
 
     if (0 != rc) {
         VERBOSE0 ("Write MMIO 32 Err\n");
@@ -150,12 +150,12 @@ static void action_write (struct snap_card* h, uint32_t addr, uint32_t data)
     return;
 }
 
-static uint32_t action_read(struct snap_card* h, uint32_t addr)
+static uint32_t action_read(struct ocaccel_card* h, uint32_t addr)
 {
     int rc;
     uint32_t data;
 
-    rc = snap_action_read32(h, (uint64_t)addr, &data);
+    rc = ocaccel_action_read32(h, (uint64_t)addr, &data);
     if (0 != rc)
         VERBOSE0("Read MMIO 32 Err\n");
     return data;
@@ -198,7 +198,7 @@ static uint64_t mem_check(uint8_t *src, uint8_t *dest, uint64_t len)
     return 0;
 }
 
-static int run_single_engine (struct snap_card* h,
+static int run_single_engine (struct ocaccel_card* h,
         uint32_t timeout,
         void* src_base,
         void* tgt_base,
@@ -227,8 +227,8 @@ static int run_single_engine (struct snap_card* h,
     FILE * file_rtt;
     FILE * file_wtt;
 
-    VERBOSE0 (" ----- START SNAP_CONTROL ----- \n");
-    snap_action_start ((void*)h);
+    VERBOSE0 (" ----- START OCACCEL_CONTROL ----- \n");
+    ocaccel_action_start ((void*)h);
 
     VERBOSE0 (" ----- CONFIG PARAMETERS ----- \n");
     action_write(h, REG_USER_MODE, wrap_pattern);
@@ -362,8 +362,8 @@ static int run_single_engine (struct snap_card* h,
 
     
 
-    //VERBOSE0 ("SNAP Wait for idle\n");
-    //rc += snap_action_completed ((void*)h, NULL, timeout);
+    //VERBOSE0 ("OCACCEL Wait for idle\n");
+    //rc += ocaccel_action_completed ((void*)h, NULL, timeout);
     //VERBOSE0 ("Card in idle\n");
 
     action_write(h, REG_SOFT_RESET, 0x00000001);
@@ -375,17 +375,17 @@ static int run_single_engine (struct snap_card* h,
     return rc; //0 means successful
 }
 
-static struct snap_action* get_action (struct snap_card* handle,
-        snap_action_flag_t flags, uint32_t timeout)
+static struct ocaccel_action* get_action (struct ocaccel_card* handle,
+        ocaccel_action_flag_t flags, uint32_t timeout)
 {
-    struct snap_action* act;
+    struct ocaccel_action* act;
 
-    act = snap_attach_action (handle, ACTION_TYPE_HDL_SINGLE_ENGINE,
+    act = ocaccel_attach_action (handle, ACTION_TYPE_HDL_SINGLE_ENGINE,
             flags, timeout);
 
     if (NULL == act) {
         VERBOSE0 ("Error: Can not attach Action: %x\n", ACTION_TYPE_HDL_SINGLE_ENGINE);
-        VERBOSE0 ("       Try to run snap_main tool\n");
+        VERBOSE0 ("       Try to run ocaccel_main tool\n");
     }
 
     return act;
@@ -475,7 +475,7 @@ static double get_variance (double *bandwidth_array, uint32_t test_count, double
 
 static void usage (const char* prog)
 {
-    VERBOSE0 ("SNAP String Match (Regular Expression Match) Tool.\n");
+    VERBOSE0 ("OCACCEL String Match (Regular Expression Match) Tool.\n");
     VERBOSE0 ("Usage: %s\n"
             "    -h, --help              | Prints usage information\n"
             "    -v, --verbose           | Verbose mode\n"
@@ -505,14 +505,14 @@ static void usage (const char* prog)
 int main (int argc, char* argv[])
 {
     char device[64];
-    struct snap_card* dn;   /* lib snap handle */
+    struct ocaccel_card* dn;   /* lib ocaccel handle */
     int card_no = 0;
     int cmd;
     int rc = 1;
     uint32_t i;
     uint32_t timeout = ACTION_WAIT_TIME;
-    snap_action_flag_t attach_flags = 0;
-    struct snap_action* act = NULL;
+    ocaccel_action_flag_t attach_flags = 0;
+    struct ocaccel_action* act = NULL;
     void* src_base=NULL;
     void* tgt_base=NULL;
     void* exp_buff=NULL;
@@ -597,7 +597,7 @@ int main (int argc, char* argv[])
                 break;
 
             case 'I':      /* irq */
-                attach_flags = SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ;
+                attach_flags = OCACCEL_ACTION_DONE_IRQ | OCACCEL_ATTACH_IRQ;
                 break;
 
             case 'w':
@@ -655,10 +655,10 @@ int main (int argc, char* argv[])
     else
         snprintf(device, sizeof(device)-1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card_no);
 
-    dn = snap_card_alloc_dev (device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+    dn = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_IBM, OCACCEL_DEVICE_ID_OCACCEL);
     if (NULL == dn) {
         errno = ENODEV;
-        VERBOSE0 ("ERROR: snap_card_alloc_dev(%s)\n", device);
+        VERBOSE0 ("ERROR: ocaccel_card_alloc_dev(%s)\n", device);
         return -1;
     }
 
@@ -666,7 +666,7 @@ int main (int argc, char* argv[])
     // Attach Action
     //-------------------------------------------------
 
-    //snap_mmio_read64 (dn, SNAP_S_CIR, &cir);
+    //ocaccel_mmio_read64 (dn, OCACCEL_S_CIR, &cir);
     //VERBOSE0 ("Start of Card Handle: %p Context: %d\n", dn,
     //        (int) (cir & 0x1ff));
     VERBOSE0 ("Start to get action.\n");
@@ -826,11 +826,11 @@ int main (int argc, char* argv[])
     // Detach, Cleanup and Exit
     //-------------------------------------------------
     VERBOSE2 ("Detach action: %p\n", act);
-    snap_detach_action (act);
+    ocaccel_detach_action (act);
 
 __exit1:
     VERBOSE2 ("Free Card Handle: %p\n", dn);
-    snap_card_free (dn);
+    ocaccel_card_free (dn);
 
     free_mem(src_base);
     free_mem(exp_buff);

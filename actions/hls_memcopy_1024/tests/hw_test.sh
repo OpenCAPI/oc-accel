@@ -17,17 +17,17 @@
 ##
 
 verbose=0
-snap_card=0
+ocaccel_card=0
 duration="SHORT"
 size=10
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
 ACTION_ROOT=$(dirname ${THIS_DIR})
-SNAP_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
+OCACCEL_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
 
 echo "Starting :    $0"
-echo "SNAP_ROOT :   ${SNAP_ROOT}"
+echo "OCACCEL_ROOT :   ${OCACCEL_ROOT}"
 echo "ACTION_ROOT : ${ACTION_ROOT}"
 
 function usage() {
@@ -44,10 +44,10 @@ function usage() {
 while getopts ":C:t:d:Nh" opt; do
     case $opt in
     C)
-    snap_card=$OPTARG;
+    ocaccel_card=$OPTARG;
     ;;
     t)
-    export SNAP_TRACE=$OPTARG;
+    export OCACCEL_TRACE=$OPTARG;
     ;;
     d)
     duration=$OPTARG;
@@ -65,17 +65,17 @@ while getopts ":C:t:d:Nh" opt; do
     esac
 done
 
-export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
+export PATH=$PATH:${OCACCEL_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 #### VERSION ##########################################################
 
 # [ -z "$STATE" ] && echo "Need to set STATE" && exit 1;
 
-if [ -z "$SNAP_CONFIG" ]; then
+if [ -z "$OCACCEL_CONFIG" ]; then
     echo "Get CARD VERSION"
-    oc_maint -C ${snap_card} -v || exit 1;
-    snap_peek -C ${snap_card} 0x0 || exit 1;
-    snap_peek -C ${snap_card} 0x8 || exit 1;
+    oc_maint -C ${ocaccel_card} -v || exit 1;
+    ocaccel_peek -C ${ocaccel_card} 0x0 || exit 1;
+    ocaccel_peek -C ${ocaccel_card} 0x8 || exit 1;
     echo
 fi
 
@@ -87,16 +87,16 @@ function test_memcopy {
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card} ${noirq} -X    \
+    echo -n "Doing ocaccel_memcopy ${size} bytes ... "
+    cmd="ocaccel_memcopy -C${ocaccel_card} ${noirq} -X    \
         -i ${size}_A.bin    \
         -o ${size}_A.out >>    \
-        snap_memcopy.log 2>&1"
-    echo ${cmd} >> snap_memcopy.log
+        ocaccel_memcopy.log 2>&1"
+    echo ${cmd} >> ocaccel_memcopy.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failed, please check snap_memcopy.log"
+        echo "failed, please check ocaccel_memcopy.log"
         exit 1
     fi
     echo "ok"
@@ -115,8 +115,8 @@ function test_memcopy {
 
 
 ################  Test Begins #####################
-rm -f snap_memcopy.log
-touch snap_memcopy.log
+rm -f ocaccel_memcopy.log
+touch ocaccel_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
 
@@ -133,7 +133,7 @@ fi
 
 echo
 echo "Print time: (small size doesn't represent performance)"
-grep "memcopy of" snap_memcopy.log
+grep "memcopy of" ocaccel_memcopy.log
 echo
 
 #### MEMCOPY to and from CARD DDR #############
@@ -143,29 +143,29 @@ function test_memcopy_with_ddr {
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy to ddr (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card}  ${noirq}  \
+    echo -n "Doing ocaccel_memcopy to ddr (aligned) ${size} bytes ... "
+    cmd="ocaccel_memcopy -C${ocaccel_card}  ${noirq}  \
         -i ${size}_B.bin    \
         -d 0x0 -D CARD_DRAM >>  \
-        snap_memcopy_with_ddr.log 2>&1"
-    echo ${cmd} >> snap_memcopy_with_ddr.log
+        ocaccel_memcopy_with_ddr.log 2>&1"
+    echo ${cmd} >> ocaccel_memcopy_with_ddr.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failed, check snap_memcopy_with_ddr.log"
+        echo "failed, check ocaccel_memcopy_with_ddr.log"
         exit 1
     fi
     
-    echo -n "Doing snap_memcopy from ddr (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card}   ${noirq} \
+    echo -n "Doing ocaccel_memcopy from ddr (aligned) ${size} bytes ... "
+    cmd="ocaccel_memcopy -C${ocaccel_card}   ${noirq} \
         -o ${size}_B.out    \
         -a 0x0 -A CARD_DRAM -s ${size} >>  \
-        snap_memcopy_with_ddr.log 2>&1"
-    echo ${cmd} >> snap_memcopy_with_ddr.log
+        ocaccel_memcopy_with_ddr.log 2>&1"
+    echo ${cmd} >> ocaccel_memcopy_with_ddr.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failedi, check snap_memcopy_with_ddr.log"
+        echo "failedi, check ocaccel_memcopy_with_ddr.log"
         exit 1
     fi
     echo "ok"
@@ -183,8 +183,8 @@ function test_memcopy_with_ddr {
 
 
 ################ TEST Begins ##################
-rm -f snap_memcopy_with_ddr.log
-touch snap_memcopy_with_ddr.log
+rm -f ocaccel_memcopy_with_ddr.log
+touch ocaccel_memcopy_with_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
     for (( size=64; size<512; size*=2 )); do
@@ -200,6 +200,6 @@ fi
 
 echo
 echo "Print time: (small size doesn't represent performance)"
-grep "memcopy of" snap_memcopy_with_ddr.log
+grep "memcopy of" ocaccel_memcopy_with_ddr.log
 echo
 

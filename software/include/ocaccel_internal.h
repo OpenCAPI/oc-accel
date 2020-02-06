@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OSNAP_INTERNAL_H__
-#define __OSNAP_INTERNAL_H__
+#ifndef __OCACCEL_INTERNAL_H__
+#define __OCACCEL_INTERNAL_H__
 
 
 /**
@@ -35,12 +35,12 @@
  */
 
 #include <stdint.h>
-#include <libosnap.h>
+#include <libocaccel.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
 
-#include "osnap_queue.h"
+#include "ocaccel_queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,22 +74,22 @@ extern "C" {
 
 //#define        ACTION_BASE 0x200000
 
-struct snap_funcs {
+struct ocaccel_funcs {
     void* (* card_alloc_dev) (const char* path, uint16_t vendor_id,
                               uint16_t device_id);
 
-    struct snap_action* (* attach_action) (struct snap_card* card,
-                                           snap_action_type_t action_type,
-                                           snap_action_flag_t action_flags,
+    struct ocaccel_action* (* attach_action) (struct ocaccel_card* card,
+                                           ocaccel_action_type_t action_type,
+                                           ocaccel_action_flag_t action_flags,
                                            int timeout_sec);
-    int (* detach_action) (struct snap_action* action);
+    int (* detach_action) (struct ocaccel_action* action);
 
-    int (* mmio_per_pasid_write32) (struct snap_card* card, uint64_t offset, uint32_t data);
-    int (* mmio_per_pasid_read32) (struct snap_card* card, uint64_t offset, uint32_t* data);
-    int (* mmio_global_write64) (struct snap_card* card, uint64_t offset, uint64_t data);
-    int (* mmio_global_read64) (struct snap_card* card, uint64_t offset, uint64_t* data);
-    void (* card_free) (struct snap_card* card);
-    int (* card_ioctl) (struct snap_card* card, unsigned int cmd, unsigned long arg);
+    int (* mmio_per_pasid_write32) (struct ocaccel_card* card, uint64_t offset, uint32_t data);
+    int (* mmio_per_pasid_read32) (struct ocaccel_card* card, uint64_t offset, uint32_t* data);
+    int (* mmio_global_write64) (struct ocaccel_card* card, uint64_t offset, uint64_t data);
+    int (* mmio_global_read64) (struct ocaccel_card* card, uint64_t offset, uint64_t* data);
+    void (* card_free) (struct ocaccel_card* card);
+    int (* card_ioctl) (struct ocaccel_card* card, unsigned int cmd, unsigned long arg);
 };
 
 static inline pid_t __gettid (void)
@@ -152,4 +152,4 @@ int pp_trace_enabled (void);
 }
 #endif
 
-#endif        /* __OSNAP_INTERNAL_H__ */
+#endif        /* __OCACCEL_INTERNAL_H__ */

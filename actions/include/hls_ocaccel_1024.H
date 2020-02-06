@@ -1,5 +1,5 @@
-#ifndef __HLS_SNAP_H__
-#define __HLS_SNAP_H__
+#ifndef __HLS_OCACCEL_H__
+#define __HLS_OCACCEL_H__
 
 /*
  * Copyright 2017 International Business Machines
@@ -52,28 +52,28 @@
 #define BPERDW_512 (MEMDW_512/8)   // Bytes per Data Word    if MEMDW=512 => BPERDW = 64
 #define WPERDW_512 (64/BPERDW_512) // Number of words per DW if MEMDW=512 => WPERDW =  1 ?????
 #define ADDR_RIGHT_SHIFT_512 6
-#define SNAP_HLS_JOBSIZE 108
+#define OCACCEL_HLS_JOBSIZE 108
 /* 1024-bit host AXI data width*/
 #define MEMDW_1024 1024             // 1024-bit Bus width for Host memory
 #define BPERDW_1024 (MEMDW_1024/8)  // Bytes per Data Word
 #define WPERDW_1024 (BPERDW_1024/4) // Number of words per DW
 #define ADDR_RIGHT_SHIFT_1024 7
 
-typedef ap_uint<MEMDW_512>  snap_membus_512_t;   /* 512-bit ddr memory access */
-typedef ap_uint<MEMDW_1024> snap_membus_1024_t;  /* 1024-bit snap memory access */
-typedef ap_uint<64> snapu64_t;
-typedef ap_uint<32> snapu32_t;
-typedef ap_uint<16> snapu16_t;
-typedef ap_uint<8> snapu8_t;
-typedef ap_uint<1> snap_bool_t;
+typedef ap_uint<MEMDW_512>  ocaccel_membus_512_t;   /* 512-bit ddr memory access */
+typedef ap_uint<MEMDW_1024> ocaccel_membus_1024_t;  /* 1024-bit ocaccel memory access */
+typedef ap_uint<64> ocaccelu64_t;
+typedef ap_uint<32> ocaccelu32_t;
+typedef ap_uint<16> ocaccelu16_t;
+typedef ap_uint<8> ocaccelu8_t;
+typedef ap_uint<1> ocaccel_bool_t;
 
 typedef struct {
-        snapu8_t sat; // short action type
-        snapu8_t flags;
-        snapu16_t seq;
-        snapu32_t Retc;
-        snapu64_t Reserved; // Priv_data
+        ocaccelu8_t sat; // short action type
+        ocaccelu8_t flags;
+        ocaccelu16_t seq;
+        ocaccelu32_t Retc;
+        ocaccelu64_t Reserved; // Priv_data
 } CONTROL;
 
 
-#endif  /* __HLS_SNAP_H__ */
+#endif  /* __HLS_OCACCEL_H__ */

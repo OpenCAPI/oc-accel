@@ -23,8 +23,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#include <osnap_tools.h>
-#include <libosnap.h>
+#include <ocaccel_tools.h>
+#include <libocaccel.h>
 #include "force_cpu.h"
 
 int verbose_flag = 0;
@@ -50,11 +50,11 @@ static void usage (const char* prog)
             "  -n, --must-not-be <value> compare and exit if equal.\n"
             "  -d, --dump                Number of 32 or 64 bytes to read. default 1\n"
             "  <addr>\n"
-            "Note: Use -w32 to access snap action starting at offset 0x10000\n"
+            "Note: Use -w32 to access ocaccel action starting at offset 0x10000\n"
             "Example:\n"
-            "  $ snap_peek 0x0000\n"
+            "  $ ocaccel_peek 0x0000\n"
             "  [00000000] 0008002f0bc0ed99\nor\n"
-            "  $ snap_peek 0x0008\n"
+            "  $ ocaccel_peek 0x0008\n"
             "  [00000000] 0000201703222151\n\n",
             prog);
 }
@@ -66,7 +66,7 @@ int main (int argc, char* argv[])
 {
     int ch, rc = 0;
     int card_no = 0;
-    struct snap_card* card;
+    struct ocaccel_card* card;
     int cpu = -1;
     int width = 64;
     uint32_t offs;
@@ -199,8 +199,8 @@ int main (int argc, char* argv[])
         printf ("[%s] Open CAPI Card: %s\n", argv[0], device);
     }
 
-    card = snap_card_alloc_dev (device, SNAP_VENDOR_ID_ANY,
-                                SNAP_DEVICE_ID_ANY);
+    card = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_ANY,
+                                OCACCEL_DEVICE_ID_ANY);
 
     if (card == NULL) {
         fprintf (stderr, "err: failed to open card %u: %s\n", card_no,
@@ -218,10 +218,10 @@ dump_more:
         switch (width) {
         case 32: {
             if (verbose_flag > 1)
-                printf ("[%s] snap_action_read32(%p, %x)\n",
+                printf ("[%s] ocaccel_action_read32(%p, %x)\n",
                         argv[0], card, offs);
 
-            rc = snap_action_read32 (card, offs, (uint32_t*)&val);
+            rc = ocaccel_action_read32 (card, offs, (uint32_t*)&val);
             val &= 0xffffffff; /* mask off obsolete bits ... */
             break;
         }
@@ -229,17 +229,17 @@ dump_more:
         default:
         case 64:
             if (verbose_flag > 1)
-                printf ("[%s] snap_global_read64(%p, %x)\n",
+                printf ("[%s] ocaccel_global_read64(%p, %x)\n",
                         argv[0], card, offs);
 
-            rc = snap_global_read64 (card, offs, &val);
+            rc = ocaccel_global_read64 (card, offs, &val);
             break;
         }
 
         if (rc != 0) {
             fprintf (stderr, "err: could not read [%08x] rc=%d\n",
                      offs, rc);
-            snap_card_free (card);
+            ocaccel_card_free (card);
             exit (EXIT_FAILURE);
         }
 
@@ -247,7 +247,7 @@ dump_more:
             (equal_val != (val & and_mask))) {
             fprintf (stderr, "err: [%08x] %016llx != %016llx\n",
                      offs, (long long)val, (long long)equal_val);
-            snap_card_free (card);
+            ocaccel_card_free (card);
             exit (EX_ERR_DATA);
         }
 
@@ -256,7 +256,7 @@ dump_more:
             fprintf (stderr, "err: [%08x] %016llx == %016llx\n",
                      offs, (long long)val,
                      (long long)not_equal_val);
-            snap_card_free (card);
+            ocaccel_card_free (card);
             exit (EX_ERR_DATA);
         }
 
@@ -283,7 +283,7 @@ dump_more:
         printf ("[%s] Close CAPI Card: %p\n", argv[0], card);
     }
 
-    snap_card_free (card);
+    ocaccel_card_free (card);
 
     if (!quiet) {
         if (32 == width) {

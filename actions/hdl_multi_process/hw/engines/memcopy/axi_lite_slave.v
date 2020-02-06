@@ -78,20 +78,20 @@ module axi_lite_slave #(
                       input      [4:0]                 tt_rid       ,
                       input      [4:0]                 tt_bid       ,
 
-                      //---- snap status ----
+                      //---- ocaccel status ----
                       input      [31:0]                i_action_type    ,
                       input      [31:0]                i_action_version ,
-                      output     [31:0]                o_snap_context
+                      output     [31:0]                o_ocaccel_context
                       );
             
 
 //---- declarations ----
- wire[31:0] REG_snap_control_rd;
+ wire[31:0] REG_ocaccel_control_rd;
  wire[31:0] REG_user_status;  /*RO*/
 
- wire[31:0] regw_snap_status;
- wire[31:0] regw_snap_int_enable;
- wire[31:0] regw_snap_context;
+ wire[31:0] regw_ocaccel_status;
+ wire[31:0] regw_ocaccel_int_enable;
+ wire[31:0] regw_ocaccel_context;
 
  wire[31:0] regw_control;
  wire[31:0] regw_mode;
@@ -118,9 +118,9 @@ module axi_lite_slave #(
  //>                REGISTERS                    <//
  //***********************************************//
  //                                               //
- /**/   reg [31:0] REG_snap_control          ;  /**/
- /**/   reg [31:0] REG_snap_int_enable       ;  /**/
- /**/   reg [31:0] REG_snap_context          ;  /**/
+ /**/   reg [31:0] REG_ocaccel_control          ;  /**/
+ /**/   reg [31:0] REG_ocaccel_int_enable       ;  /**/
+ /**/   reg [31:0] REG_ocaccel_context          ;  /**/
  /*-----------------------------------------------*/
  /**/   reg [63:0] REG_error_info            ;  /*RO*/
 
@@ -152,11 +152,11 @@ module axi_lite_slave #(
 
 //---- parameters ----
  // Register addresses arrangement
- parameter ADDR_SNAP_CONTROL        = 32'h00,
-           ADDR_SNAP_INT_ENABLE     = 32'h04,
-           ADDR_SNAP_ACTION_TYPE    = 32'h10,
-           ADDR_SNAP_ACTION_VERSION = 32'h14,
-           ADDR_SNAP_CONTEXT        = 32'h20,
+ parameter ADDR_OCACCEL_CONTROL        = 32'h00,
+           ADDR_OCACCEL_INT_ENABLE     = 32'h04,
+           ADDR_OCACCEL_ACTION_TYPE    = 32'h10,
+           ADDR_OCACCEL_ACTION_VERSION = 32'h14,
+           ADDR_OCACCEL_CONTEXT        = 32'h20,
            // User defined below
            ADDR_USER_STATUS         = 32'h30,
            ADDR_USER_CONTROL        = 32'h34,
@@ -201,7 +201,7 @@ module axi_lite_slave #(
  assign wr_number      = REG_wr_number;
  assign source_address = REG_source_address;
  assign target_address = REG_target_address;
- assign o_snap_context = REG_snap_context;
+ assign o_ocaccel_context = REG_ocaccel_context;
  assign soft_reset     = REG_soft_reset[0];
  assign wrap_mode      = REG_user_mode[0];
  assign wrap_len       = REG_user_mode[11:8];
@@ -238,9 +238,9 @@ module axi_lite_slave #(
 //---- handle write data strobe ----
  assign wr_mask = {{8{s_axi_wstrb[3]}},{8{s_axi_wstrb[2]}},{8{s_axi_wstrb[1]}},{8{s_axi_wstrb[0]}}};
 
- assign regw_snap_status     = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_snap_control)};
- assign regw_snap_int_enable = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_snap_int_enable)};
- assign regw_snap_context    = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_snap_context)};
+ assign regw_ocaccel_status     = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_ocaccel_control)};
+ assign regw_ocaccel_int_enable = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_ocaccel_int_enable)};
+ assign regw_ocaccel_context    = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_ocaccel_context)};
  assign regw_control         = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_user_control)};
  assign regw_mode            = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_user_mode)};
  assign regw_init_rdata      = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_init_rdata)};
@@ -257,9 +257,9 @@ module axi_lite_slave #(
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      begin
-       REG_snap_control    <= 32'd0;
-       REG_snap_int_enable <= 32'd0;
-       REG_snap_context    <= 32'd0;
+       REG_ocaccel_control    <= 32'd0;
+       REG_ocaccel_int_enable <= 32'd0;
+       REG_ocaccel_context    <= 32'd0;
        REG_user_control    <= 32'd0;
        REG_user_mode       <= 32'd0;
        REG_init_rdata      <= 32'd0;
@@ -274,9 +274,9 @@ module axi_lite_slave #(
      end
     else if(soft_reset)
     begin
-       REG_snap_control    <= 32'd0;
-       REG_snap_int_enable <= 32'd0;
-       REG_snap_context    <= 32'd0;
+       REG_ocaccel_control    <= 32'd0;
+       REG_ocaccel_int_enable <= 32'd0;
+       REG_ocaccel_context    <= 32'd0;
        REG_user_control    <= 32'd0;
        REG_user_mode       <= 32'd0;
        REG_init_rdata      <= 32'd0;
@@ -291,9 +291,9 @@ module axi_lite_slave #(
     end
    else if(s_axi_wvalid & s_axi_wready)
      case(write_address)
-       ADDR_SNAP_CONTROL    : REG_snap_control    <= regw_snap_status;
-       ADDR_SNAP_INT_ENABLE : REG_snap_int_enable <= regw_snap_int_enable;
-       ADDR_SNAP_CONTEXT    : REG_snap_context    <= regw_snap_context;
+       ADDR_OCACCEL_CONTROL    : REG_ocaccel_control    <= regw_ocaccel_status;
+       ADDR_OCACCEL_INT_ENABLE : REG_ocaccel_int_enable <= regw_ocaccel_int_enable;
+       ADDR_OCACCEL_CONTEXT    : REG_ocaccel_context    <= regw_ocaccel_context;
 
        ADDR_USER_CONTROL    : REG_user_control    <= regw_control;
        ADDR_USER_MODE       : REG_user_mode       <= regw_mode;
@@ -319,16 +319,16 @@ module axi_lite_slave #(
 /***********************************************************************
 *                          Control Flow                                *
 ***********************************************************************/
-// The build-in snap_action_start() and snap_action_completed functions 
-// sets REG_snap_control bit "start" and reads bit "idle"
+// The build-in ocaccel_action_start() and ocaccel_action_completed functions 
+// sets REG_ocaccel_control bit "start" and reads bit "idle"
 // The other things are managed by REG_user_control (user defined control register)
 // Flow:
 // ---------------------------------------------------------------------------------------------
 // Software                                  Hardware REG                               Hardware signal & action
 // ---------------------------------------------------------------------------------------------
-// snap_action_start()                      |                                          |
-//                                          | SNAP_CONTROL[snap_start]=1               |
-// mmio_write(USER_CONTROL[address...])     |                                          | snap_start_pulse
+// ocaccel_action_start()                      |                                          |
+//                                          | OCACCEL_CONTROL[ocaccel_start]=1               |
+// mmio_write(USER_CONTROL[address...])     |                                          | ocaccel_start_pulse
 // mmio_write(USER_CONTROL[pattern...])     |                                          | Spend 4096 cycles to clear tt_RAM
 // mmio_write(USER_CONTROL[number...])      |                                          |
 // wait(USER_CONTROL[engine_ready])==1      |                                          |
@@ -346,17 +346,17 @@ module axi_lite_slave #(
 // Send 4096 MMIO reads for TT ...          |                                          |
 // mmio_write(USER_CONTROL[finish_dump])=1  |                                          |
 //                                          | USER_CONTROL[finish_dump]=1              |
-//                                          | SNAP_CONTROL[snap_idle]=1                |
-// snap_action_completed()                  |                                          |
+//                                          | OCACCEL_CONTROL[ocaccel_idle]=1                |
+// ocaccel_action_completed()                  |                                          |
 //
 
-wire snap_start_pulse;
+wire ocaccel_start_pulse;
 wire engine_start_pulse;
 wire wrap_mode;
 wire [03:0] wrap_len;
 
-reg snap_start_q;
-reg snap_idle_q;
+reg ocaccel_start_q;
+reg ocaccel_idle_q;
 reg engine_start_q;
 reg engine_ready_q;
 reg [11:0] tt_counter_q;
@@ -371,31 +371,31 @@ wire both_done;
 
 always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
-        snap_start_q <= 0;
+        ocaccel_start_q <= 0;
         engine_start_q <= 0;
     end
     else if(soft_reset) begin
-        snap_start_q <= 0;
+        ocaccel_start_q <= 0;
         engine_start_q <= 0;
     end
     else begin
-        snap_start_q <= REG_snap_control[0];
+        ocaccel_start_q <= REG_ocaccel_control[0];
         engine_start_q <= REG_user_control[0];
     end
 end
 
-assign snap_start_pulse = REG_snap_control[0] & ~snap_start_q;
+assign ocaccel_start_pulse = REG_ocaccel_control[0] & ~ocaccel_start_q;
 assign engine_start_pulse = REG_user_control[0] & ~engine_start_q;
 
 always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
-       snap_idle_q <= 0;
+       ocaccel_idle_q <= 0;
     end
     else if(soft_reset) begin
-       snap_idle_q <= 0;
+       ocaccel_idle_q <= 0;
     end
     else if (REG_user_control[1]) begin   //finish_dump
-       snap_idle_q <= 1;
+       ocaccel_idle_q <= 1;
     end
 end
        
@@ -408,7 +408,7 @@ always @(posedge clk or negedge rst_n) begin
         tt_counter_q <= 12'hFFF;
         engine_ready_q <= 0;
     end
-    else if (REG_snap_control[0]) begin
+    else if (REG_ocaccel_control[0]) begin
         if (tt_counter_q != 0)
             tt_counter_q <= tt_counter_q - 1;
         else 
@@ -464,7 +464,7 @@ always@(posedge clk or negedge rst_n)
 
 assign both_done           = rd_done_q & wr_done_q;
 assign REG_user_status     = {current_cycle_H, 10'd0, engine_ready_q, rd_error_q, wr_error_q, rd_done_q, wr_done_q};
-assign REG_snap_control_rd = {REG_snap_control[31:4], 1'b1, snap_idle_q, 1'b0, snap_start_q};
+assign REG_ocaccel_control_rd = {REG_ocaccel_control[31:4], 1'b1, ocaccel_idle_q, 1'b0, ocaccel_start_q};
 //Address: 0x000
 //  31..8  RO: Reserved
 //      7  RW: auto restart
@@ -484,11 +484,11 @@ assign REG_snap_control_rd = {REG_snap_control[31:4], 1'b1, snap_idle_q, 1'b0, s
      s_axi_rdata <= 32'd0;
    else if(s_axi_arvalid & s_axi_arready)
      case(s_axi_araddr - s_axi_baseaddr)
-       ADDR_SNAP_CONTROL        : s_axi_rdata <= REG_snap_control_rd;
-       ADDR_SNAP_INT_ENABLE     : s_axi_rdata <= REG_snap_int_enable[31 : 0];
-       ADDR_SNAP_ACTION_TYPE    : s_axi_rdata <= i_action_type;
-       ADDR_SNAP_ACTION_VERSION : s_axi_rdata <= i_action_version;
-       ADDR_SNAP_CONTEXT        : s_axi_rdata <= REG_snap_context[31    : 0];
+       ADDR_OCACCEL_CONTROL        : s_axi_rdata <= REG_ocaccel_control_rd;
+       ADDR_OCACCEL_INT_ENABLE     : s_axi_rdata <= REG_ocaccel_int_enable[31 : 0];
+       ADDR_OCACCEL_ACTION_TYPE    : s_axi_rdata <= i_action_type;
+       ADDR_OCACCEL_ACTION_VERSION : s_axi_rdata <= i_action_version;
+       ADDR_OCACCEL_CONTEXT        : s_axi_rdata <= REG_ocaccel_context[31    : 0];
 
        ADDR_USER_STATUS         : s_axi_rdata <= REG_user_status;
        ADDR_USER_CONTROL        : s_axi_rdata <= REG_user_control;
@@ -588,7 +588,7 @@ wire clear_RAM;
 
 //We spend 4096 cycles to clear the RAMs. At this moment data_in
 //(current_cycle_L) is zero.
-assign clear_RAM = REG_snap_control[0] & ~engine_ready_q;
+assign clear_RAM = REG_ocaccel_control[0] & ~engine_ready_q;
 
 always@(posedge clk or negedge rst_n)
     if(~rst_n)

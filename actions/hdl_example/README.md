@@ -13,7 +13,7 @@ The hardware part implements the following core functions:
 Dependent on the OC-ACCEL configuration the necessary interfaces will be added to or removed from the action. 
 
 ## Software
-* snap_example
+* ocaccel_example
   * Count down mode
   * Copy from Host Memory to Host Memory.
   * Copy from Host Memory to DDR Memory (FPGA Card).

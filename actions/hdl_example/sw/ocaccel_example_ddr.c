@@ -27,10 +27,10 @@
 #include <stdbool.h>
 #include <linux/random.h>
 
-#include <libosnap.h>
-#include <osnap_tools.h>
+#include <libocaccel.h>
+#include <ocaccel_tools.h>
 
-#include "snap_example.h"
+#include "ocaccel_example.h"
 
 /*	defaults */
 #define	DEFAULT_MEMCPY_ITER	1
@@ -217,28 +217,28 @@ __memcmp_pat_exit:
 }
 
 /* Action or Kernel Write and Read are 32 bit MMIO */
-static void action_write(struct snap_card* h, uint32_t addr, uint32_t data)
+static void action_write(struct ocaccel_card* h, uint32_t addr, uint32_t data)
 {
 	int rc;
 
-	rc = snap_action_write32(h, (uint64_t)addr, data);
+	rc = ocaccel_action_write32(h, (uint64_t)addr, data);
 	if (0 != rc)
 		VERBOSE0("Write MMIO 32 Err\n");
 	return;
 }
 
-static uint32_t action_read(struct snap_card* h, uint32_t addr)
+static uint32_t action_read(struct ocaccel_card* h, uint32_t addr)
 {
 	int rc;
 	uint32_t data;
 
-	rc = snap_action_read32(h, (uint64_t)addr, &data);
+	rc = ocaccel_action_read32(h, (uint64_t)addr, &data);
 	if (0 != rc)
 		VERBOSE0("Read MMIO 32 Err\n");
 	return data;
 }
 
-static void dump_regs(struct snap_card* h)
+static void dump_regs(struct ocaccel_card* h)
 {
 	uint32_t reg;
 	reg = action_read(h, ACTION_CONFIG);
@@ -260,18 +260,18 @@ static void dump_regs(struct snap_card* h)
 /*
  *	Start Action and wait for Idle.
  */
-static int action_wait_idle(struct snap_card* h, int timeout, uint64_t *elapsed)
+static int action_wait_idle(struct ocaccel_card* h, int timeout, uint64_t *elapsed)
 {
 	int rc = ETIME;
 	uint64_t t_start;	/* time in usec */
 	uint64_t td;		/* Diff time in usec */
 
-	/* FIXME Use struct snap_action and not struct snap_card */
-	snap_action_start((void*)h);
+	/* FIXME Use struct ocaccel_action and not struct ocaccel_card */
+	ocaccel_action_start((void*)h);
 
 	/* Wait for Action to go back to Idle */
 	t_start = get_usec();
-	rc = snap_action_completed((void*)h, NULL, timeout);
+	rc = ocaccel_action_completed((void*)h, NULL, timeout);
 	td = get_usec() - t_start;
 
 	if (rc) rc = 0;	/* Good */
@@ -280,7 +280,7 @@ static int action_wait_idle(struct snap_card* h, int timeout, uint64_t *elapsed)
 	return(rc);
 }
 
-static void action_memcpy(struct snap_card* h,
+static void action_memcpy(struct ocaccel_card* h,
 		int action,	/* ACTION_CONFIG_COPY_ */
 		void *dest,
 		const void *src,
@@ -398,7 +398,7 @@ static void free_mem(void *buffer)
 /*
  *	Set Card Ram to 0
  */
-static int ram_clear(struct snap_card* dnc,
+static int ram_clear(struct ocaccel_card* dnc,
 			void *src,
 			unsigned int mem_size,	/* Size for Host Buffer */
 			uint64_t start_addr,	/* Start of Card Mem */
@@ -434,7 +434,7 @@ __ram_zero_exit:
 	return rc;
 }
 
-static int ram_test_ad(struct snap_card* dnc,
+static int ram_test_ad(struct ocaccel_card* dnc,
 			void *src,
 			void *dest,
 			unsigned int mem_size,	/* Size for Host Buffer */
@@ -498,7 +498,7 @@ __ram_test_ad_exit:
 	return rc;
 }
 
-static int ram_test_rnd1(struct snap_card* dnc,
+static int ram_test_rnd1(struct ocaccel_card* dnc,
 			void *src,
 			void *dest,
 			unsigned int mem_size,	/* Size for Host Buffer */
@@ -558,7 +558,7 @@ __ram_test_rnd1_exit:
 	return rc;
 }
 
-static int ram_test_rnd2(struct snap_card* dnc,
+static int ram_test_rnd2(struct ocaccel_card* dnc,
 			void *src,
 			void *dest,
 			unsigned int mem_size,	/* Size for Host Buffer */
@@ -618,7 +618,7 @@ static void usage(const char *prog)
 		"    -e, --end            Card Ram End Address (From card)\n"
 		"    -b, --buffer         Host Buffer Size (default 0x%llx)\n"
 		"    -I, --irq            Use Interrupts\n"
-		"\tTool to check DDR Memory (SDRAM) on SNAP Card.\n"
+		"\tTool to check DDR Memory (SDRAM) on OCACCEL Card.\n"
 		"\t     Note: values for -s -b -e must be 64 Bytes aligned.\n"
 		, prog,
 		(long long)DDR_MEM_BASE_ADDR,
@@ -628,7 +628,7 @@ static void usage(const char *prog)
 int main(int argc, char *argv[])
 {
 	char device[64];
-	struct snap_card *dn;	/* lib snap handle */
+	struct ocaccel_card *dn;	/* lib ocaccel handle */
 	int card_no = 0;
 	int cmd;
 	int rc = 1;
@@ -637,11 +637,11 @@ int main(int argc, char *argv[])
 	uint64_t start_addr = DDR_MEM_BASE_ADDR;
 	uint64_t end_addr = 0;
 	int end_addr_override = 0;
-	uint64_t snap_mem = 0;
+	uint64_t ocaccel_mem = 0;
 	unsigned int mem_size = HOST_BUFFER_SIZE;
 	void *src_buf = NULL;
 	void *dest_buf = NULL;
-	snap_action_flag_t attach_flags = 0;
+	ocaccel_action_flag_t attach_flags = 0;
 
 	while (1) {
                 int option_index = 0;
@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
 			mem_size = strtol(optarg, (char **)NULL, 0);
 			break;
 		case 'I':
-			attach_flags |= SNAP_ATTACH_IRQ | SNAP_ACTION_DONE_IRQ;
+			attach_flags |= OCACCEL_ATTACH_IRQ | OCACCEL_ACTION_DONE_IRQ;
 			break;
 		default:
 			usage(argv[0]);
@@ -710,23 +710,23 @@ int main(int argc, char *argv[])
 	VERBOSE1("Start Memory Test. Timeout: %d sec Device: ",
 		timeout);
 	sprintf(device, "/dev/cxl/afu%d.0s", card_no);
-	dn = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+	dn = ocaccel_card_alloc_dev(device, OCACCEL_VENDOR_ID_IBM, OCACCEL_DEVICE_ID_OCACCEL);
 	VERBOSE1("%s\n", device);
 
 	if (NULL == dn) {
 		errno = ENODEV;
-		VERBOSE0("ERROR: snap_card_alloc_dev(%s)\n", device);
+		VERBOSE0("ERROR: ocaccel_card_alloc_dev(%s)\n", device);
 		return -1;
 	}
 
 	/* Get Mem Size */
-	snap_card_ioctl(dn, GET_SDRAM_SIZE, (unsigned long)&snap_mem);
-        VERBOSE1("   %d MB of Card Ram avilable.\n", (int)snap_mem);
-	snap_mem = snap_mem * MEGA_BYTE;
+	ocaccel_card_ioctl(dn, GET_SDRAM_SIZE, (unsigned long)&ocaccel_mem);
+        VERBOSE1("   %d MB of Card Ram avilable.\n", (int)ocaccel_mem);
+	ocaccel_mem = ocaccel_mem * MEGA_BYTE;
 	if (0 == end_addr_override) {
-		end_addr = snap_mem;
+		end_addr = ocaccel_mem;
 	}
-	if (0 != check_parms(mem_size, start_addr, end_addr, snap_mem)) {
+	if (0 != check_parms(mem_size, start_addr, end_addr, ocaccel_mem)) {
 		rc = -1;
 		goto __exit;
 	}
@@ -743,10 +743,10 @@ int main(int argc, char *argv[])
 		goto __exit;
 
 	for (i = 0; i < iter; i++) {
-		struct snap_action *act;
+		struct ocaccel_action *act;
 
-		/* FIXME snap_detach_action() not called on errors! */
-		act = snap_attach_action(dn, ACTION_TYPE_EXAMPLE,
+		/* FIXME ocaccel_detach_action() not called on errors! */
+		act = ocaccel_attach_action(dn, ACTION_TYPE_EXAMPLE,
 					 attach_flags, 5*timeout);
 		if (NULL == act) {
 			VERBOSE0(" Error: Cannot Attach Action:%x\n",
@@ -777,14 +777,14 @@ int main(int argc, char *argv[])
 			start_addr, end_addr, timeout);
 		if (rc) break;
 
-		snap_detach_action(act);
+		ocaccel_detach_action(act);
 	}
 
 __exit:
 	free_mem(src_buf);
 	free_mem(dest_buf);
 	VERBOSE3("\nClose Card Handle: %p", dn);
-	snap_card_free(dn);
+	ocaccel_card_free(dn);
 
 	VERBOSE1("\nExit rc: %d\n", rc);
 	return rc;

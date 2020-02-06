@@ -42,7 +42,7 @@ set files [list {*}$verilog_data_bridge ]
 add_files -norecurse -fileset $obj $files
 
 
-#set file "snap_global_vars.v"
+#set file "ocaccel_global_vars.v"
 #set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 #set_property -name "file_type" -value "Verilog Header" -objects $file_obj
 

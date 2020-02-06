@@ -17,17 +17,17 @@
  * limitations under the License.
  */
 
-#include <hls_snap.H>
+#include <hls_ocaccel.H>
 
 /*
- * Instead of reading each snap_membus_t line individually, we try to
+ * Instead of reading each ocaccel_membus_t line individually, we try to
  * read always a 4KiB block and return the line from the internal buffer.
  * if the buffer is empty, we read the following 4KiB block from the bus
  * in a burst.
  *
  * FIXME No underrun or access out of bounds protection.
  */
-#define SNAP_4KiB_WORDS (4096 / sizeof(snap_membus_t))
+#define OCACCEL_4KiB_WORDS (4096 / sizeof(ocaccel_membus_t))
 
 /*
  * We found that having the indexes here too large we got synthesis
@@ -35,29 +35,29 @@
  * smaller values helped, but reduced the possible buffer memory
  * sizes.
  */
-typedef struct snap_4KiB_t {
-	snap_membus_t buf[SNAP_4KiB_WORDS]; /* temporary storage buffer */
-	snap_membus_t *mem;                 /* source where data comes from */
+typedef struct ocaccel_4KiB_t {
+	ocaccel_membus_t buf[OCACCEL_4KiB_WORDS]; /* temporary storage buffer */
+	ocaccel_membus_t *mem;                 /* source where data comes from */
 	unsigned short max_lines;           /* size of the memory buffer */
 	unsigned short m_idx;               /* read position for source */
 	unsigned char b_idx;                /* read position for buffer */
-} snap_4KiB_t;
+} ocaccel_4KiB_t;
 
-static inline int snap_4KiB_empty(snap_4KiB_t *buf)
+static inline int ocaccel_4KiB_empty(ocaccel_4KiB_t *buf)
 {
 	return buf->b_idx == 0;
 }
 
-static inline void snap_4KiB_rinit(snap_4KiB_t *buf, snap_membus_t *mem,
+static inline void ocaccel_4KiB_rinit(ocaccel_4KiB_t *buf, ocaccel_membus_t *mem,
 				   unsigned short max_lines)
 {
 	buf->mem = mem;
 	buf->max_lines = max_lines;
 	buf->m_idx = 0;
-	buf->b_idx = SNAP_4KiB_WORDS;
+	buf->b_idx = OCACCEL_4KiB_WORDS;
 }
 
-static inline void snap_4KiB_winit(snap_4KiB_t *buf, snap_membus_t *mem,
+static inline void ocaccel_4KiB_winit(ocaccel_4KiB_t *buf, ocaccel_membus_t *mem,
 				   unsigned short max_lines)
 {
 	buf->mem = mem;
@@ -70,32 +70,32 @@ static inline void snap_4KiB_winit(snap_4KiB_t *buf, snap_membus_t *mem,
  * Reading beyond the available memory is blocked, buffer filling
  * is returned to keep code simple, and contains unuseable data.
  */
-static inline void snap_4KiB_get(snap_4KiB_t *buf, snap_membus_t *line)
+static inline void ocaccel_4KiB_get(ocaccel_4KiB_t *buf, ocaccel_membus_t *line)
 {
 	if ((buf->m_idx == buf->max_lines) &&
-	    (buf->b_idx == SNAP_4KiB_WORDS)) {
-		*line = (snap_membus_t)-1;
+	    (buf->b_idx == OCACCEL_4KiB_WORDS)) {
+		*line = (ocaccel_membus_t)-1;
 		return;
 	}
 	/* buffer is empty, read in the next 4KiB */
-	if (buf->b_idx == SNAP_4KiB_WORDS) {
+	if (buf->b_idx == OCACCEL_4KiB_WORDS) {
 		unsigned short tocopy =
-			MIN(SNAP_4KiB_WORDS, buf->max_lines - buf->m_idx);
+			MIN(OCACCEL_4KiB_WORDS, buf->max_lines - buf->m_idx);
 
 #if defined(CONFIG_4KIB_DEBUG)
 		fprintf(stderr, "4KiB buffer %d lines, reading %d bytes\n",
-			tocopy, tocopy * (int)sizeof(snap_membus_t));
+			tocopy, tocopy * (int)sizeof(ocaccel_membus_t));
 #endif
 		switch (tocopy) {
 		case 0: /* NOTE: Avoid read/write 0 bytes, HLS bug */
 			break;
-		case  SNAP_4KiB_WORDS:
+		case  OCACCEL_4KiB_WORDS:
 			memcpy(buf->buf, buf->mem + buf->m_idx,
-			       SNAP_4KiB_WORDS * sizeof(snap_membus_t));
+			       OCACCEL_4KiB_WORDS * sizeof(ocaccel_membus_t));
 			break;
 		default:
 			memcpy(buf->buf, buf->mem + buf->m_idx,
-			       tocopy * sizeof(snap_membus_t));
+			       tocopy * sizeof(ocaccel_membus_t));
 			break;
 		}
 		
@@ -112,7 +112,7 @@ static inline void snap_4KiB_get(snap_4KiB_t *buf, snap_membus_t *line)
  * Normally I would have written that with tocopy = MIN(free_lines, buf->b_idx)
  * but that produced hardware with bad timing.
  */
-static inline void snap_4KiB_flush(snap_4KiB_t *buf)
+static inline void ocaccel_4KiB_flush(ocaccel_4KiB_t *buf)
 {
 	unsigned short free_lines = buf->max_lines - buf->m_idx;
 	unsigned short tocopy = MIN(free_lines, buf->b_idx);
@@ -120,30 +120,30 @@ static inline void snap_4KiB_flush(snap_4KiB_t *buf)
 #if defined(CONFIG_4KIB_DEBUG)
 	fprintf(stderr, "4KiB buffer %d lines, writing %d bytes "
 		"free: %d bmax: %d mmax: %d\n",
-		tocopy, tocopy * (int)sizeof(snap_membus_t),
-		(int)free_lines, SNAP_4KiB_WORDS, buf->max_lines);
+		tocopy, tocopy * (int)sizeof(ocaccel_membus_t),
+		(int)free_lines, OCACCEL_4KiB_WORDS, buf->max_lines);
 #endif
 	switch (tocopy) {
 	case 0: /* NOTE: Avoid read/write 0 bytes, HLS bug */
 		break;
-	case SNAP_4KiB_WORDS:
+	case OCACCEL_4KiB_WORDS:
 		memcpy(buf->mem + buf->m_idx, buf->buf,
-		       SNAP_4KiB_WORDS * sizeof(snap_membus_t));
+		       OCACCEL_4KiB_WORDS * sizeof(ocaccel_membus_t));
 		break;
 	default:
 		memcpy(buf->mem + buf->m_idx, buf->buf,
-		       tocopy * sizeof(snap_membus_t));
+		       tocopy * sizeof(ocaccel_membus_t));
 		break;
 	}
 	buf->m_idx += tocopy;
 	buf->b_idx = 0;
 }
 
-static inline void snap_4KiB_put(snap_4KiB_t *buf, snap_membus_t line)
+static inline void ocaccel_4KiB_put(ocaccel_4KiB_t *buf, ocaccel_membus_t line)
 {
 	/* buffer is full, flush the gathered 4KiB */
-	if (buf->b_idx == SNAP_4KiB_WORDS) {
-		snap_4KiB_flush(buf);
+	if (buf->b_idx == OCACCEL_4KiB_WORDS) {
+		ocaccel_4KiB_flush(buf);
 	}
 	buf->buf[buf->b_idx] = line;
 	buf->b_idx++;

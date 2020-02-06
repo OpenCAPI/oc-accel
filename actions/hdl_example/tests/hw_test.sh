@@ -16,15 +16,15 @@
 ##
 
 #
-# Simple tests for example snap actions.
+# Simple tests for example ocaccel actions.
 #
 
 verbose=0
-snap_card=0
+ocaccel_card=0
 iteration=1
 ddr_test=0
-SNAP_ROOT="."
-FUNC="${SNAP_ROOT}/actions/hdl_example/sw/snap_example"
+OCACCEL_ROOT="."
+FUNC="${OCACCEL_ROOT}/actions/hdl_example/sw/ocaccel_example"
 
 function test () # $1 = card, $2 = action, $3 = 4k or 64, $4 = min_align, $5 = dma_size
 {
@@ -177,7 +177,7 @@ function test_rnd () # $1 = card, $2 = action, $3 = min_align, $4 = dma_size
 }
 
 function usage() {
-	echo "SNAP Example Action 10140000 Basic Test's"
+	echo "OCACCEL Example Action 10140000 Basic Test's"
 	echo "Usage:"
 	echo "  $PROGRAM"
 	echo "    [-C <card>]        card to be used for the test"
@@ -194,10 +194,10 @@ PROGRAM=$0
 while getopts "C:t:i:hd" opt; do
 	case $opt in
 	C)
-	snap_card=$OPTARG;
+	ocaccel_card=$OPTARG;
 	;;
 	t)
-	SNAP_TRACE=$OPTARG;
+	OCACCEL_TRACE=$OPTARG;
 	;;
 	i)
 	iteration=$OPTARG;
@@ -221,9 +221,9 @@ echo -n " (Align: $MIN_ALIGN Min Block: $MIN_BLOCK) "
 
 for ((iter=1;iter <= iteration;iter++))
 {
-	echo "Iteration $iter of $iteration on CARD[$snap_card]"
+	echo "Iteration $iter of $iteration on CARD[$ocaccel_card]"
 	echo "Testing Action 1 from 200 msec to 1 sec in 200 msec steps"
-	cmd="${FUNC} -a 1 -C${snap_card} -e 1000 -t 2"
+	cmd="${FUNC} -a 1 -C${ocaccel_card} -e 1000 -t 2"
 	eval ${cmd}
 	if [ $? -ne 0 ]; then
        		echo "cmd: ${cmd}"
@@ -231,26 +231,26 @@ for ((iter=1;iter <= iteration;iter++))
        		exit 1
 	fi
 	echo "Testing Action 1 from 200 msec to 1 sec in 200 msec steps with Interrupts"
-	cmd="${FUNC} -a 1 -C${snap_card} -e 1000 -t 2 -I"
+	cmd="${FUNC} -a 1 -C${ocaccel_card} -e 1000 -t 2 -I"
 	eval ${cmd}
 	if [ $? -ne 0 ]; then
 		echo "cmd: ${cmd}"
 		echo "failed"
 		exit 1
 	fi
-	test    $snap_card 2 4k $MIN_ALIGN $MIN_BLOCK
-	test    $snap_card 2 64 $MIN_ALIGN $MIN_BLOCK
-	test_sb $snap_card 2    $MIN_ALIGN $MIN_BLOCK
-	test_bs $snap_card 2    $MIN_ALIGN $MIN_BLOCK
-	test_rnd $snap_card 2   $MIN_ALIGN $MIN_BLOCK
+	test    $ocaccel_card 2 4k $MIN_ALIGN $MIN_BLOCK
+	test    $ocaccel_card 2 64 $MIN_ALIGN $MIN_BLOCK
+	test_sb $ocaccel_card 2    $MIN_ALIGN $MIN_BLOCK
+	test_bs $ocaccel_card 2    $MIN_ALIGN $MIN_BLOCK
+	test_rnd $ocaccel_card 2   $MIN_ALIGN $MIN_BLOCK
 
 	# Check SDRAM
 	if [ $ddr_test -eq 1 ]; then
-		test     $snap_card 6 4k $MIN_ALIGN $MIN_BLOCK
-		test     $snap_card 6 64 $MIN_ALIGN $MIN_BLOCK
-		test_sb  $snap_card 6    $MIN_ALIGN $MIN_BLOCK
-		test_bs  $snap_card 6    $MIN_ALIGN $MIN_BLOCK
-		test_rnd $snap_card 6    $MIN_ALIGN $MIN_BLOCK
+		test     $ocaccel_card 6 4k $MIN_ALIGN $MIN_BLOCK
+		test     $ocaccel_card 6 64 $MIN_ALIGN $MIN_BLOCK
+		test_sb  $ocaccel_card 6    $MIN_ALIGN $MIN_BLOCK
+		test_bs  $ocaccel_card 6    $MIN_ALIGN $MIN_BLOCK
+		test_rnd $ocaccel_card 6    $MIN_ALIGN $MIN_BLOCK
 	fi
 }
 echo "---------->>>> Exit Good <<<<<<--------------"

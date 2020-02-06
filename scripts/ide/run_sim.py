@@ -44,7 +44,7 @@ from ocaccel_utils import kill_pid
 from ocaccel_utils import msg 
 
 class SimSession:
-    def __init__(self, simulator_name = 'xsim', testcase_cmd = 'snap_example', testcase_args = "",\
+    def __init__(self, simulator_name = 'xsim', testcase_cmd = 'ocaccel_example', testcase_args = "",\
                  ocse_root = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
                  sim_timeout = 600, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
         # prepare the environment
@@ -84,26 +84,26 @@ class SimSession:
 
     def check_root_path(self):
         if not isdir(self.ocaccel_root):
-            msg.warn_msg("SNAP_ROOT path: %s is not valid!" % self.ocaccel_root)
-            msg.fail_msg("SNAP_ROOT is not valid! Exiting ...")
+            msg.warn_msg("OCACCEL_ROOT path: %s is not valid!" % self.ocaccel_root)
+            msg.fail_msg("OCACCEL_ROOT is not valid! Exiting ...")
 
         if not isdir(self.action_root):
             msg.warn_msg("ACTION_ROOT path: %s is not valid!" % self.action_root)
             msg.fail_msg("ACTION_ROOT is not valid! Exiting ...")
 
     def setup_env(self):
-        if 'SNAP_ROOT' not in env:
-            env['SNAP_ROOT'] = self.ocaccel_root
+        if 'OCACCEL_ROOT' not in env:
+            env['OCACCEL_ROOT'] = self.ocaccel_root
 
-        self.ocaccel_root = env['SNAP_ROOT']
+        self.ocaccel_root = env['OCACCEL_ROOT']
 
-        source(pathjoin(env['SNAP_ROOT'], '.snap_config.sh'))
-        source(pathjoin(env['SNAP_ROOT'], 'snap_env.sh'))
+        source(pathjoin(env['OCACCEL_ROOT'], '.ocaccel_config.sh'))
+        source(pathjoin(env['OCACCEL_ROOT'], 'ocaccel_env.sh'))
 
         self.action_root = env['ACTION_ROOT']
 
         env['PATH'] = ":".join((env['PATH'],\
-                pathjoin(env['SNAP_ROOT'], 'software', 'tools'),\
+                pathjoin(env['OCACCEL_ROOT'], 'software', 'tools'),\
                 pathjoin(env['ACTION_ROOT'], 'sw')))
 
         if self.unit_sim == False:
@@ -122,7 +122,7 @@ class SimSession:
                               pathjoin(self.ocse_root, 'libocxl'),\
                               pathjoin(self.ocaccel_root, 'software', 'lib')))
     def print_env(self):
-        msg.header_msg("SNAP ROOT\t %s" % self.ocaccel_root)
+        msg.header_msg("OCACCEL ROOT\t %s" % self.ocaccel_root)
         msg.header_msg("ACTION ROOT\t %s" % self.action_root)
         self.simulator.print_env()
         if self.unit_sim == False:
@@ -395,7 +395,7 @@ class OCSE:
         msg.header_msg(" OCSE listening on socket: %s" % ocse_server_dat)
 
 class Testcase:
-    def __init__(self, cmd = 'snap_example', simout = '.', args = ""):
+    def __init__(self, cmd = 'ocaccel_example', simout = '.', args = ""):
         self.cmd = cmd
         self.args = args
         self.simout = simout
@@ -442,7 +442,7 @@ if __name__ == '__main__':
                       dest="simulator", default='xsim',
                       help="The simulator for this simulation, default %default")
     parser.add_option("-t", "--testcase",
-                      dest="testcase", default='snap_example',
+                      dest="testcase", default='ocaccel_example',
                       help="The testcase for this simulation, default %default")
     parser.add_option("-r", "--testcase_args",
                       dest="testcase_args", default=' ',

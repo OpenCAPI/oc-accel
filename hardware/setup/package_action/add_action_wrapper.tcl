@@ -52,7 +52,7 @@ set obj [get_filesets sources_1]
 
 add_files -scan_for_includes -fileset $obj $action_hdl_dir
 
-#set file "snap_global_vars.v"
+#set file "ocaccel_global_vars.v"
 #set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 #set_property -name "file_type" -value "Verilog Header" -objects $file_obj
 

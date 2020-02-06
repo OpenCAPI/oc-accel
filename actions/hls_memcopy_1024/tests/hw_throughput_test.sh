@@ -17,16 +17,16 @@
 ##
 
 verbose=0
-snap_card=0
+ocaccel_card=0
 duration="SHORT"
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
 ACTION_ROOT=$(dirname ${THIS_DIR})
-SNAP_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
+OCACCEL_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
 
 echo "Starting :    $0"
-echo "SNAP_ROOT :   ${SNAP_ROOT}"
+echo "OCACCEL_ROOT :   ${OCACCEL_ROOT}"
 echo "ACTION_ROOT : ${ACTION_ROOT}"
 
 function usage() {
@@ -42,10 +42,10 @@ function usage() {
 while getopts ":C:t:d:Nh" opt; do
     case $opt in
     C)
-    snap_card=$OPTARG;
+    ocaccel_card=$OPTARG;
     ;;
     t)
-    export SNAP_TRACE=$OPTARG;
+    export OCACCEL_TRACE=$OPTARG;
     ;;
     d)
     duration=$OPTARG;
@@ -63,17 +63,17 @@ while getopts ":C:t:d:Nh" opt; do
     esac
 done
 
-export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
+export PATH=$PATH:${OCACCEL_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 #### VERSION ##########################################################
 
 # [ -z "$STATE" ] && echo "Need to set STATE" && exit 1;
 
-if [ -z "$SNAP_CONFIG" ]; then
+if [ -z "$OCACCEL_CONFIG" ]; then
     echo "Get CARD VERSION"
-    #snap_maint -C ${snap_card} -v || exit 1;
-#    snap_peek -C ${snap_card} 0x0 || exit 1;
-#    snap_peek -C ${snap_card} 0x8 || exit 1;
+    #ocaccel_maint -C ${ocaccel_card} -v || exit 1;
+#    ocaccel_peek -C ${ocaccel_card} 0x0 || exit 1;
+#    ocaccel_peek -C ${ocaccel_card} 0x8 || exit 1;
 #    echo
 fi
 
@@ -105,10 +105,10 @@ else
         dd if=/dev/urandom of=temp_A.bin count=${blk_count} bs=1 2> dd.log
 fi
 
-#    echo "Doing snap_memcopy benchmarking with" ${size} "bytes transfers ... "
+#    echo "Doing ocaccel_memcopy benchmarking with" ${size} "bytes transfers ... "
 
     echo -n "Read from Host Memory to FPGA ... "
-    cmd="snap_memcopy -C${snap_card} ${noirq}     \
+    cmd="ocaccel_memcopy -C${ocaccel_card} ${noirq}     \
         -i temp_A.bin    >>    \
         memcopy_throughput.log 2>&1"
     echo ${cmd} >> memcopy_throughput.log
@@ -121,7 +121,7 @@ fi
     echo "ok"
 
     echo -n "Write from FPGA to Host Memory ... "
-    cmd="snap_memcopy -C${snap_card} ${noirq}    \
+    cmd="ocaccel_memcopy -C${ocaccel_card} ${noirq}    \
         -o temp_A.out        \
         -s ${size}     >>    \
         memcopy_throughput.log 2>&1"
@@ -135,7 +135,7 @@ fi
     echo "ok"
 
     echo -n "Read from Card DDR Memory to FPGA ... "
-    cmd="snap_memcopy -C${snap_card}     ${noirq}\
+    cmd="ocaccel_memcopy -C${ocaccel_card}     ${noirq}\
         -A CARD_DRAM -a 0x0    \
         -s ${size}     >>    \
         memcopy_throughput.log 2>&1"
@@ -149,7 +149,7 @@ fi
     echo "ok"
 
     echo -n "Write from FPGA to Card DDR Memory ... "
-    cmd="snap_memcopy -C${snap_card}     ${noirq}\
+    cmd="ocaccel_memcopy -C${ocaccel_card}     ${noirq}\
         -D CARD_DRAM -d 0x0    \
         -s ${size}     >>    \
         memcopy_throughput.log 2>&1"
@@ -202,10 +202,10 @@ fi
 #Print build date and version
 echo
 echo -n "Git Version: "
-snap_peek -C ${snap_card} 0x0 || exit 1;
+ocaccel_peek -C ${ocaccel_card} 0x0 || exit 1;
 echo -n "Build Date:  "
-snap_peek -C ${snap_card} 0x8 || exit 1;
-${ACTION_ROOT}/tests/process.awk snap_memcopy.log
+ocaccel_peek -C ${ocaccel_card} 0x8 || exit 1;
+${ACTION_ROOT}/tests/process.awk ocaccel_memcopy.log
 
 echo "ok"
 

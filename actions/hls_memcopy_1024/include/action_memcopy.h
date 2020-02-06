@@ -32,7 +32,7 @@
  * limitations under the License.
  */
 
-#include <osnap_types.h>
+#include <ocaccel_types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,19 +42,19 @@ extern "C" {
 // ACTION_TYPE and RELEASE_LEVEL are automatically handled. 
 // 1. Define them in header file (here), use HEX 32bits numbers
 // 2. They will be extracted by hardware/setup/patch_version.sh
-// 3. And put into snap_global_vars.v
+// 3. And put into ocaccel_global_vars.v
 // 4. Used by hardware/hls/action_wrapper.v
 #define ACTION_TYPE               0x1014300B
 #define RELEASE_LEVEL             0x00000003
-// For snap_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
-// Please modify this file so snap_maint can recognize this action.
+// For ocaccel_maint, Action descriptions are decoded with the help of software/tools/ocaccel_actions.h
+// Please modify this file so ocaccel_maint can recognize this action.
 // ------------ MUST READ -----------
 
 
 
 typedef struct memcopy_job {
-	struct snap_addr in;	/* input data */
-	struct snap_addr out;   /* offset table */
+	struct ocaccel_addr in;	/* input data */
+	struct ocaccel_addr out;   /* offset table */
 } memcopy_job_t;
 
 #ifdef __cplusplus

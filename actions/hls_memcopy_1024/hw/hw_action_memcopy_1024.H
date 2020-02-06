@@ -21,7 +21,7 @@
 #include <string.h>
 #include <ap_int.h>
 
-#include "hls_snap_1024.H"
+#include "hls_ocaccel_1024.H"
 #include <action_memcopy.h> /* Memcopy Job definition */
 
 
@@ -34,7 +34,7 @@
 typedef struct {
 	CONTROL Control;	/*  16 bytes */
 	memcopy_job_t Data;	/* up to 108 bytes */
-	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(memcopy_job_t)];
+	uint8_t padding[OCACCEL_HLS_JOBSIZE - sizeof(memcopy_job_t)];
 } action_reg;
 
 #endif  /* __ACTION_HLS_MEMCOPY_H__ */

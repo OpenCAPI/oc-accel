@@ -30,8 +30,8 @@
 #include <getopt.h>
 #include <ctype.h>
 
-#include <libosnap.h>
-#include <osnap_tools.h>
+#include <libocaccel.h>
+#include <ocaccel_tools.h>
 
 #include "hdl_multi_process.h"
 
@@ -106,11 +106,11 @@ static void free_mem (void* a)
 
 
 /* Action or Kernel Write and Read are 32 bit MMIO */
-static void action_write (FILE* log, struct snap_card* h, uint32_t addr, uint32_t data)
+static void action_write (FILE* log, struct ocaccel_card* h, uint32_t addr, uint32_t data)
 {
     int rc;
 
-    rc = snap_action_write32 (h, (uint64_t)addr, data);
+    rc = ocaccel_action_write32 (h, (uint64_t)addr, data);
 
     if (0 != rc) {
         VERBOSE0 (log, "Write MMIO 32 Err\n");
@@ -119,12 +119,12 @@ static void action_write (FILE* log, struct snap_card* h, uint32_t addr, uint32_
     return;
 }
 
-static uint32_t action_read (FILE* log, struct snap_card* h, uint32_t addr)
+static uint32_t action_read (FILE* log, struct ocaccel_card* h, uint32_t addr)
 {
     int rc;
     uint32_t data;
 
-    rc = snap_action_read32 (h, (uint64_t)addr, &data);
+    rc = ocaccel_action_read32 (h, (uint64_t)addr, &data);
 
     if (0 != rc) {
         VERBOSE0 (log, "Read MMIO 32 Err\n");
@@ -175,7 +175,7 @@ static uint64_t mem_check (uint8_t* src, uint8_t* dest, uint64_t len)
     return 0;
 }
 
-static int run_single_engine (struct snap_card* h,
+static int run_single_engine (struct ocaccel_card* h,
                               uint32_t timeout,
                               void* src_base,
                               void* tgt_base,
@@ -207,13 +207,13 @@ static int run_single_engine (struct snap_card* h,
     //FILE* file_wtt;
     uint32_t pasid;
 
-    VERBOSE0 (log, " ----- START SNAP_CONTROL ----- \n");
-    //snap_action_start ((void*)h);
-    action_write(log, h, reg (REG_SNAP_CONTROL, id), 0x00000001);
+    VERBOSE0 (log, " ----- START OCACCEL_CONTROL ----- \n");
+    //ocaccel_action_start ((void*)h);
+    action_write(log, h, reg (REG_OCACCEL_CONTROL, id), 0x00000001);
 
-    pasid = snap_action_get_pasid (h);
+    pasid = ocaccel_action_get_pasid (h);
     VERBOSE0 (log, "PASID of this process: %u\n", pasid);
-    action_write (log, h, reg (REG_SNAP_CONTEXT, id), pasid);
+    action_write (log, h, reg (REG_OCACCEL_CONTEXT, id), pasid);
 
     VERBOSE0 (log, " ----- CONFIG PARAMETERS ----- \n");
     action_write (log, h, reg (REG_USER_MODE, id), wrap_pattern);
@@ -329,8 +329,8 @@ static int run_single_engine (struct snap_card* h,
     VERBOSE0 (log, " ----- Finish dump, release AFU ----- \n");
     action_write (log, h, reg (REG_USER_CONTROL, id), 0x00000002);
 
-    //VERBOSE0 (log, "SNAP Wait for idle\n");
-    //rc += snap_action_completed ((void*)h, NULL, timeout);
+    //VERBOSE0 (log, "OCACCEL Wait for idle\n");
+    //rc += ocaccel_action_completed ((void*)h, NULL, timeout);
     //VERBOSE1 ("Card in idle\n");
 
     action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000001);
@@ -341,17 +341,17 @@ static int run_single_engine (struct snap_card* h,
     return rc; //1 means successful
 }
 
-static struct snap_action* get_action (FILE* log, struct snap_card* handle,
-                                       snap_action_flag_t flags, uint32_t timeout)
+static struct ocaccel_action* get_action (FILE* log, struct ocaccel_card* handle,
+                                       ocaccel_action_flag_t flags, uint32_t timeout)
 {
-    struct snap_action* act;
+    struct ocaccel_action* act;
 
-    act = snap_attach_action (handle, ACTION_TYPE_HDL_MULTI_PROCESS,
+    act = ocaccel_attach_action (handle, ACTION_TYPE_HDL_MULTI_PROCESS,
                               flags, timeout);
 
     if (NULL == act) {
         VERBOSE0 (log, "Error: Can not attach Action: %x\n", ACTION_TYPE_HDL_MULTI_PROCESS);
-        VERBOSE0 (log, "       Try to run snap_main tool\n");
+        VERBOSE0 (log, "       Try to run ocaccel_main tool\n");
     }
 
     return act;
@@ -359,7 +359,7 @@ static struct snap_action* get_action (FILE* log, struct snap_card* handle,
 
 static void usage (FILE* log, const char* prog)
 {
-    VERBOSE0 (log, "SNAP String Match (Regular Expression Match) Tool.\n");
+    VERBOSE0 (log, "OCACCEL String Match (Regular Expression Match) Tool.\n");
     VERBOSE0 (log, "Usage: %s\n"
              "    -h, --help              | Prints usage information\n"
              "    -v, --verbose           | Verbose mode\n"
@@ -386,14 +386,14 @@ static void usage (FILE* log, const char* prog)
 static int memcopy (int argc, char* argv[], int id)
 {
     char device[64];
-    struct snap_card* dn;   /* lib snap handle */
+    struct ocaccel_card* dn;   /* lib ocaccel handle */
     int card_no = 0;
     int cmd;
     int rc = 1;
     int i;
     uint32_t timeout = ACTION_WAIT_TIME;
-    snap_action_flag_t attach_flags = 0;
-    struct snap_action* act = NULL;
+    ocaccel_action_flag_t attach_flags = 0;
+    struct ocaccel_action* act = NULL;
     void* src_base = NULL;
     void* tgt_base = NULL;
     void* exp_buff = NULL;
@@ -482,7 +482,7 @@ static int memcopy (int argc, char* argv[], int id)
             break;
 
         case 'I':      /* irq */
-            attach_flags = SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ;
+            attach_flags = OCACCEL_ACTION_DONE_IRQ | OCACCEL_ATTACH_IRQ;
             break;
 
         case 'w':
@@ -537,11 +537,11 @@ static int memcopy (int argc, char* argv[], int id)
         snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card_no);
     }
 
-    dn = snap_card_alloc_dev (device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+    dn = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_IBM, OCACCEL_DEVICE_ID_OCACCEL);
 
     if (NULL == dn) {
         errno = ENODEV;
-        VERBOSE0 (log, "ERROR: snap_card_alloc_dev(%s)\n", device);
+        VERBOSE0 (log, "ERROR: ocaccel_card_alloc_dev(%s)\n", device);
         return -1;
     }
 
@@ -669,11 +669,11 @@ static int memcopy (int argc, char* argv[], int id)
     // Detach, Cleanup and Exit
     //-------------------------------------------------
     VERBOSE2 ("Detach action: %p\n", act);
-    snap_detach_action (act);
+    ocaccel_detach_action (act);
 
 __exit1:
     VERBOSE2 ("Free Card Handle: %p\n", dn);
-    snap_card_free (dn);
+    ocaccel_card_free (dn);
 
     free_mem (src_base);
     free_mem (exp_buff);

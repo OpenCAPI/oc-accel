@@ -22,8 +22,8 @@
 #include <asm/byteorder.h>
 #include <sys/mman.h>
 #include <getopt.h>
-#include <osnap_tools.h>
-#include <libosnap.h>
+#include <ocaccel_tools.h>
+#include <libocaccel.h>
 #include "force_cpu.h"
 
 int verbose_flag = 0;
@@ -49,7 +49,7 @@ static void usage (const char* prog)
             "  <addr> <val>\n"
             "\n"
             "Example:\n"
-            "  snap_poke 0x0000000 0xdeadbeef\n"
+            "  ocaccel_poke 0x0000000 0xdeadbeef\n"
             "\n",
             prog);
 }
@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
 {
     int ch, rc, rbrc = 0;
     int card_no = 0;
-    struct snap_card* card;
+    struct ocaccel_card* card;
     int cpu = -1;
     int width = 64;
     int rd_back = 0;
@@ -172,8 +172,8 @@ int main (int argc, char* argv[])
         snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card_no);
     }
 
-    card = snap_card_alloc_dev (device, SNAP_VENDOR_ID_ANY,
-                                SNAP_DEVICE_ID_ANY);
+    card = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_ANY,
+                                OCACCEL_DEVICE_ID_ANY);
 
     if (card == NULL) {
         fprintf (stderr, "err: failed to open card %u: %s\n", card_no,
@@ -184,23 +184,23 @@ int main (int argc, char* argv[])
     for (i = 0; i < count; i++) {
         switch (width) {
         case 32:
-            rc = snap_action_write32 (card, offs, (uint32_t)val);
+            rc = ocaccel_action_write32 (card, offs, (uint32_t)val);
             xerrno = errno;
 
             if (rd_back)
-                rbrc = snap_action_read32 (card, offs,
+                rbrc = ocaccel_action_read32 (card, offs,
                                            (uint32_t*)&rbval);
 
             break;
 
         default:
         case 64:
-            printf ("Poke SNAP Global regs: 0x%x, 0x%lx\n", offs, val);
-            rc = snap_global_write64 (card, offs, val);
+            printf ("Poke OCACCEL Global regs: 0x%x, 0x%lx\n", offs, val);
+            rc = ocaccel_global_write64 (card, offs, val);
             xerrno = errno;
 
             if (rd_back) {
-                rbrc = snap_global_read64 (card, offs, &rbval);
+                rbrc = ocaccel_global_read64 (card, offs, &rbval);
             }
 
             break;
@@ -211,7 +211,7 @@ int main (int argc, char* argv[])
                      "%016llx to [%08x]\n"
                      "  %s\n", (unsigned long long)val, offs,
                      strerror (xerrno));
-            snap_card_free (card);
+            ocaccel_card_free (card);
             exit (EXIT_FAILURE);
         }
 
@@ -219,7 +219,7 @@ int main (int argc, char* argv[])
             if (rbrc != 0) {
                 fprintf (stderr, "err: read back failed (%d)\n",
                          rbrc);
-                snap_card_free (card);
+                ocaccel_card_free (card);
                 exit (EXIT_FAILURE);
             }
 
@@ -228,7 +228,7 @@ int main (int argc, char* argv[])
                          "%016llx/%016llx\n",
                          (unsigned long long)val,
                          (unsigned long long)rbval);
-                snap_card_free (card);
+                ocaccel_card_free (card);
                 exit (EXIT_FAILURE);
             }
         }
@@ -238,7 +238,7 @@ int main (int argc, char* argv[])
         }
     }
 
-    snap_card_free (card);
+    ocaccel_card_free (card);
 
     if (!quiet) {
         printf ("[%08x] %016llx\n", offs, (long long)val);

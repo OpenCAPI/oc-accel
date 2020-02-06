@@ -17,16 +17,16 @@
 ##
 
 verbose=0
-snap_card=0
+ocaccel_card=0
 short=1
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
 ACTION_ROOT=$(dirname ${THIS_DIR})
-SNAP_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
+OCACCEL_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
 
 echo "Starting :    $0"
-echo "SNAP_ROOT :   ${SNAP_ROOT}"
+echo "OCACCEL_ROOT :   ${OCACCEL_ROOT}"
 echo "ACTION_ROOT : ${ACTION_ROOT}"
 
 function usage() {
@@ -43,7 +43,7 @@ function usage() {
 while getopts ":C:s:h" opt; do
     case $opt in
         C)  
-        snap_card=$OPTARG;
+        ocaccel_card=$OPTARG;
         ;;
         s)  
         short=$OPTARG;
@@ -58,17 +58,17 @@ while getopts ":C:s:h" opt; do
     esac
 done
 
-export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
+export PATH=$PATH:${OCACCEL_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 #### VERSION ##########################################################
 
 # [ -z "$STATE" ] && echo "Need to set STATE" && exit 1;
 
-if [ -z "$SNAP_CONFIG" ]; then
+if [ -z "$OCACCEL_CONFIG" ]; then
         echo "Get CARD VERSION"
-        #snap_maint -C ${snap_card} -v || exit 1;
-#       snap_peek -C ${snap_card} 0x0 || exit 1;
-#       snap_peek -C ${snap_card} 0x8 || exit 1;
+        #ocaccel_maint -C ${ocaccel_card} -v || exit 1;
+#       ocaccel_peek -C ${ocaccel_card} 0x0 || exit 1;
+#       ocaccel_peek -C ${ocaccel_card} 0x8 || exit 1;
 #       echo
 fi
 
@@ -84,7 +84,7 @@ function test_single_engine {
     local pattern=$(($(($idn<<16))+$(($length<<8))+$size))
 
     echo -n "Read and Write Duplex ... "
-    cmd="hdl_single_engine -C${snap_card} -c 1 -w 0 -n ${num} -N ${num} -p ${pattern} -P ${pattern} -t 100000 >>  hdl_single_engine_general_test.log 2>&1"
+    cmd="hdl_single_engine -C${ocaccel_card} -c 1 -w 0 -n ${num} -N ${num} -p ${pattern} -P ${pattern} -t 100000 >>  hdl_single_engine_general_test.log 2>&1"
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
@@ -125,9 +125,9 @@ done
 ##Print build date and version
 #echo
 #echo -n "Git Version: "
-##snap_peek -C ${snap_card} 0x0 || exit 1;
+##ocaccel_peek -C ${ocaccel_card} 0x0 || exit 1;
 #echo -n "Build Date:  "
-##snap_peek -C ${snap_card} 0x8 || exit 1;
+##ocaccel_peek -C ${ocaccel_card} 0x8 || exit 1;
 
 echo "ok"
 

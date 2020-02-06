@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-`include "snap_global_vars.v"
+`include "ocaccel_global_vars.v"
 
 //------------------------------------------------------------------------------
 // Convert bit width to byte log width

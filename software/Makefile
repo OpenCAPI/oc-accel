@@ -27,10 +27,10 @@
 #
 
 PLATFORM ?= $(shell uname -i)
-export SNAP_ROOT=$(abspath ..)
+export OCACCEL_ROOT=$(abspath ..)
 
--include ../snap_env.sh
--include ../.snap_config.sh
+-include ../ocaccel_env.sh
+-include ../.ocaccel_config.sh
 
 ifeq ($(PLATFORM),x86_64)
 BUILD_SIMCODE=1
@@ -65,11 +65,11 @@ $(subdirs): ..check_platform
 		$(MAKE) -C $@ C=0 || exit 1;		\
 	fi
 
-# If we find a SNAP binary which is not executable, automatically
+# If we find a OCACCEL binary which is not executable, automatically
 # clean up, such that we get a new build.
 ..check_platform:
-	@${SNAP_ROOT}/check_platform.sh || \
-	(echo "info: Non executable snap_maint! Rebuild required." && $(MAKE) clean)
+	@${OCACCEL_ROOT}/check_platform.sh || \
+	(echo "info: Non executable ocaccel_maint! Rebuild required." && $(MAKE) clean)
 
 # Install/uninstall
 install uninstall:
@@ -81,7 +81,7 @@ install uninstall:
 
 
 help:
-	@echo "Build Snap/CAPI hardware accelerator tools"
+	@echo "Build OpenCAPI Acceleration Framework hardware accelerator tools"
 	@echo
 	@echo "Possible Makefile options:"
 	@echo "  V=0 silent, 1 normal (default), 2 verbose"

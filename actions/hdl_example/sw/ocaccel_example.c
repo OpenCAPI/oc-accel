@@ -26,10 +26,10 @@
 #include <getopt.h>
 #include <ctype.h>
 
-#include <libosnap.h>
-#include <osnap_tools.h>
+#include <libocaccel.h>
+#include <ocaccel_tools.h>
 
-#include "snap_example.h"
+#include "ocaccel_example.h"
 
 /*  defaults */
 #define START_DELAY     20
@@ -136,11 +136,11 @@ static void memset2 (void* a, uint64_t pattern, int size)
 }
 
 /* Action or Kernel Write and Read are 32 bit MMIO */
-static void action_write (struct snap_card* h, uint32_t addr, uint32_t data)
+static void action_write (struct ocaccel_card* h, uint32_t addr, uint32_t data)
 {
     int rc;
 
-    rc = snap_action_write32 (h, (uint64_t)addr, data);
+    rc = ocaccel_action_write32 (h, (uint64_t)addr, data);
 
     if (0 != rc) {
         VERBOSE0 ("Write MMIO 32 Err\n");
@@ -167,22 +167,22 @@ static uint32_t msec_2_ticks (int msec)
 /*
  *  Start Action and wait for Idle.
  */
-static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed, snap_action_flag_t flags)
+static int action_wait_idle (struct ocaccel_card* h, int timeout, uint64_t* elapsed, ocaccel_action_flag_t flags)
 {
     int rc = 0;
     uint64_t t_start;   /* time in usec */
     uint64_t td = 0;    /* Diff time in usec */
 
-    //if ((flags & SNAP_ACTION_DONE_IRQ) != 0) {
-    //    snap_action_assign_irq ((void*)h, ACTION_IRQ_SRC_HIGH);
+    //if ((flags & OCACCEL_ACTION_DONE_IRQ) != 0) {
+    //    ocaccel_action_assign_irq ((void*)h, ACTION_IRQ_SRC_HIGH);
     //}
 
-    /* FIXME Use struct snap_action and not struct snap_card */
-    snap_action_start ((void*)h);
+    /* FIXME Use struct ocaccel_action and not struct ocaccel_card */
+    ocaccel_action_start ((void*)h);
 
     /* Wait for Action to go back to Idle */
     t_start = get_usec();
-    rc = snap_action_completed ((void*)h, NULL, timeout);
+    rc = ocaccel_action_completed ((void*)h, NULL, timeout);
 
     if (rc) {
         rc = 0;    /* Good */
@@ -199,7 +199,7 @@ static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed
     return rc;
 }
 
-static void action_count (struct snap_card* h, int delay_ms)
+static void action_count (struct ocaccel_card* h, int delay_ms)
 {
     VERBOSE1 ("       Expect %d msec to wait...", delay_ms);
     fflush (stdout);
@@ -208,7 +208,7 @@ static void action_count (struct snap_card* h, int delay_ms)
     return;
 }
 
-static void action_memcpy (struct snap_card* h,
+static void action_memcpy (struct ocaccel_card* h,
                            int action,  /* Action can be 2,3,4,5,6  see ACTION_CONFIG_COPY_ */
                            void* dest,
                            const void* src,
@@ -271,8 +271,8 @@ static int memcmp2 (uint8_t* src, uint8_t* dest, int len)
     return 0;
 }
 
-static int do_action (struct snap_card* h,
-                      snap_action_flag_t flags,
+static int do_action (struct ocaccel_card* h,
+                      ocaccel_action_flag_t flags,
                       int action,
                       int timeout,
                       void* dest,
@@ -281,15 +281,15 @@ static int do_action (struct snap_card* h,
 
 {
     int rc;
-    struct snap_action* act = NULL;
+    struct ocaccel_action* act = NULL;
     uint64_t td;
 
-    act = snap_attach_action (h, ACTION_TYPE_EXAMPLE,
+    act = ocaccel_attach_action (h, ACTION_TYPE_EXAMPLE,
                               flags, 5 * timeout);
 
     if (NULL == act) {
         VERBOSE0 ("Error: Can not attach Action: %x\n", ACTION_TYPE_EXAMPLE);
-        VERBOSE0 ("       Try to run snap_main tool\n");
+        VERBOSE0 ("       Try to run ocaccel_main tool\n");
         return 0x100;
     }
 
@@ -298,7 +298,7 @@ static int do_action (struct snap_card* h,
     rc = action_wait_idle (h, timeout, &td, flags);
     print_time (td, memsize);
 
-    if (0 != snap_detach_action (act)) {
+    if (0 != ocaccel_detach_action (act)) {
         VERBOSE0 ("Error: Can not detach Action: %x\n", ACTION_TYPE_EXAMPLE);
         rc |= 0x100;
     }
@@ -306,8 +306,8 @@ static int do_action (struct snap_card* h,
     return rc;
 }
 
-static int memcpy_test (struct snap_card* dnc,
-                        snap_action_flag_t attach_flags,
+static int memcpy_test (struct ocaccel_card* dnc,
+                        ocaccel_action_flag_t attach_flags,
                         int action,
                         int blocks_4k,  /* Number of DEFAULT_MEMCPY_BLOCK */
                         int blocks_64,  /* Number of 64 Bytes Blocks */
@@ -338,10 +338,10 @@ static int memcpy_test (struct snap_card* dnc,
 
     if (action > 2) {
         /* Make sure to have SDRAM for action 2,3,4,5,6 */
-        snap_card_ioctl (dnc, GET_SDRAM_SIZE, (unsigned long)&ddr_mem_size);
+        ocaccel_card_ioctl (dnc, GET_SDRAM_SIZE, (unsigned long)&ddr_mem_size);
 
         if (0 == ddr_mem_size) {
-            VERBOSE0 ("Error: No SDRAM configured on SNAP Card\n");
+            VERBOSE0 ("Error: No SDRAM configured on OCACCEL Card\n");
             return 1;
         }
 
@@ -534,10 +534,10 @@ static int memcpy_test (struct snap_card* dnc,
 
 static void usage (const char* prog)
 {
-    VERBOSE0 ("SNAP Basic Test and Debug Tool.\n"
-              "    Use Option -a 1 for SNAP Timer Test's\n"
+    VERBOSE0 ("OCACCEL Basic Test and Debug Tool.\n"
+              "    Use Option -a 1 for OCACCEL Timer Test's\n"
               "    e.g. %s -a1 -s 1000 -e 2000 -i 200 -v\n"
-              "    Use Option -a 2,3,4,5,6 for SNAP DMA Test's\n"
+              "    Use Option -a 2,3,4,5,6 for OCACCEL DMA Test's\n"
               "    e.g. %s -a2 [-vv] [-I]\n",
               prog, prog);
     VERBOSE0 ("Usage: %s\n"
@@ -559,7 +559,7 @@ static void usage (const char* prog)
               "    -N, --iter           Memcpy iterations (default 1)\n"
               "    -A, --align          Memcpy alignment (default 4 KB)\n"
               "    -D, --dest           Memcpy Card RAM base Address (default 0)\n"
-              "\tTool to check Stage 1 FPGA or Stage 2 FPGA Mode (-a) for snap bringup.\n"
+              "\tTool to check Stage 1 FPGA or Stage 2 FPGA Mode (-a) for ocaccel bringup.\n"
               "\t-a 1: Count down mode (Stage 1)\n"
               "\t-a 2: Copy from Host Memory to Host Memory.\n"
               "\t-a 3: Copy from Host Memory to DDR Memory (FPGA Card).\n"
@@ -572,7 +572,7 @@ static void usage (const char* prog)
 int main (int argc, char* argv[])
 {
     char device[64];
-    struct snap_card* dn;   /* lib snap handle */
+    struct ocaccel_card* dn;   /* lib ocaccel handle */
     int start_delay = START_DELAY;
     int end_delay = END_DELAY;
     int step_delay = STEP_DELAY;
@@ -587,9 +587,9 @@ int main (int argc, char* argv[])
     int memcpy_align = DEFAULT_MEMCPY_BLOCK;
     uint64_t card_ram_base = DDR_MEM_BASE_ADDR; /* Base of Card DDR or Block Ram */
     int timeout = ACTION_WAIT_TIME;
-    snap_action_flag_t attach_flags = 0;
+    ocaccel_action_flag_t attach_flags = 0;
     uint64_t td;
-    struct snap_action* act = NULL;
+    struct ocaccel_action* act = NULL;
     unsigned long ioctl_data;
     unsigned long dma_align;
     unsigned long dma_min_size;
@@ -690,8 +690,8 @@ int main (int argc, char* argv[])
             break;
 
         case 'I':      /* irq */
-            //attach_flags = SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ;
-            attach_flags = SNAP_ACTION_DONE_IRQ;
+            //attach_flags = OCACCEL_ACTION_DONE_IRQ | OCACCEL_ATTACH_IRQ;
+            attach_flags = OCACCEL_ACTION_DONE_IRQ;
             break;
 
         default:
@@ -722,7 +722,7 @@ int main (int argc, char* argv[])
     }
 
     VERBOSE2 ("Open Card: %d device: %s\n", card_no, device);
-    dn = snap_card_alloc_dev (device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+    dn = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_IBM, OCACCEL_DEVICE_ID_OCACCEL);
 
     if (NULL == dn) {
         VERBOSE0 ("ERROR: Can not Open (%s)\n", device);
@@ -734,16 +734,16 @@ int main (int argc, char* argv[])
     VERBOSE2 ("Open Card done\n");
 
     /* Read Card Name */
-    snap_card_ioctl (dn, GET_CARD_NAME, (unsigned long)&card_name);
-    VERBOSE1 ("SNAP on %s", card_name);
+    ocaccel_card_ioctl (dn, GET_CARD_NAME, (unsigned long)&card_name);
+    VERBOSE1 ("OCACCEL on %s", card_name);
 
-    snap_card_ioctl (dn, GET_SDRAM_SIZE, (unsigned long)&ioctl_data);
+    ocaccel_card_ioctl (dn, GET_SDRAM_SIZE, (unsigned long)&ioctl_data);
     VERBOSE1 (" Card, %d MB of Card Ram avilable. ", (int)ioctl_data);
 
-    snap_card_ioctl (dn, GET_DMA_ALIGN, (unsigned long)&dma_align);
+    ocaccel_card_ioctl (dn, GET_DMA_ALIGN, (unsigned long)&dma_align);
     VERBOSE1 (" (Align: %d ", (int)dma_align);
 
-    snap_card_ioctl (dn, GET_DMA_MIN_SIZE, (unsigned long)&dma_min_size);
+    ocaccel_card_ioctl (dn, GET_DMA_MIN_SIZE, (unsigned long)&dma_min_size);
     VERBOSE1 (" Min DMA: %d Bytes)\n", (int)dma_min_size);
 
     /* Check Align and DMA Min Size */
@@ -764,11 +764,11 @@ int main (int argc, char* argv[])
     switch (action) {
     case 1:
 
-        act = snap_attach_action (dn, ACTION_TYPE_EXAMPLE,
+        act = ocaccel_attach_action (dn, ACTION_TYPE_EXAMPLE,
                                   attach_flags, 5 * timeout + delay / 1000);
 
-        if ((attach_flags & SNAP_ACTION_DONE_IRQ) != 0) {
-            snap_action_assign_irq ((void*)dn, ACTION_IRQ_SRC_HIGH);
+        if ((attach_flags & OCACCEL_ACTION_DONE_IRQ) != 0) {
+            ocaccel_action_assign_irq ((void*)dn, ACTION_IRQ_SRC_HIGH);
         }
 
         for (delay = start_delay; delay <= end_delay;
@@ -788,7 +788,7 @@ int main (int argc, char* argv[])
         }
 
         /* Detach Action and exit if rc is set */
-        if (0 != snap_detach_action (act)) {
+        if (0 != ocaccel_detach_action (act)) {
             VERBOSE0 ("Error: Can not detach Action: %x\n",
                       ACTION_TYPE_EXAMPLE);
             rc |= 0x100;
@@ -825,7 +825,7 @@ int main (int argc, char* argv[])
 __exit1:
     // Unmap AFU MMIO registers, if previously mapped
     VERBOSE2 ("Free Card Handle: %p\n", dn);
-    snap_card_free (dn);
+    ocaccel_card_free (dn);
 
     VERBOSE1 ("End of Test rc: %d\n", rc);
     return rc;

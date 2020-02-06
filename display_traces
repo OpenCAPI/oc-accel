@@ -19,13 +19,13 @@
 ############################################################################
 ############################################################################
 #
-snapdir=$(dirname $(readlink -f "$BASH_SOURCE")) # path containing this script
-PATH=$snapdir:$PATH
+ocacceldir=$(dirname $(readlink -f "$BASH_SOURCE")) # path containing this script
+PATH=$ocacceldir:$PATH
 
-snap_config=$snapdir/\.snap_config
+ocaccel_config=$ocacceldir/\.ocaccel_config
 
-simulator=`grep SIMULATOR $snap_config|cut -d = -f 2 |tr -d '"'`
-capi20=`grep CAPI20 .snap_config|cut -d = -f 2`
+simulator=`grep SIMULATOR $ocaccel_config|cut -d = -f 2 |tr -d '"'`
+capi20=`grep CAPI20 .ocaccel_config|cut -d = -f 2`
 
 cd hardware/sim
 if [ $simulator == "xsim" ]; then

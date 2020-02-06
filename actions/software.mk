@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-include $(SNAP_ROOT)/software/config.mk
+include $(OCACCEL_ROOT)/software/config.mk
 
 # Environment variable OCSE_ROOT defined by hardware setup scripts. Use default path if OCSE_ROOT is not defined.
 ifndef OCSE_ROOT
@@ -23,10 +23,10 @@ endif
 
 CFLAGS += -std=c99
 
-LDLIBS += -losnap -locxl -lpthread
+LDLIBS += -locaccel -locxl -lpthread
 
-LDFLAGS += -Wl,-rpath,$(SNAP_ROOT)/software/lib
-LIBS += $(SNAP_ROOT)/software/lib/libosnap.so
+LDFLAGS += -Wl,-rpath,$(OCACCEL_ROOT)/software/lib
+LIBS += $(OCACCEL_ROOT)/software/lib/libocaccel.so
 
 ifdef BUILD_SIMCODE
 CFLAGS += -D_SIM_
@@ -47,14 +47,14 @@ $(projs): $(LIBS) $(libs)
 
 $(libs): $(LIBS)
 
-$(SNAP_ROOT)/software/lib/libosnap.so:
+$(OCACCEL_ROOT)/software/lib/libocaccel.so:
 	$(MAKE) -C `dirname $@`
 
 
 # Resolve dependencies to required libraries
-#$(projs) $(libs): $(OCSE_ROOT)/libcxl/libcxl.so $(SNAP_ROOT)/software/lib/libosnap.so
+#$(projs) $(libs): $(OCSE_ROOT)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so
 #
-#$(OCSE_ROOT)/libcxl/libcxl.so $(SNAP_ROOT)/software/lib/libosnap.so:
+#$(OCSE_ROOT)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so:
 #	$(MAKE) -C `dirname $@`
 
 ### Deactivate existing implicit rule

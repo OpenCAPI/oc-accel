@@ -35,5 +35,5 @@ def env_clean(log):
         msg.fail_msg("Error running 'make clean_config'! Exiting ...")
 
 if __name__ == '__main__':
-    env_clean('./snap_workflow.log')
+    env_clean('./ocaccel_workflow.log')
 

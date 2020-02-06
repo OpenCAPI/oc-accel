@@ -14,12 +14,12 @@
 # limitations under the License.
 #
 
-ifndef SNAP_ROOT
+ifndef OCACCEL_ROOT
 ifneq ("$(wildcard ../../actions)","")
-SNAP_ROOT=$(abspath ../../)
+OCACCEL_ROOT=$(abspath ../../)
 else
-$(info You probably have defined a wrong $$SNAP_ROOT.)
-$(error Please make sure that $$SNAP_ROOT is set up correctly.)
+$(info You probably have defined a wrong $$OCACCEL_ROOT.)
+$(error Please make sure that $$OCACCEL_ROOT is set up correctly.)
 endif
 endif
 
@@ -42,13 +42,13 @@ LDFLAGS += -L$(OCSE_ROOT)/libocxl -Wl,-rpath,$(OCSE_ROOT)/libocxl
 LIBS += $(OCSE_ROOT)/libocxl/libocxl.so
 endif
 
-libnameA = libosnap
+libnameA = libocaccel
 projA = $(libnameA).a \
 	$(libnameA).so \
 	$(libnameA).so.$(MAJOR_VERSION) \
 	$(libnameA).so.$(libversion)
 
-srcA = osnap.c
+srcA = ocaccel.c
 
 objsA = $(srcA:.c=.o)
 

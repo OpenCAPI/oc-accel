@@ -28,7 +28,7 @@ module axi_master_wr #(
                       (
                        input                              clk               ,
                        input                              rst_n             , 
-                       input     [031:0]                  i_snap_context    ,
+                       input     [031:0]                  i_ocaccel_context    ,
                                                             
                        //---- AXI bus ----                   
                          // AXI write address channel           
@@ -90,7 +90,7 @@ module axi_master_wr #(
  assign m_axi_awsize   = wr_pattern[2:0]; // 2^6=512
  assign m_axi_awburst  = 2'd1; // INCR mode for memory access
  assign m_axi_awcache  = 4'd3; // Normal Non-cacheable Bufferable
- assign m_axi_awuser   = i_snap_context[ARUSER_WIDTH - 1:0]; 
+ assign m_axi_awuser   = i_ocaccel_context[ARUSER_WIDTH - 1:0]; 
  assign m_axi_awprot   = 3'd0;
  assign m_axi_awqos    = 4'd0;
  assign m_axi_awregion = 4'd0; //?

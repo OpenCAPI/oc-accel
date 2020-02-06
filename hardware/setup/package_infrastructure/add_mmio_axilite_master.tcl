@@ -50,7 +50,7 @@ if {$capi_ver  eq "OPENCAPI30" } {
 set_property verilog_define "$synth_verilog_defines" [get_filesets sources_1]
 set_property verilog_define "$synth_verilog_defines" [get_filesets sim_1]
 
-#set file "snap_global_vars.v"
+#set file "ocaccel_global_vars.v"
 #set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 #set_property -name "file_type" -value "Verilog Header" -objects $file_obj
 

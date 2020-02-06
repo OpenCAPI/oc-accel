@@ -36,78 +36,78 @@ input                                          clk                  ,
 input                                          rst_n                ,
 
 
-//---- AXI bus interfaced with SNAP core ----
+//---- AXI bus interfaced with OCACCEL core ----
   // AXI write address channel
-output    [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_snap_awid     ,
-output    [C_M_AXI_HOST_MEM_ADDR_WIDTH - 1:0]   m_axi_snap_awaddr   ,
-output    [0007:0]                              m_axi_snap_awlen    ,
-output    [0002:0]                              m_axi_snap_awsize   ,
-output    [0001:0]                              m_axi_snap_awburst  ,
-output    [0003:0]                              m_axi_snap_awcache  ,
-output    [0001:0]                              m_axi_snap_awlock   ,
-output    [0002:0]                              m_axi_snap_awprot   ,
-output    [0003:0]                              m_axi_snap_awqos    ,
-output    [0003:0]                              m_axi_snap_awregion ,
-output    [C_M_AXI_HOST_MEM_AWUSER_WIDTH - 1:0] m_axi_snap_awuser   ,
-output                                          m_axi_snap_awvalid  ,
-input                                           m_axi_snap_awready  ,
+output    [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_ocaccel_awid     ,
+output    [C_M_AXI_HOST_MEM_ADDR_WIDTH - 1:0]   m_axi_ocaccel_awaddr   ,
+output    [0007:0]                              m_axi_ocaccel_awlen    ,
+output    [0002:0]                              m_axi_ocaccel_awsize   ,
+output    [0001:0]                              m_axi_ocaccel_awburst  ,
+output    [0003:0]                              m_axi_ocaccel_awcache  ,
+output    [0001:0]                              m_axi_ocaccel_awlock   ,
+output    [0002:0]                              m_axi_ocaccel_awprot   ,
+output    [0003:0]                              m_axi_ocaccel_awqos    ,
+output    [0003:0]                              m_axi_ocaccel_awregion ,
+output    [C_M_AXI_HOST_MEM_AWUSER_WIDTH - 1:0] m_axi_ocaccel_awuser   ,
+output                                          m_axi_ocaccel_awvalid  ,
+input                                           m_axi_ocaccel_awready  ,
   // AXI write data channel
-output    [C_M_AXI_HOST_MEM_DATA_WIDTH - 1:0]   m_axi_snap_wdata    ,
-output    [(C_M_AXI_HOST_MEM_DATA_WIDTH/8) -1:0]m_axi_snap_wstrb    ,
-output                                          m_axi_snap_wlast    ,
-output                                          m_axi_snap_wvalid   ,
-input                                           m_axi_snap_wready   ,
+output    [C_M_AXI_HOST_MEM_DATA_WIDTH - 1:0]   m_axi_ocaccel_wdata    ,
+output    [(C_M_AXI_HOST_MEM_DATA_WIDTH/8) -1:0]m_axi_ocaccel_wstrb    ,
+output                                          m_axi_ocaccel_wlast    ,
+output                                          m_axi_ocaccel_wvalid   ,
+input                                           m_axi_ocaccel_wready   ,
   // AXI write response channel
-output                                          m_axi_snap_bready   ,
-input     [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_snap_bid      ,
-input     [0001:0]                              m_axi_snap_bresp    ,
-input                                           m_axi_snap_bvalid   ,
+output                                          m_axi_ocaccel_bready   ,
+input     [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_ocaccel_bid      ,
+input     [0001:0]                              m_axi_ocaccel_bresp    ,
+input                                           m_axi_ocaccel_bvalid   ,
   // AXI read address channel
-output    [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_snap_arid     ,
-output    [C_M_AXI_HOST_MEM_ADDR_WIDTH - 1:0]   m_axi_snap_araddr   ,
-output    [0007:0]                              m_axi_snap_arlen    ,
-output    [0002:0]                              m_axi_snap_arsize   ,
-output    [0001:0]                              m_axi_snap_arburst  ,
-output    [C_M_AXI_HOST_MEM_ARUSER_WIDTH - 1:0] m_axi_snap_aruser   ,
-output    [0003:0]                              m_axi_snap_arcache  ,
-output    [0001:0]                              m_axi_snap_arlock   ,
-output    [0002:0]                              m_axi_snap_arprot   ,
-output    [0003:0]                              m_axi_snap_arqos    ,
-output    [0003:0]                              m_axi_snap_arregion ,
-output                                          m_axi_snap_arvalid  ,
-input                                           m_axi_snap_arready  ,
+output    [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_ocaccel_arid     ,
+output    [C_M_AXI_HOST_MEM_ADDR_WIDTH - 1:0]   m_axi_ocaccel_araddr   ,
+output    [0007:0]                              m_axi_ocaccel_arlen    ,
+output    [0002:0]                              m_axi_ocaccel_arsize   ,
+output    [0001:0]                              m_axi_ocaccel_arburst  ,
+output    [C_M_AXI_HOST_MEM_ARUSER_WIDTH - 1:0] m_axi_ocaccel_aruser   ,
+output    [0003:0]                              m_axi_ocaccel_arcache  ,
+output    [0001:0]                              m_axi_ocaccel_arlock   ,
+output    [0002:0]                              m_axi_ocaccel_arprot   ,
+output    [0003:0]                              m_axi_ocaccel_arqos    ,
+output    [0003:0]                              m_axi_ocaccel_arregion ,
+output                                          m_axi_ocaccel_arvalid  ,
+input                                           m_axi_ocaccel_arready  ,
   // AXI  ead data channel
-output                                          m_axi_snap_rready   ,
-input     [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_snap_rid      ,
-input     [C_M_AXI_HOST_MEM_DATA_WIDTH - 1:0]   m_axi_snap_rdata    ,
-input     [0001:0]                              m_axi_snap_rresp    ,
-input                                           m_axi_snap_rlast    ,
-input                                           m_axi_snap_rvalid   ,
+output                                          m_axi_ocaccel_rready   ,
+input     [C_M_AXI_HOST_MEM_ID_WIDTH - 1:0]     m_axi_ocaccel_rid      ,
+input     [C_M_AXI_HOST_MEM_DATA_WIDTH - 1:0]   m_axi_ocaccel_rdata    ,
+input     [0001:0]                              m_axi_ocaccel_rresp    ,
+input                                           m_axi_ocaccel_rlast    ,
+input                                           m_axi_ocaccel_rvalid   ,
 
 
-//---- AXI Lite bus interfaced with SNAP core ----
+//---- AXI Lite bus interfaced with OCACCEL core ----
   // AXI write address channel
-output                                          s_axi_snap_awready  ,
-input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_awaddr   ,
-input                                           s_axi_snap_awvalid  ,
+output                                          s_axi_ocaccel_awready  ,
+input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_ocaccel_awaddr   ,
+input                                           s_axi_ocaccel_awvalid  ,
   // axi write data channel
-output                                          s_axi_snap_wready   ,
-input     [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_snap_wdata    ,
-input     [(C_S_AXI_CTRL_REG_DATA_WIDTH/8) -1:0]s_axi_snap_wstrb    ,
-input                                           s_axi_snap_wvalid   ,
+output                                          s_axi_ocaccel_wready   ,
+input     [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_ocaccel_wdata    ,
+input     [(C_S_AXI_CTRL_REG_DATA_WIDTH/8) -1:0]s_axi_ocaccel_wstrb    ,
+input                                           s_axi_ocaccel_wvalid   ,
   // AXI response channel
-output    [0001:0]                              s_axi_snap_bresp    ,
-output                                          s_axi_snap_bvalid   ,
-input                                           s_axi_snap_bready   ,
+output    [0001:0]                              s_axi_ocaccel_bresp    ,
+output                                          s_axi_ocaccel_bvalid   ,
+input                                           s_axi_ocaccel_bready   ,
   // AXI read address channel
-output                                          s_axi_snap_arready  ,
-input                                           s_axi_snap_arvalid  ,
-input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_araddr   ,
+output                                          s_axi_ocaccel_arready  ,
+input                                           s_axi_ocaccel_arvalid  ,
+input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_ocaccel_araddr   ,
   // AXI read data channel
-output    [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_snap_rdata    ,
-output    [0001:0]                              s_axi_snap_rresp    ,
-input                                           s_axi_snap_rready   ,
-output                                          s_axi_snap_rvalid   ,
+output    [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_ocaccel_rdata    ,
+output    [0001:0]                              s_axi_ocaccel_rresp    ,
+input                                           s_axi_ocaccel_rready   ,
+output                                          s_axi_ocaccel_rvalid   ,
 
 // Other signals
 input      [31:0]                               i_action_type       ,
@@ -139,7 +139,7 @@ wire  [4:0]     tt_arid            ;
 wire  [4:0]     tt_awid            ;
 wire  [4:0]     tt_rid             ;
 wire  [4:0]     tt_bid             ;
-wire  [31:0]    snap_context       ;
+wire  [31:0]    ocaccel_context       ;
 
 
 
@@ -150,23 +150,23 @@ wire  [31:0]    snap_context       ;
  ) maxi_lite_slave (
                       .clk                ( clk                ) ,
                       .rst_n              ( rst_n              ) ,
-                      .s_axi_awready      ( s_axi_snap_awready ) ,
-                      .s_axi_awaddr       ( s_axi_snap_awaddr  ) ,//32b
-                      .s_axi_awvalid      ( s_axi_snap_awvalid ) ,
-                      .s_axi_wready       ( s_axi_snap_wready  ) ,
-                      .s_axi_wdata        ( s_axi_snap_wdata   ) ,//32b
-                      .s_axi_wstrb        ( s_axi_snap_wstrb   ) ,//4b
-                      .s_axi_wvalid       ( s_axi_snap_wvalid  ) ,
-                      .s_axi_bresp        ( s_axi_snap_bresp   ) ,//2b
-                      .s_axi_bvalid       ( s_axi_snap_bvalid  ) ,
-                      .s_axi_bready       ( s_axi_snap_bready  ) ,
-                      .s_axi_arready      ( s_axi_snap_arready ) ,
-                      .s_axi_arvalid      ( s_axi_snap_arvalid ) ,
-                      .s_axi_araddr       ( s_axi_snap_araddr  ) ,//32b
-                      .s_axi_rdata        ( s_axi_snap_rdata   ) ,//32b
-                      .s_axi_rresp        ( s_axi_snap_rresp   ) ,//2b
-                      .s_axi_rready       ( s_axi_snap_rready  ) ,
-                      .s_axi_rvalid       ( s_axi_snap_rvalid  ) ,
+                      .s_axi_awready      ( s_axi_ocaccel_awready ) ,
+                      .s_axi_awaddr       ( s_axi_ocaccel_awaddr  ) ,//32b
+                      .s_axi_awvalid      ( s_axi_ocaccel_awvalid ) ,
+                      .s_axi_wready       ( s_axi_ocaccel_wready  ) ,
+                      .s_axi_wdata        ( s_axi_ocaccel_wdata   ) ,//32b
+                      .s_axi_wstrb        ( s_axi_ocaccel_wstrb   ) ,//4b
+                      .s_axi_wvalid       ( s_axi_ocaccel_wvalid  ) ,
+                      .s_axi_bresp        ( s_axi_ocaccel_bresp   ) ,//2b
+                      .s_axi_bvalid       ( s_axi_ocaccel_bvalid  ) ,
+                      .s_axi_bready       ( s_axi_ocaccel_bready  ) ,
+                      .s_axi_arready      ( s_axi_ocaccel_arready ) ,
+                      .s_axi_arvalid      ( s_axi_ocaccel_arvalid ) ,
+                      .s_axi_araddr       ( s_axi_ocaccel_araddr  ) ,//32b
+                      .s_axi_rdata        ( s_axi_ocaccel_rdata   ) ,//32b
+                      .s_axi_rresp        ( s_axi_ocaccel_rresp   ) ,//2b
+                      .s_axi_rready       ( s_axi_ocaccel_rready  ) ,
+                      .s_axi_rvalid       ( s_axi_ocaccel_rvalid  ) ,
 
                       .engine_start_pulse ( engine_start_pulse ) ,
                       .wrap_mode          ( wrap_mode          ) ,
@@ -197,19 +197,19 @@ wire  [31:0]    snap_context       ;
 
                       .i_action_type      ( i_action_type      ) ,
                       .i_action_version   ( i_action_version   ) ,
-                      .o_snap_context     ( snap_context       )
+                      .o_ocaccel_context     ( ocaccel_context       )
            );
- assign tt_arvalid = m_axi_snap_arvalid && m_axi_snap_arready;
- assign tt_rlast = m_axi_snap_rvalid && m_axi_snap_rready && m_axi_snap_rlast;
- assign tt_arid = m_axi_snap_arid;
- assign tt_rid = m_axi_snap_rid;
+ assign tt_arvalid = m_axi_ocaccel_arvalid && m_axi_ocaccel_arready;
+ assign tt_rlast = m_axi_ocaccel_rvalid && m_axi_ocaccel_rready && m_axi_ocaccel_rlast;
+ assign tt_arid = m_axi_ocaccel_arid;
+ assign tt_rid = m_axi_ocaccel_rid;
 
- assign tt_awvalid = m_axi_snap_awvalid && m_axi_snap_awready;
- assign tt_bvalid = m_axi_snap_bvalid && m_axi_snap_bready;
- assign tt_awid = m_axi_snap_awid;
- assign tt_bid = m_axi_snap_bid;
+ assign tt_awvalid = m_axi_ocaccel_awvalid && m_axi_ocaccel_awready;
+ assign tt_bvalid = m_axi_ocaccel_bvalid && m_axi_ocaccel_bready;
+ assign tt_awid = m_axi_ocaccel_awid;
+ assign tt_bid = m_axi_ocaccel_bid;
 
-//---- writing channel of AXI master interface facing SNAP ----
+//---- writing channel of AXI master interface facing OCACCEL ----
  axi_master_wr#(
                 .ID_WIDTH     (C_M_AXI_HOST_MEM_ID_WIDTH     ),
                 .ADDR_WIDTH   (C_M_AXI_HOST_MEM_ADDR_WIDTH   ),
@@ -222,28 +222,28 @@ wire  [31:0]    snap_context       ;
                 ) maxi_master_wr( 
        .clk                (clk                ),
        .rst_n              (rst_n), 
-       .m_axi_awid         (m_axi_snap_awid    ), 
-       .m_axi_awaddr       (m_axi_snap_awaddr  ), 
-       .m_axi_awlen        (m_axi_snap_awlen   ),
-       .m_axi_awsize       (m_axi_snap_awsize  ),
-       .m_axi_awburst      (m_axi_snap_awburst ),
-       .m_axi_awcache      (m_axi_snap_awcache ),
-       .m_axi_awlock       (m_axi_snap_awlock  ),
-       .m_axi_awprot       (m_axi_snap_awprot  ),
-       .m_axi_awqos        (m_axi_snap_awqos   ),
-       .m_axi_awregion     (m_axi_snap_awregion),
-       .m_axi_awuser       (m_axi_snap_awuser  ),
-       .m_axi_awvalid      (m_axi_snap_awvalid ),
-       .m_axi_awready      (m_axi_snap_awready ),
-       .m_axi_wdata        (m_axi_snap_wdata   ),
-       .m_axi_wstrb        (m_axi_snap_wstrb   ),
-       .m_axi_wlast        (m_axi_snap_wlast   ),
-       .m_axi_wvalid       (m_axi_snap_wvalid  ),
-       .m_axi_wready       (m_axi_snap_wready  ),
-       .m_axi_bready       (m_axi_snap_bready  ),
-       .m_axi_bid          (m_axi_snap_bid     ), 
-       .m_axi_bresp        (m_axi_snap_bresp   ),
-       .m_axi_bvalid       (m_axi_snap_bvalid  ),
+       .m_axi_awid         (m_axi_ocaccel_awid    ), 
+       .m_axi_awaddr       (m_axi_ocaccel_awaddr  ), 
+       .m_axi_awlen        (m_axi_ocaccel_awlen   ),
+       .m_axi_awsize       (m_axi_ocaccel_awsize  ),
+       .m_axi_awburst      (m_axi_ocaccel_awburst ),
+       .m_axi_awcache      (m_axi_ocaccel_awcache ),
+       .m_axi_awlock       (m_axi_ocaccel_awlock  ),
+       .m_axi_awprot       (m_axi_ocaccel_awprot  ),
+       .m_axi_awqos        (m_axi_ocaccel_awqos   ),
+       .m_axi_awregion     (m_axi_ocaccel_awregion),
+       .m_axi_awuser       (m_axi_ocaccel_awuser  ),
+       .m_axi_awvalid      (m_axi_ocaccel_awvalid ),
+       .m_axi_awready      (m_axi_ocaccel_awready ),
+       .m_axi_wdata        (m_axi_ocaccel_wdata   ),
+       .m_axi_wstrb        (m_axi_ocaccel_wstrb   ),
+       .m_axi_wlast        (m_axi_ocaccel_wlast   ),
+       .m_axi_wvalid       (m_axi_ocaccel_wvalid  ),
+       .m_axi_wready       (m_axi_ocaccel_wready  ),
+       .m_axi_bready       (m_axi_ocaccel_bready  ),
+       .m_axi_bid          (m_axi_ocaccel_bid     ), 
+       .m_axi_bresp        (m_axi_ocaccel_bresp   ),
+       .m_axi_bvalid       (m_axi_ocaccel_bvalid  ),
        .engine_start_pulse (engine_start_pulse ),
        .wrap_mode          ( wrap_mode          ) ,
        .wrap_len           ( wrap_len           ) ,
@@ -253,12 +253,12 @@ wire  [31:0]    snap_context       ;
        .wr_number          (wr_number          ),
        .wr_done_pulse      (wr_done_pulse      ),
        .wr_error           (wr_error           ),
-       .i_snap_context     (snap_context       )
+       .i_ocaccel_context     (ocaccel_context       )
       );
 
 
 
-//---- writing channel of AXI master interface facing SNAP ----
+//---- writing channel of AXI master interface facing OCACCEL ----
  axi_master_rd#(
                 .ID_WIDTH     (C_M_AXI_HOST_MEM_ID_WIDTH     ),
                 .ADDR_WIDTH   (C_M_AXI_HOST_MEM_ADDR_WIDTH   ),
@@ -271,25 +271,25 @@ wire  [31:0]    snap_context       ;
                 ) maxi_master_rd( 
       .clk                (clk                ),
       .rst_n              (rst_n), 
-      .m_axi_arid         (m_axi_snap_arid    ),
-      .m_axi_araddr       (m_axi_snap_araddr  ),
-      .m_axi_arlen        (m_axi_snap_arlen   ),
-      .m_axi_arsize       (m_axi_snap_arsize  ),
-      .m_axi_arburst      (m_axi_snap_arburst ),
-      .m_axi_aruser       (m_axi_snap_aruser  ),
-      .m_axi_arcache      (m_axi_snap_arcache ),
-      .m_axi_arlock       (m_axi_snap_arlock  ),
-      .m_axi_arprot       (m_axi_snap_arprot  ),
-      .m_axi_arqos        (m_axi_snap_arqos   ),
-      .m_axi_arregion     (m_axi_snap_arregion),
-      .m_axi_arvalid      (m_axi_snap_arvalid ),
-      .m_axi_arready      (m_axi_snap_arready ),
-      .m_axi_rready       (m_axi_snap_rready  ),
-      .m_axi_rid          (m_axi_snap_rid     ),
-      .m_axi_rdata        (m_axi_snap_rdata   ),
-      .m_axi_rresp        (m_axi_snap_rresp   ),
-      .m_axi_rlast        (m_axi_snap_rlast   ),
-      .m_axi_rvalid       (m_axi_snap_rvalid  ),
+      .m_axi_arid         (m_axi_ocaccel_arid    ),
+      .m_axi_araddr       (m_axi_ocaccel_araddr  ),
+      .m_axi_arlen        (m_axi_ocaccel_arlen   ),
+      .m_axi_arsize       (m_axi_ocaccel_arsize  ),
+      .m_axi_arburst      (m_axi_ocaccel_arburst ),
+      .m_axi_aruser       (m_axi_ocaccel_aruser  ),
+      .m_axi_arcache      (m_axi_ocaccel_arcache ),
+      .m_axi_arlock       (m_axi_ocaccel_arlock  ),
+      .m_axi_arprot       (m_axi_ocaccel_arprot  ),
+      .m_axi_arqos        (m_axi_ocaccel_arqos   ),
+      .m_axi_arregion     (m_axi_ocaccel_arregion),
+      .m_axi_arvalid      (m_axi_ocaccel_arvalid ),
+      .m_axi_arready      (m_axi_ocaccel_arready ),
+      .m_axi_rready       (m_axi_ocaccel_rready  ),
+      .m_axi_rid          (m_axi_ocaccel_rid     ),
+      .m_axi_rdata        (m_axi_ocaccel_rdata   ),
+      .m_axi_rresp        (m_axi_ocaccel_rresp   ),
+      .m_axi_rlast        (m_axi_ocaccel_rlast   ),
+      .m_axi_rvalid       (m_axi_ocaccel_rvalid  ),
       .engine_start_pulse (engine_start_pulse ),
       .wrap_mode          ( wrap_mode          ) ,
       .wrap_len           ( wrap_len           ) ,
@@ -300,7 +300,7 @@ wire  [31:0]    snap_context       ;
       .rd_done_pulse      (rd_done_pulse      ),
       .rd_error           (rd_error           ),
       .rd_error_info      (rd_error_info      ),
-      .i_snap_context     (snap_context       )
+      .i_ocaccel_context     (ocaccel_context       )
      );
 
 endmodule

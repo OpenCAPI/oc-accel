@@ -19,20 +19,20 @@
 #
 # The generated HDL depends on the chip which is used and
 # therefore must match what is being used to build the
-# toplevel SNAP bitstream.
+# toplevel OCACCEL bitstream.
 #
 # FIXME Pass part_number and other parameters from toplevel
 #      build-system as required.
 #
 
-# Finding $SNAP_ROOT
-ifndef SNAP_ROOT
-# check if we are in hw folder of an action (three directories below snap root)
+# Finding $OCACCEL_ROOT
+ifndef OCACCEL_ROOT
+# check if we are in hw folder of an action (three directories below ocaccel root)
 ifneq ("$(wildcard ../../../actions)","")
-SNAP_ROOT=$(abspath ../../../)
+OCACCEL_ROOT=$(abspath ../../../)
 else
-$(info You are not building your software from the default directory (/path/to/snap/actions/<action_name>/sw) or specified a wrong $$SNAP_ROOT.)
-$(error Please make sure that $$SNAP_ROOT is set up correctly.)
+$(info You are not building your software from the default directory (/path/to/ocaccel/actions/<action_name>/sw) or specified a wrong $$OCACCEL_ROOT.)
+$(error Please make sure that $$OCACCEL_ROOT is set up correctly.)
 endif
 endif
 
@@ -41,6 +41,6 @@ SOLUTION_NAME ?= helloworld
 SOLUTION_DIR ?= hlsUpperCase
 srcs += action_uppercase.cpp 
 
-# If you have the action code outside of the default snap directory structure, 
-# change to /path/to/snap/actions/hls.mk
-include $(SNAP_ROOT)/actions/hls.mk
+# If you have the action code outside of the default ocaccel directory structure, 
+# change to /path/to/ocaccel/actions/hls.mk
+include $(OCACCEL_ROOT)/actions/hls.mk

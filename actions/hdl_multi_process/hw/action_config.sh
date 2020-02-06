@@ -27,7 +27,7 @@ if [ ! -d $ENGINE_DESIGN ]; then
 fi
 
 if [ -z $NUM_OF_MULTI_PROCESS_ENGINES ]; then
-    echo "No number of multi process engines specified, check your snap_config!"
+    echo "No number of multi process engines specified, check your ocaccel_config!"
     exit 1
 fi
 

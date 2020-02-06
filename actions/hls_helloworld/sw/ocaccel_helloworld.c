@@ -15,9 +15,9 @@
  */
 
 /**
- * SNAP HelloWorld Example
+ * OCACCEL HelloWorld Example
  *
- * Demonstration how to get data into the FPGA, process it using a SNAP
+ * Demonstration how to get data into the FPGA, process it using a OCACCEL
  * action and move the data out of the FPGA back to host-DRAM.
  */
 
@@ -33,10 +33,10 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include <osnap_tools.h>
-#include <libosnap.h>
+#include <ocaccel_tools.h>
+#include <libocaccel.h>
 #include <action_changecase.h>
-#include <osnap_hls_if.h>
+#include <ocaccel_hls_if.h>
 
 int verbose_flag = 0;
 
@@ -66,18 +66,18 @@ static void usage(const char *prog)
 	"\n"
 	"Useful parameters (to be placed before the command):\n"
 	"----------------------------------------------------\n"
-	"SNAP_TRACE=0x0   no debug trace  (default mode)\n"
-	"SNAP_TRACE=0xF   full debug trace\n"
+	"OCACCEL_TRACE=0x0   no debug trace  (default mode)\n"
+	"OCACCEL_TRACE=0xF   full debug trace\n"
 	"\n"
         "Example\n"
         "------------------------\n"
         "echo Clean possible temporary old files \n"
 	"echo Prepare the text to process\n"
-	"echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\""
+	"echo \"Hello world. This is my first CAPI OCACCEL experience. It's real fun.\""
 	" > /tmp/t1\n"
 	"\n"
 	"echo Run the application + hardware action\n"
-	"snap_helloworld -i /tmp/t1 -o /tmp/t2\n"
+	"ocaccel_helloworld -i /tmp/t1 -o /tmp/t2\n"
 	"echo Display input file: && cat /tmp/t1\n"
 	"echo Display output file from FPGA executed action -UPPER CASE expected-:"
 	" && cat /tmp/t2\n"
@@ -87,7 +87,7 @@ static void usage(const char *prog)
 
 // Function that fills the MMIO registers / data structure 
 // these are all data exchanged between the application and the action
-static void snap_prepare_helloworld(struct snap_job *cjob,
+static void ocaccel_prepare_helloworld(struct ocaccel_job *cjob,
 				 struct helloworld_job *mjob,
 				 void *addr_in,
 				 uint32_t size_in,
@@ -98,18 +98,18 @@ static void snap_prepare_helloworld(struct snap_job *cjob,
 {
 	fprintf(stderr, "  prepare helloworld job of %ld bytes size\n", sizeof(*mjob));
 
-	assert(sizeof(*mjob) <= SNAP_JOBSIZE);
+	assert(sizeof(*mjob) <= OCACCEL_JOBSIZE);
 	memset(mjob, 0, sizeof(*mjob));
 
 	// Setting input params : where text is located in host memory
-	snap_addr_set(&mjob->in, addr_in, size_in, type_in,
-		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_SRC);
+	ocaccel_addr_set(&mjob->in, addr_in, size_in, type_in,
+		      OCACCEL_ADDRFLAG_ADDR | OCACCEL_ADDRFLAG_SRC);
 	// Setting output params : where result will be written in host memory
-	snap_addr_set(&mjob->out, addr_out, size_out, type_out,
-		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_DST |
-		      SNAP_ADDRFLAG_END);
+	ocaccel_addr_set(&mjob->out, addr_out, size_out, type_out,
+		      OCACCEL_ADDRFLAG_ADDR | OCACCEL_ADDRFLAG_DST |
+		      OCACCEL_ADDRFLAG_END);
 
-	snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+	ocaccel_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
 /* main program of the application for the hls_helloworld example        */
@@ -120,10 +120,10 @@ int main(int argc, char *argv[])
 	// Init of all the default values used 
 	int ch, rc = 0;
 	int card_no = 0;
-	struct snap_card *card = NULL;
-	struct snap_action *action = NULL;
+	struct ocaccel_card *card = NULL;
+	struct ocaccel_action *action = NULL;
 	char device[128];
-	struct snap_job cjob;
+	struct ocaccel_job cjob;
 	struct helloworld_job mjob;
 	const char *input = NULL;
 	const char *output = NULL;
@@ -132,16 +132,16 @@ int main(int argc, char *argv[])
 	struct timeval etime, stime;
 	ssize_t size = 1024 * 1024;
 	uint8_t *ibuff = NULL, *obuff = NULL;
-	uint8_t type_in = SNAP_ADDRTYPE_HOST_DRAM;
+	uint8_t type_in = OCACCEL_ADDRTYPE_HOST_DRAM;
 	uint64_t addr_in = 0x0ull;
-	uint8_t type_out = SNAP_ADDRTYPE_HOST_DRAM;
+	uint8_t type_out = OCACCEL_ADDRTYPE_HOST_DRAM;
 	uint64_t addr_out = 0x0ull;
 	int verify = 0;
 	int exit_code = EXIT_SUCCESS;
 	uint8_t trailing_zeros[1024] = { 0, };
 	// default is interrupt mode enabled (vs polling)
-	//snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
-	snap_action_flag_t action_irq = SNAP_ACTION_DONE_IRQ;
+	//ocaccel_action_flag_t action_irq = (OCACCEL_ACTION_DONE_IRQ | OCACCEL_ATTACH_IRQ);
+	ocaccel_action_flag_t action_irq = OCACCEL_ACTION_DONE_IRQ;
 
 	// collecting the command line arguments
 	while (1) {
@@ -184,9 +184,9 @@ int main(int argc, char *argv[])
 		case 'A':
 			space = optarg;
 			if (strcmp(space, "CARD_DRAM") == 0)
-				type_in = SNAP_ADDRTYPE_CARD_DRAM;
+				type_in = OCACCEL_ADDRTYPE_CARD_DRAM;
 			else if (strcmp(space, "HOST_DRAM") == 0)
-				type_in = SNAP_ADDRTYPE_HOST_DRAM;
+				type_in = OCACCEL_ADDRTYPE_HOST_DRAM;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -199,9 +199,9 @@ int main(int argc, char *argv[])
 		case 'D':
 			space = optarg;
 			if (strcmp(space, "CARD_DRAM") == 0)
-				type_out = SNAP_ADDRTYPE_CARD_DRAM;
+				type_out = OCACCEL_ADDRTYPE_CARD_DRAM;
 			else if (strcmp(space, "HOST_DRAM") == 0)
-				type_out = SNAP_ADDRTYPE_HOST_DRAM;
+				type_out = OCACCEL_ADDRTYPE_HOST_DRAM;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 			goto out_error;
 
 		/* Allocate in host memory the place to put the text to process */
-		ibuff = snap_malloc(size); //64Bytes aligned malloc
+		ibuff = ocaccel_malloc(size); //64Bytes aligned malloc
 		if (ibuff == NULL)
 			goto out_error;
 		memset(ibuff, 0, size);
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 			goto out_error;
 
 		// prepare params to be written in MMIO registers for action
-		type_in = SNAP_ADDRTYPE_HOST_DRAM;
+		type_in = OCACCEL_ADDRTYPE_HOST_DRAM;
 		addr_in = (unsigned long)ibuff;
 	}
 
@@ -278,13 +278,13 @@ int main(int argc, char *argv[])
 		size_t set_size = size + (verify ? sizeof(trailing_zeros) : 0);
 
 		/* Allocate in host memory the place to put the text processed */
-		obuff = snap_malloc(set_size); //64Bytes aligned malloc
+		obuff = ocaccel_malloc(set_size); //64Bytes aligned malloc
 		if (obuff == NULL)
 			goto out_error;
 		memset(obuff, 0x0, set_size);
 
 		// prepare params to be written in MMIO registers for action
-		type_out = SNAP_ADDRTYPE_HOST_DRAM;
+		type_out = OCACCEL_ADDRTYPE_HOST_DRAM;
 		addr_out = (unsigned long)obuff;
 	}
 
@@ -310,21 +310,21 @@ int main(int argc, char *argv[])
         else
                 snprintf(device, sizeof(device)-1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card_no);
 
-	card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM,
-				   SNAP_DEVICE_ID_SNAP);
+	card = ocaccel_card_alloc_dev(device, OCACCEL_VENDOR_ID_IBM,
+				   OCACCEL_DEVICE_ID_OCACCEL);
 	if (card == NULL) {
 		fprintf(stderr, "err: failed to open card %u: %s\n",
 			card_no, strerror(errno));
                 fprintf(stderr, "Default mode is FPGA mode.\n");
-                fprintf(stderr, "Did you want to run CPU mode ? => add SNAP_CONFIG=CPU before your command.\n");
-                fprintf(stderr, "Otherwise make sure you ran snap_find_card and snap_maint for your selected card.\n");
+                fprintf(stderr, "Did you want to run CPU mode ? => add OCACCEL_CONFIG=CPU before your command.\n");
+                fprintf(stderr, "Otherwise make sure you ran ocaccel_find_card and ocaccel_maint for your selected card.\n");
 		goto out_error;
 	}
 
 	// Attach the action that will be used on the allocated card
-	action = snap_attach_action(card, ACTION_TYPE, action_irq, 60);
+	action = ocaccel_attach_action(card, ACTION_TYPE, action_irq, 60);
 	if(action_irq)
-		snap_action_assign_irq(action, ACTION_IRQ_SRC_LO);
+		ocaccel_action_assign_irq(action, ACTION_IRQ_SRC_LO);
 	if (action == NULL) {
 		fprintf(stderr, "err: failed to attach action %u: %s\n",
 			card_no, strerror(errno));
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Fill the stucture of data exchanged with the action
-	snap_prepare_helloworld(&cjob, &mjob,
+	ocaccel_prepare_helloworld(&cjob, &mjob,
 			     (void *)addr_in,  size, type_in,
 			     (void *)addr_out, size, type_out);
 
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
 	//  + start the action 
 	//  + wait for completion
 	//  + read all the registers from the action (MMIO) 
-	rc = snap_action_sync_execute_job(action, &cjob, timeout);
+	rc = ocaccel_action_sync_execute_job(action, &cjob, timeout);
 
 	// Collect the timestamp AFTER the call of the action
 	gettimeofday(&etime, NULL);
@@ -369,16 +369,16 @@ int main(int argc, char *argv[])
 	}
 
 	// test return code
-	(cjob.retc == SNAP_RETC_SUCCESS) ? fprintf(stdout, "SUCCESS\n") : fprintf(stdout, "FAILED\n");
-	if (cjob.retc != SNAP_RETC_SUCCESS) {
+	(cjob.retc == OCACCEL_RETC_SUCCESS) ? fprintf(stdout, "SUCCESS\n") : fprintf(stdout, "FAILED\n");
+	if (cjob.retc != OCACCEL_RETC_SUCCESS) {
 		fprintf(stderr, "err: Unexpected RETC=%x!\n", cjob.retc);
 		goto out_error2;
 	}
 
 	// Compare the input and output if verify option -X is enabled
 	if (verify) {
-		if ((type_in  == SNAP_ADDRTYPE_HOST_DRAM) &&
-		    (type_out == SNAP_ADDRTYPE_HOST_DRAM)) {
+		if ((type_in  == OCACCEL_ADDRTYPE_HOST_DRAM) &&
+		    (type_out == OCACCEL_ADDRTYPE_HOST_DRAM)) {
 			rc = memcmp(ibuff, obuff, size);
 			if (rc != 0)
 				exit_code = EX_ERR_VERIFY;
@@ -396,21 +396,21 @@ int main(int argc, char *argv[])
 				"only with HOST_DRAM\n");
 	}
 	// Display the time of the action call (MMIO registers filled + execution)
-	fprintf(stdout, "SNAP helloworld took %lld usec\n",
+	fprintf(stdout, "OCACCEL helloworld took %lld usec\n",
 		(long long)timediff_usec(&etime, &stime));
 
 	// Detach action + disallocate the card
-	snap_detach_action(action);
-	snap_card_free(card);
+	ocaccel_detach_action(action);
+	ocaccel_card_free(card);
 
 	__free(obuff);
 	__free(ibuff);
 	exit(exit_code);
 
  out_error2:
-	snap_detach_action(action);
+	ocaccel_detach_action(action);
  out_error1:
-	snap_card_free(card);
+	ocaccel_card_free(card);
  out_error:
 	__free(obuff);
 	__free(ibuff);

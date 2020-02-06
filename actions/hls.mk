@@ -19,7 +19,7 @@
 #   xc7vx690tffg1157-2
 #   xcku115-flva1517-2-e
 #FPGACHIP    ?= xcku060-ffva1156-2-e
-CONFIG_FILE = $(SNAP_ROOT)/.snap_config
+CONFIG_FILE = $(OCACCEL_ROOT)/.ocaccel_config
 HLS_ACTION_CLOCK_DEFAULT = 4
 ifneq ("$(wildcard $(CONFIG_FILE))","")
   FPGACHIP = $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
@@ -48,27 +48,27 @@ CXXFLAGS = -Wall -W -Wextra -Werror -O2 -DNO_SYNTH -Wno-unknown-pragmas -I../inc
 all: $(syn_dir) check
 
 $(syn_dir): $(srcs) run_hls_script.tcl
-	@if [ ! -d "$(SNAP_ROOT)/hardware/logs" ]; then \
-		mkdir -p $(SNAP_ROOT)/hardware/logs; \
+	@if [ ! -d "$(OCACCEL_ROOT)/hardware/logs" ]; then \
+		mkdir -p $(OCACCEL_ROOT)/hardware/logs; \
 	fi
 	@echo "Compiling action with Vivado HLS `vivado_hls -version|head -n1|cut -d " " -f 11`"
 	@echo "Clock period used for HLS is $(HLS_ACTION_CLOCK) ns"
-	vivado_hls -f run_hls_script.tcl > $(SNAP_ROOT)/hardware/logs/action_make.log
+	vivado_hls -f run_hls_script.tcl > $(OCACCEL_ROOT)/hardware/logs/action_make.log
 	$(RM) -rf $@/systemc $@/verilog
 
 # Create symlinks for simpler access
 $(symlinks): $(syn_dir)
 	@$(RM) hls_syn_$@ && ln -s $(syn_dir)/$@ hls_syn_$@
 
-run_hls_script.tcl: $(SNAP_ROOT)/actions/scripts/create_run_hls_script.sh
-	$(SNAP_ROOT)/actions/scripts/create_run_hls_script.sh	\
+run_hls_script.tcl: $(OCACCEL_ROOT)/actions/scripts/create_run_hls_script.sh
+	$(OCACCEL_ROOT)/actions/scripts/create_run_hls_script.sh	\
 		-n $(SOLUTION_NAME)		\
 		-d $(SOLUTION_DIR) 		\
 		-w $(WRAPPER)			\
 		-p $(PART_NUMBER)		\
 		-c $(HLS_ACTION_CLOCK)		\
 		-f "$(srcs)" 			\
-		-s $(SNAP_ROOT) 		\
+		-s $(OCACCEL_ROOT) 		\
 		-x "$(HLS_CFLAGS)" > $@
 
 $(SOLUTION_NAME): $(objs)
@@ -107,7 +107,7 @@ check: $(syn_dir)
 	  	echo "OK";                                                                    \
 	else \
 		echo "   --------------------------------------------------------------------------- ";    \
-		echo "   By defining HLS_CLOCK_PERIOD_CONSTRAINT in snap_env.sh, automatic critical timing checking is disabled"; \
+		echo "   By defining HLS_CLOCK_PERIOD_CONSTRAINT in ocaccel_env.sh, automatic critical timing checking is disabled"; \
 		echo "   FYI action was compiled with following HLS clock:"; \
 		grep "Setting up clock" vivado_hls.log ; \
 		echo "   --------------------------------------------------------------------------- ";    \

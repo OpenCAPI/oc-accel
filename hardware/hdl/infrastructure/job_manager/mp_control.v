@@ -118,7 +118,7 @@ assign cmpl_ram_data_o = s_axi_wdata;
      s_axi_rdata <= 32'd0;
    else if(s_axi_arvalid & s_axi_arready)
      case(s_axi_araddr)
-//       ADDR_SNAP_ACTION_TYPE     : s_axi_rdata <= i_action_type;
+//       ADDR_OCACCEL_ACTION_TYPE     : s_axi_rdata <= i_action_type;
        ADDR_GLOBAL_CONTROL       : s_axi_rdata <= REG_global_control;
 //       ADDR_INIT_ADDR_HI         : s_axi_rdata <= REG_init_addr_hi;
 //       ADDR_INIT_ADDR_LO         : s_axi_rdata <= REG_init_addr_lo;

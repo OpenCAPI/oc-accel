@@ -1,5 +1,5 @@
-#ifndef __HLS_SNAP_H__
-#define __HLS_SNAP_H__
+#ifndef __HLS_OCACCEL_H__
+#define __HLS_OCACCEL_H__
 
 /*
  * Copyright 2017 International Business Machines
@@ -52,22 +52,22 @@
 #define BPERDW (MEMDW/8)   // Bytes per Data Word    if MEMDW=512 => BPERDW = 64
 #define WPERDW (64/BPERDW) // Number of words per DW if MEMDW=512 => WPERDW =  1
 #define ADDR_RIGHT_SHIFT 6
-#define SNAP_HLS_JOBSIZE 108
+#define OCACCEL_HLS_JOBSIZE 108
 
-typedef ap_uint<MEMDW> snap_membus_t;  /* snap memory access */
-typedef ap_uint<64> snapu64_t;
-typedef ap_uint<32> snapu32_t;
-typedef ap_uint<16> snapu16_t;
-typedef ap_uint<8> snapu8_t;
-typedef ap_uint<1> snap_bool_t;
+typedef ap_uint<MEMDW> ocaccel_membus_t;  /* ocaccel memory access */
+typedef ap_uint<64> ocaccelu64_t;
+typedef ap_uint<32> ocaccelu32_t;
+typedef ap_uint<16> ocaccelu16_t;
+typedef ap_uint<8> ocaccelu8_t;
+typedef ap_uint<1> ocaccel_bool_t;
 
 typedef struct {
-        snapu8_t sat; // short action type
-        snapu8_t flags;
-        snapu16_t seq;
-        snapu32_t Retc;
-        snapu64_t Reserved; // Priv_data
+        ocaccelu8_t sat; // short action type
+        ocaccelu8_t flags;
+        ocaccelu16_t seq;
+        ocaccelu32_t Retc;
+        ocaccelu64_t Reserved; // Priv_data
 } CONTROL;
 
 
-#endif  /* __HLS_SNAP_H__ */
+#endif  /* __HLS_OCACCEL_H__ */

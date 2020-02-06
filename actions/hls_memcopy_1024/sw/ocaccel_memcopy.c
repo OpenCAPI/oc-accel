@@ -26,10 +26,10 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include <osnap_tools.h>
+#include <ocaccel_tools.h>
 #include <action_memcopy.h>
-#include <libosnap.h>
-#include <osnap_hls_if.h>
+#include <libocaccel.h>
+#include <ocaccel_hls_if.h>
 
 int verbose_flag = 0;
 
@@ -72,67 +72,67 @@ static void usage(const char *prog)
 	       "\n"
 	       "Useful parameters(to be placed before the command)  :\n"
 	       "-----------------------------------------------------\n"
-	       "SNAP_TRACE=0x0    no debug trace  (default mode)\n"
-	       "SNAP_TRACE=0xF    full debug trace\n"
+	       "OCACCEL_TRACE=0x0    no debug trace  (default mode)\n"
+	       "OCACCEL_TRACE=0xF    full debug trace\n"
 	       "The easy way is to run the scripts under 'tests' directory\n"
 	       "\n"
 	       "Example on a real card :\n"
 	       "------------------------\n"
-	       "cd /home/snap && export ACTION_ROOT=/home/snap/actions/hls_memcopy\n"
-	       "source snap_path.sh\n"
-	       "snap_maint -vv\n"
+	       "cd /home/ocaccel && export ACTION_ROOT=/home/ocaccel/actions/hls_memcopy\n"
+	       "source ocaccel_path.sh\n"
+	       "ocaccel_maint -vv\n"
 	       "echo create a 512MB file with random data ...wait...\n"
 	       "dd if=/dev/urandom of=t1 bs=1M count=512\n"
 	       "\n"
 	       "echo READ 512MB from Host - one direction\n"
-	       "snap_memcopy -C0 -i t1\n"
+	       "ocaccel_memcopy -C0 -i t1\n"
 	       "echo WRITE 512MB to Host - one direction - (t1!=t2 since buffer is 256KB)\n"
-	       "snap_memcopy -C0 -o t2 -s0x20000000\n"
+	       "ocaccel_memcopy -C0 -o t2 -s0x20000000\n"
 	       "\n"
 	       "echo READ 512MB from DDR - one direction\n"
-	       "snap_memcopy -C0 -s0x20000000 -ACARD_DRAM -a0x0\n"
+	       "ocaccel_memcopy -C0 -s0x20000000 -ACARD_DRAM -a0x0\n"
 	       "echo WRITE 512MB to DDR - one direction\n"
-	       "snap_memcopy -C0 -s0x20000000 -DCARD_DRAM -d0x0\n"
+	       "ocaccel_memcopy -C0 -s0x20000000 -DCARD_DRAM -d0x0\n"
 	       "\n"
 	       "echo MOVE 512MB from Host to DDR back to Host and compare\n"
-	       "snap_memcopy -C0 -i t1 -DCARD_DRAM -d 0x0\n"
-	       "snap_memcopy -C0 -o t2 -s0x20000000 -ACARD_DRAM -a 0x0\n"
+	       "ocaccel_memcopy -C0 -i t1 -DCARD_DRAM -d 0x0\n"
+	       "ocaccel_memcopy -C0 -o t2 -s0x20000000 -ACARD_DRAM -a 0x0\n"
 	       "diff t1 t2\n"
 	       "\n"
 	       "Example for a simulation\n"
 	       "------------------------\n"
-	       "snap_maint -vv\n"
+	       "ocaccel_maint -vv\n"
 	       "echo create a 4KB file with random data \n"
 	       "rm t2; dd if=/dev/urandom of=t1 bs=1K count=4\n"
 	       "echo READ file t1 from host memory THEN write it at @0x0 in card DDR\n"
-	       "snap_memcopy -i t1 -D CARD_DRAM -d 0x0 -t70 \n"
+	       "ocaccel_memcopy -i t1 -D CARD_DRAM -d 0x0 -t70 \n"
 	       "echo READ 4KB from card DDR at @0x0 THEN write them to Host and file t2\n"
-	       "snap_memcopy -o t2 -A CARD_DRAM -a 0x0 -s0x1000 -t70 \n"
+	       "ocaccel_memcopy -o t2 -A CARD_DRAM -a 0x0 -s0x1000 -t70 \n"
 	       "diff t1 t2\n"
 	       "\n"
 	       "echo same test using polling instead of IRQ waiting for the result\n"
-	       "snap_memcopy -o t2 -A CARD_DRAM -a 0x0 -s0x1000 -N\n"
+	       "ocaccel_memcopy -o t2 -A CARD_DRAM -a 0x0 -s0x1000 -N\n"
 	       "\n",
 	       prog);
 }
 
-static void snap_prepare_memcopy(struct snap_job *cjob, struct memcopy_job *mjob,
+static void ocaccel_prepare_memcopy(struct ocaccel_job *cjob, struct memcopy_job *mjob,
 				 void *addr_in,  uint32_t size_in,  uint16_t type_in,
 				 void *addr_out, uint32_t size_out, uint16_t type_out)
 {
   fprintf(stderr, "  prepare memcopy job of %ld bytes size\n"
   "  This is the register information exchanged between host and fpga\n", sizeof(*mjob));
 
-	assert(sizeof(*mjob) <= SNAP_JOBSIZE);
+	assert(sizeof(*mjob) <= OCACCEL_JOBSIZE);
 	memset(mjob, 0, sizeof(*mjob));
 
-	snap_addr_set(&mjob->in, addr_in, size_in, type_in,
-		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_SRC);
-	snap_addr_set(&mjob->out, addr_out, size_out, type_out,
-		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_DST |
-		      SNAP_ADDRFLAG_END);
+	ocaccel_addr_set(&mjob->in, addr_in, size_in, type_in,
+		      OCACCEL_ADDRFLAG_ADDR | OCACCEL_ADDRFLAG_SRC);
+	ocaccel_addr_set(&mjob->out, addr_out, size_out, type_out,
+		      OCACCEL_ADDRFLAG_ADDR | OCACCEL_ADDRFLAG_DST |
+		      OCACCEL_ADDRFLAG_END);
 
-	snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+	ocaccel_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
 /**
@@ -142,10 +142,10 @@ int main(int argc, char *argv[])
 {
 	int ch, rc = 0;
 	int card_no = 0;
-	struct snap_card *card = NULL;
-	struct snap_action *action = NULL;
+	struct ocaccel_card *card = NULL;
+	struct ocaccel_action *action = NULL;
 	char device[128];
-	struct snap_job cjob;
+	struct ocaccel_job cjob;
 	struct memcopy_job mjob;
 	const char *input = NULL;
 	const char *output = NULL;
@@ -155,14 +155,14 @@ int main(int argc, char *argv[])
 	struct timeval etime, stime;
 	ssize_t size = 1024 * 1024;
 	uint8_t *ibuff = NULL, *obuff = NULL;
-	uint16_t type_in = SNAP_ADDRTYPE_UNUSED;
+	uint16_t type_in = OCACCEL_ADDRTYPE_UNUSED;
 	uint64_t addr_in = 0x0ull;
-	uint16_t type_out = SNAP_ADDRTYPE_UNUSED;
+	uint16_t type_out = OCACCEL_ADDRTYPE_UNUSED;
 	uint64_t addr_out = 0x0ull;
 	int verify = 0;
 	int exit_code = EXIT_SUCCESS;
 	uint8_t trailing_zeros[1024] = { 0, };
-	snap_action_flag_t action_irq = SNAP_ACTION_DONE_IRQ;
+	ocaccel_action_flag_t action_irq = OCACCEL_ACTION_DONE_IRQ;
 	long long diff_usec = 0;
 	double mib_sec;
 
@@ -209,9 +209,9 @@ int main(int argc, char *argv[])
 		case 'A':
 			space = optarg;
 			if (strcmp(space, "CARD_DRAM") == 0)
-				type_in = SNAP_ADDRTYPE_CARD_DRAM;
+				type_in = OCACCEL_ADDRTYPE_CARD_DRAM;
 			else if (strcmp(space, "HOST_DRAM") == 0)
-				type_in = SNAP_ADDRTYPE_HOST_DRAM;
+				type_in = OCACCEL_ADDRTYPE_HOST_DRAM;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -224,9 +224,9 @@ int main(int argc, char *argv[])
 		case 'D':
 			space = optarg;
 			if (strcmp(space, "CARD_DRAM") == 0)
-				type_out = SNAP_ADDRTYPE_CARD_DRAM;
+				type_out = OCACCEL_ADDRTYPE_CARD_DRAM;
 			else if (strcmp(space, "HOST_DRAM") == 0)
-				type_out = SNAP_ADDRTYPE_HOST_DRAM;
+				type_out = OCACCEL_ADDRTYPE_HOST_DRAM;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
 			goto out_error;
 
 		/* source buffer */
-		ibuff = snap_malloc(size);
+		ibuff = ocaccel_malloc(size);
 		if (ibuff == NULL)
 			goto out_error;
 		memset(ibuff, 0, size);
@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
 		if (rc < 0)
 			goto out_error;
 
-		type_in = SNAP_ADDRTYPE_HOST_DRAM;
+		type_in = OCACCEL_ADDRTYPE_HOST_DRAM;
 		addr_in = (unsigned long)ibuff;
 	}
 
@@ -305,11 +305,11 @@ int main(int argc, char *argv[])
 	if (output != NULL) {
 		ssize_t set_size = size + (verify ? sizeof(trailing_zeros) : 0);
 
-		obuff = snap_malloc(set_size);
+		obuff = ocaccel_malloc(set_size);
 		if (obuff == NULL)
 			goto out_error;
 		memset(obuff, 0x0, set_size);
-		type_out = SNAP_ADDRTYPE_HOST_DRAM;
+		type_out = OCACCEL_ADDRTYPE_HOST_DRAM;
 		addr_out = (unsigned long)obuff;
 	}
 
@@ -334,8 +334,8 @@ int main(int argc, char *argv[])
         else
                 snprintf(device, sizeof(device)-1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card_no);
 
-	card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM,
-				   SNAP_DEVICE_ID_SNAP);
+	card = ocaccel_card_alloc_dev(device, OCACCEL_VENDOR_ID_IBM,
+				   OCACCEL_DEVICE_ID_OCACCEL);
 	if (card == NULL) {
 		fprintf(stderr, "err: failed to open card %u: %s\n",
 			card_no, strerror(errno));
@@ -343,9 +343,9 @@ int main(int argc, char *argv[])
 		goto out_error;
 	}
 
-	action = snap_attach_action(card, ACTION_TYPE, action_irq, 60);
+	action = ocaccel_attach_action(card, ACTION_TYPE, action_irq, 60);
 	if(action_irq)
-		snap_action_assign_irq(action, ACTION_IRQ_SRC_LO);
+		ocaccel_action_assign_irq(action, ACTION_IRQ_SRC_LO);
 
 	if (action == NULL) {
 		fprintf(stderr, "err: failed to attach action %u: %s\n",
@@ -353,9 +353,9 @@ int main(int argc, char *argv[])
 		goto out_error1;
 	}
 
-        // The following snap_prepare_memcopy will fill the software mjob and cjob
+        // The following ocaccel_prepare_memcopy will fill the software mjob and cjob
         // structures with the appropriate content
-	snap_prepare_memcopy(&cjob, &mjob,
+	ocaccel_prepare_memcopy(&cjob, &mjob,
 			     (void *)addr_in,  size, type_in,
 			     (void *)addr_out, size, type_out);
 
@@ -363,11 +363,11 @@ int main(int argc, char *argv[])
 
         printf("      get starting time\nAction is running ....");
         gettimeofday(&stime, NULL);
-        // The following snap_action_sync_execute_job will transfer the
+        // The following ocaccel_action_sync_execute_job will transfer the
         // structures cjob and mjob contents to fpga registers and launch
         // the specified action.
         // => timing will thus take into account the registers transfer time added to the action duration
-	rc = snap_action_sync_execute_job(action, &cjob, timeout);
+	rc = ocaccel_action_sync_execute_job(action, &cjob, timeout);
 	gettimeofday(&etime, NULL);
         printf("      got end of exec. time\n");
 	if (rc != 0) {
@@ -387,15 +387,15 @@ int main(int argc, char *argv[])
 	}
 
 	/* obuff[size] = 0xff; */
-	(cjob.retc == SNAP_RETC_SUCCESS) ? fprintf(stdout, "SUCCESS\n") : fprintf(stdout, "FAILED\n");
-	if (cjob.retc != SNAP_RETC_SUCCESS) {
+	(cjob.retc == OCACCEL_RETC_SUCCESS) ? fprintf(stdout, "SUCCESS\n") : fprintf(stdout, "FAILED\n");
+	if (cjob.retc != OCACCEL_RETC_SUCCESS) {
 		fprintf(stderr, "err: Unexpected RETC=%x!\n", cjob.retc);
 		goto out_error2;
 	}
 
 	if (verify) {
-		if ((type_in  == SNAP_ADDRTYPE_HOST_DRAM) &&
-		    (type_out == SNAP_ADDRTYPE_HOST_DRAM)) {
+		if ((type_in  == OCACCEL_ADDRTYPE_HOST_DRAM) &&
+		    (type_out == OCACCEL_ADDRTYPE_HOST_DRAM)) {
 			rc = memcmp(ibuff, obuff, size);
 			if (rc != 0)
 				exit_code = EX_ERR_VERIFY;
@@ -421,17 +421,17 @@ int main(int argc, char *argv[])
 		(long long)size, (long long)diff_usec, mib_sec, mem_tab[type_in%4], mem_tab[type_out%4]);
         fprintf(stdout, "This time represents the register transfer time + memcopy action time\n");       
 
-	snap_detach_action(action);
-	snap_card_free(card);
+	ocaccel_detach_action(action);
+	ocaccel_card_free(card);
 
 	__free(obuff);
 	__free(ibuff);
 	exit(exit_code);
 
  out_error2:
-	snap_detach_action(action);
+	ocaccel_detach_action(action);
  out_error1:
-	snap_card_free(card);
+	ocaccel_card_free(card);
  out_error:
 	__free(obuff);
 	__free(ibuff);
