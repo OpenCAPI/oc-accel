@@ -23,6 +23,7 @@ class tb_vseqr extends uvm_sequencer;
     tl_agent        tl_agt;
     host_mem_model  host_mem;
     brdg_cfg_obj    brdg_cfg;
+    act_cfg_obj     act_cfg;
     action_agent    action_agt;
     action_seqr     act_sqr;
     action_seqr_st  act_sqr_st;

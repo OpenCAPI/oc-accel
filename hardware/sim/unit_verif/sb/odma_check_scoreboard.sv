@@ -1338,7 +1338,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                 list_mm_format_ch0.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 0:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 0:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 0. The descriptor head address is 0x%16h.", address))                       
@@ -1348,7 +1348,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                 list_mm_format_ch1.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 1:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 1:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 1. The descriptor head address is 0x%16h.", address))                       
@@ -1358,7 +1358,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                  list_mm_format_ch2.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 2:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 2:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 2. The descriptor head address is 0x%16h.", address))                       
@@ -1368,7 +1368,7 @@ function odma_desp_transaction odma_check_scoreboard::catch_desp_chnl(int channe
             if({brdg_read_memory[address+3], brdg_read_memory[address+2]} == 16'had4b)begin
                 catch_desp_chnl=gen_mm_desp(address);
                 list_mm_format_ch3.desp_mm_q.push_back(catch_desp_chnl);
-                `uvm_info(tID, $sformatf("Get a descriptor for channel 3:\n%s", catch_desp_chnl.sprint()), UVM_LOW)
+                `uvm_info(tID, $sformatf("Get a descriptor for channel 3:\n%s", catch_desp_chnl.sprint()), UVM_MEDIUM)
             end
             else begin
                 `uvm_error(get_type_name(), $psprintf("The descriptor magic content is not 0xad4b for channel 3. The descriptor head address is 0x%16h.", address))                       
@@ -1696,7 +1696,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_error(get_type_name(), $psprintf("H2A: Data mismatch in the src_adr=0x%16h with data=0x%2h, dst_adr=0x%16h with data=0x%2h, for the descriptor:\n%s", desp_item.src_adr+i, brdg_read_memory[desp_item.src_adr+i], desp_item.dst_adr+i, axi_write_memory[desp_item.dst_adr+i], desp_item.sprint()))                    
             end
         end
-        `uvm_info(tID, $sformatf("H2A: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_LOW)
+        `uvm_info(tID, $sformatf("H2A: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_MEDIUM)
     `else
         //Check collected data from AXI-Stream interface
         if(st_h2a_data[chnl_num].data_queue.size == 0)begin
@@ -1720,13 +1720,13 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_info(tID, $sformatf("H2A Channel %d: Data check successfully for the EOP descriptor:\n%s", chnl_num, desp_item.sprint()), UVM_LOW)
             end
             else begin
-                `uvm_error(tID, $sformatf("H2A channel %d byte number not match! AXI stream has a number of %d bytes while the EOP despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].st_byte_num_queue[0], desp_item.length))
+                `uvm_error(tID, $sformatf("H2A channel %d: byte number not match! AXI stream has a number of %d bytes while the EOP despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].st_byte_num_queue[0], st_h2a_data[chnl_num].desp_byte_num+desp_item.length))
             end
         end
         //Not the EOP descriptor
         else begin
             //Check data length
-            if((st_h2a_data[chnl_num].data_queue.size > 0) && !(st_h2a_data[chnl_num].data_queue.size < desp_item.length))begin
+            if((st_h2a_data[chnl_num].data_queue.size > 0) && (st_h2a_data[chnl_num].data_queue.size >= desp_item.length))begin
                 for(int i=0; i<desp_item.length; i++)begin
                     if(!brdg_read_memory.exists(desp_item.src_adr+i))begin
                         `uvm_error(get_type_name(), $psprintf("H2A Channel %d: Not found a match afu-tlx read command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.src_adr+i, desp_item.sprint()))
@@ -1739,7 +1739,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 st_h2a_data[chnl_num].desp_byte_num+=desp_item.length;
             end
             else begin
-                `uvm_error(tID, $sformatf("H2A channel %d byte number not match! AXI stream has a number of %d bytes while the despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].data_queue.size, desp_item.length))
+                `uvm_error(tID, $sformatf("H2A channel %d: byte number not match! AXI stream has a number of %d bytes while the despcriptor has a length of %d bytes.", chnl_num, st_h2a_data[chnl_num].data_queue.size, desp_item.length))
             end
         end
     `endif
@@ -1758,11 +1758,11 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_error(get_type_name(), $psprintf("A2H: Data mismatch in the src_adr=0x%16h with data=0x%2h, dst_adr=0x%16h with data=0x%2h, for the descriptor:\n%s", desp_item.src_adr+i, axi_read_memory[desp_item.src_adr+i], desp_item.dst_adr+i, brdg_write_memory[desp_item.dst_adr+i], desp_item.sprint()))                    
             end
         end
-        `uvm_info(tID, $sformatf("A2H: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_LOW)
+        `uvm_info(tID, $sformatf("A2H: Data check successfully for the descriptor:\n%s", desp_item.sprint()), UVM_MEDIUM)
     `else
         //Check collected data from AXI-Stream interface
         if(st_a2h_data[chnl_num].data_queue.size == 0)begin
-             `uvm_error(tID, $sformatf("A2H channel %d dose not get any data from AXI-Stream interface for descriptor:\n%s.", chnl_num, desp_item.sprint()))
+             `uvm_error(tID, $sformatf("A2H channel %d: dose not get any data from AXI-Stream interface for descriptor:\n%s.", chnl_num, desp_item.sprint()))
         end
         //For the EOP descriptor
         if(desp_item.st_eop == 1)begin
@@ -1782,13 +1782,13 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 `uvm_info(tID, $sformatf("A2H Channel %d: Data check successfully for the EOP descriptor:\n%s", chnl_num, desp_item.sprint()), UVM_LOW)
             end
             else begin
-                `uvm_error(tID, $sformatf("A2H channel %d byte number not match! AXI stream has a number of %d while the EOP despcriptor has a length of %d.", chnl_num, desp_item.length))
+                `uvm_error(tID, $sformatf("A2H channel %d: byte number not match! AXI stream has a number of %d while the EOP despcriptor has a length of %d.", chnl_num, st_a2h_data[chnl_num].st_byte_num_queue[0], st_a2h_data[chnl_num].desp_byte_num+desp_item.length))
             end
         end
         //Not the EOP descriptor
         else begin
             //Check data length
-            if((st_a2h_data[chnl_num].data_queue.size > 0) && !(st_a2h_data[chnl_num].data_queue.size < desp_item.length))begin
+            if((st_a2h_data[chnl_num].data_queue.size > 0) && (st_a2h_data[chnl_num].data_queue.size >= desp_item.length))begin
                 for(int i=0; i<desp_item.length; i++)begin
                     if(!brdg_write_memory.exists(desp_item.dst_adr+i))begin
                         `uvm_error(get_type_name(), $psprintf("A2H Channel %d: Not found a match afu-tlx write command of address 0x%16h for the descriptor:\n%s", chnl_num, desp_item.dst_adr+i, desp_item.sprint()))
@@ -1801,7 +1801,7 @@ function void odma_check_scoreboard::check_dma_data(int chnl_num, bit direction,
                 st_a2h_data[chnl_num].desp_byte_num+=desp_item.length;
             end
             else begin
-                `uvm_error(tID, $sformatf("A2H channel %d byte number not match! AXI stream has a number of %d while the despcriptor has a length of %d.", chnl_num, desp_item.length))
+                `uvm_error(tID, $sformatf("A2H channel %d: byte number not match! AXI stream has a number of %d while the despcriptor has a length of %d.", chnl_num, st_a2h_data[chnl_num].data_queue.size, desp_item.length))
             end
         end
     `endif

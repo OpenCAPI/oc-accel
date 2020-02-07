@@ -87,6 +87,7 @@ task axi_st_slv_agent::main_phase(uvm_phase phase);
     `uvm_info(tID, $sformatf("main_phase begin ..."), UVM_HIGH)
     axi_vip_st_slave_slv = new("axi_vip_st_slave_slv", lite_slv_vif);
     axi_vip_st_slave_slv.start_slave();
+    axi_vip_st_slave_slv.vif_proxy.set_dummy_drive_type(XIL_AXI4STREAM_VIF_DRIVE_NONE);
 endtask : main_phase
 
 `endif // _AXI_ST_SLV_AGENT_SV_

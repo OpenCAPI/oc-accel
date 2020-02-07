@@ -216,8 +216,8 @@ class odma_seq_block1_dsc1_a2h_4k_st extends bfm_sequence_base;
 	    `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
         end
         else begin
-            for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                if(seq_num==odma_desp_templ_item.length/128-1)begin
+            for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                if(seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1)begin
                     `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                         act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                 end else begin
@@ -494,8 +494,8 @@ class odma_seq_block1_dsc4_a2h_4k_st extends bfm_sequence_base;
 	            `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                 end
                 else begin
-                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                        if(seq_num==odma_desp_templ_item.length/128-1)begin
+                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                        if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                             `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                 act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                         end else begin
@@ -525,8 +525,8 @@ class odma_seq_block1_dsc4_a2h_4k_st extends bfm_sequence_base;
 	            `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                 end
                 else begin
-                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                        if(seq_num==odma_desp_templ_item.length/128-1)begin
+                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                        if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                             `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                 act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                         end else begin
@@ -805,8 +805,8 @@ class odma_seq_block1_dsc4_a2h_less64k_st extends bfm_sequence_base;
 	            `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                 end
                 else begin
-                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                        if(seq_num==odma_desp_templ_item.length/128-1)begin
+                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                        if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                             `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                 act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                         end else begin
@@ -836,8 +836,8 @@ class odma_seq_block1_dsc4_a2h_less64k_st extends bfm_sequence_base;
 	            `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                 end
                 else begin
-                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                        if(seq_num==odma_desp_templ_item.length/128-1)begin
+                    for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                        if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                             `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                 act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                         end else begin
@@ -987,8 +987,8 @@ class odma_seq_block2to4_randdsc_a2h_less64k_st extends bfm_sequence_base;
 	                `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                     act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
@@ -1030,8 +1030,8 @@ class odma_seq_block2to4_randdsc_a2h_less64k_st extends bfm_sequence_base;
 	                `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                     act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
@@ -1178,8 +1178,8 @@ class odma_seq_block2to4_dsc1to8_a2h_hardlen_st extends bfm_sequence_base;
 	                `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                     act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
@@ -1217,8 +1217,8 @@ class odma_seq_block2to4_dsc1to8_a2h_hardlen_st extends bfm_sequence_base;
 	                `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                     act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
@@ -1369,8 +1369,8 @@ class odma_seq_block1to32_randdsc_a2h_less64k_st extends bfm_sequence_base;
 	                `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                     act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
@@ -1412,8 +1412,8 @@ class odma_seq_block1to32_randdsc_a2h_less64k_st extends bfm_sequence_base;
 	                `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                     act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
@@ -2258,8 +2258,8 @@ class odma_seq_list2to4_block2to4_randdsc_a2h_less64k_st extends bfm_sequence_ba
 	                    `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                         end
                         else begin
-                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                if(seq_num==odma_desp_templ_item.length/128-1)begin
+                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                     `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                         act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                                 end else begin
@@ -2301,8 +2301,8 @@ class odma_seq_list2to4_block2to4_randdsc_a2h_less64k_st extends bfm_sequence_ba
 	                    `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                         end
                         else begin
-                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                if(seq_num==odma_desp_templ_item.length/128-1)begin
+                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                     `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
                                                                                         act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
                                 end else begin
@@ -2402,7 +2402,7 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k_st extends bfm_sequence_base;
     	bit[63:0] temp_addr;
     	bit[2:0]  temp_plength;
     	//int list_num = 1;
-    	int k = 0;	
+    	int k = 0;
         //Turn off adr_var hardlen constrain
         odma_desp_templ_item.adr_var_hardlen.constraint_mode(0);
     	//Set descriptor address
@@ -2569,17 +2569,17 @@ class odma_seq_chnl4_block2to4_dsc1to8_h2a_less64k_st extends bfm_sequence_base;
 	    	channel(0);
 	    end
 	    begin
-	    	delay(start_time[15: 8]);
+	    	delay(start_time[ 15: 8]);
 	    	`uvm_info("odma_seq_lib", $sformatf("Channel 1 starts, delay time: %d ns", start_time[15: 8] * 10), UVM_LOW)
 	    	channel(1);
 	    end
 	    begin
-	    	delay(start_time[23:16]);
+	    	delay(start_time[ 23: 16]);
 	    	`uvm_info("odma_seq_lib", $sformatf("Channel 2 starts, delay time: %d ns", start_time[23:16] * 10), UVM_LOW)
 	    	channel(2);
 	    end
 	    begin
-	    	delay(start_time[31:24]);
+	    	delay(start_time[ 31: 24]);
 	    	`uvm_info("odma_seq_lib", $sformatf("Channel 3 starts, delay time: %d ns", start_time[31:24] * 10), UVM_LOW)
 	    	channel(3);
 	    end
@@ -2611,9 +2611,11 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k_st extends bfm_sequence_base;
     bit [31:0] write_mmio_patt [int unsigned];
     init_mem_desp init_mem_desp_item=new();
     init_host_mem init_host_mem_item; 
+    rand bit[1:0] chnl_x;
 
     function new(string name= "odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k_st");
         super.new(name);
+        randomize(chnl_x);
     endfunction: new
 
     task delay(bit[7:0] delay_time);
@@ -2706,13 +2708,13 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k_st extends bfm_sequence_base;
                         `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                    act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                    act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                    act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                    act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                             end
                         end
                     end
@@ -2749,13 +2751,13 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k_st extends bfm_sequence_base;
                         `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                     end
                     else begin
-                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                            if(seq_num==odma_desp_templ_item.length/128-1)begin
+                        for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                            if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                    act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                    act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                             end else begin
                                 `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                    act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                    act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                             end
                         end
                     end
@@ -2826,23 +2828,31 @@ class odma_seq_chnl4_block2to4_dsc1to8_a2h_less64k_st extends bfm_sequence_base;
 	fork
 	    begin
 	    	delay(start_time[ 7: 0]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 0 starts, delay time: %d ns", start_time[ 7: 0] * 10), UVM_LOW)
-	    	channel(0);
+                if(chnl_x==0)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 0 starts, delay time: %d ns", start_time[ 7: 0] * 10), UVM_LOW)
+	    	    channel(0);
+                end
 	    end
 	    begin
 	    	delay(start_time[15: 8]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 1 starts, delay time: %d ns", start_time[15: 8] * 10), UVM_LOW)
-	    	channel(1);
+                if(chnl_x==1)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 1 starts, delay time: %d ns", start_time[15: 8] * 10), UVM_LOW)
+	    	    channel(1);
+                end
 	    end
 	    begin
 	    	delay(start_time[23:16]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 2 starts, delay time: %d ns", start_time[23:16] * 10), UVM_LOW)
-	    	channel(2);
+                if(chnl_x==2)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 2 starts, delay time: %d ns", start_time[23:16] * 10), UVM_LOW)
+	    	    channel(2);
+                end
 	    end
 	    begin
 	    	delay(start_time[31:24]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 3 starts, delay time: %d ns", start_time[31:24] * 10), UVM_LOW)
-	    	channel(3);
+                if(chnl_x==3)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 3 starts, delay time: %d ns", start_time[31:24] * 10), UVM_LOW)
+	    	    channel(3);
+                end
 	    end
 	join
 	#10000ns;
@@ -3098,6 +3108,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k_st extends bfm_seque
     rand int unsigned temp_desp_q[$];
     rand int temp_list_num = 1;
     rand bit[31:0]start_time;
+    rand bit[1:0]chnl_x;
 
     bit [31:0] write_mmio_patt [int unsigned];
     init_mem_desp init_mem_desp_item=new();
@@ -3105,6 +3116,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k_st extends bfm_seque
 
     function new(string name= "odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k_st");
         super.new(name);
+        randomize(chnl_x);
     endfunction: new
 
     task delay(bit[7:0] delay_time);
@@ -3200,13 +3212,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k_st extends bfm_seque
                             `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                         end
                         else begin
-                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                if(seq_num==odma_desp_templ_item.length/128-1)begin
+                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                     `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                        act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                        act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                 end else begin
                                     `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                        act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                        act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                 end
                             end
                         end
@@ -3243,13 +3255,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k_st extends bfm_seque
                             `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                         end
                         else begin
-                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                if(seq_num==odma_desp_templ_item.length/128-1)begin
+                            for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                     `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                        act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                        act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                 end else begin
                                     `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                        act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                        act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                 end
                             end
                         end
@@ -3319,23 +3331,31 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_a2h_less64k_st extends bfm_seque
 	fork
 	    begin
 	    	delay(start_time[ 7: 0]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 0 starts, delay time: %d ns", start_time[ 7: 0] * 10), UVM_LOW)
-	    	channel(0);
+                if(chnl_x==0)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 0 starts, delay time: %d ns", start_time[ 7: 0] * 10), UVM_LOW)
+	    	    channel(0);
+                end
 	    end
 	    begin
 	    	delay(start_time[15: 8]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 1 starts, delay time: %d ns", start_time[15: 8] * 10), UVM_LOW)
-	    	channel(1);
+                if(chnl_x==1)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 1 starts, delay time: %d ns", start_time[15: 8] * 10), UVM_LOW)
+	    	    channel(1);
+                end
 	    end
 	    begin
 	    	delay(start_time[23:16]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 2 starts, delay time: %d ns", start_time[23:16] * 10), UVM_LOW)
-	    	channel(2);
+                if(chnl_x==2)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 2 starts, delay time: %d ns", start_time[23:16] * 10), UVM_LOW)
+	    	    channel(2);
+                end
 	    end
 	    begin
 	    	delay(start_time[31:24]);
-	    	`uvm_info("odma_seq_lib", $sformatf("Channel 3 starts, delay time: %d ns", start_time[31:24] * 10), UVM_LOW)
-	    	channel(3);
+                if(chnl_x==3)begin
+	    	    `uvm_info("odma_seq_lib", $sformatf("Channel 3 starts, delay time: %d ns", start_time[31:24] * 10), UVM_LOW)
+	    	    channel(3);
+                end
 	    end
 	join
 
@@ -3362,6 +3382,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k_st extends bfm_se
     rand int temp_list_num = 1;
     rand bit[31:0]start_time;
     rand bit temp_direction;
+    rand bit[1:0]chnl_x;
 	
     bit [31:0] write_mmio_patt [int unsigned];
     init_mem_desp init_mem_desp_item=new();
@@ -3369,6 +3390,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k_st extends bfm_se
 
     function new(string name= "odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k_st");
         super.new(name);
+        randomize(chnl_x);
     endfunction: new
 
     task delay(bit[7:0] delay_time);
@@ -3409,8 +3431,10 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k_st extends bfm_se
     	list_num = temp_list_num;
     	for(int k = 0; k < list_num; k++)begin
     	    randomize(temp_direction);
-    	    direction = temp_direction;
-    	    //direction = 1;
+            if(x==chnl_x)
+    	        direction = temp_direction;
+            else
+                direction = 0;
     	    dir_claim = direction ? "Action to Host" : "Host to Action";
     	    desp_count = 0;
     	    `uvm_info("odma_seq_lib", $sformatf("Channel %d Generate list %d of direction: %s\n", x, k, dir_claim), UVM_LOW) 
@@ -3483,13 +3507,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k_st extends bfm_se
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -3532,13 +3556,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_less64k_st extends bfm_se
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -3650,6 +3674,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen_st extends bfm_se
     rand int temp_list_num = 1;
     rand bit[31:0]start_time;
     rand bit temp_direction;
+    rand bit[1:0]chnl_x;
 	
     bit [31:0] write_mmio_patt [int unsigned];
     init_mem_desp init_mem_desp_item=new();
@@ -3657,6 +3682,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen_st extends bfm_se
 
     function new(string name= "odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen_st");
         super.new(name);
+        randomize(chnl_x);
     endfunction: new
 
     task delay(bit[7:0] delay_time);
@@ -3697,7 +3723,10 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen_st extends bfm_se
     	list_num = temp_list_num;
     	for(int k = 0; k < list_num; k++)begin
     	    randomize(temp_direction);
-    	    direction = temp_direction;
+            if(x==chnl_x)
+    	        direction = temp_direction;
+            else
+                direction = 0;
     	    dir_claim = direction ? "Action to Host" : "Host to Action";
     	    desp_count = 0;
     	    `uvm_info("odma_seq_lib", $sformatf("Channel %d Generate list %d of direction: %s\n", x, k, dir_claim), UVM_LOW) 
@@ -3769,13 +3798,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen_st extends bfm_se
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -3818,13 +3847,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to8_mixdrt_hardlen_st extends bfm_se
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -3935,6 +3964,7 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k_st extends bfm_seque
     //rand int temp_list_num = 1;
     rand bit[31:0]start_time;
     rand bit temp_direction;
+    rand bit[1:0]chnl_x;
 	
     bit [31:0] write_mmio_patt [int unsigned];
     init_mem_desp init_mem_desp_item=new();
@@ -3942,6 +3972,7 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k_st extends bfm_seque
 
     function new(string name= "odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k_st");
         super.new(name);
+        randomize(chnl_x);
     endfunction: new
 
     task delay(bit[7:0] delay_time);
@@ -3983,8 +4014,10 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k_st extends bfm_seque
     	//list_num = temp_list_num;
     	for(int k = 0; k < 32; k++)begin
     	    randomize(temp_direction);
-    	    direction = temp_direction;
-    	    //direction = 1;
+            if(x==chnl_x)
+    	        direction = temp_direction;
+            else
+                direction = 0;
     	    dir_claim = direction ? "Action to Host" : "Host to Action";
     	    desp_count = 0;
     	    `uvm_info("odma_seq_lib", $sformatf("Channel %d Generate list %d of direction: %s\n", x, k, dir_claim), UVM_LOW) 
@@ -4057,13 +4090,13 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k_st extends bfm_seque
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -4106,13 +4139,13 @@ class odma_seq_chnl4_list32_block2to4_dsc1to8_mixdrt_less4k_st extends bfm_seque
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -4226,6 +4259,7 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B_st extends bfm_sequen
     //rand int temp_list_num = 1;
     rand bit[31:0]start_time;
     rand bit temp_direction;
+    rand bit[1:0]chnl_x;
 	
     bit [31:0] write_mmio_patt [int unsigned];
     init_mem_desp init_mem_desp_item=new();
@@ -4233,6 +4267,7 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B_st extends bfm_sequen
 
     function new(string name= "odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B_st");
         super.new(name);
+        randomize(chnl_x);
     endfunction: new
 
     task delay(bit[7:0] delay_time);
@@ -4274,8 +4309,10 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B_st extends bfm_sequen
     	//list_num = temp_list_num;
     	for(int k = 0; k < 32; k++)begin
     	    randomize(temp_direction);
-    	    direction = temp_direction;
-    	    //direction = 1;
+            if(x==chnl_x)
+    	        direction = temp_direction;
+            else
+                direction = 0;
     	    dir_claim = direction ? "Action to Host" : "Host to Action";
     	    desp_count = 0;
     	    `uvm_info("odma_seq_lib", $sformatf("Channel %d Generate list %d of direction: %s\n", x, k, dir_claim), UVM_LOW) 
@@ -4348,13 +4385,13 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B_st extends bfm_sequen
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -4397,13 +4434,13 @@ class odma_seq_chnl4_list32_block2to4_dsc1to64_mixdrt_128B_st extends bfm_sequen
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -4518,6 +4555,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k_st extends bfm_se
     rand int temp_list_num = 1;
     rand bit[31:0]start_time;
     rand bit temp_direction;
+    rand bit[1:0]chnl_x;
 	
     bit [31:0] write_mmio_patt [int unsigned];
     init_mem_desp init_mem_desp_item=new();
@@ -4525,6 +4563,7 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k_st extends bfm_se
 
     function new(string name= "odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k_st");
         super.new(name);
+        randomize(chnl_x);
     endfunction: new
 
     task delay(bit[7:0] delay_time);
@@ -4565,8 +4604,10 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k_st extends bfm_se
     	list_num = temp_list_num;
     	for(int k = 0; k < list_num; k++)begin
     	    randomize(temp_direction);
-    	    direction = temp_direction;
-    	    //direction = 1;
+            if(x==chnl_x)
+    	        direction = temp_direction;
+            else
+                direction = 0;
     	    dir_claim = direction ? "Action to Host" : "Host to Action";
     	    desp_count = 0;
     	    `uvm_info("odma_seq_lib", $sformatf("Channel %d Generate list %d of direction: %s\n", x, k, dir_claim), UVM_LOW) 
@@ -4639,13 +4680,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k_st extends bfm_se
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end
@@ -4688,13 +4729,13 @@ class odma_seq_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k_st extends bfm_se
                                 `uvm_error("odma_seq_lib", $sformatf("Unsupported length of 0x%h for ST mode.", odma_desp_templ_item.length))
                             end
                             else begin
-                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/128; seq_num++)begin
-                                    if(seq_num==odma_desp_templ_item.length/128-1)begin
+                                for(int seq_num=0; seq_num<odma_desp_templ_item.length/(`AXI_ST_DW/8); seq_num++)begin
+                                    if((seq_num==odma_desp_templ_item.length/(`AXI_ST_DW/8)-1) && (odma_desp_templ_item.control[4]==1))begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==1;})
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==1;})
                                     end else begin
                                         `uvm_do_on_with(act_trans, p_sequencer.act_sqr_st, {act_trans.trans==axi_st_transaction::A2H; act_trans.tkeep==128'hffffffff_ffffffff_ffffffff_ffffffff; 
-                                                                                            act_trans.tid==0;act_trans.tuser==0; act_trans.tlast==0;})                
+                                                                                            act_trans.tid==x;act_trans.tuser==0; act_trans.tlast==0;})                
                                     end
                                 end
                             end

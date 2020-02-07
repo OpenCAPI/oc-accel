@@ -512,7 +512,6 @@ assign rdata_fifo_empty = (rdata_fifo_cnt == 6'd0);
 //                                    
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-assign rdata_fifo_ren = (~rdata_fifo_empty) && m_axis_tvalid && m_axis_tready;
 
 assign m_axis_tid = {3'b000, dsc_channel_id};
 assign m_axis_tlast = dsc_st_eop & dsc_axis_data_last_beat;
@@ -528,17 +527,21 @@ assign m_axis_tuser = 8'b0;
     //  64B | 64B
     // even | odd | even | odd | even | odd
     //
-    reg              m_axis_tvalid_128B;
+    wire             m_axis_tvalid_128B;
     reg              m_axis_tvalid_64B_odd;
-    reg  [1023:0]    m_axis_tdata_128B;
+    wire [1023:0]    m_axis_tdata_128B;
     reg  [0511:0]    m_axis_tdata_64B_odd;
     wire             m_axis_wbeat_even;
     
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
-            m_axis_tvalid_128B <= 1'b0;
-        else
-            m_axis_tvalid_128B <= (dsc_axis_data_cnt != 22'd0) && lcl_rd_data_valid;
+    assign rdata_fifo_ren = (~rdata_fifo_empty) && m_axis_tvalid && m_axis_tready && (~m_axis_wbeat_even);
+
+    //always @(posedge clk or negedge rst_n)
+    //    if (!rst_n)
+    //        m_axis_tvalid_128B <= 1'b0;
+    //    else
+    //        m_axis_tvalid_128B <= (dsc_axis_data_cnt != 22'd0) && rdata_fifo_valid;
+    assign m_axis_tvalid_128B = (dsc_axis_data_cnt != 22'd0) && rdata_fifo_valid;
+
 
     always @(posedge clk or negedge rst_n)
         if (!rst_n)
@@ -548,8 +551,9 @@ assign m_axis_tuser = 8'b0;
         else
             m_axis_tvalid_64B_odd <= m_axis_tvalid_64B_odd;
 
-    always @(posedge clk)
-        m_axis_tdata_128B <= rdata_fifo_dout;
+    //always @(posedge clk)
+    //    m_axis_tdata_128B <= rdata_fifo_dout;
+    assign m_axis_tdata_128B = rdata_fifo_dout;
 
     always @(posedge clk)
         if (m_axis_wbeat_even)
@@ -562,6 +566,8 @@ assign m_axis_tuser = 8'b0;
     assign m_axis_tdata = (m_axis_wbeat_even)? m_axis_tdata_128B[511:0] : m_axis_tdata_64B_odd;
     assign m_axis_tkeep = 64'hFFFF_FFFF_FFFF_FFFF;
 `else
+    assign rdata_fifo_ren = (~rdata_fifo_empty) && m_axis_tvalid && m_axis_tready;
+
     assign m_axis_tvalid = rdata_fifo_valid;
     assign m_axis_tdata = rdata_fifo_dout;
     assign m_axis_tkeep = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
