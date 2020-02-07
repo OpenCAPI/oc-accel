@@ -1466,7 +1466,85 @@ class bfm_seq_rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3 extends bfm_s
                                                              act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
-        #300000ns;
+        #8000000ns;
+    endtask: body
+endclass
+
+//------------------------------------------------------------------------------
+//
+// SEQUENCE: bfm_seq_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser
+//
+//------------------------------------------------------------------------------
+class bfm_seq_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser extends bfm_sequence_base; //Super
+    `uvm_object_utils(bfm_seq_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser)
+    bfm_seq_return_initial_credits return_initial_credits;
+    bfm_seq_initial_config initial_config;
+
+    axi_mm_transaction act_trans;
+    bridge_axi_item axi_item=new();
+    bit [63:0] read_addr;
+    bit [63:0] write_addr;
+    int rd_block_byte;
+    int wr_block_byte;
+    bit[8:0] hard_user_q[$];
+    init_host_mem init_host_mem_item;
+    function new(string name= "bfm_seq_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser");
+        super.new(name);
+    endfunction: new
+
+    task body();
+        #50ns;
+        `uvm_do(return_initial_credits)
+        #100ns;
+        `uvm_do(initial_config)
+        #10000ns;
+
+        //Set resd/write/interrupt number
+        p_sequencer.brdg_cfg.total_intrp_num = 0;
+        p_sequencer.brdg_cfg.total_read_num = 100;
+        p_sequencer.brdg_cfg.total_write_num = 100;
+
+        //Enable/Disable check read/write 256B in bridge check scorboard
+        p_sequencer.brdg_cfg.cmd_rd_256_enable = 0;
+        p_sequencer.brdg_cfg.cmd_wr_256_enable = 0;
+
+        //Initial read/write address
+        void'(axi_item.randomize());
+        read_addr={axi_item.read_addr_high[31:0],axi_item.read_addr_low[31:0]};
+        write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
+
+	//Random AXI user in hard mode
+        randomize(hard_user_q) with {hard_user_q.size inside {16,24,32};};
+        foreach(hard_user_q[i])begin
+            if(i%8==0)begin
+                hard_user_q[i]=hard_user_q[i]%64;
+            end else begin
+                hard_user_q[i]=64*(i%8)+hard_user_q[i/8*8];
+            end
+        end
+
+        for(int num=0; num<100; num++)begin
+            void'(axi_item.randomize()with{rd_usr inside{hard_user_q}; wr_usr inside{hard_user_q};});
+            read_addr+=axi_item.rd_adr_var;
+            write_addr+=axi_item.wr_adr_var;
+            rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
+            wr_block_byte=(1<<axi_item.wr_size)*(axi_item.wr_len+1);
+            //Set address not cross a 4KB boundary
+            read_addr[11:0] = (4096 - rd_block_byte) == 0 ? 0 : (read_addr[31:0] % (4096 - rd_block_byte));
+            write_addr[11:0] = (4096 - wr_block_byte) == 0 ? 0 : (write_addr[31:0] % (4096 - wr_block_byte));
+            //Set address aligned to axi size
+            //read_addr[11:0] = read_addr[11:0]&(12'hFFF<<axi_item.rd_size);
+            //write_addr[11:0] = write_addr[11:0]&(12'hFFF<<axi_item.wr_size);
+            //Initial host memory data for read commands
+            p_sequencer.host_mem.set_memory_by_length(read_addr, rd_block_byte, init_host_mem_item.init_data_queue(rd_block_byte));
+
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::READ; act_trans.axi_len==axi_item.rd_len; act_trans.axi_size==axi_item.rd_size;
+                                                             act_trans.axi_id==axi_item.rd_id; act_trans.axi_usr==axi_item.rd_usr; act_trans.addr==read_addr;act_trans.act_intrp==0;})
+            `uvm_do_on_with(act_trans, p_sequencer.act_sqr, {act_trans.trans==axi_mm_transaction::WRITE; act_trans.axi_len==axi_item.wr_len; act_trans.axi_size==axi_item.wr_size;
+                                                             act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;})
+        end
+
+        #40000000ns;
     endtask: body
 endclass
 
@@ -1734,7 +1812,7 @@ class bfm_seq_rd_wr_1000_randsize_randlen_unaligned_randid_randuser extends bfm_
                                                              act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
-        #3000000ns;
+        #40000000ns;
     endtask: body
 endclass
 

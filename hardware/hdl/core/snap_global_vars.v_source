@@ -115,8 +115,8 @@
   `define AXI_AWUSER      9
   `define AXI_ARUSER      9
   `define AXI_WUSER       1
-  `define AXI_RUSER       1
-  `define AXI_BUSER       1
+  `define AXI_RUSER       9
+  `define AXI_BUSER       9
   `define AXI_ST_USER     9
 
   `define AXI_CARD_MEM_ID_WIDTH      4
