@@ -139,6 +139,7 @@ module brdg_data_bridge
  wire[1023:0]    buf_r_data;
  wire[`TAGW-1:0] buf_r_data_addr;
  wire            buf_r_info_en; 
+ wire            buf_r_info_en_for_wr; 
  wire[`TAGW-1:0] buf_r_info_addr;
  wire[0200:0]    buf_r_info;              
  wire[0127:0]    buf_r_be;       
@@ -171,6 +172,8 @@ module brdg_data_bridge
  wire[`IDW-1:0]  ret_axi_id;
  wire            ret_last;
  wire            recycle_tag_out_ready;
+ reg [`IDW-1:0]  ret_axi_id_sync;
+ reg ret_valid_sync, ret_resp_sync;
 
 
  parameter DMA_W = 0,
@@ -496,13 +499,14 @@ module brdg_data_bridge
 //     | DMA read  | reclaim     |  retry or reclaim |
 //     -----------------------------------------------
 
- assign buf_r_data_en   = (MODE == DMA_W)? retry_tag_out_valid : rd_valid;
- assign buf_r_data_addr = (MODE == DMA_W)? retry_tag_out       : rd_tag;
- assign buf_r_info_en   = retry_tag_out_valid || ((MODE == DMA_R) && rd_valid) || ((MODE == DMA_W) && (ret_valid && ret_ready));
- assign buf_r_info_addr = retry_tag_out_valid? retry_tag_out : (((MODE == DMA_W) && ret_valid)? ret_tag : rd_tag);
- assign buf_r_be        = buf_r_info[127:0] & retry_be;
- assign buf_r_ea        = buf_r_info[191:128];
- assign buf_r_ctx       = buf_r_info[200:192];
+ assign buf_r_data_en        = (MODE == DMA_W)? retry_tag_out_valid : rd_valid;
+ assign buf_r_data_addr      = (MODE == DMA_W)? retry_tag_out       : rd_tag;
+ assign buf_r_info_en        = retry_tag_out_valid || ((MODE == DMA_R) && rd_valid) || buf_r_info_en_for_wr;
+ assign buf_r_info_en_for_wr = (MODE == DMA_W) && ((ret_valid && ret_ready) || (ret_valid_sync && !lcl_resp_ready));
+ assign buf_r_info_addr      = retry_tag_out_valid? retry_tag_out : (buf_r_info_en_for_wr ? ret_tag : rd_tag);
+ assign buf_r_be             = buf_r_info[127:0] & retry_be;
+ assign buf_r_ea             = buf_r_info[191:128];
+ assign buf_r_ctx            = buf_r_info[200:192];
 
 
 //=====================================================================================================================================
@@ -584,8 +588,6 @@ module brdg_data_bridge
  endgenerate
 
 //---- return data and response back to AXI, which should be one cycle later than reclaim channel ----
- reg [`IDW-1:0]  ret_axi_id_sync;
- reg ret_valid_sync, ret_resp_sync;
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      ret_valid_sync <= 1'b0;
