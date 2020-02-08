@@ -1332,7 +1332,7 @@ class bfm_seq_rd_wr_20_randsize_randlen_id0to3_user0to3 extends bfm_sequence_bas
                                                              act_trans.axi_id==axi_item.wr_id; act_trans.axi_usr==axi_item.wr_usr; act_trans.addr==write_addr;act_trans.act_intrp==0;foreach(act_trans.data_strobe[i]) act_trans.data_strobe[i]==128'hFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFF;})
         end
 
-        #250000ns;
+        #800000ns;
     endtask: body
 endclass
 //------------------------------------------------------------------------------
