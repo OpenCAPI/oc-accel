@@ -35,9 +35,9 @@ ocaccel_config_cflags = $(OCACCEL_ROOT)/.ocaccel_config.cflags
 ocaccel_config_sh     = $(OCACCEL_ROOT)/.ocaccel_config.sh
 ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 
--include $(OCACCEL_config_cflags)
--include $(OCACCEL_config_sh)
--include $(OCACCEL_env_sh)
+-include $(ocaccel_config_cflags)
+-include $(ocaccel_config_sh)
+-include $(ocaccel_env_sh)
 
 SIMULATOR ?= nosim
 
@@ -83,7 +83,7 @@ ifeq ($(PLATFORM),x86_64)
 all: model image
 
 ocaccel_config:
-	@$(MAKE) -C $(OCACCEL_ROOT) OCACCEL_config
+	@$(MAKE) -C $(OCACCEL_ROOT) ocaccel_config
 
 check_ocaccel_settings:
 	@if [ -z `which git 2> /dev/null` ]; then \
@@ -105,7 +105,7 @@ check_ocaccel_settings:
 	fi
 	@if [ ! -e "$(ocaccel_config_sh)" ]; then \
 		echo "                        Missing ocaccel config setup file \"$(ocaccel_config_sh)\""; \
-		echo "                        Please make sure that the ocaccel configuration is prepared by calling 'make ocaccel_Config'"; \
+		echo "                        Please make sure that the ocaccel configuration is prepared by calling 'make ocaccel_config'"; \
 		exit -1; \
 	fi
 	@if [ ! -e "$(ocaccel_env_sh)" ]; then \
@@ -244,13 +244,13 @@ hw_project: ocaccel_preprocess action_hw define_interface package_hostside packa
 #	$(MAKE) .hw_project_done
 #	@echo -e "[BUILD IMAGE.........] start `date +"%T %a %b %d %Y"`\n"
 #ifeq ($(USE_PRFLOW),TRUE)
-#	ocaccel-cloud-build ${OCACCEL_ROOT}/OCACCEL_env.sh
+#	ocaccel-cloud-build ${OCACCEL_ROOT}/ocaccel_env.sh
 #else
 #	@echo "A complete FPGA bitstream build got kicked off.";
 #	@echo "This might take more than an hour depending on the machine used";
 #	@echo "The process may be terminated by pressing <CTRL>-C at any time.";
 #	@echo "After termination it can be restarted later."; echo
-#	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/OCACCEL_build.tcl -notrace -log $(LOGS_DIR)/OCACCEL_build.log -journal $(LOGS_DIR)/ocaccel_build.jou
+#	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/ocaccel_build.tcl -notrace -log $(LOGS_DIR)/ocaccel_build.log -journal $(LOGS_DIR)/ocaccel_build.jou
 #	@$(RM) -r .bitstream_name.txt
 #endif
 #	@echo -e "Generating ltx file for ILA debug."

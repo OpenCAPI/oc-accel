@@ -34,7 +34,7 @@ ocaccel_env_sh = ocaccel_env.sh
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall ocaccel_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge ocaccel_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall ocaccel_env hw_project model sim image ocaccel_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
 
 help:
 	@echo "Main targets for the OCACCEL Framework make process:";
@@ -100,18 +100,10 @@ $(hardware_subdirs): $(ocaccel_env_sh)
 hardware: $(hardware_subdirs)
 
 # Model build and config
-hw_project model sim image cloud_enable cloud_base cloud_action sim_tmux: $(ocaccel_env_sh)
+hw_project model sim image sim_tmux: $(ocaccel_env_sh)
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
-	    fi                                             \
-	done
-
-cloud_merge:
-	@ignore_action_root=ignore_action_root $(MAKE) $(ocaccel_env_sh)
-	@for dir in $(hardware_subdirs); do                \
-	    if [ -d $$dir ]; then                          \
-	        ignore_action_root=ignore_action_root $(MAKE) -s -C $$dir $@ || exit 1;          \
 	    fi                                             \
 	done
 
@@ -121,12 +113,12 @@ else #noteq ($(PLATFORM),x86_64)
 wrong_platform:
 	@echo; echo "\nOCACCEL hardware builds and simulation are possible on x86 platform only\n"; echo;
 
-$(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action cloud_merge: wrong_platform
+$(hardware_subdirs) hardware hw_project model sim image: wrong_platform
 endif
 
 # OCACCEL Config
 config menuconfig xconfig gconfig oldconfig silentoldconfig:
-	@echo "$@: Setting up OCACCEL configuration" &>/dev/null
+	@echo "$@: Setting up OCACCEL configuration"
 	@touch $(ocaccel_config) && sed '/^#/ d' <$(ocaccel_config) >$(ocaccel_config_bak)
 	@for dir in $(config_subdirs); do          \
 	    if [ -d $$dir ]; then                  \
@@ -142,7 +134,7 @@ config menuconfig xconfig gconfig oldconfig silentoldconfig:
 ocaccel_config:
 	@$(MAKE) -s menuconfig || exit 1
 	@$(MAKE) -s ocaccel_env ocaccel_env_parm=config
-	@echo "OCACCEL config done" &>/dev/null
+	@echo "OCACCEL config done"
 
 $(ocaccel_config_sh):
 	@$(MAKE) -s menuconfig || exit 1
@@ -150,7 +142,7 @@ $(ocaccel_config_sh):
 
 # Prepare OCACCEL Environment
 $(ocaccel_env_sh) ocaccel_env: $(ocaccel_config_sh)
-	@$(OCACCEL_ROOT)/ocaccel_env $(ocaccel_env_parm) $(ignore_action_root) $(ocaccel_config_sh)
+	@$(OCACCEL_ROOT)/ocaccel_env $(ocaccel_config_sh)
 
 %.defconfig:
 	@if [ ! -f defconfig/$@ ]; then			        \
