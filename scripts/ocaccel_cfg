@@ -23,6 +23,7 @@ ocaccel_root=$(dirname "$prgdir")
 # output formatting
 bold=$(tput bold)
 normal=$(tput sgr0)
+mylog="/dev/null"
 
 # Name of global config file
 build_dir="$prgdir/build"
@@ -63,7 +64,7 @@ while getopts ":a:o:c:Vh" opt; do
       ocaccel_config_cflags=$OPTARG.cflags
       ;;
       V)
-      echo  "${version}" >/dev/null
+      echo  "${version}" > $mylog
       exit 0
       ;;
       h)
@@ -81,14 +82,14 @@ while getopts ":a:o:c:Vh" opt; do
   esac
 done
 
-echo  "OCACCEL Build Options" >/dev/null
-echo  "  Kconfig:          $kconfig" >/dev/null
-echo  "  Build directory:  $build_dir" >/dev/null
-echo  "  config:           $ocaccel_config" >/dev/null
-echo  "  autoconf:         $autoconf" >/dev/null
+echo  "OCACCEL Build Options" > $mylog
+echo  "  Kconfig:          $kconfig" > $mylog
+echo  "  Build directory:  $build_dir" > $mylog
+echo  "  config:           $ocaccel_config" > $mylog
+echo  "  autoconf:         $autoconf" > $mylog
 
 if [ ! -e $build_dir ]; then
-  echo  "Cloning kconfig from github.com/guillon/kconfig into $build_dir" >/dev/null
+  echo  "Cloning kconfig from github.com/guillon/kconfig into $build_dir" > $mylog
   git clone https://github.com/guillon/kconfig $build_dir
   if [ $? != 0 ]; then
       printf "FAILED: git clone https://github.com/guillon/kconfig $build_dir"
@@ -103,16 +104,19 @@ fi
 
 cmd="make -C $build_dir -f GNUmakefile TOPDIR=. SRCDIR=. KBUILD_KCONFIG=$kconfig $option"
 
-echo  "Executing:" >/dev/null
-echo  "  $cmd" >/dev/null
-$cmd 2>/dev/null
+echo  "Executing:" > $mylog
+echo  "  $cmd" > $mylog
+$cmd 2> $mylog
 
 if [[ $? != 0 ]]; then
     echo "Make kconfig failed!"
     exit 1
 fi
 
-echo  "Generating OCACCEL config files $ocaccel_config, $ocaccel_config_sh and $ocaccel_config_cflags ..."
+echo  "Generating OCACCEL config files to "
+echo  "    $ocaccel_config"
+echo  "    $ocaccel_config_sh"
+echo  "    $ocaccel_config_cflags"
 cp $config $ocaccel_config
 cat $ocaccel_config | sed 's/^\([^#].*\)/export \1/' | tr -d '"' > $ocaccel_config_sh
 chmod +x $ocaccel_config_sh

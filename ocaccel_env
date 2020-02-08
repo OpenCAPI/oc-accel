@@ -20,16 +20,15 @@
 ############################################################################
 #
 ocacceldir=$(dirname $(readlink -f "$BASH_SOURCE")) # path containing this script
+#echo "ocacceldir is set to $ocacceldir"
 PATH=$ocacceldir:$PATH
 
 ocaccel_env_sh=$ocacceldir/ocaccel_env.sh
 
-unset PSL_DCP
 unset ACTION_ROOT
 unset OCSE_ROOT
 unset TIMING_LABLIMIT
 unset ILA_SETUP_FILE
-unset DCP_ROOT
 unset config_script
 unset ocaccel_env_info
 
@@ -41,10 +40,6 @@ while [[ $# -gt 0 ]]; do
       ocaccel_env_info=y
       shift
       ;;
-    "ignore_action_root")
-      ignore_action_root=y
-      shift
-      ;;
     *)
       config_script=$1
       shift
@@ -52,11 +47,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+#echo  "======================================================="
 if [ -e "$config_script" ]; then
+#  echo "Preparation: source $config_script ..."
   source $config_script
 fi
 
 if [ -e "$ocaccel_env_sh" ]; then
+#  echo "Preparation: source current $ocaccel_env_sh ..."
   source "$ocaccel_env_sh"
 else
   touch "$ocaccel_env_sh"
@@ -68,7 +66,7 @@ while [ -z "$SETUP_DONE" ]; do
   SETUP_INFO=""
   SETUP_EMPTY=""
   echo  "======================================================="
-  echo  "== OCACCEL ENVIRONMENT SETUP                            =="
+  echo  "== OCACCEL ENVIRONMENT SETUP                         =="
   echo  "======================================================="
 
 
@@ -96,86 +94,36 @@ while [ -z "$SETUP_DONE" ]; do
   ####### checking path to OCSE (only if simulation is enabled)
   # Note: SIMULATOR is defined via ocaccel_config
   if [ "$SIMULATOR" != "nosim" ]; then
-    echo "=====Simulation setup: Setting up OCSE version=========="
-#    if [ "$CAPI10" == "y" ]; then
-#      PSLVER="8"
-#    else
-#      PSLVER="9"
-#    fi
-#    echo "Setting PSLVER                 to: \"$PSLVER\""
-#    sed -i '/export[ ^]*PSLVER[ ^]*=/ d' $ocaccel_env_sh
-#    sed -i '1s/^/export PSLVER='$PSLVER'\n/' $ocaccel_env_sh
-    echo "=====Simulation setup: Checking path to OCSE=========="
-    echo "OCSE_ROOT              is set to: \"$OCSE_ROOT\""
-    RESP=`grep OCSE_ROOT $ocaccel_env_sh`
-    if [ -z "$RESP" ]; then
-      tmp_pwd=`pwd`
-      abs_OCSE_PATH=$(cd $OCSE_PATH && echo $PWD)
-      cd $tmp_pwd
-      echo "export OCSE_ROOT=$abs_OCSE_PATH" >> $ocaccel_env_sh
-      OCSE_ROOT=$abs_OCSE_PATH
-    fi
-    if [ -z "$OCSE_ROOT" ]; then
-      if [ ! -n "$HDL_UNIT_SIM" ]; then
-        SETUP_EMPTY="$SETUP_EMPTY\n  OCSE_ROOT"
+    if [ ! -n "$HDL_UNIT_SIM" ]; then
+      echo "=====Simulation setup: Checking path to OCSE=========="
+
+      if [ ! -d "$OCSE_PATH" ]; then
+        #Doesn't care OCSE in Unit Sim
+           SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to OCSE not set properly."
+           SETUP_WARNING="$SETUP_WARNING\n    For simulation please clone OpenCAPI Simulation Environment (OCSE)"
+           SETUP_WARNING="$SETUP_WARNING\n    from https://github.com/OpenCAPI/ocse"
+           SETUP_WARNING="$SETUP_WARNING\n    and set it int the Kconfig Menu."
+           SETUP_WARNING="$SETUP_WARNING\n    Please set Simulator to 'nosim' if you do not intend to run simulation."
+        echo "OCSE_ROOT              is set to: \"$OCSE_PATH\""
+      else
+        abs_OCSE_PATH=$(cd $OCSE_PATH && echo $PWD)
+        echo "OCSE_ROOT              is set to: \"$abs_OCSE_PATH\""
       fi
-    elif [ ! -d "$OCSE_ROOT" ]; then
-      SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to OCSE not set properly."
-      SETUP_WARNING="$SETUP_WARNING\n    For simulation please clone OpenCAPI Simulation Environment (OCSE)"
-      SETUP_WARNING="$SETUP_WARNING\n    from https://github.com/xxxxxxxxx/ocse FIXME!!"
-      SETUP_WARNING="$SETUP_WARNING\n    and let \$OCSE_ROOT point to it."
-      SETUP_WARNING="$SETUP_WARNING\n    Please set Simulator to 'nosim' if you do not intend to run simulation."
     fi
   fi
 
 
-  ####### OCACCEL path variables
-  echo  "=====ACTION ROOT setup================================="
-  unset AR
-  if [ -n "$HDL_EXAMPLE" ]; then
-    AR='${OCACCEL_ROOT}/actions/hdl_example'
-  elif [ -n "$HLS_MEMCOPY" ]; then
-    AR='${OCACCEL_ROOT}/actions/hls_memcopy'
-  elif [ -n "$HLS_MEMCOPY_1024" ]; then
-    AR='${OCACCEL_ROOT}/actions/hls_memcopy_1024'
-  elif [ -n "$HLS_SPONGE" ]; then
-    AR='${OCACCEL_ROOT}/actions/hls_sponge'
-  elif [ -n "$HLS_LATENCY_EVAL" ]; then
-    AR='${OCACCEL_ROOT}/actions/hls_latency_eval'
-  elif [ -n "$HLS_LATENCY_EVAL_1024" ]; then
-    AR='${OCACCEL_ROOT}/actions/hls_latency_eval_1024'
-  elif [ -n "$HLS_HELLOWORLD" ]; then
-    AR='${OCACCEL_ROOT}/actions/hls_helloworld'
-  elif [ -n "$HDL_HELLOWORLD" ]; then
-    AR='${OCACCEL_ROOT}/actions/hdl_helloworld'
-  elif [ -n "$HDL_SINGLE_ENGINE" ]; then
-    AR='${OCACCEL_ROOT}/actions/hdl_single_engine'
-  elif [ -n "$HDL_MULTI_PROCESS" ]; then
-    AR='${OCACCEL_ROOT}/actions/hdl_multi_process'
-  elif [ -n "$HDL_UNIT_SIM" ]; then
-    AR='${OCACCEL_ROOT}/actions/hdl_unit_sim'
-  fi
-  if [ -z "$AR" ] && [ -n "$ACTION_ROOT" ]; then
-    AR=$ACTION_ROOT
-    echo  "ACTION_ROOT             is set to: \"$ACTION_ROOT\""
-    SETUP_INFO="$SETUP_INFO\n### INFO ### Kept ACTION_ROOT from previous configuration."
-  else
-    echo  "Setting ACTION_ROOT            to: \"$AR\""
-    sed -i '/export[ ^]*ACTION_ROOT[ ^]*=/ d' $ocaccel_env_sh
-    { echo  "export ACTION_ROOT=$AR"; cat $ocaccel_env_sh; } > $ocaccel_env_sh.tmp && mv $ocaccel_env_sh.tmp $ocaccel_env_sh
+  ####### checking path to ACTION_ROOT
+  # Note: $ACTION_NAME is defined via ocaccel_config
+  echo "=====Action setup: Checking path to ACTION_ROOT======="
+  AR=$ocacceldir/actions/$ACTION_NAME
+
+  echo "ACTION_ROOT              is set to: \"$AR\""
+  if [ ! -d "$AR" ]; then
+      SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to ACTION_ROOT doesn't exist. "
+      SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Please make sure the path is valid. "
   fi
 
-  if [ -z "$AR" ] && [ "$ignore_action_root" != "y" ]; then
-    SETUP_EMPTY="$SETUP_EMPTY\n  ACTION_ROOT"
-  else
-    OCACCEL_ROOT=$ocacceldir
-    eval ACTION_ROOT=$AR
-    if [ "$ignore_action_root" == "y" ]; then
-      SETUP_INFO="$SETUP_INFO\n### INFO ### Skipping ACTION_ROOT check"
-    elif [ ! -d "$ACTION_ROOT" ] && ( ( [ -z `echo  "x$ACTION_ROOT" | grep -i /HLS` ] && [ "${HLS_SUPPORT^^}" != "TRUE" ] ) || [ `basename "x$ACTION_ROOT"` != "vhdl" ] ); then
-      SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Please make sure that ACTION_ROOT points to an existing directory."
-    fi
-  fi
 
   ####### settings for ILA Debug
   # Note: ILA_DEBUG is defined via ocaccel_config
@@ -197,21 +145,6 @@ while [ -z "$SETUP_DONE" ]; do
   fi
 
 
-  ####### settings for Partial Reconfiguration flow
-  # Note: USE_PRFLOW is defined via ocaccel_config
-  if [ "$USE_PRFLOW" == "TRUE" ]; then
-    echo  "=====PR flow setup====================================="
-    RESP=`grep DCP_ROOT $ocaccel_env_sh`
-    if [ -z "$RESP" ]; then
-      echo  "export DCP_ROOT=" >> $ocaccel_env_sh
-    fi
-    echo  "DCP_ROOT                is set to: \"$DCP_ROOT\""
-    if [ -z "$DCP_ROOT" ]; then
-      SETUP_EMPTY="$SETUP_EMPTY\n  DCP_ROOT"
-    fi
-  fi
-
-
   ####### checking TIMNG LIMITS setup
   if [ -z "$TIMING_LABLIMIT" ]; then
     TIMING_LABLIMIT="$TIMING_LABLIMIT_DEFAULT"
@@ -219,21 +152,21 @@ while [ -z "$SETUP_DONE" ]; do
     { echo  "export TIMING_LABLIMIT=\"$TIMING_LABLIMIT_DEFAULT\""; cat $ocaccel_env_sh; } > $ocaccel_env_sh.tmp && mv $ocaccel_env_sh.tmp $ocaccel_env_sh
     SETUP_INFO="$SETUP_INFO\n### INFO ### Timing limit for FPGA image build got set to default value $TIMING_LABLIMIT_DEFAULT"
   fi
-  echo  "=====Timing limit for FPGA image build in ps============"
+  echo  "=====Timing limit for FPGA image build in ps==========="
   echo  "TIMING_LABLIMIT         is set to: \"$TIMING_LABLIMIT\""
 
 
   ####### Cadence simulation setup:
   # Note: SIMULATOR is defined via ocaccel_config
-  if [ "$SIMULATOR" == "irun" ]; then
+  if [ "$SIMULATOR" == "xcelium" ]; then
     echo  "=====Cadence simulation setup=========================="
 
-    if [ -z `which irun 2> /dev/null` ]; then
-      SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to irun not set, Cadence simulation won't work"
+    if [ -z `which xrun 2> /dev/null` ]; then
+      SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to xrun not set, Cadence simulation won't work"
     else
-      echo  "Path to irun                   is: \"`which irun`\""
+      echo  "Path to xrun                   is: \"`which xrun`\""
       # checking version
-      echo  "irun version                   is: \"$(irun -version| cut -f 3)\""
+      echo  "xrun version                   is: \"$(xrun -version| cut -f 3)\""
       if [ -z "$CDS_INST_DIR" ]; then
         SETUP_WARNING="$SETUP_WARNING\n### WARNING ### SIMULATOR is $SIMULATOR but CDS_INST_DIR is not set. Simulation may not work."
       fi
@@ -256,29 +189,22 @@ while [ -z "$SETUP_DONE" ]; do
     fi
   fi
 
-  # Note: NVME_USED and DENALI_USED are defined via ocaccel_config
-  if [ "$NVME_USED" == "TRUE" ] && [ "$DENALI_USED" == "TRUE" ]; then
-    echo  "=====Denali setup======================================"
-    if [ -z "$DENALI" ]; then
-      SETUP_INFO="$SETUP_INFO\n### INFO ### Setting of NVME_USED=$NVME_USED and setting of DENALI_USED=$DENALI_USED but DENALI not set!"
-    else
-      echo  "DENALI                  is set to: \"$DENALI\""
-    fi
-  fi
-
 
   ####### Print warning messages and create $ocaccel_env_sh
-  echo  -e "======================================================="
-  echo  -e "\n=====Content of $(basename $ocaccel_env_sh)============================"
+  echo " "
+  echo "======================================================="
+  echo "==   Additional Environmental Variables              =="
+  echo "==   Content of $(basename $ocaccel_env_sh):                      =="
+  echo "======================================================="
   cat $ocaccel_env_sh
-  echo  -e "======================================================="
+  echo  "======================================================="
 
   RC=0
   if [ -n "$SETUP_WARNING" ]; then
     RC=1
     echo  -e "$SETUP_WARNING"
-    echo  -e "\nPlease add the required environment settings to the file $(basename $ocaccel_env_sh)"
-    echo  -e "All of the variables above have to be filled with the correct values."
+#echo  -e "\nPlease fix the required environment settings to the file $(basename $ocaccel_env_sh)"
+#echo  -e "All of the variables above have to be filled with the correct and valid values."
   fi
 
   if [ "$ocaccel_env_info" == "y" ] && [ -n "$SETUP_INFO" ]; then
