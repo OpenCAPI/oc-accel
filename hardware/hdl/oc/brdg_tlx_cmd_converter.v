@@ -391,7 +391,7 @@ module brdg_tlx_cmd_converter (
  always@(posedge clk_tlx or negedge rst_n)
    if(~rst_n) 
      tlx_in_cmd_pending <= 1'b0;
-   else if(~cmd_credit_run_out)
+   else if(~cmd_credit_run_out && tlx_in_cmd_pending)
      tlx_in_cmd_pending <= 1'b0;
    else if(tlx_in_cmd_req_pipe[2] && ~tlx_in_cmd_rec)
      tlx_in_cmd_pending <= 1'b1;
