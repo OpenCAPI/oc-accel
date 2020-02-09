@@ -39,6 +39,7 @@ ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 -include $(ocaccel_config_sh)
 -include $(ocaccel_env_sh)
 
+export ACTION_ROOT=$(OCACCEL_ROOT)/actions/$(ACTION_NAME)
 SIMULATOR ?= nosim
 
 
@@ -55,7 +56,7 @@ VIV_PROJ_DIR=$(BUILD_DIR)/viv_project
 
 
 OCACCEL_SIMULATORS += xsim xcelium
-
+templog=/dev/null
 
 ifeq ($(UNIT_SIM_USED),TRUE)
 sim_top = unit_top
@@ -109,11 +110,8 @@ check_ocaccel_settings:
 		exit -1; \
 	fi
 	@if [ ! -e "$(ocaccel_env_sh)" ]; then \
-		echo "                        Missing ocaccel environment setup file \"$(ocaccel_env_sh)\""; \
-		echo "                        Please make sure that the ocaccel environment is prepared by calling 'make ocaccel_config'"; \
-		exit -1; \
+		echo "                        Additional ocaccel environment setup file \"$(ocaccel_env_sh)\" doesn't exist."; \
 	fi
-	@source $(OCACCEL_ROOT)/ocaccel_env;
 	@echo "                        =============================="
 	@echo "                        hardware/Makefile called with:"
 	@echo "                        ACTION_ROOT     = $(ACTION_ROOT)"
@@ -121,11 +119,8 @@ check_ocaccel_settings:
 	@echo "                        FPGACARD        = $(FPGACARD)"
 	@echo "                        FPGACHIP        = $(FPGACHIP)"
 	@echo "                        PHY_SPEED       = $(PHY_SPEED)"
-#	@echo "                        NUM_OF_ACTIONS  = $(NUM_OF_ACTIONS)"
-#	@echo "                        HLS_SUPPORT     = $(HLS_SUPPORT)"
-	@echo "                        BRAM_USED       = $(BRAM_USED)"
-	@echo "                        SDRAM_USED      = $(SDRAM_USED)"
-	@echo "                        NVME_USED       = $(NVME_USED)"
+	@echo "                        INFRA_TEMPLATE  = $(INFRA_TEMPLATE_SELECTION)"
+	@echo "                        ACTION_TEMPLATE = $(ACTION_TEMPLATE_SELECTION)"
 	@echo "                        ILA_DEBUG       = $(ILA_DEBUG)"
 	@echo "                        FLASH_USED      = $(FLASH_USED)"
 	@echo "                        FLASH_INTERFACE = $(FLASH_INTERFACE)"
@@ -215,25 +210,33 @@ action_hw: prepare_logs
 # Usually no need to update, use the hidden file .package_hostside_done to 
 # indicate that this step has been executed 
 define_interface:
-	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/common/define_interfaces.tcl -notrace -log $(LOGS_DIR)/define_interfaces.log  -journal $(LOGS_DIR)/define_interfaces.jou
+	@echo -e "[DEFINE INTERFACE....] start `date +"%T %a %b %d %Y"`";
+	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/common/define_interfaces.tcl -notrace -log $(LOGS_DIR)/define_interfaces.log  -journal $(LOGS_DIR)/define_interfaces.jou > $(templog) 
+	@echo -e "[DEFINE INTERFACE....] done  `date +"%T %a %b %d %Y"`";
 
 package_hostside:
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_hostside/package_hostside_ips.tcl -notrace -log $(LOGS_DIR)/package_hostside_ips.log -journal $(LOGS_DIR)/package_hostside_ips.jou
+	@echo -e "[PACKAGE HOSTSIDE....] start `date +"%T %a %b %d %Y"`";
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_hostside/package_hostside_ips.tcl -notrace -log $(LOGS_DIR)/package_hostside_ips.log -journal $(LOGS_DIR)/package_hostside_ips.jou > $(templog)
+	@echo -e "[PACKAGE HOSTSIDE....] done  `date +"%T %a %b %d %Y"`";
 
 package_infrastructure:
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_1.tcl -notrace -log $(LOGS_DIR)/bd_infra_template_1.log -journal $(LOGS_DIR)/bd_infra_template_1.jou
+	@echo -e "[PACKAGE INFRA.......] start `date +"%T %a %b %d %Y"`";
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou > $(templog)
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_1.tcl -notrace -log $(LOGS_DIR)/bd_infra_template_1.log -journal $(LOGS_DIR)/bd_infra_template_1.jou > $(templog)
+	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
 package_action:
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_10.tcl -notrace -log $(LOGS_DIR)/bd_action_template_10.log -journal $(LOGS_DIR)/bd_action_template_10.jou
+	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_10.tcl -notrace -log $(LOGS_DIR)/bd_action_template_10.log -journal $(LOGS_DIR)/bd_action_template_10.jou > $(templog)
+	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
 hw_project: ocaccel_preprocess action_hw define_interface package_hostside package_infrastructure package_action
-	@echo -e "[CREATE HW_PROJECT......] start `date +"%T %a %b %d %Y"`";
+	@echo -e "[CREATE TOP PROJECT..] start `date +"%T %a %b %d %Y"`";
 	@echo -e "                        using `vivado -version |grep Vivado`"
 	@echo -e "                        CAPI_VER=$(CAPI_VER)"
-	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_framework.log  -journal $(LOGS_DIR)/create_framework.jou
-	@echo -e "[CREATE HW_PROJECT......] done  `date +"%T %a %b %d %Y"`"
+	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_framework.log  -journal $(LOGS_DIR)/create_framework.jou > $(templog)
+	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
 
 ###############################################################################
@@ -374,27 +377,25 @@ endif
 
 clean:
 	@echo -e "[CLEAN ENVIRONMENT...] start `date +"%T %a %b %d %Y"`"
-	@$(RM) -r $ 
 	@$(RM) -r $(OCACCEL_PREPROCESS_FILES)                   \
 	          $(OCACCEL_MODELS)                         \
 	          *build
-	@$(RM) $(OCACCEL_ROOT)/hardware/hdl/core/*_tmp
-	@echo -e "                        vivado project" 1>/dev/null 2>/dev/null; 
+	@$(RM) $(OCACCEL_ROOT)/hardware/hdl/common/*_tmp
+	@echo -e "                        vivado project"; 
 	@$(RM) -r $(VIV_PROJ_DIR)*
-	@echo -e "                        IPs" 1>/dev/null 2>/dev/null;
+	@echo -e "                        IPs";
 	@$(RM) -r $(IP_REPO_DIR)
-	@echo -e "                        Interface definitions" 1>/dev/null 2>/dev/null;
+	@echo -e "                        interface definitions";
 	@$(RM) -r $(INTERFACES_DIR)
-	@echo -e "                        sim files" 1>/dev/null 2>/dev/null;
+	@echo -e "                        sim files";
 	@$(RM) -r sim/ies sim/xsim sim/modelsim sim/questa sim/xcelium 
-	@echo -e "                        log files" 1>/dev/null 2>/dev/null;
+	@echo -e "                        log files";
 	@$(RM) -r logs
-	@echo -e "                        action / application" 1>/dev/null 2>/dev/null;
-	@$(RM) $(ACTION_ROOT)/hw/vhdl
-	@if [ -e "$(ACTION_ROOT)/Makefile" ]; then	    \
+	@echo -e "                        action / application";
+	@if [ -e "$(ACTION_ROOT)/Makefile" ]; then          \
 		$(MAKE) -C $(ACTION_ROOT) $@ > /dev/null;   \
 		if [ $$? -ne 0 ]; then                      \
 			echo -e "                        Error: [make "$@"] failed for action/application in $(ACTION_ROOT)"; exit -1; \
 		fi                                          \
 	fi
-	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`" 1>/dev/null 2>/dev/null
+	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`"

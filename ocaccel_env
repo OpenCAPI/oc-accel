@@ -97,17 +97,19 @@ while [ -z "$SETUP_DONE" ]; do
     if [ ! -n "$HDL_UNIT_SIM" ]; then
       echo "=====Simulation setup: Checking path to OCSE=========="
 
+      #OCSE_PATH is extracted from .ocaccel_config.sh, it may be a "relative path"
       if [ ! -d "$OCSE_PATH" ]; then
-        #Doesn't care OCSE in Unit Sim
-           SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to OCSE not set properly."
-           SETUP_WARNING="$SETUP_WARNING\n    For simulation please clone OpenCAPI Simulation Environment (OCSE)"
-           SETUP_WARNING="$SETUP_WARNING\n    from https://github.com/OpenCAPI/ocse"
-           SETUP_WARNING="$SETUP_WARNING\n    and set it int the Kconfig Menu."
-           SETUP_WARNING="$SETUP_WARNING\n    Please set Simulator to 'nosim' if you do not intend to run simulation."
-        echo "OCSE_ROOT              is set to: \"$OCSE_PATH\""
+        echo "OCSE_ROOT              is set to: \"$OCSE_PATH\" but doesn't exist."
+        SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to OCSE not set properly."
+        SETUP_WARNING="$SETUP_WARNING\n    For simulation please clone OpenCAPI Simulation Environment (OCSE)"
+        SETUP_WARNING="$SETUP_WARNING\n    from https://github.com/OpenCAPI/ocse"
+        SETUP_WARNING="$SETUP_WARNING\n    and set it int the Kconfig Menu."
+        SETUP_WARNING="$SETUP_WARNING\n    Please set Simulator to 'nosim' if you do not intend to run simulation."
       else
+        #Convert it to absolut path and record in env variable
         abs_OCSE_PATH=$(cd $OCSE_PATH && echo $PWD)
-        echo "OCSE_ROOT              is set to: \"$abs_OCSE_PATH\""
+        export OCSE_ROOT=$abs_OCSE_PATH
+        echo "OCSE_ROOT              is set to: \"$OCSE_ROOT\""
       fi
     fi
   fi
@@ -117,43 +119,13 @@ while [ -z "$SETUP_DONE" ]; do
   # Note: $ACTION_NAME is defined via ocaccel_config
   echo "=====Action setup: Checking path to ACTION_ROOT======="
   AR=$ocacceldir/actions/$ACTION_NAME
-
-  echo "ACTION_ROOT              is set to: \"$AR\""
-  if [ ! -d "$AR" ]; then
+  export ACTION_ROOT=$AR
+  echo "ACTION_ROOT              is set to: \"$ACTION_ROOT\""
+  if [ ! -d "$ACTION_ROOT" ]; then
+      echo "ACTION_ROOT              is set to: \"$ACTION_ROOT\" but doesn't exist."
       SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to ACTION_ROOT doesn't exist. "
       SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Please make sure the path is valid. "
   fi
-
-
-  ####### settings for ILA Debug
-  # Note: ILA_DEBUG is defined via ocaccel_config
-  if [ "$ILA_DEBUG" == "TRUE" ]; then
-    echo  "=====ILA Debug setup==================================="
-    echo  "ILA_SETUP_FILE          is set to: \"$ILA_SETUP_FILE\""
-    RESP=`grep ILA_SETUP_FILE $ocaccel_env_sh`
-    if [ -z "$RESP" ]; then
-      echo  "export ILA_SETUP_FILE=" >> $ocaccel_env_sh
-    fi
-    if [ -z "$ILA_SETUP_FILE" ]; then
-      #SETUP_EMPTY="$SETUP_EMPTY\n  ILA_SETUP_FILE"
-      echo "You can still manually instantiate ila cores in logic design."
-    else
-      if [ `echo  "$ILA_SETUP_FILE" | tr a-z A-Z` = "TRUE" ] && [ ! -e "$ILA_SETUP_FILE" ]; then
-        SETUP_WARNING="$SETUP_WARNING\n### WARNING ### ILA_DEBUG is set to $ILA_DEBUG but ILA_SETUP_FILE (set to \"$ILA_SETUP_FILE\") is not pointing to a file!"
-      fi
-    fi
-  fi
-
-
-  ####### checking TIMNG LIMITS setup
-  if [ -z "$TIMING_LABLIMIT" ]; then
-    TIMING_LABLIMIT="$TIMING_LABLIMIT_DEFAULT"
-    sed -i '/export[ ^]*TIMING_LABLIMIT[ ^]*=/ d' $ocaccel_env_sh
-    { echo  "export TIMING_LABLIMIT=\"$TIMING_LABLIMIT_DEFAULT\""; cat $ocaccel_env_sh; } > $ocaccel_env_sh.tmp && mv $ocaccel_env_sh.tmp $ocaccel_env_sh
-    SETUP_INFO="$SETUP_INFO\n### INFO ### Timing limit for FPGA image build got set to default value $TIMING_LABLIMIT_DEFAULT"
-  fi
-  echo  "=====Timing limit for FPGA image build in ps==========="
-  echo  "TIMING_LABLIMIT         is set to: \"$TIMING_LABLIMIT\""
 
 
   ####### Cadence simulation setup:
@@ -219,6 +191,7 @@ while [ -z "$SETUP_DONE" ]; do
   echo 
 
   SETUP_DONE="1"
+  echo "ocaccel_env STEP_DONE"
 done
 
 if [ -z "$ocaccel_env_info" ]; then

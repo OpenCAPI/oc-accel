@@ -43,7 +43,7 @@ help:
 	@echo "* model          Build simulation model for simulator specified via target ocaccel_config";
 	@echo "* sim            Start a simulation";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
-	@echo "* hw_project     Create Vivado project with oc-bip";
+	@echo "* hw_project     Create Vivado project with oc-accel-bsp";
 	@echo "* image          Build a complete FPGA bitstream after hw_project (takes more than one hour)";
 	@echo "* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')";
 	@echo "* software       Build software libraries and tools for OCACCEL";
@@ -92,7 +92,7 @@ test install uninstall:
 	done
 
 ifeq ($(PLATFORM),x86_64)
-$(hardware_subdirs): $(ocaccel_env_sh)
+$(hardware_subdirs):
 	@if [ -d $@ ]; then              \
 	    $(MAKE) -s -C $@ || exit 1;  \
 	fi
@@ -100,7 +100,7 @@ $(hardware_subdirs): $(ocaccel_env_sh)
 hardware: $(hardware_subdirs)
 
 # Model build and config
-hw_project model sim image sim_tmux: $(ocaccel_env_sh)
+hw_project model sim image sim_tmux: ocaccel_env
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
@@ -113,7 +113,7 @@ else #noteq ($(PLATFORM),x86_64)
 wrong_platform:
 	@echo; echo "\nOCACCEL hardware builds and simulation are possible on x86 platform only\n"; echo;
 
-$(hardware_subdirs) hardware hw_project model sim image: wrong_platform
+$(hardware_subdirs) hardware hw_project model sim sim_tmux image: wrong_platform
 endif
 
 # OCACCEL Config
@@ -141,7 +141,7 @@ $(ocaccel_config_sh):
 	@echo "OCACCEL config done" &>/dev/null
 
 # Prepare OCACCEL Environment
-$(ocaccel_env_sh) ocaccel_env: $(ocaccel_config_sh)
+ocaccel_env: $(ocaccel_config_sh)
 	@$(OCACCEL_ROOT)/ocaccel_env $(ocaccel_config_sh)
 
 %.defconfig:

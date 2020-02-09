@@ -15,7 +15,9 @@
 ## limitations under the License.
 ##
 
-# This script needs to get sourced in order to effectively change $PATH
+# This script is NOT needed if you follow the "make" process.
+# However, in some cases, you need these variables get set explicitly. 
+
 export OCACCEL_ROOT=$(dirname $(readlink -f "$BASH_SOURCE"))
 [ -f "${OCACCEL_ROOT}/ocaccel_env.sh" ] && . ${OCACCEL_ROOT}/ocaccel_env.sh
 [ -f "${OCACCEL_ROOT}/.ocaccel_config.sh" ] && . ${OCACCEL_ROOT}/.ocaccel_config.sh

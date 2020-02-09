@@ -489,7 +489,6 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
     prompt "Clock period constraint for HLS C++ code"
     string
     default "4ns"
-    range "1ns" "20ns"
     depends on ENABLE_HLS_SUPPORT
     help
       The clock period constrant in "ns" used when hls is compiled to rtl, 
