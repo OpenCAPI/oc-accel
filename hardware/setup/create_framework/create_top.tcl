@@ -1,6 +1,7 @@
 
 set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_part        $::env(FPGACHIP)
+set fpga_card        $::env(FPGACARD)
 set project "viv_project"
 set project_dir      $root_dir/build/$project
 
@@ -16,51 +17,51 @@ add_files -norecurse $root_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
 
 # Add IPs
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:action_template_10:1.0 act_top
-create_bd_cell -type ip -vlnv opencapi.org:ocaccel:infra_template_1:1.0 oc_infra_0
-create_bd_cell -type ip -vlnv opencapi.org:ocaccel:oc_host_if:1.0 oc_host_if_0
-create_bd_cell -type ip -vlnv opencapi.org:ocaccel:flash_vpd_wrapper:1.0 flash_vpd_wrapper_0
-create_bd_cell -type module -reference iprog_icap iprog_icap_0
+create_bd_cell -type ip -vlnv opencapi.org:ocaccel:infra_template_1:1.0 oc_infra
+create_bd_cell -type ip -vlnv opencapi.org:ocaccel:oc_host_if:1.0 oc_host_if
+create_bd_cell -type ip -vlnv opencapi.org:ocaccel:flash_vpd_wrapper:1.0 flash_vpd_wrapper
+create_bd_cell -type module -reference iprog_icap iprog_icap
 
 # Connections
-connect_bd_intf_net [get_bd_intf_pins oc_host_if_0/ocaccel_tlx_afu] [get_bd_intf_pins oc_infra_0/ocaccel_tlx_afu_0]
-connect_bd_intf_net [get_bd_intf_pins oc_host_if_0/ocaccel_cfg_infra_c1] [get_bd_intf_pins oc_infra_0/ocaccel_cfg_infra_c1_0]
-connect_bd_net [get_bd_pins oc_host_if_0/clock_afu] [get_bd_pins oc_infra_0/clock_afu]
-connect_bd_net [get_bd_pins oc_host_if_0/clock_tlx] [get_bd_pins oc_infra_0/clock_tlx]
-connect_bd_net [get_bd_pins oc_host_if_0/reset_afu_n] [get_bd_pins oc_infra_0/rst_n]
-connect_bd_net [get_bd_pins oc_host_if_0/cfg_infra_f1_mmio_bar0] [get_bd_pins oc_infra_0/cfg_f1_mmio_bar0_0]
-connect_bd_net [get_bd_pins oc_host_if_0/cfg_infra_f1_mmio_bar0_mask] [get_bd_pins oc_infra_0/cfg_f1_mmio_bar0_mask_0]
-connect_bd_net [get_bd_pins oc_host_if_0/icap_clk] [get_bd_pins flash_vpd_wrapper_0/icap_clk]
-connect_bd_net [get_bd_pins oc_host_if_0/icap_clk] [get_bd_pins iprog_icap_0/clk]
-connect_bd_net [get_bd_pins oc_host_if_0/iprog_go_or] [get_bd_pins iprog_icap_0/go]
-connect_bd_net [get_bd_pins oc_host_if_0/reset_afu_n] [get_bd_pins flash_vpd_wrapper_0/reset_afu_n]
-connect_bd_net [get_bd_pins oc_host_if_0/clock_afu] [get_bd_pins flash_vpd_wrapper_0/clock_afu]
-connect_bd_intf_net [get_bd_intf_pins oc_host_if_0/ocaccel_cfg_flsh] [get_bd_intf_pins flash_vpd_wrapper_0/ocaccel_cfg_flsh]
-connect_bd_intf_net [get_bd_intf_pins oc_host_if_0/ocaccel_cfg_vpd] [get_bd_intf_pins flash_vpd_wrapper_0/ocaccel_cfg_vpd]
-connect_bd_intf_net [get_bd_intf_pins oc_infra_0/m_axi_0] [get_bd_intf_pins act_top/s_axi_ctrl_reg_0]
-connect_bd_intf_net [get_bd_intf_pins act_top/m_axi_host_mem_0] [get_bd_intf_pins oc_infra_0/s_axi_0]
-connect_bd_net [get_bd_pins act_top/ap_clk] [get_bd_pins oc_host_if_0/clock_afu]
-connect_bd_intf_net [get_bd_intf_pins oc_host_if_0/ocaccel_afu_tlx] [get_bd_intf_pins oc_infra_0/ocaccel_afu_tlx_0]
-connect_bd_net [get_bd_pins oc_infra_0/interrupt_ack_0] [get_bd_pins act_top/interrupt_ack_0]
-connect_bd_net [get_bd_pins oc_host_if_0/reset_afu_n] [get_bd_pins act_top/ap_rst_n_0]
-connect_bd_net [get_bd_pins act_top/interrupt_0] [get_bd_pins oc_infra_0/interrupt_0]
-connect_bd_net [get_bd_pins act_top/interrupt_ctx_0] [get_bd_pins oc_infra_0/interrupt_ctx_0]
-connect_bd_net [get_bd_pins act_top/interrupt_src_0] [get_bd_pins oc_infra_0/interrupt_src_0]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_tlx_afu] [get_bd_intf_pins oc_infra/ocaccel_tlx_afu]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_infra_c1] [get_bd_intf_pins oc_infra/ocaccel_cfg_infra_c1]
+connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins oc_infra/clock_afu]
+connect_bd_net [get_bd_pins oc_host_if/clock_tlx] [get_bd_pins oc_infra/clock_tlx]
+connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins oc_infra/rst_n]
+connect_bd_net [get_bd_pins oc_host_if/cfg_infra_f1_mmio_bar0] [get_bd_pins oc_infra/cfg_f1_mmio_bar0]
+connect_bd_net [get_bd_pins oc_host_if/cfg_infra_f1_mmio_bar0_mask] [get_bd_pins oc_infra/cfg_f1_mmio_bar0_mask]
+connect_bd_net [get_bd_pins oc_host_if/icap_clk] [get_bd_pins flash_vpd_wrapper/icap_clk]
+connect_bd_net [get_bd_pins oc_host_if/icap_clk] [get_bd_pins iprog_icap/clk]
+connect_bd_net [get_bd_pins oc_host_if/iprog_go_or] [get_bd_pins iprog_icap/go]
+connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins flash_vpd_wrapper/reset_afu_n]
+connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins flash_vpd_wrapper/clock_afu]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_flsh] [get_bd_intf_pins flash_vpd_wrapper/ocaccel_cfg_flsh]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_vpd] [get_bd_intf_pins flash_vpd_wrapper/ocaccel_cfg_vpd]
+connect_bd_intf_net [get_bd_intf_pins oc_infra/m_axi] [get_bd_intf_pins act_top/s_axi_ctrl_reg]
+connect_bd_intf_net [get_bd_intf_pins act_top/m_axi_host_mem] [get_bd_intf_pins oc_infra/s_axi]
+connect_bd_net [get_bd_pins act_top/ap_clk] [get_bd_pins oc_host_if/clock_afu]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_afu_tlx] [get_bd_intf_pins oc_infra/ocaccel_afu_tlx]
+connect_bd_net [get_bd_pins oc_infra/interrupt_ack] [get_bd_pins act_top/interrupt_ack]
+connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins act_top/ap_rst_n]
+connect_bd_net [get_bd_pins act_top/interrupt] [get_bd_pins oc_infra/interrupt]
+connect_bd_net [get_bd_pins act_top/interrupt_ctx] [get_bd_pins oc_infra/interrupt_ctx]
+connect_bd_net [get_bd_pins act_top/interrupt_src] [get_bd_pins oc_infra/interrupt_src]
 
 # Create Ports
 create_bd_intf_port -mode Slave -vlnv opencapi.org:ocaccel:oc_phy_rtl:1.0 ocaccel_oc_phy
-connect_bd_intf_net [get_bd_intf_pins oc_host_if_0/ocaccel_oc_phy] [get_bd_intf_ports ocaccel_oc_phy]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_oc_phy] [get_bd_intf_ports ocaccel_oc_phy]
 create_bd_port -dir IO FPGA_FLASH_CE2_L
-connect_bd_net [get_bd_pins /flash_vpd_wrapper_0/FPGA_FLASH_CE2_L] [get_bd_ports FPGA_FLASH_CE2_L]
+connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_CE2_L] [get_bd_ports FPGA_FLASH_CE2_L]
 create_bd_port -dir IO FPGA_FLASH_DQ4
-connect_bd_net [get_bd_pins /flash_vpd_wrapper_0/FPGA_FLASH_DQ4] [get_bd_ports FPGA_FLASH_DQ4]
+connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ4] [get_bd_ports FPGA_FLASH_DQ4]
 create_bd_port -dir IO FPGA_FLASH_DQ5
-connect_bd_net [get_bd_pins /flash_vpd_wrapper_0/FPGA_FLASH_DQ5] [get_bd_ports FPGA_FLASH_DQ5]
+connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ5] [get_bd_ports FPGA_FLASH_DQ5]
 create_bd_port -dir IO FPGA_FLASH_DQ6
-connect_bd_net [get_bd_pins /flash_vpd_wrapper_0/FPGA_FLASH_DQ6] [get_bd_ports FPGA_FLASH_DQ6]
+connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ6] [get_bd_ports FPGA_FLASH_DQ6]
 create_bd_port -dir IO FPGA_FLASH_DQ7
-connect_bd_net [get_bd_pins /flash_vpd_wrapper_0/FPGA_FLASH_DQ7] [get_bd_ports FPGA_FLASH_DQ7]
+connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ7] [get_bd_ports FPGA_FLASH_DQ7]
 create_bd_port -dir I ocde
-connect_bd_net [get_bd_pins /oc_host_if_0/ocde] [get_bd_ports ocde]
+connect_bd_net [get_bd_pins /oc_host_if/ocde] [get_bd_ports ocde]
 
 
 # Save and Make wrapper
@@ -70,14 +71,16 @@ save_bd_design [current_bd_design]
 make_wrapper -files [get_files $project_dir/${project}.srcs/sources_1/bd/$bd_name/$bd_name.bd] -top -force
 add_files -norecurse $project_dir/${project}.srcs/sources_1/bd/$bd_name/hdl/${bd_name}_wrapper.v
 
-# Do we need to add constraint files here? 
-# They are already added when building IPs
-#add_files -fileset constrs_1 -norecurse {$root_dir/oc-accel-bsp/AD9V3/xdc/gty_properties.xdc \
-# $root_dir/oc-accel-bsp/AD9V3/xdc/main_pinout.xdc \
-# $root_dir/oc-accel-bsp/AD9V3/xdc/main_placement_bypass.xdc \
-# $root_dir/oc-accel-bsp/AD9V3/xdc/main_placement_elastic.xdc \
-# $root_dir/oc-accel-bsp/AD9V3/xdc/main_timing.xdc \
-# $root_dir/oc-accel-bsp/AD9V3/xdc/qspi_pinout.xdc \
-# $root_dir/oc-accel-bsp/AD9V3/xdc/qspi_timing.xdc}
+# use bypass
+# Is it a good way to organize like this?
+add_files -fileset constrs_1 -norecurse  [list \
+                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/gty_properties.xdc \
+                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/main_pinout.xdc \
+                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/main_placement_bypass.xdc \
+                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/main_timing.xdc \
+                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/bitstream_config.xdc \
+                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_pinout.xdc \
+                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \
+                                         ] 
 
 close_project

@@ -164,28 +164,29 @@ set_property -name "file_type" -value "Verilog Header" -objects $file_obj
 
 ############################################################################
 # Add constraint files
-set xdc_files [list \
-                       $xdc_dir/main_pinout.xdc  \
-                       $xdc_dir/main_timing.xdc  \
-                       $xdc_dir/extra.xdc  \
-                   ]
+# only add PHY related 
+#set xdc_files [list \
+#                       $xdc_dir/main_pinout.xdc  \
+#                       $xdc_dir/main_timing.xdc  \
+#                       $xdc_dir/extra.xdc  \
+#                   ]
 
-if {$transceiver_type eq "bypass" } {
-    set xdc_files [list {*}$xdc_files \
-                         $xdc_dir/main_placement_bypass.xdc  \
-                         $xdc_dir/gty_properties.xdc  \
-                   ]
-} else {
-    set xdc_files [list {*}$xdc_files \
-                         $xdc_dir/main_placement_elastic.xdc  \
-                   ]
-}
-
-
-puts "	                Adding constraints to oc_host_if project"
-set obj [get_filesets constrs_1]
-add_files -fileset constrs_1 -norecurse $xdc_files
-set_property -name "target_constrs_file" -value $xdc_dir/extra.xdc  -objects $obj
+#if {$transceiver_type eq "bypass" } {
+#    set xdc_files [list {*}$xdc_files \
+#                         $xdc_dir/main_placement_bypass.xdc  \
+#                         $xdc_dir/gty_properties.xdc  \
+#                   ]
+#} else {
+#    set xdc_files [list {*}$xdc_files \
+#                         $xdc_dir/main_placement_elastic.xdc  \
+#                   ]
+#}
+##
+##
+#puts "	                Adding constraints to oc_host_if project"
+#set obj [get_filesets constrs_1]
+#add_files -fileset constrs_1 -norecurse $xdc_files
+#set_property -name "target_constrs_file" -value $xdc_dir/extra.xdc  -objects $obj
 
 ############################################################################
 set synth_verilog_defines ""

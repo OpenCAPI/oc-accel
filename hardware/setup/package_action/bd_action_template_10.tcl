@@ -15,23 +15,34 @@ update_ip_catalog
 
 # Add IPs
 startgroup
-create_bd_cell -type ip -vlnv opencapi.org:ocaccel:action_wrapper:1.0 action_wrapper_0
-set_property -dict [list CONFIG.C_M_AXI_HOST_MEM_ID_WIDTH {3}] [get_bd_cells action_wrapper_0]
+create_bd_cell -type ip -vlnv opencapi.org:ocaccel:action_wrapper:1.0 action_wrapper
+set_property -dict [list CONFIG.C_M_AXI_HOST_MEM_ID_WIDTH {3}] [get_bd_cells action_wrapper]
 endgroup
 
 
 # Annouce external pins
 startgroup
 create_bd_port -dir I -type clk -freq_hz 100000000 ap_clk
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins action_wrapper_0/ap_clk] 
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins action_wrapper/ap_clk] 
 
-make_bd_pins_external  [get_bd_pins action_wrapper_0/ap_rst_n]
-make_bd_intf_pins_external  [get_bd_intf_pins action_wrapper_0/m_axi_host_mem]
-make_bd_intf_pins_external  [get_bd_intf_pins action_wrapper_0/s_axi_ctrl_reg]
-make_bd_pins_external  [get_bd_pins action_wrapper_0/interrupt]
-make_bd_pins_external  [get_bd_pins action_wrapper_0/interrupt_ack]
-make_bd_pins_external  [get_bd_pins action_wrapper_0/interrupt_src]
-make_bd_pins_external  [get_bd_pins action_wrapper_0/interrupt_ctx]
+create_bd_port -dir I -type rst ap_rst_n
+connect_bd_net [get_bd_pins action_wrapper/ap_rst_n] [get_bd_ports ap_rst_n]
+
+## After "make external", modify the port names
+make_bd_intf_pins_external  [get_bd_intf_pins action_wrapper/m_axi_host_mem]
+make_bd_intf_pins_external  [get_bd_intf_pins action_wrapper/s_axi_ctrl_reg]
+make_bd_pins_external  [get_bd_pins action_wrapper/interrupt]
+make_bd_pins_external  [get_bd_pins action_wrapper/interrupt_ack]
+make_bd_pins_external  [get_bd_pins action_wrapper/interrupt_src]
+make_bd_pins_external  [get_bd_pins action_wrapper/interrupt_ctx]
+
+set_property NAME s_axi_ctrl_reg [get_bd_intf_ports s_axi_ctrl_reg_0]
+set_property NAME m_axi_host_mem [get_bd_intf_ports m_axi_host_mem_0]
+set_property NAME interrupt [get_bd_ports interrupt_0]
+set_property NAME interrupt_ack [get_bd_ports interrupt_ack_0]
+set_property NAME interrupt_src [get_bd_ports interrupt_src_0]
+set_property NAME interrupt_ctx [get_bd_ports interrupt_ctx_0]
+
 endgroup
 
 
