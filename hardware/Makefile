@@ -231,12 +231,14 @@ package_action:
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_10.tcl -notrace -log $(LOGS_DIR)/bd_action_template_10.log -journal $(LOGS_DIR)/bd_action_template_10.jou > $(templog)
 	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
-hw_project: ocaccel_preprocess action_hw define_interface package_hostside package_infrastructure package_action
+top_project:
 	@echo -e "[CREATE TOP PROJECT..] start `date +"%T %a %b %d %Y"`";
-	@echo -e "                        using `vivado -version |grep Vivado`"
-	@echo -e "                        CAPI_VER=$(CAPI_VER)"
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_framework.log  -journal $(LOGS_DIR)/create_framework.jou > $(templog)
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
+
+hw_project: ocaccel_preprocess action_hw define_interface package_hostside package_infrastructure package_action top_project
+	@echo -e "                        using `vivado -version |grep Vivado`"
+	@echo -e "                        CAPI_VER=$(CAPI_VER)"
 
 
 ###############################################################################
