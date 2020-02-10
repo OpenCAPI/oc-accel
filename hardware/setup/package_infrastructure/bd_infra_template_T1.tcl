@@ -6,11 +6,12 @@ set project_dir      $root_dir/build/temp_projs/$project
 
 set ip_repo_dir     $root_dir/build/ip_repo
 set interfaces_dir  $root_dir/build/interfaces
-set bd_name         "infra_template_1"
+set bd_name         "infra_template_T1"
 
 source $root_dir/setup/common/common_funcs.tcl
 set imp_version [eval my_get_imp_version]
 set build_date [eval my_get_build_date]
+set date_string [eval my_get_date_string $build_date]
 set card_type [eval my_get_card_type]
 
 ###############################################################################
@@ -29,6 +30,8 @@ create_bd_cell -type ip -vlnv opencapi.org:ocaccel:mmio_axilite_master:1.0 mmio_
 set_property -dict [list CONFIG.IMP_VERSION $imp_version ] [get_bd_cells mmio_axilite_master]
 set_property -dict [list CONFIG.BUILD_DATE $build_date ] [get_bd_cells mmio_axilite_master]
 set_property -dict [list CONFIG.CARD_TYPE $card_type ] [get_bd_cells mmio_axilite_master]
+# Set the same image name and register readout
+exec echo $date_string > $root_dir/setup/build_image/bitstream_date.txt
 
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_c1:1.0 opencapi30_c1
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_mmio:1.0 opencapi30_mmio

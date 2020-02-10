@@ -67,6 +67,13 @@ proc my_get_build_date {} {
     return "0x$build_date"
 }
 
+proc my_get_date_string {build_date} {
+    set year [string range $build_date 2 5]
+    set mmdd [string range $build_date 6 9]
+    set hhmm [string range $build_date 10 13]
+    return "${year}_${mmdd}_${hhmm}"
+}
+
 proc my_get_imp_version {} {
     set imp_version [exec git describe --tags --always]
     return "0x$imp_version"

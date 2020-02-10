@@ -6,7 +6,7 @@ set project_dir      $root_dir/build/temp_projs/$project
 
 set ip_repo_dir     $root_dir/build/ip_repo
 set interfaces_dir  $root_dir/build/interfaces
-set bd_name         "action_template_10"
+set bd_name         "action_template_A10"
 
 create_project $project $project_dir -part $fpga_part
 create_bd_design $bd_name

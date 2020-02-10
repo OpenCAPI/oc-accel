@@ -16,8 +16,8 @@ update_ip_catalog
 add_files -norecurse $root_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
 
 # Add IPs
-create_bd_cell -type ip -vlnv opencapi.org:ocaccel:action_template_10:1.0 act_top
-create_bd_cell -type ip -vlnv opencapi.org:ocaccel:infra_template_1:1.0 oc_infra
+create_bd_cell -type ip -vlnv opencapi.org:ocaccel:action_template_A10:1.0 act_top
+create_bd_cell -type ip -vlnv opencapi.org:ocaccel:infra_template_T1:1.0 oc_infra
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:oc_host_if:1.0 oc_host_if
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:flash_vpd_wrapper:1.0 flash_vpd_wrapper
 create_bd_cell -type module -reference iprog_icap iprog_icap
@@ -82,5 +82,7 @@ add_files -fileset constrs_1 -norecurse  [list \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_pinout.xdc \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \
                                          ] 
+
+
 
 close_project

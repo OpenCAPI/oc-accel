@@ -207,8 +207,7 @@ action_hw: prepare_logs
 	@echo -e "[CONFIG ACTION HW....] done  `date +"%T %a %b %d %Y"`";
 
 ###############################################################################
-# Usually no need to update, use the hidden file .package_hostside_done to 
-# indicate that this step has been executed 
+# Build the vivado project
 define_interface:
 	@echo -e "[DEFINE INTERFACE....] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/common/define_interfaces.tcl -notrace -log $(LOGS_DIR)/define_interfaces.log  -journal $(LOGS_DIR)/define_interfaces.jou > $(templog) 
@@ -222,13 +221,13 @@ package_hostside:
 package_infrastructure:
 	@echo -e "[PACKAGE INFRA.......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou > $(templog)
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_1.tcl -notrace -log $(LOGS_DIR)/bd_infra_template_1.log -journal $(LOGS_DIR)/bd_infra_template_1.jou > $(templog)
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
 package_action:
 	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_10.tcl -notrace -log $(LOGS_DIR)/bd_action_template_10.log -journal $(LOGS_DIR)/bd_action_template_10.jou > $(templog)
+	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
 top_project:
@@ -245,26 +244,22 @@ hw_project: ocaccel_preprocess action_hw define_interface package_hostside packa
 # sim_project
 
 
-#image:
-#	$(MAKE) .hw_project_done
-#	@echo -e "[BUILD IMAGE.........] start `date +"%T %a %b %d %Y"`\n"
-#ifeq ($(USE_PRFLOW),TRUE)
-#	ocaccel-cloud-build ${OCACCEL_ROOT}/ocaccel_env.sh
-#else
-#	@echo "A complete FPGA bitstream build got kicked off.";
-#	@echo "This might take more than an hour depending on the machine used";
-#	@echo "The process may be terminated by pressing <CTRL>-C at any time.";
-#	@echo "After termination it can be restarted later."; echo
-#	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/ocaccel_build.tcl -notrace -log $(LOGS_DIR)/ocaccel_build.log -journal $(LOGS_DIR)/ocaccel_build.jou
+###############################################################################
+image: hw_project
+	@echo -e "[BUILD IMAGE.........] start `date +"%T %a %b %d %Y"`\n"
+	@echo "A complete FPGA bitstream build got kicked off.";
+	@echo "This might take more than an hour depending on the machine used";
+	@echo "The process may be terminated by pressing <CTRL>-C at any time.";
+	@echo "After termination it can be restarted later."; echo
+	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/build_image/ocaccel_build.tcl -notrace -log $(LOGS_DIR)/ocaccel_build.log -journal $(LOGS_DIR)/ocaccel_build.jou
 #	@$(RM) -r .bitstream_name.txt
-#endif
 #	@echo -e "Generating ltx file for ILA debug."
 #	@cd $(BUILD_DIR) && vivado -mode batch -source $(SETUP_DIR)/gen_probe_ltx.tcl -notrace  -log $(LOGS_DIR)/gen_probe_ltx.log         -journal $(LOGS_DIR)/gen_probe_ltx.jou
 #	@echo -e "Generation of ltx file done."
 #	@mv $(BUILD_DIR)/probe.ltx $(BUILD_DIR)/Images
 #	@echo -e "Moved ltx file into Image."
-#	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
-#
+	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
+
 
 ocse: prepare_logs
 	@echo -e "[COMPILE OCSE .......] start `date +"%T %a %b %d %Y"`"
@@ -383,6 +378,7 @@ clean:
 	          $(OCACCEL_MODELS)                         \
 	          *build
 	@$(RM) $(OCACCEL_ROOT)/hardware/hdl/common/*_tmp
+	@$(RM) $(OCACCEL_ROOT)/hardware/setup/build_image/bitstream_date.txt
 	@echo -e "                        vivado project"; 
 	@$(RM) -r $(VIV_PROJ_DIR)*
 	@echo -e "                        IPs";
