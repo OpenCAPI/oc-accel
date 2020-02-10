@@ -65,7 +65,7 @@ module wr_data_send_channel
     wire [031:0]              base_data_incr;
 
     //---- write data send state machine ----
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             cstate <= IDLE;
@@ -95,7 +95,7 @@ module wr_data_send_channel
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             beat_bias <= 0;
@@ -116,7 +116,7 @@ module wr_data_send_channel
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             base_data <= 0;
@@ -151,7 +151,7 @@ module wr_data_send_channel
         endcase                                                        
     end                                                                
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             beat_counter <= 0;
@@ -166,7 +166,7 @@ module wr_data_send_channel
     assign stage2_ready = !m_axi_wvalid || m_axi_wready;
     assign stage1_sent = stage1_valid && stage2_ready;
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             stage1_cycle_cnt <= 5'b0;
@@ -465,7 +465,7 @@ module wr_data_send_channel
     end
 
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             wr_len_counter_stage1 <= 0;
@@ -479,7 +479,7 @@ module wr_data_send_channel
 
     assign stage1_wlast = stage1_sent && (wr_len_counter_stage1 == 0);
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             m_axi_wvalid <= 1'b0;
@@ -489,7 +489,7 @@ module wr_data_send_channel
             m_axi_wvalid <= 1'b0;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
         begin

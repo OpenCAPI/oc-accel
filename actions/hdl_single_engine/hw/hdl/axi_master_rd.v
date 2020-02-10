@@ -91,7 +91,7 @@ module axi_master_rd #(
  assign m_axi_arlock   = 2'b00; // normal access  
  assign burst_sent     = m_axi_arvalid && m_axi_arready;
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk)
  begin
      if(~rst_n)
          m_axi_arid <= 0;
@@ -108,7 +108,7 @@ module axi_master_rd #(
  assign rd_id_num = rd_pattern[20:16];
 
  assign rd_len_plus_1 = {1'b0, rd_len} + 1'b1;
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk)
  begin
      if(~rst_n)
          total_rd_beat_count <= 0;

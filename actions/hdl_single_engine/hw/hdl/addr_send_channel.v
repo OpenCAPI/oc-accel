@@ -79,7 +79,7 @@ module addr_send_channel
     assign addr_send_done = (cstate == DONE);
 
     //---- Burst send state machine ----
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             cstate <= IDLE;
@@ -124,7 +124,7 @@ module addr_send_channel
     end
 
     //---- prepare values in IDLE and INIT state ----
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
         begin
@@ -151,7 +151,7 @@ module addr_send_channel
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
         begin
@@ -170,7 +170,7 @@ module addr_send_channel
         end
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             current_burst_len <= 0;
@@ -191,7 +191,7 @@ module addr_send_channel
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             beat_number_sent_in_4KB <= 0;

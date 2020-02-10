@@ -98,7 +98,7 @@ module axi_master_wr #(
  assign m_axi_bready   = 1'b1;
  assign burst_sent     = m_axi_awvalid && m_axi_awready;
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk)
  begin
      if(~rst_n)
          m_axi_awid <= 0;
@@ -113,7 +113,7 @@ module axi_master_wr #(
  assign wr_id_num = wr_pattern[20:16];
 
  assign wr_len_plus_1 = {1'b0, wr_len} + 1'b1;
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk)
  begin
      if(~rst_n)
          total_wr_beat_count <= 0;
@@ -167,7 +167,7 @@ wr_data_send_channel mwr_data_send (
 /***********************************************************************
 *                        write response channel                        *
 ***********************************************************************/
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             wr_wait_done <= 1'b0;
@@ -177,7 +177,7 @@ wr_data_send_channel mwr_data_send (
             wr_wait_done <= 1'b0;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             wr_burst_cnt <= 0;
@@ -187,7 +187,7 @@ wr_data_send_channel mwr_data_send (
             wr_burst_cnt <= wr_burst_cnt - 1'b1;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             wr_error <= 1'b0;

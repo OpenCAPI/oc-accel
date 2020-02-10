@@ -107,7 +107,7 @@ module rd_result_check_channel #(
     assign rd_id_num_plus_1 = {1'b0, rd_id_num} + 1'b1;
     assign axi_data_valid = m_axi_rvalid && m_axi_rready;
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             init_counter <= 5'b0;
@@ -116,7 +116,7 @@ module rd_result_check_channel #(
     end
 
     //---- read result state machine ----
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             cstate <= IDLE;
@@ -157,7 +157,7 @@ module rd_result_check_channel #(
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             beat_counter <= 0;
@@ -167,7 +167,7 @@ module rd_result_check_channel #(
             beat_counter <= beat_counter - 1'b1;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
         begin
@@ -183,7 +183,7 @@ module rd_result_check_channel #(
         end
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
         begin
@@ -197,7 +197,7 @@ module rd_result_check_channel #(
         end
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             id_bias <= 0;
@@ -218,7 +218,7 @@ module rd_result_check_channel #(
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             init_bias_for_idx <= 0;
@@ -258,7 +258,7 @@ module rd_result_check_channel #(
             assign data_valid_for_idx[i] = axi_data_valid && (m_axi_rid == i);
             assign last_data_valid_for_idx[i] = data_valid_for_idx[i] && m_axi_rlast;
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk)
             begin
                 if(~rst_n)
                     cycle_cnt[i] <= 0;
@@ -268,7 +268,7 @@ module rd_result_check_channel #(
                     cycle_cnt[i] <= cycle_cnt[i] + 1;
             end
                
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk)
             begin
                 if(~rst_n)
                     base_data[i] <= 0;
@@ -308,7 +308,7 @@ module rd_result_check_channel #(
     endgenerate
 
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             stage1_valid <= 0;
@@ -316,13 +316,13 @@ module rd_result_check_channel #(
             stage1_valid <= axi_data_valid;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             stage1_addr <= 0;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
         begin
@@ -338,7 +338,7 @@ module rd_result_check_channel #(
         end
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
         begin  
@@ -647,7 +647,7 @@ module rd_result_check_channel #(
 
     // read data error
     assign data_error = ((stage2_actual_data & stage2_data_mask) != stage2_expect_data);
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             rd_error[1] <= 0;
@@ -658,7 +658,7 @@ module rd_result_check_channel #(
     end
 
     // read response error
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             rd_error[0] <= 0;
@@ -670,7 +670,7 @@ module rd_result_check_channel #(
 
     assign rd_done = (cstate == DONE);
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk)
     begin
         if(~rst_n)
             rd_error_info <= 0;
@@ -714,7 +714,7 @@ module rd_result_check_channel #(
     //reg [4:0]   stage1_cycle_cnt_sync4;
     //reg [31:0]  stage1_actual_data_sync4;
 
-    //always@(posedge clk or negedge rst_n)
+    //always@(posedge clk)
     //begin
     //    if(~rst_n)
     //    begin
