@@ -22,6 +22,7 @@ export OCACCEL_ROOT=$(dirname $(readlink -f "$BASH_SOURCE"))
 [ -f "${OCACCEL_ROOT}/ocaccel_env.sh" ] && . ${OCACCEL_ROOT}/ocaccel_env.sh
 [ -f "${OCACCEL_ROOT}/.ocaccel_config.sh" ] && . ${OCACCEL_ROOT}/.ocaccel_config.sh
 export ACTION_ROOT=$OCACCEL_ROOT/actions/$ACTION_NAME
+export OCACCEL_HARDWARE_ROOT=$OCACCEL_ROOT/hardware
 export PATH=$PATH:$OCACCEL_ROOT/software/tools
 [ -n "$ACTION_ROOT" ] &&  export PATH=$PATH:$ACTION_ROOT/sw
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OCACCEL_ROOT/software/lib

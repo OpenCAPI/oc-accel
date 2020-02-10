@@ -56,7 +56,7 @@ open_project $root_dir/build/viv_project/viv_project.xpr
 ############################################################################
 # Set image_name
 set IMAGE_NAME [expr {$capi_ver == "OPENCAPI30" ? "oc_" : "fw_"}]
-# append IMAGE_NAME [exec cat $root_dir/setup/build_image/bitstream_date.txt]
+append IMAGE_NAME [exec cat $root_dir/setup/build_image/bitstream_date.txt]
 append IMAGE_NAME [expr {$::env(PHY_SPEED) == "20.0" ? "_20G" : "_25G"}]
 append IMAGE_NAME [format {_%s} $::env(ACTION_NAME)]
 append IMAGE_NAME [format {_%s_%s_%s} $::env(INFRA_TEMPLATE_SELECTION) $::env(ACTION_TEMPLATE_SELECTION) $fpgacard]

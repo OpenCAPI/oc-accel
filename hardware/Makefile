@@ -79,7 +79,7 @@ OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/ocaccel_global_v
 ifeq ($(PLATFORM),x86_64)
 
 # TODO: the phony list needs updating
-.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project image ocse software clean
+.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project .hw_project_done define_interfaces package_infrastructure package_hostside package_action top_project image ocse software clean
 
 all: model image
 
@@ -139,7 +139,7 @@ check_simulator:
 	fi
 
 prepare_logs:
-	@echo -e "[PREPARE LOGS.....] start `date +"%T %a %b %d %Y"`";
+	@echo -e "[PREPARE LOGS........]       `date +"%T %a %b %d %Y"`";
 	@mkdir -p $(LOGS_DIR);
 
 prepare_project: check_ocaccel_settings prepare_logs
@@ -154,14 +154,13 @@ prepare_project: check_ocaccel_settings prepare_logs
 		cd $(OCACCEL_ROOT); \
 		git submodule update --init --recursive hardware/oc-accel-bsp; \
 	fi;
-	@echo "write_cfgmem -force -format bin -size $(FLASH_SIZE) -interface $(FLASH_INTERFACE) -loadbit \"up 0x0 $(OCACCEL_HARDWARE_ROOT)/viv_project/fpga_top.runs/impl_1/fpga_top.bit\" $(OCACCEL_HARDWARE_ROOT)/viv_project/fpga_top.runs/impl_1/$(CAPI_VER)_fpga_top_$(PHY_SPEED)_`date +%H%M_%b_%d`" > $(OCACCEL_HARDWARE_ROOT)/setup/ocaccel_bitstream_post.tcl;
 	@echo -e "[PREPARE PROJECT.....] done  `date +"%T %a %b %d %Y"`";
 
 ################################# Preprocess files  #######################
 # covert v_source files to v
 # may not needed anymore
 ocaccel_preprocess_start: prepare_project
-	@echo -e "[OCACCEL PREPROCESS.....] start `date +"%T %a %b %d %Y"`";
+	@echo -e "[OCACCEL PREPROCESS..] start `date +"%T %a %b %d %Y"`";
 
 $(OCACCEL_PREPROCESS_FILES):
 	@if [ -e "$(ocaccel_config_cflags)" ]; then \
@@ -180,7 +179,7 @@ $(OCACCEL_PREPROCESS_FILES):
 
 
 ocaccel_preprocess_execute: $(OCACCEL_PREPROCESS_FILES)
-	@echo -e "[OCACCEL PREPROCESS.....] done  `date +"%T %a %b %d %Y"`";
+	@echo -e "[OCACCEL PREPROCESS..] done  `date +"%T %a %b %d %Y"`";
 
 ocaccel_preprocess: ocaccel_preprocess_start
 	@$(MAKE) -s ocaccel_preprocess_execute
@@ -208,7 +207,7 @@ action_hw: prepare_logs
 
 ###############################################################################
 # Build the vivado project
-define_interface:
+define_interfaces:
 	@echo -e "[DEFINE INTERFACE....] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/common/define_interfaces.tcl -notrace -log $(LOGS_DIR)/define_interfaces.log  -journal $(LOGS_DIR)/define_interfaces.jou > $(templog) 
 	@echo -e "[DEFINE INTERFACE....] done  `date +"%T %a %b %d %Y"`";
@@ -235,9 +234,10 @@ top_project:
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_framework.log  -journal $(LOGS_DIR)/create_framework.jou > $(templog)
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
-hw_project: ocaccel_preprocess action_hw define_interface package_hostside package_infrastructure package_action top_project
+hw_project: ocaccel_preprocess action_hw define_interfaces package_hostside package_infrastructure package_action top_project
 	@echo -e "                        using `vivado -version |grep Vivado`"
 	@echo -e "                        CAPI_VER=$(CAPI_VER)"
+	@touch .hw_project_done
 
 
 ###############################################################################
@@ -245,19 +245,16 @@ hw_project: ocaccel_preprocess action_hw define_interface package_hostside packa
 
 
 ###############################################################################
-image: hw_project
+image:
+	@if [ ! -d .hw_project_done ]; then
+		make -s hw_project
+	fi
 	@echo -e "[BUILD IMAGE.........] start `date +"%T %a %b %d %Y"`\n"
 	@echo "A complete FPGA bitstream build got kicked off.";
 	@echo "This might take more than an hour depending on the machine used";
 	@echo "The process may be terminated by pressing <CTRL>-C at any time.";
 	@echo "After termination it can be restarted later."; echo
 	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/build_image/ocaccel_build.tcl -notrace -log $(LOGS_DIR)/ocaccel_build.log -journal $(LOGS_DIR)/ocaccel_build.jou
-#	@$(RM) -r .bitstream_name.txt
-#	@echo -e "Generating ltx file for ILA debug."
-#	@cd $(BUILD_DIR) && vivado -mode batch -source $(SETUP_DIR)/gen_probe_ltx.tcl -notrace  -log $(LOGS_DIR)/gen_probe_ltx.log         -journal $(LOGS_DIR)/gen_probe_ltx.jou
-#	@echo -e "Generation of ltx file done."
-#	@mv $(BUILD_DIR)/probe.ltx $(BUILD_DIR)/Images
-#	@echo -e "Moved ltx file into Image."
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
 
 
@@ -374,6 +371,7 @@ endif
 
 clean:
 	@echo -e "[CLEAN ENVIRONMENT...] start `date +"%T %a %b %d %Y"`"
+	@$(RM)    .hw_project_done
 	@$(RM) -r $(OCACCEL_PREPROCESS_FILES)                   \
 	          $(OCACCEL_MODELS)                         \
 	          *build
