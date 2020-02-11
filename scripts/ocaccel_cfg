@@ -23,6 +23,7 @@ ocaccel_root=$(dirname "$prgdir")
 # output formatting
 bold=$(tput bold)
 normal=$(tput sgr0)
+#mylog="mylog"
 mylog="/dev/null"
 
 # Name of global config file
