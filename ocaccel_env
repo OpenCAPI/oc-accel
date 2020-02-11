@@ -26,7 +26,6 @@ PATH=$ocacceldir:$PATH
 ocaccel_env_sh=$ocacceldir/ocaccel_env.sh
 
 unset ACTION_ROOT
-unset OCSE_ROOT
 unset TIMING_LABLIMIT
 unset ILA_SETUP_FILE
 unset config_script
@@ -88,30 +87,6 @@ while [ -z "$SETUP_DONE" ]; do
   else
     echo  "Path to vivado          is set to: `which vivado`"
     echo  "Vivado version          is set to: `vivado -version|head -n1`"
-  fi
-
-
-  ####### checking path to OCSE (only if simulation is enabled)
-  # Note: SIMULATOR is defined via ocaccel_config
-  if [ "$SIMULATOR" != "nosim" ]; then
-    if [ ! -n "$HDL_UNIT_SIM" ]; then
-      echo "=====Simulation setup: Checking path to OCSE=========="
-
-      #OCSE_PATH is extracted from .ocaccel_config.sh, it may be a "relative path"
-      if [ ! -d "$OCSE_PATH" ]; then
-        echo "OCSE_ROOT              is set to: \"$OCSE_PATH\" but doesn't exist."
-        SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to OCSE not set properly."
-        SETUP_WARNING="$SETUP_WARNING\n    For simulation please clone OpenCAPI Simulation Environment (OCSE)"
-        SETUP_WARNING="$SETUP_WARNING\n    from https://github.com/OpenCAPI/ocse"
-        SETUP_WARNING="$SETUP_WARNING\n    and set it int the Kconfig Menu."
-        SETUP_WARNING="$SETUP_WARNING\n    Please set Simulator to 'nosim' if you do not intend to run simulation."
-      else
-        #Convert it to absolut path and record in env variable
-        abs_OCSE_PATH=$(cd $OCSE_PATH && echo $PWD)
-        export OCSE_ROOT=$abs_OCSE_PATH
-        echo "OCSE_ROOT              is set to: \"$OCSE_ROOT\""
-      fi
-    fi
   fi
 
 

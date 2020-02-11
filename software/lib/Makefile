@@ -38,8 +38,8 @@ endif
 
 ifdef BUILD_SIMCODE
 CFLAGS += -D_SIM_
-LDFLAGS += -L$(OCSE_ROOT)/libocxl -Wl,-rpath,$(OCSE_ROOT)/libocxl
-LIBS += $(OCSE_ROOT)/libocxl/libocxl.so
+LDFLAGS += -L$(OCSE_PATH)/libocxl -Wl,-rpath,$(OCSE_PATH)/libocxl
+LIBS += $(OCSE_PATH)/libocxl/libocxl.so
 endif
 
 libnameA = libocaccel
@@ -57,9 +57,9 @@ projs += $(projA)
 all: $(projs)
 
 ifdef BUILD_SIMCODE
-$(projs): $(OCSE_ROOT)/libocxl/libocxl.so
+$(projs): $(OCSE_PATH)/libocxl/libocxl.so
 
-$(OCSE_ROOT)/libocxl/libocxl.so:
+$(OCSE_PATH)/libocxl/libocxl.so:
 	$(MAKE) -C `dirname $@`
 endif
 

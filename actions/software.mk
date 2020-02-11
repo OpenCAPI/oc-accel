@@ -16,9 +16,9 @@
 
 include $(OCACCEL_ROOT)/software/config.mk
 
-# Environment variable OCSE_ROOT defined by hardware setup scripts. Use default path if OCSE_ROOT is not defined.
-ifndef OCSE_ROOT
-OCSE_ROOT=$(abspath ../../ocse)
+# Environment variable OCSE_PATH defined by hardware setup scripts. Use default path if OCSE_PATH is not defined.
+ifndef OCSE_PATH
+OCSE_PATH=$(abspath ../../ocse)
 endif
 
 CFLAGS += -std=c99
@@ -30,8 +30,8 @@ LIBS += $(OCACCEL_ROOT)/software/lib/libocaccel.so
 
 ifdef BUILD_SIMCODE
 CFLAGS += -D_SIM_
-LDFLAGS += -L$(OCSE_ROOT)/libocxl -Wl,-rpath,$(OCSE_ROOT)/libocxl
-LIBS += $(OCSE_ROOT)/libocxl/libocxl.so
+LDFLAGS += -L$(OCSE_PATH)/libocxl -Wl,-rpath,$(OCSE_PATH)/libocxl
+LIBS += $(OCSE_PATH)/libocxl/libocxl.so
 endif
 
 # This rule should be the 1st one to find (default)
@@ -52,9 +52,9 @@ $(OCACCEL_ROOT)/software/lib/libocaccel.so:
 
 
 # Resolve dependencies to required libraries
-#$(projs) $(libs): $(OCSE_ROOT)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so
+#$(projs) $(libs): $(OCSE_PATH)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so
 #
-#$(OCSE_ROOT)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so:
+#$(OCSE_PATH)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so:
 #	$(MAKE) -C `dirname $@`
 
 ### Deactivate existing implicit rule
