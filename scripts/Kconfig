@@ -24,50 +24,64 @@ config ENABLE_HLS_SUPPORT
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-# Infrastructure template: bridge minimum
-config INFRA_TEMPLATE_1
+config EXAMPLE_INFRA_T1
     bool
     default n
 
-# Infrastructure template: job manager reg_config
-config INFRA_TEMPLATE_2
+config EXAMPLE_INFRA_T2
+    bool
+    default n
+
+config EXAMPLE_INFRA_T4
+    bool
+    default n
+
+config EXAMPLE_INFRA_T8
     bool
     default n
 
 # Summary
-config INFRA_TEMPLATE_SELECTION
+config EXAMPLE_INFRA_SELECTION
     string
-    default "T1" if INFRA_TEMPLATE_1 || USER_INFRA_T1
-    default "T2" if INFRA_TEMPLATE_2 || USER_INFRA_T2
+    default "T1" if EXAMPLE_INFRA_T1 || USER_INFRA_T1
+    default "T2" if EXAMPLE_INFRA_T2 || USER_INFRA_T2
+    default "T4" if EXAMPLE_INFRA_T4 || USER_INFRA_T4
+    default "T8" if EXAMPLE_INFRA_T8 || USER_INFRA_T8
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-config ACTION_TEMPLATE_10
+config EXAMPLE_ACTION_A10
     bool
     default n
 
-config ACTION_TEMPLATE_11
+config EXAMPLE_ACTION_A11
     bool
     default n
 
-config ACTION_TEMPLATE_12
+config EXAMPLE_ACTION_A12
     bool
     default n
 
-config ACTION_TEMPLATE_13
+config EXAMPLE_ACTION_A20
     bool
     default n
 
-config ACTION_TEMPLATE_20
+config EXAMPLE_ACTION_A40
+    bool
+    default n
+
+config EXAMPLE_ACTION_A80
     bool
     default n
 # Summary
-config ACTION_TEMPLATE_SELECTION
+config EXAMPLE_ACTION_SELECTION
     string
-    default "A10" if ACTION_TEMPLATE_10 || USER_ACTION_A10
-    default "A11" if ACTION_TEMPLATE_11 || USER_ACTION_A11
-    default "A12" if ACTION_TEMPLATE_12 || USER_ACTION_A12
-    default "A13" if ACTION_TEMPLATE_13 || USER_ACTION_A13
-    default "A20" if ACTION_TEMPLATE_20 || USER_ACTION_A20
+    default "A10" if EXAMPLE_ACTION_A10 || USER_ACTION_A10
+    default "A11" if EXAMPLE_ACTION_A11 || USER_ACTION_A11
+    default "A12" if EXAMPLE_ACTION_A12 || USER_ACTION_A12
+    default "A20" if EXAMPLE_ACTION_A20 || USER_ACTION_A20
+    default "A40" if EXAMPLE_ACTION_A40 || USER_ACTION_A40
+    default "A80" if EXAMPLE_ACTION_A80 || USER_ACTION_A80
+
 
 
 ###############################################################################
@@ -139,32 +153,32 @@ choice
         help
           This is an example written in VHDL (512b data width, do memcopy)
           Refer to the README in this action directory for more information
-        select INFRA_TEMPLATE_1
-        select ACTION_TEMPLATE_11
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A11
     
     config HDL_SINGLE_ENGINE
         bool "HDL Single Engine"
         help
           This is an example written in Verilog (1024b data width, peformance measuring)
           Refer to the README in this action directory for more information
-        select INFRA_TEMPLATE_1
-        select ACTION_TEMPLATE_10
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A10
 
     config HDL_MULTI_PROCESS
         bool "HDL Multi Process"
         help
           This is an example to use Job Manager and verify multi process usage.
           Refer to the README in this action directory for more information
-        select INFRA_TEMPLATE_2
-        select ACTION_TEMPLATE_20
+        select EXAMPLE_INFRA_T2
+        select EXAMPLE_ACTION_A20
 
     config HDL_UNIT_SIM
         bool "HDL Unit Sim (with VIP and BFM)"
         help
           This is an random/configurable test for bridge mode, using Bus Function Models
           Not an ordinary action
-        select INFRA_TEMPLATE_1
-        select ACTION_TEMPLATE_10
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A10
 
     config HLS_HELLOWORLD
         bool "HLS HelloWorld"
@@ -173,8 +187,8 @@ choice
           It converts the letters in the input file to uppercase, and write to the output file
           Refer to the README in this action directory for more information
         select ENABLE_HLS_SUPPORT
-        select INFRA_TEMPLATE_1
-        select ACTION_TEMPLATE_11
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A10
 
     config HLS_MEMCOPY_1024
         bool "HLS Memcopy 1024b"
@@ -183,9 +197,9 @@ choice
           It copies data between Host and FPGA DDR/HBM (4 combinations)
           Refer to the README in this action directory for more information
         select ENABLE_HLS_SUPPORT
-        select INFRA_TEMPLATE_1
-        select ACTION_TEMPLATE_12 if FPGACARD_AD9V3
-        select ACTION_TEMPLATE_13 if (FPGACARD_AD9H3 || FPGACARD_AD9H7)
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A12 if FPGACARD_AD9V3
+        select EXAMPLE_ACTION_A13 if (FPGACARD_AD9H3 || FPGACARD_AD9H7)
         # Note: Select the action template according to the card
 endchoice
 
@@ -266,11 +280,22 @@ choice
         bool "T2 (job manager reg_config)"
         help
           Refer to OC-Accel documentation for detailed information.
-    
+  
+    config USER_INFRA_T4
+        bool "T4 (odma -- not valid)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+  
+    config USER_INFRA_T8
+        depends on OPENCAPI30
+        bool "T8 (M1 -- not valid)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+  
 endchoice
 
 ###############################################################################
-#  Engine Number
+#  Infra Template Parameters: Engine Number @ T2
 config ENGINE_NUMBER
     depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T2
     int "Input the number of engines (1 to 16)"
@@ -278,11 +303,39 @@ config ENGINE_NUMBER
     default 1
 
 # !!! This doesn't show in the menuwindow
-# Override the number for existing actions
+# Override the number for existing example
 config ENGINE_NUMBER
     int
     default 8 if HDL_MULTI_PROCESS
 
+###############################################################################
+#  Infra Template Parameters: Number of AXI Ports @ T1
+config NUM_AXIMM_PORTS
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T1
+    int "Input the number of AXI-MM Ports (1 to 8)"
+    range 1 8
+    default 1
+
+# !!! This doesn't show in the menuwindow
+# Override the number for existing example
+config NUM_AXIMM_PORTS
+    int
+    default 1
+
+
+###############################################################################
+#  Infra Template Parameters: Data bus Width of AXI Ports @ T1, T4
+config WIDTH_AXIMM_PORTS
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T4)
+    int "Input the number of AXI-MM Ports (512 or 1024)"
+    range 512 1024
+    default 1024
+
+# !!! This doesn't show in the menuwindow
+# Override the number for existing example
+config WIDTH_AXIMM_PORTS
+    int
+    default 512 if HLS_HELLOWORLD
 
 ###############################################################################
 choice
@@ -293,36 +346,41 @@ choice
         Select the Action Template
     config USER_ACTION_A10
         depends on USER_INFRA_T1
-        bool "A10 (Connects T1, 1024b AXI4)"
+        bool "A10 (Connects T1, no peripherals)"
         help
           Refer to OC-Accel documentation for detailed information.
     
     config USER_ACTION_A11
         depends on USER_INFRA_T1
-        bool "A11 (Connects T1, 512b with dwith converter)"
+        depends on FPGACARD_AD9V3
+        bool "A11 (Connects T1, one channel DDR4)"
         help
           Refer to OC-Accel documentation for detailed information.
     
     config USER_ACTION_A12
         depends on USER_INFRA_T1
-        depends on FPGACARD_AD9V3
-        bool "A12 (Connects T1, 1024b, one channel DDR4)"
-        help
-          Refer to OC-Accel documentation for detailed information.
-    
-    config USER_ACTION_A13
-        depends on USER_INFRA_T1
         depends on FPGACARD_AD9H3 || FPGACARD_AD9H7
-        bool "A13 (Connects T1, 1024b, one channel HBM)"
+        bool "A12 (Connects T1, one channel HBM)"
         help
           Refer to OC-Accel documentation for detailed information.
 
     config USER_ACTION_A20
         depends on USER_INFRA_T2
-        bool "A20 (Connects T2 job manager reg_config)"
+        bool "A20 (Connects T2, no peripherals)"
         help
           Refer to OC-Accel documentation for detailed information.
         
+    config USER_ACTION_A40
+        depends on USER_INFRA_T4
+        bool "A40 (Connects T4, no peripherals)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+    config USER_ACTION_A81
+        depends on USER_INFRA_T8
+        depends on FPGACARD_AD9V3
+        bool "A81 (Connects T8, one channel DDR4)"
+        help
+          Refer to OC-Accel documentation for detailed information.
 endchoice
 
 ###############################################################################
@@ -407,82 +465,68 @@ config AXI_ID_WIDTH
           ID width on AXI interface, for example, AWID, ARID, etc
 
 ###############################################################################
+# Note: When ACTION_CLOCK_200MHZ is selected, no need to insert clock converter
+config ACTION_CLOCK_FREQUENCY 
+    int
+    default 50   if ACTION_CLOCK_50MHZ
+    default 100  if ACTION_CLOCK_100MHZ
+    default 150  if ACTION_CLOCK_150MHZ
+    default 200  if ACTION_CLOCK_200MHZ
+    default 250  if ACTION_CLOCK_250MHZ
+    default 300  if ACTION_CLOCK_300MHZ
+    default 350  if ACTION_CLOCK_350MHZ
+    default 400  if ACTION_CLOCK_400MHZ
+ 
+
 choice
     bool "Action Clock"
-    default Action_clock_200MHz
+    default ACTION_CLOCK_200MHZ
     help
       Clock frequency for action
       There are multiple frequencys the framework supports. Please select
       one of them.
 
-    config Action_clock_50MHz
+    config ACTION_CLOCK_50MHZ
         bool "Action works on 50.355MHz"
-        select ACTION_USER_CLOCK
         help
           Action use 50MHz clock. A different clock with oc-accel bridge. 
 
-    config Action_clock_100MHz
+    config ACTION_CLOCK_100MHZ
         bool "Action works on 100.710MHz"
-        select ACTION_USER_CLOCK
         help
           Action use 100MHz clock. A different clock with oc-accel bridge. 
 
-    config Action_clock_150MHz
+    config ACTION_CLOCK_150MHZ
         bool "Action works on 151.065MHz"
-        select ACTION_USER_CLOCK
         help
           Action use 150MHz clock. A different clock with oc-accel bridge. 
 
-    config Action_clock_200MHz
+    config ACTION_CLOCK_200MHZ
         bool "Action works on 201.420MHz"
         help
           Action use 200MHz clock. Same clock with oc-accel bridge. 
 
-    config Action_clock_250MHz
+    config ACTION_CLOCK_250MHZ
         bool "Action works on 251.775MHz"
-        select ACTION_USER_CLOCK
         help
           Action use 250MHz clock. A different clock with oc-accel bridge. 
 
-    config Action_clock_300MHz
+    config ACTION_CLOCK_300MHZ
         bool "Action works on 302.130MHz"
-        select ACTION_USER_CLOCK
         help
           Action use 300MHz clock. A different clock with oc-accel bridge. 
 
-    config Action_clock_350MHz
+    config ACTION_CLOCK_350MHZ
         bool "Action works on 352.485MHz"
-        select ACTION_USER_CLOCK
         help
           Action use 350MHz clock. A different clock with oc-accel bridge. 
 
-    config Action_clock_400MHz
+    config ACTION_CLOCK_400MHZ
         bool "Action works on 402.840MHz"
-        select ACTION_USER_CLOCK
         help
           Action use 400MHz clock. A different clock with oc-accel bridge. 
 endchoice
 
-config USER_CLOCK_FREQ
-    int
-    default 50   if Action_clock_50MHz
-    default 100  if Action_clock_100MHz
-    default 150  if Action_clock_150MHz
-    default 200  if Action_clock_200MHz
-    default 250  if Action_clock_250MHz
-    default 300  if Action_clock_300MHz
-    default 350  if Action_clock_350MHz
-    default 400  if Action_clock_400MHz
-
-## Try to avoid this
-#config ACTION_USER_CLOCK
-#    bool
-#    default y
-#        prompt "Action's clock frequency is 200MHz ('n', unchecked) or other clock frequency ('y', checked)"
-#    depends on OPENCAPI30 && (HDL_ACTION || HLS_ACTION)
-#    help
-#      Input 'Y' if your action's clock frequency is not 200MHz.
-#      Leave it unchecked if it is 200MHz.
 
 ###############################################################################
 config HLS_CLOCK_PERIOD_CONSTRAINT
