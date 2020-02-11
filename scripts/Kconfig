@@ -41,7 +41,7 @@ config EXAMPLE_INFRA_T8
     default n
 
 # Summary
-config EXAMPLE_INFRA_SELECTION
+config INFRA_TEMPLATE_SELECTION
     string
     default "T1" if EXAMPLE_INFRA_T1 || USER_INFRA_T1
     default "T2" if EXAMPLE_INFRA_T2 || USER_INFRA_T2
@@ -73,7 +73,7 @@ config EXAMPLE_ACTION_A80
     bool
     default n
 # Summary
-config EXAMPLE_ACTION_SELECTION
+config ACTION_TEMPLATE_SELECTION
     string
     default "A10" if EXAMPLE_ACTION_A10 || USER_ACTION_A10
     default "A11" if EXAMPLE_ACTION_A11 || USER_ACTION_A11
