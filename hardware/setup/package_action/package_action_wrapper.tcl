@@ -37,4 +37,5 @@ my_package_custom_ip $root_dir/build/temp_projs \
                      action_wrapper           \
                      $tcl_dir/add_action_wrapper.tcl      \
                      $bus_array
-
+#ipx::associate_bus_interfaces -busif m_axi_host_mem -clock ap_clk [ipx::current_core]
+#ipx::associate_bus_interfaces -busif s_axi_ctrl_reg -clock ap_clk [ipx::current_core]

@@ -169,6 +169,7 @@ $(OCACCEL_PREPROCESS_FILES):
 		echo -e "                        Need to run \"make ocaccel_config\" first"; exit -1; \
 	fi
 	@$(CC) -E -xc $(OCACCEL_CFLAGS) $@_source 2> $(LOGS_DIR)/$(notdir $@)_pp.log > $@_tmp;
+# hdl_pp placeholder
 	@if [ $$? -ne 0 ]; then \
 		$(RM) $@_tmp; \
 		echo -e "                        Error: please look into $(LOGS_DIR)/$(notdir $@)_pp.log"; exit -1; \
@@ -220,13 +221,13 @@ package_hostside:
 package_infrastructure:
 	@echo -e "[PACKAGE INFRA.......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou > $(templog)
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
+#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
 package_action:
 	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
+#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
 top_project:
