@@ -19,6 +19,7 @@
 ############################################################################
 set fpga_card        $::env(FPGACARD)
 set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
+set simulator        $::env(SIMULATOR)
 set fpga_card_dir    $root_dir/oc-accel-bsp/$fpga_card
 
 set host_if_dir      $root_dir/hdl/host_interface_opencapi30
@@ -129,7 +130,10 @@ set verilog_host_if [list \
   $host_if_dir/oc_host_if.v \
 ]
 
-
+if { $simulator != "nosim" } {
+  puts "	                Simulation with $simulator enabled, adding $host_if_dir/sim_only/oc_host_if.sv"
+  lappend verilog_host_if $host_if_dir/sim_only/oc_host_if.sv
+}
 
 if {$transceiver_type eq "bypass"} {
     set phy_package [list {*}$verilog_bypass]
@@ -160,7 +164,16 @@ set file "cfg_func0_init.v"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "Verilog Header" -objects $file_obj
 
+# set the property of simulation-only files
+set_property used_in_synthesis      true  [get_files $host_if_dir/oc_host_if.v]
+set_property used_in_implementation true  [get_files $host_if_dir/oc_host_if.v]
+set_property used_in_simulation     false [get_files $host_if_dir/oc_host_if.v]
 
+if { $simulator != "nosim" } {
+  set_property used_in_synthesis      false [get_files $host_if_dir/sim_only/oc_host_if.sv]
+  set_property used_in_implementation false [get_files $host_if_dir/sim_only/oc_host_if.sv]
+  set_property used_in_simulation     true  [get_files $host_if_dir/sim_only/oc_host_if.sv]
+}
 
 ############################################################################
 # Add constraint files
