@@ -19,6 +19,7 @@
 module data_bridge_channel 
                         #(
                           parameter IDW  = 3,
+                          parameter CTXW = 9,
                           parameter TAGW  = 7,
                           parameter MODE = 0 //0: write; 1: read
                           )
@@ -35,7 +36,9 @@ module data_bridge_channel
                          output reg            lcl_addr_ready        ,
                          input                 lcl_addr_valid        ,
                          input      [0063:0]   lcl_addr_ea           ,
-                         input      [IDW-1:0] lcl_addr_axi_id       ,  
+                         input                 lcl_addr_ctx_valid    ,
+                         input      [CTXW-1:0] lcl_addr_ctx          ,  
+                         input      [IDW-1:0]  lcl_addr_axi_id       ,  
                          input                 lcl_addr_first        ,
                          input                 lcl_addr_last         ,
                          input      [0127:0]   lcl_addr_be           ,  
@@ -44,6 +47,7 @@ module data_bridge_channel
                          input      [1023:0]   lcl_data_in           , 
                          output     [1023:0]   lcl_data_out          , 
                          output                lcl_data_out_last     ,
+                         output     [CTXW-1:0]lcl_data_ctx          ,  
                              //--- response and data out ---
                          `ifndef ENABLE_ODMA
                          input                 lcl_resp_ready        ,
@@ -54,6 +58,7 @@ module data_bridge_channel
                          output                lcl_resp_valid        ,
                          output     [IDW-1:0] lcl_resp_axi_id       ,
                          output                lcl_resp_code         ,
+                         output     [CTXW-1:0]lcl_resp_ctx          ,  
 
                          //---- command encoder ---------------
                          input                 dma_cmd_ready         ,
@@ -61,7 +66,8 @@ module data_bridge_channel
                          output reg [1023:0]   dma_cmd_data          , 
                          output reg [0127:0]   dma_cmd_be            , 
                          output reg [0063:0]   dma_cmd_ea            , 
-                         output reg [TAGW-1:0]dma_cmd_tag           , 
+                         output reg [TAGW-1:0] dma_cmd_tag           , 
+                         output reg [CTXW-1:0] dma_cmd_ctx           ,
 
                          //---- response decoder --------------
                          input                 dma_resp_valid        ,
@@ -69,9 +75,6 @@ module data_bridge_channel
                          input      [TAGW-1:0]dma_resp_tag          , 
                          input      [0001:0]   dma_resp_pos          , 
                          input      [0002:0]   dma_resp_code         ,  
-
-                         //---- context surveil ---------------
-                         input                 context_update_ongoing, 
 
                          //---- control and status ------------
                          input                 debug_cnt_clear       ,
@@ -93,20 +96,22 @@ module data_bridge_channel
  reg  [1023:0]   lcl_data_in_sync;
  reg  [0127:0]   lcl_addr_be_sync;
  reg  [0063:0]   lcl_addr_ea_sync;
- reg  [TAGW-1:0]retry_tag_out_sync;
- reg  [TAGW-1:0]recycle_tag_out_sync;
+ reg  [CTXW-1:0] lcl_addr_ctx_sync;
+ reg  [CTXW-1:0] lcl_addr_ctx_real;
+ reg  [TAGW-1:0] retry_tag_out_sync;
+ reg  [TAGW-1:0] recycle_tag_out_sync;
  wire            recycle_tag_out_req;
- wire [TAGW-1:0]recycle_tag_out;
+ wire [TAGW-1:0] recycle_tag_out;
  reg             retry_tag_in_valid;
  wire            retry_tag_out_req;
- wire[TAGW-1:0] retry_tag_out;
+ wire[TAGW-1:0]  retry_tag_out;
  wire            retry_tag_out_valid;
- reg [TAGW-1:0] retry_tag_in;
+ reg [TAGW-1:0]  retry_tag_in;
  reg [000001:0]  retry_pos_in;
  wire[000001:0]  retry_pos_out;
- wire [TAGW+1:0]fifo_rty_tag_din;
- wire [TAGW+1:0]fifo_rty_tag_dout;
- wire [TAGW-1:0]fifo_rty_tag_count;
+ wire [TAGW+1:0] fifo_rty_tag_din;
+ wire [TAGW+1:0] fifo_rty_tag_dout;
+ wire [TAGW-1:0 ]fifo_rty_tag_count;
  wire            fifo_rty_tag_wr_en;
  wire            fifo_rty_tag_rd_en;
  wire            fifo_rty_tag_empty;
@@ -114,33 +119,35 @@ module data_bridge_channel
  reg             retry_intrpt;
  reg [0003:0]    powerup_cnt;
  reg             fifo_rcy_init;
- reg [TAGW-1:0] fifo_rcy_init_cnt;
+ reg [TAGW-1:0]  fifo_rcy_init_cnt;
  reg             fifo_rcy_tag_wr_en;
- reg [TAGW-1:0] fifo_rcy_tag_din;
- wire[TAGW-1:0] fifo_rcy_tag_count;
+ reg [TAGW-1:0]  fifo_rcy_tag_din;
+ wire[TAGW-1:0]  fifo_rcy_tag_count;
  wire            fifo_rcy_tag_rd_en;
- wire[TAGW-1:0] fifo_rcy_tag_dout;
+ wire[TAGW-1:0]  fifo_rcy_tag_dout;
  wire            fifo_rcy_tag_full;
  wire            fifo_rcy_tag_ovfl;
- wire[TAGW-1:0] recycle_tag_dout;
+ wire[TAGW-1:0]  recycle_tag_dout;
  wire            fifo_rcy_tag_empty;
  wire            fifo_rcy_tag_alempty;
  reg             buf_w_data_o_en; 
  reg             buf_w_data_e_en; 
- reg [TAGW-1:0] buf_w_data_addr;
+ reg [TAGW-1:0]  buf_w_data_addr;
  reg [1023:0]    buf_w_data; 
  reg             buf_w_info_en;  
- reg [TAGW-1:0] buf_w_info_addr;
- reg [0191:0]    buf_w_info;    
+ reg [TAGW-1:0]  buf_w_info_addr;
+ reg [0200:0]    buf_w_info;    
  wire            buf_r_data_en; 
  wire[1023:0]    buf_r_data;
- wire[TAGW-1:0] buf_r_data_addr;
+ wire[TAGW-1:0]  buf_r_data_addr;
  wire            buf_r_info_en; 
- wire[TAGW-1:0] buf_r_info_addr;
- wire[0191:0]    buf_r_info;              
+ wire            buf_r_info_en_for_wr; 
+ wire[TAGW-1:0]  buf_r_info_addr;
+ wire[0200:0]    buf_r_info;              
  wire[0127:0]    buf_r_be;       
  reg [0127:0]    retry_be;       
  wire[0063:0]    buf_r_ea;       
+ wire[CTXW:0]    buf_r_ctx;       
  wire            rsv_valid;
  wire[0001:0]    rsv_pos;
  wire[TAGW-1:0] rsv_tag;
@@ -163,9 +170,12 @@ module data_bridge_channel
  wire[0031:0]    ret_ready_hint; 
  `endif
  wire            ret_valid;
- wire[IDW-1:0]  ret_axi_id;
+ wire[TAGW-1:0]  ret_tag;
+ wire[IDW-1:0]   ret_axi_id;
  wire            ret_last;
  wire            recycle_tag_out_ready;
+ reg [IDW-1:0]   ret_axi_id_sync;
+ reg ret_valid_sync, ret_resp_sync;
 
 
  localparam DMA_W = 0,
@@ -188,9 +198,15 @@ module data_bridge_channel
                        //~lcl_addr_idle;              //   4) Transaction in AXI is active
 
 //---- valid AXI command indication ----
- assign local_cmd_valid = (lcl_addr_valid && lcl_addr_ready && (!context_update_ongoing));
+ assign local_cmd_valid = (lcl_addr_valid && lcl_addr_ready);
 
-//---- timing alignment for normal and retry data ----
+////---- timing alignment for normal and retry data ----
+// always@(posedge clk or negedge rst_n)
+//   if(~rst_n) 
+//     lcl_addr_ctx_real <= {CTXW{1'b0}};
+//   else if(lcl_addr_ctx_valid)
+//     lcl_addr_ctx_real <= lcl_addr_ctx;
+
  always@(posedge clk or negedge rst_n)
    if(~rst_n) 
      begin
@@ -199,6 +215,7 @@ module data_bridge_channel
        lcl_data_in_sync         <= 1024'd0;
        lcl_addr_be_sync         <= 128'd0;
        lcl_addr_ea_sync         <= 64'd0;
+       lcl_addr_ctx_sync        <= {CTXW{1'b0}};
        retry_tag_out_sync       <= {TAGW{1'b0}};
        recycle_tag_out_sync     <= {TAGW{1'b0}};
      end
@@ -209,6 +226,7 @@ module data_bridge_channel
        lcl_data_in_sync         <= lcl_data_in;
        lcl_addr_be_sync         <= lcl_addr_be;
        lcl_addr_ea_sync         <= lcl_addr_ea;
+       lcl_addr_ctx_sync        <= lcl_addr_ctx;
        retry_tag_out_sync       <= retry_tag_out;
        recycle_tag_out_sync     <= recycle_tag_out;
      end
@@ -223,6 +241,7 @@ module data_bridge_channel
        dma_cmd_data  <= 1024'd0;
        dma_cmd_be    <= 128'd0;
        dma_cmd_ea    <= 64'd0;
+       dma_cmd_ctx   <= {CTXW{1'b0}};
        dma_cmd_tag   <= {TAGW{1'b0}};
      end
    else
@@ -231,6 +250,7 @@ module data_bridge_channel
        dma_cmd_data  <= (retry_tag_out_valid_sync)? buf_r_data         : lcl_data_in_sync;
        dma_cmd_be    <= (retry_tag_out_valid_sync)? buf_r_be           : lcl_addr_be_sync;
        dma_cmd_ea    <= (retry_tag_out_valid_sync)? buf_r_ea           : lcl_addr_ea_sync;
+       dma_cmd_ctx   <= (retry_tag_out_valid_sync)? buf_r_ctx          : lcl_addr_ctx_sync;
        dma_cmd_tag   <= (retry_tag_out_valid_sync)? retry_tag_out_sync : recycle_tag_out_sync;
      end
 
@@ -382,7 +402,7 @@ module data_bridge_channel
 
 //---- enable retry when retry interupt is asserted or no transaction in AXI ----
 // Caution: no latency between tag out request (AXI address info valid) and valid tag out
- assign retry_tag_out_req   = (retry_intrpt || ~local_cmd_valid) && dma_cmd_ready;
+ assign retry_tag_out_req   = (retry_intrpt || ~local_cmd_valid) && dma_cmd_ready && (((~rd_valid) && (MODE == DMA_R)) || ((MODE == DMA_W) && ~ret_valid));
  assign fifo_rty_tag_rd_en  = retry_tag_out_req && (!fifo_rty_tag_empty);
  assign retry_tag_out       = fifo_rty_tag_dout[6:0];
  assign retry_tag_out_valid = fifo_rty_tag_rd_en;
@@ -425,7 +445,7 @@ module data_bridge_channel
        buf_w_data      <= 1024'd0;
        buf_w_info_en   <= 1'b0;
        buf_w_info_addr <= {TAGW{1'b1}};
-       buf_w_info      <= 192'd0;
+       buf_w_info      <= 201'd0;
      end
    else
      begin
@@ -435,7 +455,7 @@ module data_bridge_channel
        buf_w_data      <= (MODE == DMA_W)? lcl_data_in_sync     : dma_resp_data;
        buf_w_info_en   <= local_cmd_valid_sync;
        buf_w_info_addr <= recycle_tag_out_sync;
-       buf_w_info      <= {lcl_addr_ea_sync, lcl_addr_be_sync};
+       buf_w_info      <= {lcl_addr_ctx_sync, lcl_addr_ea_sync, lcl_addr_be_sync};
      end
 
 //---- buffer for data ----
@@ -461,7 +481,7 @@ module data_bridge_channel
                                      .dob   (buf_r_data[511:0]   )  
                                      );
 //---- buffer for information ----
- ram_simple_dual #(192,TAGW) mbuf_info (
+ ram_simple_dual #(201,TAGW) mbuf_info (
                                      .clk   (clk            ), 
                                      .ena   (1'b1           ),
                                      .enb   (1'b1           ),
@@ -474,19 +494,21 @@ module data_bridge_channel
 
 //---- read buffer data and info out of buffer ----
 //
-//     ------------------------------------------
-//     |           | Read data   |  Read EA/BE  |
-//     ------------------------------------------
-//     | DMA write | retry       |  retry       |
-//     | DMA read  | reclaim     |  retry       |
-//     ------------------------------------------
+//     -----------------------------------------------
+//     |           | Read data   |  Read EA/BE/CTX   |
+//     -----------------------------------------------
+//     | DMA write | retry       |  retry or reclaim |
+//     | DMA read  | reclaim     |  retry or reclaim |
+//     -----------------------------------------------
 
- assign buf_r_data_en   = (MODE == DMA_W)? retry_tag_out_valid : rd_valid;
- assign buf_r_data_addr = (MODE == DMA_W)? retry_tag_out       : rd_tag;
- assign buf_r_info_en   = retry_tag_out_valid;
- assign buf_r_info_addr = retry_tag_out;
- assign buf_r_be        = buf_r_info[127:0] & retry_be;
- assign buf_r_ea        = buf_r_info[191:128];
+ assign buf_r_data_en        = (MODE == DMA_W)? retry_tag_out_valid : rd_valid;
+ assign buf_r_data_addr      = (MODE == DMA_W)? retry_tag_out       : rd_tag;
+ assign buf_r_info_en        = retry_tag_out_valid || ((MODE == DMA_R) && rd_valid) || buf_r_info_en_for_wr;
+ assign buf_r_info_en_for_wr = (MODE == DMA_W) && ((ret_valid && ret_ready) || (ret_valid_sync && !lcl_resp_ready));
+ assign buf_r_info_addr      = retry_tag_out_valid? retry_tag_out : (buf_r_info_en_for_wr ? ret_tag : rd_tag);
+ assign buf_r_be             = buf_r_info[127:0] & retry_be;
+ assign buf_r_ea             = buf_r_info[191:128];
+ assign buf_r_ctx            = buf_r_info[200:192];
 
 
 //=====================================================================================================================================
@@ -565,6 +587,7 @@ module data_bridge_channel
                         .rsp_pos   (rsp_pos   ),   
                         .ret_ready (ret_ready ),
                         .ret_valid (ret_valid ), 
+                        .ret_tag   (ret_tag   ), 
                         .ret_axi_id(ret_axi_id),
                         .ret_resp  (ret_resp  ),  
                         .ret_last  (ret_last  ),   
@@ -575,12 +598,34 @@ module data_bridge_channel
  endgenerate
 
 //---- return data and response back to AXI, which should be one cycle later than reclaim channel ----
- assign ret_ready         = lcl_resp_ready;
- assign lcl_resp_valid    = ret_valid;
- assign lcl_resp_axi_id   = ret_axi_id;
- assign lcl_resp_code     = ret_resp;
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n)
+     ret_valid_sync <= 1'b0;
+   else if(ret_valid && ret_ready)
+     ret_valid_sync <= 1'b1;
+   else if(lcl_resp_ready)
+     ret_valid_sync <= 1'b0;
+
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n)
+     begin
+       ret_axi_id_sync <= {IDW{1'd0}};
+       ret_resp_sync <= 'd0;
+     end
+   else if(ret_valid && ret_ready)
+     begin
+       ret_axi_id_sync <= ret_axi_id;
+       ret_resp_sync <= ret_resp;
+     end
+
+ assign ret_ready         = (MODE == DMA_W)?(!ret_valid_sync || lcl_resp_ready) : lcl_resp_ready;
+ assign lcl_resp_valid    = (MODE == DMA_W)? ret_valid_sync : ret_valid;
+ assign lcl_resp_axi_id   = (MODE == DMA_W)? ret_axi_id_sync : ret_axi_id;
+ assign lcl_resp_code     = (MODE == DMA_W)? ret_resp_sync : ret_resp;
+ assign lcl_resp_ctx      = buf_r_ctx;
  assign lcl_data_out      = buf_r_data;
  assign lcl_data_out_last = ret_last;
+ assign lcl_data_ctx      = buf_r_ctx;
  `ifdef ENABLE_ODMA
  assign ret_ready_hint    = lcl_resp_ready_hint;
  `endif
@@ -673,7 +718,11 @@ module data_bridge_channel
      end
 
 
-// psl default clock = (posedge clk);
+ // psl default clock = (posedge clk);
+
+//==== PSL ASSERTION ==============================================================================
+// psl NEW_CONTEXT_CONGESTED : assert always onehot0({retry_tag_out_valid, ((MODE == DMA_R) && rd_valid), ((MODE == DMA_W) && ret_valid)}) report "information buffer read conflict! Reading the infor BUF for TLX retry command and for AXI reclaim should never happen in the same time.";
+//==== PSL ASSERTION ==============================================================================
 
 //==== PSL ASSERTION ==============================================================================
 // psl DMA_COMMAND_RETRY_CONFLICT : assert never (retry_tag_out_valid_sync && local_cmd_valid_sync) report "retry and normal command conflict! It's not allowed to send both retry command from retry FIFO and normal command from AXI to command encoder simultanuously.";

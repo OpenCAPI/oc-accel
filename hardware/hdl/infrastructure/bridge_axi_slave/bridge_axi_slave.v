@@ -61,13 +61,14 @@ module bridge_axi_slave #(
                 output                lcl_wr_idle,       //Current write channel is idle,
                 input                 lcl_wr_ready,      //From bridge
                   // write ctx channel
-                output                lcl_wr_ctx_valid,  //Indicate current write context is valid (one cycle) (early)
-                output      [8:0]     lcl_wr_ctx,        //AWUSER in AXI world and PASID in TLX world
+                output reg            lcl_wr_ctx_valid,  //Indicate current write context is valid (one cycle) (early)
+                output reg  [CTXW-1:0]lcl_wr_ctx,        //AWUSER in AXI world and PASID in TLX world
                   // write response channel
                 input                 lcl_wr_rsp_valid,  //A response valid from bridge
                 input      [IDW-1:0]  lcl_wr_rsp_axi_id, //AXI ID of current beat in response
                 input                 lcl_wr_rsp_code,   //Response code. 0: good;  1: error
                 output                lcl_wr_rsp_ready,  //axi_slave is ready to accept the response.
+                input      [CTXW-1:0] lcl_wr_rsp_ctx,  
                 
                 
                    // read address channel
@@ -80,12 +81,13 @@ module bridge_axi_slave #(
                 output                lcl_rd_idle,       //Current read channel is idle,
                 input                 lcl_rd_ready,      //From bridge
                   // read ctx channel
-                output                lcl_rd_ctx_valid,  //Indicate current read context is valid (one cycle) (early)
-                output      [8:0]     lcl_rd_ctx,        //ARUSER in AXI world and PASID in TLX world
+                output reg            lcl_rd_ctx_valid,  //Indicate current read context is valid (one cycle) (early)
+                output reg  [CTXW-1:0]lcl_rd_ctx,        //ARUSER in AXI world and PASID in TLX world
                   // read response & data channel
                 input                 lcl_rd_data_valid, //Data valid from bridge
                 input      [IDW-1:0]  lcl_rd_data_axi_id,//AXI ID of current beat in response
-                input [1023:0]        lcl_rd_data,       //Read data for the current beat
+                input      [1023:0]   lcl_rd_data,       //Read data for the current beat
+                input      [CTXW-1:0] lcl_rd_data_ctx       ,  
                 input                 lcl_rd_data_last,  //This the last beat in a burst
                 input                 lcl_rd_rsp_code,   //Response code. 0: good;  1: error
                 output                lcl_rd_data_ready, //To bridge: axi_slave is ready to accept the response.
@@ -111,7 +113,7 @@ module bridge_axi_slave #(
                   // AXI write response channel
                 output reg [IDW-1:0]  s_axi_bid,
                 output reg [1:0]      s_axi_bresp,
-                //output reg [CTXW-1:0] s_axi_buser, //No drive
+                output reg [CTXW-1:0] s_axi_buser, //No drive
                 output reg            s_axi_bvalid,
                 input                 s_axi_bready,
                   // AXI read address channel
@@ -127,6 +129,7 @@ module bridge_axi_slave #(
                 output reg [IDW-1:0]  s_axi_rid,
                 output reg [1023:0]   s_axi_rdata,
                 output reg [1:0]      s_axi_rresp,
+                output reg [CTXW-1:0] s_axi_ruser,
                 output reg            s_axi_rlast,
                 output reg            s_axi_rvalid,
                 input                 s_axi_rready
@@ -197,7 +200,10 @@ localparam AXI_OKAY=2'b00,
  reg [1:0]   rd_burst_q;
  reg [127:0] rd_be1_q;
  wire        rd_addr_present;
-wire [CTXW-1:0] lcl_ctx_aruser;
+ wire            burst_wr_ctx_valid;  //Indicate current write context is valid (one cycle) (early)
+ wire [CTXW-1:0] burst_wr_ctx;        //AWUSER in AXI world and PASID in TLX world
+ wire            burst_rd_ctx_valid;  //Indicate current write context is valid (one cycle) (early)
+ wire [CTXW-1:0] burst_rd_ctx;        //AWUSER in AXI world and PASID in TLX world
 
 axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  ar_cf(
         .clk            (clk             ),
@@ -490,10 +496,24 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
      lcl_wr_axi_id <= aw_cf_id;
    end
 
-  assign lcl_wr_ctx_valid = (wr_nstate == WR_REQ_FIRST); //One cycle earlier before lcl_wr_valid.
-  assign lcl_ctx_awuser = (wr_nstate ==  WR_REQ_FIRST) ? aw_cf_user : 0;
+  assign burst_wr_ctx_valid = (wr_nstate == WR_REQ_FIRST); //One cycle earlier before lcl_wr_valid.
+  assign burst_wr_ctx = (wr_nstate ==  WR_REQ_FIRST) ? aw_cf_user : 0;
 
-
+ always@(posedge clk or negedge rst_n)
+ begin
+     if(~rst_n)
+         lcl_wr_ctx_valid <= 1'b0;
+     else
+         lcl_wr_ctx_valid <= burst_wr_ctx_valid;
+ end
+ 
+ always@(posedge clk or negedge rst_n)
+ begin
+     if(~rst_n)
+         lcl_wr_ctx       <= {CTXW{1'b0}};
+     else if(burst_wr_ctx_valid)
+         lcl_wr_ctx       <= burst_wr_ctx;
+ end
 
 //=============================================================================================
 // READ COMMAND CHANNEL
@@ -633,21 +653,24 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
      lcl_rd_axi_id <= ar_cf_id;
    end
   
-  assign lcl_rd_ctx_valid = (rd_nstate == RD_REQ_FIRST); //One cycle earlier before lcl_rd_valid.
-  assign lcl_ctx_aruser = (rd_nstate ==  RD_REQ_FIRST) ? ar_cf_user : 0;
+  assign burst_rd_ctx_valid = (rd_nstate == RD_REQ_FIRST); //One cycle earlier before lcl_rd_valid.
+  assign burst_rd_ctx = (rd_nstate ==  RD_REQ_FIRST) ? ar_cf_user : 0;
 
-//=============================================================================================
-//      Match ctx width with the AXI ARUSER/AWUSER width
+ always@(posedge clk or negedge rst_n)
+ begin
+     if(~rst_n)
+         lcl_rd_ctx_valid <= 1'b0;
+     else
+         lcl_rd_ctx_valid <= burst_rd_ctx_valid;
+ end
 
-assign lcl_rd_ctx[CTXW-1:0] = lcl_ctx_aruser;
-assign lcl_wr_ctx[CTXW-1:0] = lcl_ctx_awuser;
-generate if (CTXW < 9)
-begin: ctx_width_matcher
-     assign lcl_rd_ctx[8: CTXW] = 'b0;
-     assign lcl_wr_ctx[8: CTXW] = 'b0;
-end
-endgenerate
-
+ always@(posedge clk or negedge rst_n)
+ begin
+     if(~rst_n)
+         lcl_rd_ctx       <= {CTXW{1'b0}};
+     else if(burst_rd_ctx_valid)
+         lcl_rd_ctx       <= burst_rd_ctx;
+ end
 
 //=============================================================================================
 // WRITE RESPONSE CHANNEL
@@ -665,10 +688,12 @@ endgenerate
    if(~rst_n) begin
      s_axi_bid   <= 0;
      s_axi_bresp <= AXI_OKAY;
+     s_axi_buser <= 0;
    end
    else if(lcl_wr_rsp_valid && lcl_wr_rsp_ready) begin
      s_axi_bid   <= lcl_wr_rsp_axi_id;
      s_axi_bresp <= lcl_wr_rsp_code;
+     s_axi_buser <= lcl_wr_rsp_ctx;
    end
 
  assign lcl_wr_rsp_ready = !s_axi_bvalid && s_axi_bready;
@@ -689,6 +714,7 @@ endgenerate
  always@(posedge clk or negedge rst_n)
    if(~rst_n) begin
      s_axi_rid   <= 0;
+     s_axi_ruser <= 0;
      s_axi_rresp <= AXI_OKAY;
      s_axi_rdata <= 1024'h0;
      s_axi_rlast <= 1'b0;
@@ -696,6 +722,7 @@ endgenerate
    //RDATA must remain stable when RVALID is asserted and RREADY low
    else if(lcl_rd_data_valid && lcl_rd_data_ready) begin
      s_axi_rid   <= lcl_rd_data_axi_id;
+     s_axi_ruser <= lcl_rd_data_ctx;
      s_axi_rresp <= lcl_rd_rsp_code;
      s_axi_rdata <= lcl_rd_data;
      s_axi_rlast <= lcl_rd_data_last;

@@ -43,7 +43,8 @@
 
 module opencapi30_c1
                  #(
-                   parameter TAGW = 7   //Use 128 afu tags
+                   parameter TAGW = 7,   //Use 128 afu tags
+                   parameter CTXW = 9   //Use 128 afu tags
                   )
                   (
                    //---- synchronous clocks and reset ----------------------
@@ -139,7 +140,6 @@ module opencapi30_c1
                    input                 last_context_cleared  ,   // both write buffer and read buffer are empty
                    output                context_update_ongoing,   // screen local burst request
 
-
                    // interrupt
                    output                interrupt_ack          ,
                    input                 interrupt              ,
@@ -149,20 +149,7 @@ module opencapi30_c1
 
 
 
-//===============================================================================================================
-//         WIRES: context_surveil to tlx_cmd_conv
-//===============================================================================================================
-
-wire            tlx_ac_cmd_valid  ;
-wire   [019:0]  tlx_ac_cmd_pasid  ;
-wire   [011:0]  tlx_ac_cmd_actag  ;
-wire   [007:0]  tlx_ac_cmd_opcode ;
-wire   [063:0]  tlx_r_cmd_be      ;
-
-
-//===============================================================================================================
-//         WIRES: data_bridge with cmd_enc & rsp_dec
-//===============================================================================================================
+wire   [063:0]  tlx_r_cmd_be     ;
 
 //---- command encoder -----
 wire            w_prt_cmd_valid ;
@@ -216,6 +203,8 @@ wire  [0002:0] tlx_w_cmd_pl       ;
 wire  [0063:0] tlx_w_cmd_be       ;
 wire  [1023:0] tlx_w_cdata_bus    ;
 wire           tlx_w_cmd_ready    ;
+wire  [0019:0] tlx_w_cmd_pasid    ;
+wire  [0011:0] tlx_w_cmd_actag    ;
 
 wire           tlx_r_cmd_valid    ;
 wire  [0007:0] tlx_r_cmd_opcode   ;
@@ -224,6 +213,8 @@ wire  [0015:0] tlx_r_cmd_afutag   ;
 wire  [0001:0] tlx_r_cmd_dl       ;
 wire  [0002:0] tlx_r_cmd_pl       ;
 wire           tlx_r_cmd_ready    ;
+wire  [0019:0] tlx_r_cmd_pasid    ;
+wire  [0011:0] tlx_r_cmd_actag    ;
 wire  [1023:0] tlx_r_cdata_bus    ;
 
 //debug and FIR from submodules
@@ -255,7 +246,6 @@ wire  [0031:0] debug_tlx_cnt_xlt_pd_r    ;
 wire  [0031:0] debug_tlx_cnt_xlt_done_r  ;
 wire  [0031:0] debug_tlx_cnt_xlt_retry_r ;
 
-
  assign debug_bus = {fir_tlx_response_unsupport, fir_tlx_rsp_err, fir_tlx_command_credit,
                      fir_fifo_overflow_cmdencw, fir_fifo_overflow_cmdencr,
                      fir_fifo_overflow_cmdcnv, fir_fifo_overflow_rspcnv,
@@ -268,11 +258,6 @@ wire  [0031:0] debug_tlx_cnt_xlt_retry_r ;
                      debug_tlx_cnt_xlt_done_w,  debug_tlx_cnt_xlt_done_r,
                      debug_tlx_cnt_xlt_retry_w,  debug_tlx_cnt_xlt_retry_r};
 
-
-
-
-
-
 wire           tlx_i_cmd_valid  ;
 wire  [0067:0] tlx_i_cmd_obj    ;
 wire  [0015:0] tlx_i_cmd_afutag ;
@@ -281,6 +266,39 @@ wire           tlx_i_rsp_valid  ;
 wire  [0015:0] tlx_i_rsp_afutag ;
 wire  [0007:0] tlx_i_rsp_opcode ;
 wire  [0003:0] tlx_i_rsp_code   ;
+wire  [0019:0] tlx_i_cmd_pasid  ;
+wire  [0011:0] tlx_i_cmd_actag  ;
+
+reg   [0019:0] cfg_pasid_mask;
+
+//---- convert the enabled pasid length into a mask ----
+ always@*
+   begin
+     case(cfg_pasid_length)
+       5'b10011 : cfg_pasid_mask = 20'h80000;
+       5'b10010 : cfg_pasid_mask = 20'hC0000;
+       5'b10001 : cfg_pasid_mask = 20'hE0000;
+       5'b10000 : cfg_pasid_mask = 20'hF0000;
+       5'b01111 : cfg_pasid_mask = 20'hF8000;
+       5'b01110 : cfg_pasid_mask = 20'hFC000;
+       5'b01101 : cfg_pasid_mask = 20'hFE000;
+       5'b01100 : cfg_pasid_mask = 20'hFF000;
+       5'b01011 : cfg_pasid_mask = 20'hFF800;
+       5'b01010 : cfg_pasid_mask = 20'hFFC00;
+       5'b01001 : cfg_pasid_mask = 20'hFFE00;
+       5'b01000 : cfg_pasid_mask = 20'hFFF00;
+       5'b00111 : cfg_pasid_mask = 20'hFFF80;
+       5'b00110 : cfg_pasid_mask = 20'hFFFC0;
+       5'b00101 : cfg_pasid_mask = 20'hFFFE0;
+       5'b00100 : cfg_pasid_mask = 20'hFFFF0;
+       5'b00011 : cfg_pasid_mask = 20'hFFFF8;
+       5'b00010 : cfg_pasid_mask = 20'hFFFFC;
+       5'b00001 : cfg_pasid_mask = 20'hFFFFE;
+       5'b00000 : cfg_pasid_mask = 20'hFFFFF;
+       default  : cfg_pasid_mask = 20'h00000;
+     endcase
+   end 
+
 
 
 //===============================================================================================================
@@ -327,7 +345,7 @@ tlx_cmd_converter tlx_cmd_conv (
                 /*input                 */   .tlx_afu_cmd_credit              ( tlx_afu_cmd_credit              ),
                 /*input                 */   .tlx_afu_cmd_data_credit         ( tlx_afu_cmd_data_credit         ),
                 /*input      [003:0]    */   .tlx_afu_cmd_initial_credit      ( tlx_afu_cmd_initial_credit      ),
-                /*input      [005:0]    */   .tlx_afu_cmd_data_initial_credit (tlx_afu_cmd_data_initial_credit  ),
+                /*input      [005:0]    */   .tlx_afu_cmd_data_initial_credit ( tlx_afu_cmd_data_initial_credit ),
 
                 //---- AFU side interface --------------------------------
                   // write channel
@@ -340,6 +358,8 @@ tlx_cmd_converter tlx_cmd_conv (
                 /*input      [0063:0]   */   .tlx_wr_cmd_be                   ( tlx_w_cmd_be                   ),
                 /*input      [1023:0]   */   .tlx_wr_cdata_bus                ( tlx_w_cdata_bus                ),
                 /*output                */   .tlx_wr_cmd_ready                ( tlx_w_cmd_ready                ),
+                /*input      [0019:0]   */   .tlx_wr_cmd_pasid                ( tlx_w_cmd_pasid                ),
+                /*input      [0011:0]   */   .tlx_wr_cmd_actag                ( tlx_w_cmd_actag                ),
 
                 // read channel
                 /*input                 */   .tlx_rd_cmd_valid                ( tlx_r_cmd_valid                ),
@@ -349,22 +369,20 @@ tlx_cmd_converter tlx_cmd_conv (
                 /*input      [0001:0]   */   .tlx_rd_cmd_dl                   ( tlx_r_cmd_dl                   ),
                 /*input      [0002:0]   */   .tlx_rd_cmd_pl                   ( tlx_r_cmd_pl                   ),
                 /*output                */   .tlx_rd_cmd_ready                ( tlx_r_cmd_ready                ),
-
-                // assign ACTAG channel
-                /*input                 */   .tlx_ac_cmd_valid                ( tlx_ac_cmd_valid               ),
-                /*input      [0019:0]   */   .tlx_ac_cmd_pasid                ( tlx_ac_cmd_pasid               ),
-                /*input      [0011:0]   */   .tlx_ac_cmd_actag                ( tlx_ac_cmd_actag               ),
-                /*input      [0007:0]   */   .tlx_ac_cmd_opcode               ( tlx_ac_cmd_opcode              ),
+                /*input      [0019:0]   */   .tlx_rd_cmd_pasid                ( tlx_r_cmd_pasid                ),
+                /*input      [0011:0]   */   .tlx_rd_cmd_actag                ( tlx_r_cmd_actag                ),
 
                 // interrupt channel
                 /*input                 */   .tlx_in_cmd_valid                ( tlx_i_cmd_valid                ),
                 /*input      [067:0]    */   .tlx_in_cmd_obj                  ( tlx_i_cmd_obj                  ),
                 /*input      [015:0]    */   .tlx_in_cmd_afutag               ( tlx_i_cmd_afutag               ),
                 /*input      [007:0]    */   .tlx_in_cmd_opcode               ( tlx_i_cmd_opcode               ),
+                /*input      [0019:0]   */   .tlx_in_cmd_pasid                ( tlx_i_cmd_pasid                ),
+                /*input      [0011:0]   */   .tlx_in_cmd_actag                ( tlx_i_cmd_actag                ),
 
                 //---- control and status --------------------------------
-                /*input      [031:0]    */   .debug_tlx_cmd_idle_lim          ( debug_tlx_cmd_idle_lim         ),
-                /*output                */   .debug_tlx_cmd_idle              ( debug_tlx_cmd_idle             ),
+                ///*input      [031:0]    */   .debug_tlx_cmd_idle_lim          ( debug_tlx_cmd_idle_lim         ),
+                ///*output                */   .debug_tlx_cmd_idle              ( debug_tlx_cmd_idle             ),
                 /*output     [0004:0]   */   .fir_fifo_overflow               ( fir_fifo_overflow_cmdcnv       ),
                 /*output     [0001:0]   */   .fir_tlx_command_credit          ( fir_tlx_command_credit         )
                 );
@@ -422,8 +440,8 @@ tlx_rsp_converter tlx_rsp_conv(
                 /*input      [0003:0]*/      .tlx_i_rsp_code                 ( tlx_i_rsp_code                 ),
 
                 //---- control and status ---------------------
-                /*input      [031:0]   */    .debug_tlx_rsp_idle_lim         ( debug_tlx_rsp_idle_lim         ),
-                /*output               */    .debug_tlx_rsp_idle             ( debug_tlx_rsp_idle             ),
+                ///*input      [031:0]   */    .debug_tlx_rsp_idle_lim         ( debug_tlx_rsp_idle_lim         ),
+                ///*output               */    .debug_tlx_rsp_idle             ( debug_tlx_rsp_idle             ),
                 /*output     [005:0]   */    .fir_fifo_overflow              ( fir_fifo_overflow_rspcnv       ),
 	               /*output               */    .fir_tlx_rsp_err                ( fir_tlx_rsp_err                )
                 );
@@ -449,6 +467,11 @@ command_encode
                 /*input                 */   .clk                          ( clock_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
 
+                //---- configuration ---------------------------------
+                /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
+                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_pasid_base               ),
+                /*input      [019:0]    */   .cfg_pasid_mask               ( cfg_pasid_mask               ),
+
                 //---- communication with command decoder -----
                 /*output                */   .prt_cmd_valid                ( w_prt_cmd_valid              ),
                 /*output                */   .prt_cmd_last                 ( w_prt_cmd_last               ),
@@ -456,12 +479,13 @@ command_encode
                 /*input                 */   .prt_cmd_enable               ( w_prt_cmd_enable             ),
 
                 //---- DMA interface ---------------------------------
-                /*output                */   .dma_cmd_ready                ( dma_wr_cmd_ready                ),
-                /*input                 */   .dma_cmd_valid                ( dma_wr_cmd_valid                ),
-                /*input      [1023:0]   */   .dma_cmd_data                 ( dma_wr_cmd_data                 ),
-                /*input      [0127:0]   */   .dma_cmd_be                   ( dma_wr_cmd_be                   ),
-                /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_wr_cmd_ea                   ),
-                /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_wr_cmd_tag                  ),
+                /*output                */   .dma_cmd_ready                ( dma_w_cmd_ready                ),
+                /*input                 */   .dma_cmd_valid                ( dma_w_cmd_valid                ),
+                /*input      [1023:0]   */   .dma_cmd_data                 ( dma_w_cmd_data                 ),
+                /*input      [0127:0]   */   .dma_cmd_be                   ( dma_w_cmd_be                   ),
+                /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_w_cmd_ea                   ),
+                /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_w_cmd_tag                  ),
+                /*input      [CTXW-1:0] */   .dma_cmd_ctx                  ( dma_w_cmd_ctx                  ),
 
                 //---- TLX interface ---------------------------------
                   // command
@@ -472,6 +496,8 @@ command_encode
                 /*output reg [0001:0]   */   .tlx_cmd_dl                   ( tlx_w_cmd_dl                   ),
                 /*output reg [0002:0]   */   .tlx_cmd_pl                   ( tlx_w_cmd_pl                   ),
                 /*output     [0063:0]   */   .tlx_cmd_be                   ( tlx_w_cmd_be                   ),
+                /*output reg [0019:0]   */   .tlx_cmd_pasid                ( tlx_w_cmd_pasid                ),
+                /*output reg [0011:0]   */   .tlx_cmd_actag                ( tlx_w_cmd_actag                ),
                 /*output reg [1023:0]   */   .tlx_cdata_bus                ( tlx_w_cdata_bus                ),
 
                   // credit availability
@@ -493,6 +519,11 @@ command_encode
                 /*input                 */   .clk                          ( clock_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
 
+                //---- configuration ---------------------------------
+                /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
+                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_pasid_base               ),
+                /*input      [019:0]    */   .cfg_pasid_mask               ( cfg_pasid_mask               ),
+
                 //---- communication with command decoder -----
                 /*output                */   .prt_cmd_valid                ( r_prt_cmd_valid              ),
                 /*output                */   .prt_cmd_last                 ( r_prt_cmd_last               ),
@@ -500,12 +531,13 @@ command_encode
                 /*input                 */   .prt_cmd_enable               ( r_prt_cmd_enable             ),
 
                 //---- DMA interface ---------------------------------
-                /*output                */   .dma_cmd_ready                ( dma_rd_cmd_ready                ),
-                /*input                 */   .dma_cmd_valid                ( dma_rd_cmd_valid                ),
-                /*input      [1023:0]   */   .dma_cmd_data                 ( dma_rd_cmd_data                 ),
-                /*input      [0127:0]   */   .dma_cmd_be                   ( dma_rd_cmd_be                   ),
-                /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_rd_cmd_ea                   ),
-                /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_rd_cmd_tag                  ),
+                /*output                */   .dma_cmd_ready                ( dma_r_cmd_ready                ),
+                /*input                 */   .dma_cmd_valid                ( dma_r_cmd_valid                ),
+                /*input      [1023:0]   */   .dma_cmd_data                 ( dma_r_cmd_data                 ),
+                /*input      [0127:0]   */   .dma_cmd_be                   ( dma_r_cmd_be                   ),
+                /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_r_cmd_ea                   ),
+                /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_r_cmd_tag                  ),
+                /*input      [CTXW-1:0] */   .dma_cmd_ctx                  ( dma_r_cmd_ctx                  ),
 
                 //---- TLX interface ---------------------------------
                   // command
@@ -516,6 +548,8 @@ command_encode
                 /*output reg [0001:0]   */   .tlx_cmd_dl                   ( tlx_r_cmd_dl                   ),
                 /*output reg [0002:0]   */   .tlx_cmd_pl                   ( tlx_r_cmd_pl                   ),
                 /*output     [0063:0]   */   .tlx_cmd_be                   ( tlx_r_cmd_be                   ),
+                /*output reg [0019:0]   */   .tlx_cmd_pasid                ( tlx_r_cmd_pasid                ),
+                /*output reg [0011:0]   */   .tlx_cmd_actag                ( tlx_r_cmd_actag                ),
                 /*output reg [1023:0]   */   .tlx_cdata_bus                ( tlx_r_cdata_bus                ),
 
                   // credit availability
@@ -635,66 +669,31 @@ response_decode
                 /*output     [0004:0]   */   .fir_fifo_overflow          ( fir_fifo_overflow_rspdecr )
                 );
 
-
-//===============================================================================================================
-//
-//     Context surveil
-//
-//===============================================================================================================
-
-context_surveil ctx_surveil(
-                /*input                 */   .clk                    ( clock_afu                ),
-                /*input            if()     */   .rst_n                  ( rst_n                  ),
-
-                //---- configuration ---------------------------------
-                /*input      [011:0]    */   .cfg_actag_base         ( cfg_infra_actag_base         ),
-                /*input      [019:0]    */   .cfg_pasid_base         ( cfg_infra_pasid_base         ),
-                /*input      [004:0]    */   .cfg_pasid_length       ( cfg_infra_pasid_length       ),
-
-                //---- AXI interface ---------------------------------
-                /*input      [008:0]    */   .lcl_wr_ctx             ( lcl_wr_ctx             ),
-                /*input      [008:0]    */   .lcl_rd_ctx             ( lcl_rd_ctx             ),
-                /*input                 */   .lcl_wr_ctx_valid       ( lcl_wr_ctx_valid       ),
-                /*input                 */   .lcl_rd_ctx_valid       ( lcl_rd_ctx_valid       ),
-                /*input              */      .interrupt              ( interrupt              ),
-                /*input      [008:0] */      .interrupt_ctx          ( interrupt_ctx          ),
-
-                //---- status ----------------------------------------
-                /*input                 */   .last_context_cleared   ( last_context_cleared   ),
-                /*output reg            */   .context_update_ongoing ( context_update_ongoing ),
-
-                //---- TLX interface ---------------------------------
-                /*output                */   .tlx_cmd_valid          ( tlx_ac_cmd_valid        ),
-                /*output     [019:0]    */   .tlx_cmd_pasid          ( tlx_ac_cmd_pasid        ),
-                /*output     [011:0]    */   .tlx_cmd_actag          ( tlx_ac_cmd_actag        ),
-                /*output     [007:0]    */   .tlx_cmd_opcode         ( tlx_ac_cmd_opcode       )
-                );
-
-//===============================================================================================================
-//
-//    Interrupt
 //
 //===============================================================================================================
 
  interrupt_tlx interrupt_tlx (
                        /*input              */  .clk              (clock_afu             ),
                        /*input              */  .rst_n            (rst_n               ),
-                       /*input      [003:0] */  .backoff_limit    (cfg_infra_backoff_timer   ),
-                       /*input              */  .interrupt_enable (last_context_cleared),
+                       /*input      [011:0] */  .cfg_actag_base   (cfg_actag_base      ),
+                       /*input      [019:0] */  .cfg_pasid_base   (cfg_pasid_base      ),
+                       /*input      [019:0] */  .cfg_pasid_mask   (cfg_pasid_mask      ),
+                       /*input      [003:0] */  .backoff_limit    (cfg_backoff_timer   ),
+                       /*input              */  .interrupt_enable (1'b1                ),
                        /*output             */  .interrupt_ack    (interrupt_ack       ),
                        /*input              */  .interrupt        (interrupt           ),
                        /*input      [067:0] */  .interrupt_src    (interrupt_src       ),
+                       /*input      [008:0] */  .interrupt_ctx    (interrupt_ctx       ),
                        /*output reg         */  .tlx_cmd_valid    (tlx_i_cmd_valid     ),
                        /*output reg [067:0] */  .tlx_cmd_obj      (tlx_i_cmd_obj       ),
                        /*output reg [015:0] */  .tlx_cmd_afutag   (tlx_i_cmd_afutag    ),
                        /*output reg [007:0] */  .tlx_cmd_opcode   (tlx_i_cmd_opcode    ),
+                       /*output reg [019:0] */  .tlx_cmd_pasid    (tlx_i_cmd_pasid     ),
+                       /*output reg [011:0] */  .tlx_cmd_actag    (tlx_i_cmd_actag     ),
                        /*input              */  .tlx_rsp_valid    (tlx_i_rsp_valid     ),
                        /*input      [0015:0]*/  .tlx_rsp_afutag   (tlx_i_rsp_afutag    ),
                        /*input      [0007:0]*/  .tlx_rsp_opcode   (tlx_i_rsp_opcode    ),
                        /*input      [0003:0]*/  .tlx_rsp_code     (tlx_i_rsp_code      )
                        );
-
-
-
 
 endmodule

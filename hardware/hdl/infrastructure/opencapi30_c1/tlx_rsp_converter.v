@@ -68,8 +68,8 @@ module tlx_rsp_converter (
                                output     [003:0]         tlx_i_rsp_code                ,
 
                                //---- control and status ---------------------
-                               input      [031:0]         debug_tlx_rsp_idle_lim         ,
-                               output reg                 debug_tlx_rsp_idle             ,
+                               //input      [031:0]         debug_tlx_rsp_idle_lim         ,
+                               //output reg                 debug_tlx_rsp_idle             ,
                                output reg [005:0]         fir_fifo_overflow              ,
 	                              output reg                 fir_tlx_rsp_err              
                                );                                                      
@@ -571,38 +571,38 @@ module tlx_rsp_converter (
 // STATUS output for OCACCEL registers
 //=================================================================================================================
 
- reg [31:0] rsp_idle_cnt;
- reg        rsp_idle;
- reg [31:0] rsp_idle_lim;
-
-//---- DEBUG registers ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
-     rsp_idle <= 1'b0;
-   else if(tlx_afu_resp_valid)
-     rsp_idle <= 1'b0;
-   else if(rsp_idle_cnt == rsp_idle_lim)
-     rsp_idle <= 1'b1;
-
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
-     rsp_idle_cnt <= 32'd0;
-   else if(tlx_afu_resp_valid)
-     rsp_idle_cnt <= 32'd0;
-   else 
-     rsp_idle_cnt <= rsp_idle_cnt + 32'd1;
-
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
-     rsp_idle_lim <= 32'd0;
-   else
-     rsp_idle_lim <= debug_tlx_rsp_idle_lim;
-
- always@(posedge clock_afu or negedge rst_n)
-   if(~rst_n) 
-     debug_tlx_rsp_idle <= 1'b0;
-   else
-     debug_tlx_rsp_idle <= rsp_idle;
+// reg [31:0] rsp_idle_cnt;
+// reg        rsp_idle;
+// reg [31:0] rsp_idle_lim;
+//
+////---- DEBUG registers ----
+// always@(posedge clock_tlx or negedge rst_n)
+//   if(~rst_n) 
+//     rsp_idle <= 1'b0;
+//   else if(tlx_afu_resp_valid)
+//     rsp_idle <= 1'b0;
+//   else if(rsp_idle_cnt == rsp_idle_lim)
+//     rsp_idle <= 1'b1;
+//
+// always@(posedge clock_tlx or negedge rst_n)
+//   if(~rst_n) 
+//     rsp_idle_cnt <= 32'd0;
+//   else if(tlx_afu_resp_valid)
+//     rsp_idle_cnt <= 32'd0;
+//   else 
+//     rsp_idle_cnt <= rsp_idle_cnt + 32'd1;
+//
+// always@(posedge clock_tlx or negedge rst_n)
+//   if(~rst_n) 
+//     rsp_idle_lim <= 32'd0;
+//   else
+//     rsp_idle_lim <= debug_tlx_rsp_idle_lim;
+//
+// always@(posedge clock_afu or negedge rst_n)
+//   if(~rst_n) 
+//     debug_tlx_rsp_idle <= 1'b0;
+//   else
+//     debug_tlx_rsp_idle <= rsp_idle;
 
 
 //---- FAULT ISOLATION REGISTER ----
