@@ -20,6 +20,7 @@ module interrupt_tlx
                 #(
                    parameter CTXW = 9
                   ) 
+                  (
                        input                 clk              ,
                        input                 resetn            ,
 
