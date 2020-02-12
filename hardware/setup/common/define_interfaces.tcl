@@ -206,6 +206,7 @@ set port_list_lcl_wr [list \
          lcl_wr_rsp_valid         \
          lcl_wr_rsp_axi_id        \
          lcl_wr_rsp_code          \
+         lcl_wr_rsp_ctx           \
          lcl_wr_rsp_ready         \
          ]
 
@@ -222,6 +223,7 @@ set port_list_lcl_rd [list \
          lcl_rd_data_axi_id       \
          lcl_rd_data              \
          lcl_rd_data_last         \
+         lcl_rd_data_ctx          \
          lcl_rd_rsp_code          \
          lcl_rd_data_ready        \
          ]

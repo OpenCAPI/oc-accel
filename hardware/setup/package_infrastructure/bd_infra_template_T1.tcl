@@ -44,8 +44,6 @@ connect_bd_net [get_bd_pins $bd_hier/bridge_axi_slave/lcl_rd_ctx_valid] [get_bd_
 connect_bd_net [get_bd_pins $bd_hier/bridge_axi_slave/lcl_wr_ctx] [get_bd_pins $bd_hier/opencapi30_c1/lcl_wr_ctx]
 connect_bd_net [get_bd_pins $bd_hier/bridge_axi_slave/lcl_rd_ctx] [get_bd_pins $bd_hier/opencapi30_c1/lcl_rd_ctx]
 connect_bd_net [get_bd_pins $bd_hier/data_bridge/debug_bus] [get_bd_pins $bd_hier/mmio_axilite_master/debug_bus_data_bridge]
-connect_bd_net [get_bd_pins $bd_hier/data_bridge/last_context_cleared] [get_bd_pins $bd_hier/opencapi30_c1/last_context_cleared]
-connect_bd_net [get_bd_pins $bd_hier/data_bridge/context_update_ongoing] [get_bd_pins $bd_hier/opencapi30_c1/context_update_ongoing]
 
 # Connect clocks so top just needs to connect one clock
 connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/clock_afu] [get_bd_pins $bd_hier/bridge_axi_slave/clk]

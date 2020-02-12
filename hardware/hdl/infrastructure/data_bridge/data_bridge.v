@@ -35,6 +35,7 @@
 
 module data_bridge #(
                 parameter IDW = 3, 
+                parameter CTXW = 9, 
                 parameter TAGW = 7
                 )
                 (
@@ -56,8 +57,9 @@ module data_bridge #(
                    output                 lcl_wr_ready                  ,
                   // write response channel
                    output                 lcl_wr_rsp_valid              ,
-                   output      [IDW-1:0] lcl_wr_rsp_axi_id             ,
+                   output      [IDW-1:0]  lcl_wr_rsp_axi_id             ,
                    output                 lcl_wr_rsp_code               ,
+                   output     [CTXW-1:0]  lcl_wr_rsp_ctx                ,
                    input                  lcl_wr_rsp_ready              ,
 
 
@@ -75,6 +77,7 @@ module data_bridge #(
                    output      [IDW-1:0] lcl_rd_data_axi_id            ,
                    output [1023:0]        lcl_rd_data                   ,
                    output                 lcl_rd_data_last              ,
+                   output      [CTXW-1:0] lcl_rd_data_ctx               ,
                    output                 lcl_rd_rsp_code               ,
                    input                  lcl_rd_data_ready             ,
 
@@ -106,11 +109,6 @@ module data_bridge #(
                    input      [0001:0]  dma_rd_resp_pos                  ,
                    input      [0002:0]  dma_rd_resp_code                 ,
 
-  
-                   // context 
-                   output                last_context_cleared           ,
-                   input                 context_update_ongoing         ,
-
                    // debug bus
                    output     [195:0]      debug_bus
 
@@ -124,8 +122,6 @@ module data_bridge #(
 //===============================================================================================================
 
 wire wbuf_empty, rbuf_empty;
-wire last_context_cleared;
-assign last_context_cleared = wbuf_empty && rbuf_empty;
 
 wire [31:0] debug_axi_cnt_cmd_w;
 wire [31:0] debug_axi_cnt_cmd_r;
@@ -175,8 +171,9 @@ data_bridge_channel
                     //--- response and data out ---
                 /*input                */   .lcl_resp_ready      ( lcl_wr_rsp_ready    ),
                 /*output               */   .lcl_resp_valid      ( lcl_wr_rsp_valid    ),
-                /*output     [IDW-1:0]*/   .lcl_resp_axi_id     ( lcl_wr_rsp_axi_id   ),
+                /*output     [IDW-1:0]*/    .lcl_resp_axi_id     ( lcl_wr_rsp_axi_id   ),
                 /*output     [0001:0]  */   .lcl_resp_code       ( lcl_wr_rsp_code     ),
+                /*output     [0001:0]  */   .lcl_resp_ctx        ( lcl_wr_rsp_ctx      ),
 
 
                 //---- command encoder ---------------
@@ -193,9 +190,6 @@ data_bridge_channel
                 /*input      [0005:0]  */   .dma_resp_tag        ( dma_wr_resp_tag        ),
                 /*input      [0001:0]  */   .dma_resp_pos        ( dma_wr_resp_pos        ),
                 /*input      [0002:0]  */   .dma_resp_code       ( dma_wr_resp_code       ),
-
-                //---- context surveil ---------------
-                /*input wire           */   .context_update_ongoing ( context_update_ongoing ),
 
                 //---- control and status ------------
                 /*input                */   .debug_cnt_clear       ( debug_cnt_clear          ),
@@ -234,11 +228,13 @@ data_bridge_channel
                 /*input      [1023:0]  */   .lcl_data_in         ( 1024'h0             ),
                 /*output     [1023:0]  */   .lcl_data_out        ( lcl_rd_data         ),
                 /*output               */   .lcl_data_out_last   ( lcl_rd_data_last    ),
+                /*output     [0001:0]  */   .lcl_data_ctx        ( lcl_rd_data_ctx     ),
                     //--- response and data out ---
                 /*input                */   .lcl_resp_ready      ( lcl_rd_data_ready   ),
                 /*output               */   .lcl_resp_valid      ( lcl_rd_data_valid   ),
                 /*output     [IDW-1:0] */   .lcl_resp_axi_id     ( lcl_rd_data_axi_id  ),
                 /*output     [0001:0]  */   .lcl_resp_code       ( lcl_rd_rsp_code     ),
+                /*output     [0001:0]  */   .lcl_resp_ctx        (                     ),
 
 
                 //---- command encoder ---------------
@@ -255,9 +251,6 @@ data_bridge_channel
                 /*input      [0005:0]  */   .dma_resp_tag        ( dma_rd_resp_tag      ),
                 /*input      [0001:0]  */   .dma_resp_pos        ( dma_rd_resp_pos      ),
                 /*input      [0002:0]  */   .dma_resp_code       ( dma_rd_resp_code     ),
-
-                //---- context surveil ---------------
-                /*input wire           */   .context_update_ongoing ( context_update_ongoing ),
 
                 //---- control and status ------------
                 /*input                */   .debug_cnt_clear       ( debug_cnt_clear          ),

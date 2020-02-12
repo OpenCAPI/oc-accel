@@ -137,8 +137,6 @@ module opencapi30_c1
                    input      [008:0]    lcl_rd_ctx            ,
                    input                 lcl_wr_ctx_valid      ,
                    input                 lcl_rd_ctx_valid      ,
-                   input                 last_context_cleared  ,   // both write buffer and read buffer are empty
-                   output                context_update_ongoing,   // screen local burst request
 
                    // interrupt
                    output                interrupt_ack          ,
@@ -274,7 +272,7 @@ reg   [0019:0] cfg_pasid_mask;
 //---- convert the enabled pasid length into a mask ----
  always@*
    begin
-     case(cfg_pasid_length)
+     case(cfg_infra_pasid_length)
        5'b10011 : cfg_pasid_mask = 20'h80000;
        5'b10010 : cfg_pasid_mask = 20'hC0000;
        5'b10001 : cfg_pasid_mask = 20'hE0000;

@@ -46,7 +46,7 @@ module wr_order_mng_array
 
                             //interface with axi_slave module
                             output wire              ret_valid ,
-                            output        [`TAGW-1:0] ret_tag  ,
+                            output        [TAGW-1:0] ret_tag  ,
                             `ifndef ENABLE_ODMA
                             output reg     [IDW-1:0] ret_axi_id,
                             output reg               ret_resp  ,  

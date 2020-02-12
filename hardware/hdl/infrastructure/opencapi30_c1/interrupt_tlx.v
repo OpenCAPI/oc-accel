@@ -16,7 +16,10 @@
 `timescale 1ns / 1ps
 
 
-module interrupt_tlx ( 
+module interrupt_tlx
+                #(
+                   parameter CTXW = 9
+                  ) 
                        input                 clk              ,
                        input                 rst_n            ,
 
@@ -65,13 +68,13 @@ module interrupt_tlx (
 
 
 
- parameter IDLE         =  8'h01,          
-           NEW_INT      =  8'h02,  
-           WAIT_FOR_RSP =  8'h04, 
-           INT_PENDING  =  8'h08,
-           INT_BACKOFF  =  8'h10,
-           UNEXP_RESP   =  8'h20,
-           ACK_INT      =  8'h40;
+ localparam IDLE         =  8'h01,          
+            NEW_INT      =  8'h02,  
+            WAIT_FOR_RSP =  8'h04, 
+            INT_PENDING  =  8'h08,
+            INT_BACKOFF  =  8'h10,
+            UNEXP_RESP   =  8'h20,
+            ACK_INT      =  8'h40;
 
 
  // TLX AP command encodes
@@ -126,8 +129,8 @@ module interrupt_tlx (
      end
    else
      begin
-       tlx_cmd_pasid <= ((cfg_pasid_base & cfg_pasid_mask) | ({{(20-`CTXW){1'd0}}, interrupt_ctx} & ~cfg_pasid_mask));
-       tlx_cmd_actag <= cfg_actag_base + {{(12-`CTXW){1'd0}}, interrupt_ctx}; 
+       tlx_cmd_pasid <= ((cfg_pasid_base & cfg_pasid_mask) | ({{(20-CTXW){1'd0}}, interrupt_ctx} & ~cfg_pasid_mask));
+       tlx_cmd_actag <= cfg_actag_base + {{(12-CTXW){1'd0}}, interrupt_ctx}; 
      end
 
 //---- TLX response ----

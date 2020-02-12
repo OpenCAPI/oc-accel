@@ -50,7 +50,7 @@ set ::env(WIDTHCOL4) $widthCol4
 ############################################################################
 ## open ocaccel project
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open top project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-open_project $root_dir/build/viv_project/viv_project.xpr
+open_project $root_dir/build/top_project/top_project.xpr
 
 
 ############################################################################

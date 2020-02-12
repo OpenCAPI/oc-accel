@@ -16,10 +16,10 @@
 `timescale 1ns/1ps
 
 module rd_order_mng_array
-                        # (
+                        #(
                           parameter IDW = 3,
                           parameter TAGW = 7
-                          )
+                         )
                         (
                             input                    clk       ,
                             input                    rst_n     ,

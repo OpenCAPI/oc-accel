@@ -367,7 +367,7 @@ module tlx_cmd_converter (
 //-----------------------------------------------------------------------------------------------------------------
 
 
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      tlx_in_cmd_req <= 1'b0;
    else if(tlx_in_cmd_ack)
@@ -375,19 +375,19 @@ module tlx_cmd_converter (
    else if(tlx_in_cmd_valid)
      tlx_in_cmd_req <= 1'b1;
 
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      {tlx_in_cmd_ack, tlx_in_cmd_rec_pipe} <= 4'd0;
    else
      {tlx_in_cmd_ack, tlx_in_cmd_rec_pipe} <= {tlx_in_cmd_rec_pipe, tlx_in_cmd_rec};
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      {tlx_in_cmd_rec, tlx_in_cmd_req_pipe} <= 4'd0;
    else
      {tlx_in_cmd_rec, tlx_in_cmd_req_pipe} <= {tlx_in_cmd_req_pipe, tlx_in_cmd_req};
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      tlx_in_cmd_pending <= 1'b0;
    else if(~cmd_credit_run_out && tlx_in_cmd_pending)
@@ -397,13 +397,13 @@ module tlx_cmd_converter (
 
  assign tlx_interrupt_valid_pre = ~cmd_credit_run_out && tlx_in_cmd_pending;
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      tlx_interrupt_valid <= 1'b0;
    else
      tlx_interrupt_valid <= tlx_interrupt_valid_pre;
 
- always@(posedge clk_afu or negedge rst_n)
+ always@(posedge clock_afu or negedge rst_n)
    if(~rst_n) 
      begin
        tlx_in_cmd_opcode_sync <= 8'd0;
@@ -421,7 +421,7 @@ module tlx_cmd_converter (
        tlx_in_cmd_actag_sync  <= tlx_in_cmd_actag;
      end
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        tlx_interrupt_opcode <= 8'd0;
@@ -439,7 +439,7 @@ module tlx_cmd_converter (
        tlx_interrupt_actag  <= tlx_in_cmd_actag_sync;
      end
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
  begin
      if(~rst_n)
          context_buffer_cmd_valid <= 1'b0;
@@ -449,7 +449,7 @@ module tlx_cmd_converter (
          context_buffer_cmd_valid <= 1'b0;
  end
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        context_buffer_cmd_opcode    <= 8'd0;
@@ -485,7 +485,7 @@ module tlx_cmd_converter (
  assign context_input_cmd_ready = context_surveil_stage1_ready;
  assign context_input_wr_en = context_buffer_cmd_valid || fifo_w_cmdcnv_dv || fifo_r_cmdcnv_dv || tlx_interrupt_valid;
 
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
  begin
      if(~rst_n)
          context_input_cmd_valid <= 1'b0;
@@ -496,7 +496,7 @@ module tlx_cmd_converter (
  end
 
 //---- output MUX for context surveil module----
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
    if(~rst_n) 
      begin
        context_input_cmd_opcode    <= 8'd0;
@@ -535,8 +535,8 @@ module tlx_cmd_converter (
                                        tlx_interrupt_pasid));
      end
 
- brdg_context_surveil m_context_surveil (
-     .clk                  (clk_tlx                      ),
+ context_surveil m_context_surveil (
+     .clk                  (clock_tlx                      ),
      .rst_n                (rst_n                        ),
 
      .tlx_cmd_s1_ready     (context_surveil_stage1_ready ),
@@ -567,7 +567,7 @@ module tlx_cmd_converter (
 //-----------------------------------------------------------------------------------------------------------------
 //  afu_tlx interface                                                   
 //-----------------------------------------------------------------------------------------------------------------
- always@(posedge clk_tlx or negedge rst_n)
+ always@(posedge clock_tlx or negedge rst_n)
      if(~rst_n)
          dl_1_dly <= 1'b0;
      else  
@@ -717,19 +717,19 @@ module tlx_cmd_converter (
 //==== PSL ASSERTION ==============================================================================
  // psl PREMATURE_INTERRUPT : assert never (tlx_in_cmd_valid && tlx_in_cmd_req) @(posedge clock_afu) report "interrupt precedes the last acknowledgement! The interrupt command should never be sent until the last interrupt ackowledgement is confirmed.";
  
- // psl TLX_COMMAND_CHANNELS_CONFLICT : assert always onehot0({fifo_w_cmdcnv_dv, fifo_r_cmdcnv_dv, tlx_interrupt_valid}) @(posedge clk_tlx) report "TLX commands from write/read/assign_actag/interrupt have conflicts! Each time there's only one channel from write, read, assign_actag and interrupt being enabled.";
+ // psl TLX_COMMAND_CHANNELS_CONFLICT : assert always onehot0({fifo_w_cmdcnv_dv, fifo_r_cmdcnv_dv, tlx_interrupt_valid}) @(posedge clock_tlx) report "TLX commands from write/read/assign_actag/interrupt have conflicts! Each time there's only one channel from write, read, assign_actag and interrupt being enabled.";
  
  // psl TLX_COMMAND_WRITE_DATA_DEFICIENT : assert always ((fifo_w_cmdcnv_rdrq && fifo_w_datcnv_e_rdrq) -> next(fifo_w_datcnv_o_rdrq)) @(posedge clock_tlx) report "lacking command data to TLX! The odd data FIFO should always be read following the reading of even data FIFO.";
 //==== PSL ASSERTION ==============================================================================
  
 
 //==== PSL COVERAGE ==============================================================================
- // psl SINGLE_COMMAND_I   : cover {(tlx_interrupt_valid)} @(posedge clk_tlx) ;
- // psl DUPLEX_COMMAND_W_R : cover {fifo_w_cmdcnv_dv; fifo_r_cmdcnv_dv} @(posedge clk_tlx) ;
- // psl DUPLEX_COMMAND_R_W : cover {fifo_r_cmdcnv_dv; fifo_w_cmdcnv_dv} @(posedge clk_tlx) ;
+ // psl SINGLE_COMMAND_I   : cover {(tlx_interrupt_valid)} @(posedge clock_tlx) ;
+ // psl DUPLEX_COMMAND_W_R : cover {fifo_w_cmdcnv_dv; fifo_r_cmdcnv_dv} @(posedge clock_tlx) ;
+ // psl DUPLEX_COMMAND_R_W : cover {fifo_r_cmdcnv_dv; fifo_w_cmdcnv_dv} @(posedge clock_tlx) ;
  
- // psl CMD_CREDIT_RUNOUT : cover {(cmd_credit_run_out)} @(posedge clk_tlx);
- // psl CMD_CREDIT_LT_2 : cover {(cmd_data_credit_lt_2)} @(posedge clk_tlx);
+ // psl CMD_CREDIT_RUNOUT : cover {(cmd_credit_run_out)} @(posedge clock_tlx);
+ // psl CMD_CREDIT_LT_2 : cover {(cmd_data_credit_lt_2)} @(posedge clock_tlx);
  
  // psl DMA_CMD_JAM : cover {(tlx_wr_cmd_ready || tlx_rd_cmd_ready)} @(posedge clock_afu);
 //==== PSL COVERAGE ==============================================================================
