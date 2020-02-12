@@ -132,7 +132,7 @@ set verilog_host_if [list \
 
 if { $simulator != "nosim" } {
   puts "	                Simulation with $simulator enabled, adding $host_if_dir/sim_only/oc_host_if.sv"
-  lappend $verilog_host_if $host_if_dir/sim_only/oc_host_if.sv
+  lappend verilog_host_if $host_if_dir/sim_only/oc_host_if.sv
 }
 
 if {$transceiver_type eq "bypass"} {
