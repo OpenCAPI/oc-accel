@@ -59,9 +59,9 @@ OCACCEL_SIMULATORS += xsim xcelium
 templog=/dev/null
 
 ifeq ($(UNIT_SIM_USED),TRUE)
-sim_top = unit_top
+sim_top = unit_top_wrapper
 else
-sim_top = top_i
+sim_top = top_wrapper
 endif
 
 
@@ -290,9 +290,9 @@ $(OCACCEL_SIMULATORS):  .hw_project_done
 	fi
 	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`"
 	@echo -e "                        export_simulation";
-	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/export_$@.tcl -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou
+	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/simulation/export_$@.tcl -tclargs $(unit_sim_top) -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou
 	@echo -e "                        patch simulation";
-	@$(SETUP_DIR)/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
+	@$(SETUP_DIR)/simulation/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
 	@echo -e "                        link to libdpi";
 	@cd $(SIM_DIR)/$(subst irun,ies,$@) && ln -sf $(OCSE_PATH)/afu_driver/src/libdpi.so;
 	@echo -e "                        build $@ model";
@@ -312,9 +312,9 @@ $(OCACCEL_SIMULATORS):  .hw_project_done app
 	fi
 	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`"
 	@echo -e "                        export_simulation";
-	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/export_$@.tcl -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou
+	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/simulation/export_$@.tcl -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou -tclargs $(sim_top) 
 	@echo -e "                        patch simulation";
-	@$(SETUP_DIR)/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
+	@$(SETUP_DIR)/simulation/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
 	@echo -e "                        link to libdpi";
 	@cd $(SIM_DIR)/$(subst irun,ies,$@) && ln -sf $(OCSE_PATH)/afu_driver/src/libdpi.so;
 	@echo -e "                        build $@ model";
@@ -380,7 +380,7 @@ clean:
 	@echo -e "                        interface definitions";
 	@$(RM) -r $(INTERFACES_DIR)
 	@echo -e "                        sim files";
-	@$(RM) -r sim/ies sim/xsim sim/modelsim sim/questa sim/xcelium 
+	@$(RM) -r sim/xsim sim/xcelium 
 	@echo -e "                        log files";
 	@$(RM) -r logs
 	@echo -e "                        action / application";

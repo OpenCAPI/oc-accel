@@ -133,7 +133,7 @@ choice
     default HDL_EXAMPLE
 
     config USER_HLS_ACTION
-        bool "New HLS Action - manually set ACTION_ROOT in ocaccel_env.sh!"
+        bool "New HLS Action"
         select ENABLE_HLS_SUPPORT
         help
           This option is a placeholder for an action written by the user in HLS.
@@ -141,7 +141,7 @@ choice
           in ocaccel_env.sh to the directory of the action source code.
 
     config USER_HDL_ACTION
-        bool "New HDL Action - manually set ACTION_ROOT in ocaccel_env.sh!"
+        bool "New HDL Action"
         help
           This option is a placeholder for an action written by the user in a
           hardware description language such as VHDL or Verilog.

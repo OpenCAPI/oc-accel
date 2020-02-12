@@ -83,6 +83,4 @@ add_files -fileset constrs_1 -norecurse  [list \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \
                                          ] 
 
-
-
 close_project
