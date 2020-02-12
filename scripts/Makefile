@@ -22,7 +22,7 @@ help:
 	@echo
 
 .PHONY += menuconfig gconfig xconfig config oldconfig silentoldconfig prepare clean distclean
-menuconfig gconfig xconfig config oldconfig silentoldconfig prepare:
+menuconfig gconfig xconfig config oldconfig silentoldconfig prepare: Kconfig
 	./ocaccel_cfg -o $@ 2>/dev/null
 
 install:

@@ -124,9 +124,9 @@ PLATFORM ?= $(shell uname -i)
 ifeq ($(PLATFORM),x86_64)
 BUILD_SIMCODE=1
 
-# Environment variable OCSE_ROOT defined by hardware setup scripts. Use default path if OCSE_ROOT is not defined.
-ifndef OCSE_ROOT
-OCSE_ROOT=$(abspath ../../ocse)
+# Environment variable OCSE_PATH defined by hardware setup scripts. Use default path if OCSE_PATH is not defined.
+ifndef OCSE_PATH
+OCSE_PATH=$(abspath ../../ocse)
 endif
 
 FORCE_32BIT ?= 0
@@ -152,8 +152,8 @@ endif
 # the LD_LIBRARY_PATH on program execution.
 #
 ifdef BUILD_SIMCODE
-CFLAGS += -D_SIM_ -I$(OCSE_ROOT)/libocxl -I$(OCSE_ROOT)/common -DOPENCAPI30
-LDFLAGS += -L$(OCSE_ROOT)/libocxl
+CFLAGS += -D_SIM_ -I`realpath $(OCSE_PATH)/libocxl` -I`realpath $(OCSE_PATH)/common` -DOPENCAPI30
+LDFLAGS += -L`realpath $(OCSE_PATH)/libocxl`
 endif
 
 DESTDIR ?= /usr

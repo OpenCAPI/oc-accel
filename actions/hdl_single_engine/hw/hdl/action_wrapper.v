@@ -66,8 +66,8 @@ module action_wrapper #(
 
 )
 (
- input                       ap_clk ,
- input                       ap_rst_n ,
+ input                       clk ,
+ input                       rst_n ,
  output                      interrupt ,
  output [INT_BITS-1 : 0]     interrupt_src ,
  output [CONTEXT_BITS-1 : 0] interrupt_ctx ,
@@ -157,8 +157,8 @@ module action_wrapper #(
            .C_M_AXI_HOST_MEM_RUSER_WIDTH  (C_M_AXI_HOST_MEM_RUSER_WIDTH  ),
            .C_M_AXI_HOST_MEM_BUSER_WIDTH  (C_M_AXI_HOST_MEM_BUSER_WIDTH  )
     ) action_hdl_single_engine (
-        .clk                   (ap_clk),
-        .rst_n                 (ap_rst_n), 
+        .clk                   (clk),
+        .rst_n                 (rst_n), 
     
         //---- AXI bus interfaced with OCACCEL core ----               
         // AXI write address channel      

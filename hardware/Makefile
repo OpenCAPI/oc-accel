@@ -59,9 +59,9 @@ OCACCEL_SIMULATORS += xsim xcelium
 templog=/dev/null
 
 ifeq ($(UNIT_SIM_USED),TRUE)
-sim_top = unit_top
+sim_top = unit_top_wrapper
 else
-sim_top = top_i
+sim_top = top_wrapper
 endif
 
 
@@ -79,7 +79,7 @@ OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/ocaccel_global_v
 ifeq ($(PLATFORM),x86_64)
 
 # TODO: the phony list needs updating
-.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project .hw_project_done define_interfaces package_infrastructure package_hostside package_action top_project image ocse software clean
+.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project define_interfaces package_infrastructure package_hostside package_action top_project image ocse software app model xsim xcelium clean
 
 all: model image
 
@@ -133,7 +133,7 @@ check_ocaccel_settings:
 
 
 check_simulator:
-	@if [ "$(SIMULATOR)" != "irun" ] && [ "$(SIMULATOR)" != "xsim" ] && [ "$(SIMULATOR)" != "questa" ] && [ "$(SIMULATOR)" != "xcelium" ] && [ "$(SIMULATOR)" != "modelsim" ] && [ "$(SIMULATOR)" != "nosim" ]; then \
+	@if [ "$(SIMULATOR)" != "xsim" ] && [ "$(SIMULATOR)" != "xcelium" ] && [ "$(SIMULATOR)" != "nosim" ]; then \
 		echo "                        unknown simulator=$SIMULATOR"; \
 		exit -1; \
 	fi
@@ -169,6 +169,7 @@ $(OCACCEL_PREPROCESS_FILES):
 		echo -e "                        Need to run \"make ocaccel_config\" first"; exit -1; \
 	fi
 	@$(CC) -E -xc $(OCACCEL_CFLAGS) $@_source 2> $(LOGS_DIR)/$(notdir $@)_pp.log > $@_tmp;
+# hdl_pp placeholder
 	@if [ $$? -ne 0 ]; then \
 		$(RM) $@_tmp; \
 		echo -e "                        Error: please look into $(LOGS_DIR)/$(notdir $@)_pp.log"; exit -1; \
@@ -220,13 +221,13 @@ package_hostside:
 package_infrastructure:
 	@echo -e "[PACKAGE INFRA.......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou > $(templog)
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
+#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
 package_action:
 	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
+#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
 top_project:
@@ -235,14 +236,13 @@ top_project:
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
 hw_project: ocaccel_preprocess action_hw define_interfaces package_hostside package_infrastructure package_action top_project
-	@echo -e "                        using `vivado -version |grep Vivado`"
-	@echo -e "                        CAPI_VER=$(CAPI_VER)"
+	@echo -e "                       using `vivado -version |grep Vivado`"
+	@echo -e "                       CAPI_VER=$(CAPI_VER)"
+	@echo -e "[HW PROJECT]           done  `date +"%T %a %b %d %Y"`"
 	@touch .hw_project_done
 
-
-###############################################################################
-# sim_project
-
+.hw_project_done:
+	$(MAKE) -s hw_project
 
 ###############################################################################
 image: hw_project
@@ -257,8 +257,8 @@ image: hw_project
 
 ocse: prepare_logs
 	@echo -e "[COMPILE OCSE .......] start `date +"%T %a %b %d %Y"`"
-	@$(OCACCEL_ROOT)/check_ocse.sh > $(LOGS_DIR)/compile_pslse.log 2>&1
-	@$(MAKE) -C $(OCSE_ROOT) >> $(LOGS_DIR)/compile_pslse.log 2>&1; \
+	@echo -e "                       OCSE_PATH=$(OCSE_PATH)"
+	@$(MAKE) -C $(OCSE_PATH) >> $(LOGS_DIR)/compile_pslse.log 2>&1; \
 	if [ $$? -ne 0 ]; then echo -e "                        Error: please look into $(LOGS_DIR)/compile_ocse.log"; exit -1; fi
 	@echo -e "[COMPILE OCSE .......] done  `date +"%T %a %b %d %Y"`"
 
@@ -284,18 +284,18 @@ nosim:
 	@echo -e "[BUILD $@ MODEL....] done  `date +"%T %a %b %d %Y"`"
 
 ifeq ($(UNIT_SIM_USED),TRUE)
-$(OCACCEL_SIMULATORS):  .sim_project_done
+$(OCACCEL_SIMULATORS):  .hw_project_done
 	@if [ "$(SIMULATOR)" != "$@" ]; then \
 		echo; echo "Error: Makefile target $@ called with SIMULATOR set to \"$(SIMULATOR)\""; \
 		exit -1; \
 	fi
 	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`"
 	@echo -e "                        export_simulation";
-	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/export_$@.tcl -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou
+	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/simulation/export_$@.tcl -tclargs $(unit_sim_top) -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou
 	@echo -e "                        patch simulation";
-	@$(SETUP_DIR)/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
+	@$(SETUP_DIR)/simulation/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
 	@echo -e "                        link to libdpi";
-	@cd $(SIM_DIR)/$(subst irun,ies,$@) && ln -sf $(OCSE_ROOT)/afu_driver/src/libdpi.so;
+	@cd $(SIM_DIR)/$(subst irun,ies,$@) && ln -sf $(OCSE_PATH)/afu_driver/src/libdpi.so;
 	@echo -e "                        build $@ model";
 	@cd $(SIM_DIR)/$(subst irun,ies,$@); \
 		./$(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1; \
@@ -306,18 +306,18 @@ $(OCACCEL_SIMULATORS):  .sim_project_done
 	@echo -e "[BUILD $@ MODEL....] done  `date +"%T %a %b %d %Y"`"
 
 else
-$(OCACCEL_SIMULATORS):  .sim_project_done app
+$(OCACCEL_SIMULATORS):  .hw_project_done app
 	@if [ "$(SIMULATOR)" != "$@" ]; then \
 		echo; echo "Error: Makefile target $@ called with SIMULATOR set to \"$(SIMULATOR)\""; \
 		exit -1; \
 	fi
 	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`"
 	@echo -e "                        export_simulation";
-	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/export_$@.tcl -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou
+	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/simulation/export_$@.tcl -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou -tclargs $(sim_top) 
 	@echo -e "                        patch simulation";
-	@$(SETUP_DIR)/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
+	@$(SETUP_DIR)/simulation/patch_sim.sh $(SIM_DIR)/$(subst irun,ies,$@) $(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1
 	@echo -e "                        link to libdpi";
-	@cd $(SIM_DIR)/$(subst irun,ies,$@) && ln -sf $(OCSE_ROOT)/afu_driver/src/libdpi.so;
+	@cd $(SIM_DIR)/$(subst irun,ies,$@) && ln -sf $(OCSE_PATH)/afu_driver/src/libdpi.so;
 	@echo -e "                        build $@ model";
 	@cd $(SIM_DIR)/$(subst irun,ies,$@); \
 		./$(sim_top).sh >> $(LOGS_DIR)/compile_$@.log 2>&1; \
@@ -381,7 +381,7 @@ clean:
 	@echo -e "                        interface definitions";
 	@$(RM) -r $(INTERFACES_DIR)
 	@echo -e "                        sim files";
-	@$(RM) -r sim/ies sim/xsim sim/modelsim sim/questa sim/xcelium 
+	@$(RM) -r sim/xsim sim/xcelium 
 	@echo -e "                        log files";
 	@$(RM) -r logs
 	@echo -e "                        action / application";

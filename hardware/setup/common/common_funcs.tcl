@@ -31,7 +31,7 @@ proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_s
    set ver "1.0"
    set project viv_${ip_name}
    set project_dir $proj_path/$project
-   create_project $project $project_dir -part $fpga_part
+   create_project $project $project_dir -part $fpga_part -force
 
    # Set 'sources_1' fileset object, create list of all nececessary verilog files
    set obj [get_filesets sources_1]
