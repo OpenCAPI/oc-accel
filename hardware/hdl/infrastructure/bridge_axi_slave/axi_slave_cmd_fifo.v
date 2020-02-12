@@ -29,7 +29,7 @@ module axi_slave_cmd_fifo # (
                 )
          (
          clk,
-         rst_n,
+         resetn,
 
          axi_id,
          axi_addr,
@@ -52,7 +52,7 @@ module axi_slave_cmd_fifo # (
 );
 
 input                     clk;
-input                     rst_n;
+input                     resetn;
 
 input      [IDW-1:0]      axi_id;
 input      [63:0]         axi_addr;
@@ -95,7 +95,7 @@ assign {cf_id, cf_len, cf_size, cf_burst, cf_user,  cf_addr} = dout;
                               ) axicfifo 
                                      (
                                      .clk        (clk                      ),
-                                     .rst_n      (rst_n                    ),
+                                     .resetn      (resetn                    ),
                                      .din        (din                      ),
                                      .wr_en      (cf_wr_en                 ),
                                      .rd_en      (cf_rd_en                 ),

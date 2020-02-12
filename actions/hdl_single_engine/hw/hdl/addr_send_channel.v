@@ -18,7 +18,7 @@
 module addr_send_channel
                       (
                        input                           clk                ,
-                       input                           rst_n              , 
+                       input                           resetn              , 
                                                         
                        //---- AXI bus ----               
                          // AXI read address channel       
@@ -81,7 +81,7 @@ module addr_send_channel
     //---- Burst send state machine ----
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             cstate <= IDLE;
         else
             cstate <= nstate;
@@ -126,7 +126,7 @@ module addr_send_channel
     //---- prepare values in IDLE and INIT state ----
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin
             beat_number_in_4KB_reg <= 0;
             normal_addr_bias_reg   <= 0;
@@ -153,7 +153,7 @@ module addr_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin
             current_burst_addr <= 0;
             remain_beat_number <= 0;
@@ -172,7 +172,7 @@ module addr_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             current_burst_len <= 0;
         else if (cstate == CLEN)
             current_burst_len <= burst_len;
@@ -193,7 +193,7 @@ module addr_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             beat_number_sent_in_4KB <= 0;
         else if(cstate == INIT)
             beat_number_sent_in_4KB <= init_beat_number_sent;

@@ -29,7 +29,7 @@ module odma_a2h_st_engine #(
 )
 (
     input                             clk,
-    input                             rst_n,
+    input                             resetn,
     //----- dsc engine interface -----
     input                             dsc_valid,          //descriptor valid
     input  [255 : 0]                  dsc_data,           //descriptor data
@@ -211,7 +211,7 @@ wire                                            dsc_ch3_rsp_fifo_empty;     //ch
 // Xilinx IP: FWFT fifo
 fifo_sync_256x8 dsc_fifo (
   .clk          (clk           ),
-  .srst         (~rst_n        ),
+  .srst         (~resetn        ),
   .din          (dsc_fifo_din  ),
   .wr_en        (dsc_fifo_wr_en),
   .rd_en        (dsc_fifo_rd_en),
@@ -252,7 +252,7 @@ assign dsc_fifo_rd_en = ~dsc_fifo_empty & (dsc_ch0_rd_fifo_wr_en | dsc_ch1_rd_fi
 // Xilinx IP: FWFT fifo
 fifo_sync_123x4 dsc_ch0_rd_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch0_rd_fifo_din  ),
   .wr_en        (dsc_ch0_rd_fifo_wr_en),
   .rd_en        (dsc_ch0_rd_fifo_rd_en),
@@ -266,7 +266,7 @@ fifo_sync_123x4 dsc_ch0_rd_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_123x4 dsc_ch1_rd_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch1_rd_fifo_din  ),
   .wr_en        (dsc_ch1_rd_fifo_wr_en),
   .rd_en        (dsc_ch1_rd_fifo_rd_en),
@@ -280,7 +280,7 @@ fifo_sync_123x4 dsc_ch1_rd_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_123x4 dsc_ch2_rd_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch2_rd_fifo_din  ),
   .wr_en        (dsc_ch2_rd_fifo_wr_en),
   .rd_en        (dsc_ch2_rd_fifo_rd_en),
@@ -294,7 +294,7 @@ fifo_sync_123x4 dsc_ch2_rd_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_123x4 dsc_ch3_rd_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch3_rd_fifo_din  ),
   .wr_en        (dsc_ch3_rd_fifo_wr_en),
   .rd_en        (dsc_ch3_rd_fifo_rd_en),
@@ -353,8 +353,8 @@ wire                          lcl_wr_dsc_lower_half;            //any channel la
 // rlast data will send to local bus if it is the first beat
 // clear register when second 512-bit AXI data write done on
 // local bus with the first 512-bit data
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch0_valid <= 1'b0;
     axi_rdata_ch0_data  <= 512'b0;
   end
@@ -372,8 +372,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch1_valid <= 1'b0;
     axi_rdata_ch1_data  <= 512'b0;
   end
@@ -391,8 +391,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch2_valid <= 1'b0;
     axi_rdata_ch2_data  <= 512'b0;
   end
@@ -410,8 +410,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch3_valid <= 1'b0;
     axi_rdata_ch3_data  <= 512'b0;
   end
@@ -448,7 +448,7 @@ assign rdata_fifo_rd_en = ~rdata_fifo_empty & (axi_rdata_wr | lcl_wr_done);
 // Xilinx IP: FWFT fifo
 fifo_sync_512x8 rdata_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rdata_fifo_din  ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -463,7 +463,7 @@ fifo_sync_512x8 rdata_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_70x8 rtag_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rtag_fifo_din   ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -514,7 +514,7 @@ assign lcl_wr_be   = lcl_wr_dsc_lower_half ? {64'b0, rtag_fifo_tkeep} : {64'hFFF
 // Xilinx IP: FWFT fifo(FIFO IP max data width is 1024)
 fifo_sync_1024x8 rdata_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rdata_fifo_din  ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -529,7 +529,7 @@ fifo_sync_1024x8 rdata_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_134x8 rtag_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rtag_fifo_din   ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -585,8 +585,8 @@ always@(*) begin
 end
 
 // generate dsc lcl write first beat flag
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     dsc_wr_first <= 1'b1;
   else if(lcl_wr_last & lcl_wr_done)
     dsc_wr_first <= 1'b1;
@@ -596,8 +596,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_wr_first <= dsc_wr_first;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_cur_addr    <= 64'b0;
     dsc_length_left <= 28'b0;
     dsc_length_sum  <= 32'b0;
@@ -657,7 +657,7 @@ assign lcl_wr_done = lcl_wr_valid & lcl_wr_ready;
 // Xilinx IP: FWFT fifo
 fifo_sync_128x4 dsc_ch0_wr_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch0_wr_fifo_din  ),
   .wr_en        (dsc_ch0_wr_fifo_wr_en),
   .rd_en        (dsc_ch0_wr_fifo_rd_en),
@@ -671,7 +671,7 @@ fifo_sync_128x4 dsc_ch0_wr_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_128x4 dsc_ch1_wr_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch1_wr_fifo_din  ),
   .wr_en        (dsc_ch1_wr_fifo_wr_en),
   .rd_en        (dsc_ch1_wr_fifo_rd_en),
@@ -684,7 +684,7 @@ fifo_sync_128x4 dsc_ch1_wr_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_128x4 dsc_ch2_wr_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch2_wr_fifo_din  ),
   .wr_en        (dsc_ch2_wr_fifo_wr_en),
   .rd_en        (dsc_ch2_wr_fifo_rd_en),
@@ -697,7 +697,7 @@ fifo_sync_128x4 dsc_ch2_wr_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_128x4 dsc_ch3_wr_fifo (
   .clk          (clk                  ),
-  .srst         (~rst_n               ),
+  .srst         (~resetn               ),
   .din          (dsc_ch3_wr_fifo_din  ),
   .wr_en        (dsc_ch3_wr_fifo_wr_en),
   .rd_en        (dsc_ch3_wr_fifo_rd_en),
@@ -718,7 +718,7 @@ assign lcl_wr_rsp_ready = 1'b1;
 // Xilinx IP: FWFT fifo
 fifo_sync_1x4 dsc_ch0_rsp_fifo (
   .clk          (clk                   ),
-  .srst         (~rst_n                ),
+  .srst         (~resetn                ),
   .din          (dsc_ch0_rsp_fifo_din  ),
   .wr_en        (dsc_ch0_rsp_fifo_wr_en),
   .rd_en        (dsc_ch0_rsp_fifo_rd_en),
@@ -732,7 +732,7 @@ fifo_sync_1x4 dsc_ch0_rsp_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_1x4 dsc_ch1_rsp_fifo (
   .clk          (clk                   ),
-  .srst         (~rst_n                ),
+  .srst         (~resetn                ),
   .din          (dsc_ch1_rsp_fifo_din  ),
   .wr_en        (dsc_ch1_rsp_fifo_wr_en),
   .rd_en        (dsc_ch1_rsp_fifo_rd_en),
@@ -746,7 +746,7 @@ fifo_sync_1x4 dsc_ch1_rsp_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_1x4 dsc_ch2_rsp_fifo (
   .clk          (clk                   ),
-  .srst         (~rst_n                ),
+  .srst         (~resetn                ),
   .din          (dsc_ch2_rsp_fifo_din  ),
   .wr_en        (dsc_ch2_rsp_fifo_wr_en),
   .rd_en        (dsc_ch2_rsp_fifo_rd_en),
@@ -760,7 +760,7 @@ fifo_sync_1x4 dsc_ch2_rsp_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_1x4 dsc_ch3_rsp_fifo (
   .clk          (clk                   ),
-  .srst         (~rst_n                ),
+  .srst         (~resetn                ),
   .din          (dsc_ch3_rsp_fifo_din  ),
   .wr_en        (dsc_ch3_rsp_fifo_wr_en),
   .rd_en        (dsc_ch3_rsp_fifo_rd_en),

@@ -62,7 +62,7 @@ module odma_wrapper #(
                    //---- synchronous clocks and reset ----------------------
                    input                 clock_tlx                        ,
                    input                 clock_afu                        ,
-                   input                 rst_n                          ,
+                   input                 resetn                          ,
                    
                    // interrupt
                    output                interrupt_ack                  ,
@@ -426,7 +426,7 @@ brdg_tlx_cmd_converter tlx_cmd_conv (
 
                 /*input                 */   .clock_tlx                         ( clock_tlx                         ),
                 /*input                 */   .clock_afu                         ( clock_afu                         ),
-                /*input                 */   .rst_n                           ( rst_n                           ),
+                /*input                 */   .resetn                           ( resetn                           ),
 
                 //---- configuration ---------------------------------
                 /*input      [007:0]    */   .cfg_bdf_bus                     ( cfg_bdf_bus                     ),
@@ -508,7 +508,7 @@ brdg_tlx_rsp_converter tlx_rsp_conv(
 
                 /*input                 */   .clock_tlx                         ( clock_tlx                         ),
                 /*input                 */   .clock_afu                         ( clock_afu                         ),
-                /*input                 */   .rst_n                           ( rst_n                           ),
+                /*input                 */   .resetn                           ( resetn                           ),
 
                 //---- TLX side interface --------------------------------
                   // response
@@ -581,7 +581,7 @@ brdg_command_encode
                                              `endif
 
                 /*input                 */   .clk                          ( clock_afu                      ),
-                /*input                 */   .rst_n                        ( rst_n                        ),
+                /*input                 */   .resetn                        ( resetn                        ),
                 //---- communication with command decoder -----
                 /*output                */   .prt_cmd_valid                ( w_prt_cmd_valid              ),
                 /*output                */   .prt_cmd_last                 ( w_prt_cmd_last               ),
@@ -624,7 +624,7 @@ brdg_command_encode
                                              `endif
 
                 /*input                 */   .clk                          ( clock_afu                      ),
-                /*input                 */   .rst_n                        ( rst_n                        ),
+                /*input                 */   .resetn                        ( resetn                        ),
 
                 //---- communication with command decoder -----
                 /*output                */   .prt_cmd_valid                ( r_prt_cmd_valid              ),
@@ -677,7 +677,7 @@ brdg_response_decode
                                              `endif
 
                 /*input                 */   .clk               ( clock_afu           ),
-                /*input                 */   .rst_n             ( rst_n             ),
+                /*input                 */   .resetn             ( resetn             ),
 
                 //---- configuration --------------------------------------
                 /*input      [0003:0]   */   .cfg_backoff_timer ( cfg_backoff_timer ),
@@ -725,7 +725,7 @@ brdg_response_decode
                                              `endif
 
                 /*input                */   .clk               ( clock_afu           ),
-                /*input                */   .rst_n             ( rst_n             ),
+                /*input                */   .resetn             ( resetn             ),
 
                 //---- configuration --------------------------------------
                 /*input      [0003:0]  */    .cfg_backoff_timer(cfg_backoff_timer  ),
@@ -775,7 +775,7 @@ brdg_data_bridge
                                             `endif
 
                 /*input                */   .clk                 ( clock_afu             ),
-                /*input                */   .rst_n               ( rst_n               ),
+                /*input                */   .resetn               ( resetn               ),
                 /*output               */   .buf_empty           ( wbuf_empty          ),
 
                 //---- local bus ---------------------
@@ -831,7 +831,7 @@ brdg_data_bridge
                                             `endif
 
                 /*input                */   .clk                 ( clock_afu             ),
-                /*input                */   .rst_n               ( rst_n               ),
+                /*input                */   .resetn               ( resetn               ),
                 /*output               */   .buf_empty           ( rbuf_empty          ),
 
                 //---- local bus ---------------------
@@ -883,7 +883,7 @@ brdg_data_bridge
 
 brdg_context_surveil ctx_surveil(
                 /*input                 */   .clk                    ( clock_afu                ),
-                /*input            if()     */   .rst_n                  ( rst_n                  ),
+                /*input            if()     */   .resetn                  ( resetn                  ),
 
                 //---- configuration ---------------------------------
                 /*input      [011:0]    */   .cfg_actag_base         ( cfg_actag_base         ),
@@ -917,7 +917,7 @@ brdg_context_surveil ctx_surveil(
 
  brdg_interrupt mbrdg_interrupt ( 
                        /*input              */  .clk              (clock_afu             ),
-                       /*input              */  .rst_n            (rst_n               ),
+                       /*input              */  .resetn            (resetn               ),
                        /*input      [003:0] */  .backoff_limit    (cfg_backoff_timer   ),
                        /*input              */  .interrupt_enable (last_context_cleared),
                        /*output             */  .interrupt_ack    (odma_interrupt_ack  ),
@@ -957,7 +957,7 @@ odma
                    )
                 odma (
                 /*input                 */   .clk                      ( clock_afu            ),
-                /*input                 */   .rst_n                    ( rst_n              ),
+                /*input                 */   .resetn                    ( resetn              ),
                 /*input                 */   .action_interrupt         ( interrupt          ),
                 /*input [0008:0]        */   .action_interrupt_ctx     ( interrupt_ctx      ),
                 /*input [0063:0]        */   .action_interrupt_src     ( interrupt_src      ),

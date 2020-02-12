@@ -54,7 +54,7 @@ connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/clock_afu] [get_bd_pins $bd
 connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/clock_tlx] [get_bd_pins $bd_hier/opencapi30_c1/clock_tlx]
 
 # Connect Resets
-connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/rst_n] [get_bd_pins $bd_hier/bridge_axi_slave/rst_n]
-connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/rst_n] [get_bd_pins $bd_hier/data_bridge/rst_n]
-connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/rst_n] [get_bd_pins $bd_hier/mmio_axilite_master/rst_n]
-connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/rst_n] [get_bd_pins $bd_hier/opencapi30_c1/rst_n]
+connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/resetn] [get_bd_pins $bd_hier/bridge_axi_slave/resetn]
+connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/resetn] [get_bd_pins $bd_hier/data_bridge/resetn]
+connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/resetn] [get_bd_pins $bd_hier/mmio_axilite_master/resetn]
+connect_bd_net [get_bd_pins $bd_hier/opencapi30_mmio/resetn] [get_bd_pins $bd_hier/opencapi30_c1/resetn]

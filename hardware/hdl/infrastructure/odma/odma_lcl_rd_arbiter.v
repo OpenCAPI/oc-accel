@@ -20,7 +20,7 @@ module odma_lcl_rd_arbiter #(
 )
 (
                     input                clk                                    ,
-                    input                rst_n                                  ,
+                    input                resetn                                  ,
 
                     //--------------- LCL Read Interface ------------------//
                     //-------------- Read Addr/Req Channel ----------------//
@@ -114,16 +114,16 @@ module odma_lcl_rd_arbiter #(
 reg [27:0] lcl_rd_cnt;
 reg [27:0] lcl_rd_data_cnt;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_cnt <= 28'd0;
     else if (lcl_rd_valid && lcl_rd_ready && (lcl_rd_axi_id == 5'b11010))
         lcl_rd_cnt <= (lcl_rd_last)? 28'd0 : lcl_rd_cnt + 1;
     else
         lcl_rd_cnt <= lcl_rd_cnt;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_data_cnt <= 28'd0;
     else if (lcl_rd_data_valid && lcl_rd_rsp_ready && (lcl_rd_data_axi_id == 5'b11010))
         lcl_rd_data_cnt <= (lcl_rd_data_last)? 28'd0 : lcl_rd_data_cnt + 1;
@@ -152,8 +152,8 @@ wire no_valid;
 //         2) value 1'b0 means that the granter changes whne rd_req_arb_en is high. 
 
 // for rd_req_dsc_grant
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         rd_req_dsc_grant <= 1'b0;
     else if (rd_req_arb_en)
         case ({rd_req_dsc_grant, rd_req_mm_grant, rd_req_st_grant})
@@ -175,8 +175,8 @@ always @(posedge clk or negedge rst_n)
         rd_req_dsc_grant <= rd_req_dsc_grant;
 
 // for rd_req_mm_grant
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         rd_req_mm_grant <= 1'b0;
     else if (rd_req_arb_en)
         case ({rd_req_dsc_grant, rd_req_mm_grant, rd_req_st_grant})
@@ -198,8 +198,8 @@ always @(posedge clk or negedge rst_n)
         rd_req_mm_grant <= rd_req_mm_grant;
 
 // for rd_req_st_grant
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         rd_req_st_grant <= 1'b0;
     else if (rd_req_arb_en)
         case ({rd_req_dsc_grant, rd_req_mm_grant, rd_req_st_grant})
@@ -241,8 +241,8 @@ always @(*) begin
     endcase
 end
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         rd_req_arb_en_extend <= 1'b0;
     else if (rd_req_arb_en && no_arb)
         rd_req_arb_en_extend <= 1'b1;

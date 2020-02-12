@@ -45,7 +45,7 @@ module bridge_axi_slave #(
                 )
                 (
                 input                clk,
-                input                rst_n,
+                input                resetn,
                 
                 //---- local bus --------------------
                 // "early" means it should be 1 cycle earlier than lcl_wr_valid or lcl_rd_valid
@@ -207,7 +207,7 @@ localparam AXI_OKAY=2'b00,
 
 axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  ar_cf(
         .clk            (clk             ),
-        .rst_n          (rst_n           ),
+        .resetn          (resetn           ),
 
         .axi_id         (s_axi_arid      ),
         .axi_addr       (s_axi_araddr    ),
@@ -231,8 +231,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  ar_cf(
         .cf_rd_en       (ar_cf_rd_en     )
 );
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_arready <= 1'b1;
    else if (ar_cf_almost_full || ar_cf_full)
      s_axi_arready <= 1'b0;
@@ -279,7 +279,7 @@ wire [CTXW-1:0] lcl_ctx_awuser;
 
 axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
         .clk            (clk             ),
-        .rst_n          (rst_n           ),
+        .resetn          (resetn           ),
 
         .axi_id         (s_axi_awid      ),
         .axi_addr       (s_axi_awaddr    ),
@@ -303,8 +303,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
         .cf_rd_en       (aw_cf_rd_en     )
 );
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_awready <= 1'b1;
    else if (aw_cf_almost_full || aw_cf_full)
      s_axi_awready <= 1'b0;
@@ -324,14 +324,14 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
  assign wr_addr_present = s_axi_awvalid && s_axi_awready;
  assign wr_data_present = s_axi_wvalid && s_axi_wready;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      wr_cstate <= WR_IDLE;
    else
      wr_cstate <= wr_nstate;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      wdata_q <= 1024'h0;
      wstrb_q <= 128'hffffffff_ffffffff_ffffffff_ffffffff;
    end
@@ -395,8 +395,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
    else
        wr_nstate = WR_IDLE;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      wr_beat_counter <= 8'hFF;
    else if (wr_nstate == WR_IDLE)
      wr_beat_counter <= 8'hFF;
@@ -434,8 +434,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
    endcase
 
  assign wr_ea_next = wr_ea_aligned_q + wr_ea_incr_q;
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      lcl_wr_ea                 <= 64'h0;
      wr_ea_incr_q              <= 8'd128;
      wr_ea_aligned_q           <= 64'h0;
@@ -485,8 +485,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
  assign aw_cf_rd_en = ~aw_cf_empty && (wr_nstate == WR_REQ_FIRST);
 
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      lcl_wr_axi_id <= 0;
    end
    else if (wr_nstate == WR_IDLE) begin
@@ -499,17 +499,17 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
   assign burst_wr_ctx_valid = (wr_nstate == WR_REQ_FIRST); //One cycle earlier before lcl_wr_valid.
   assign burst_wr_ctx = (wr_nstate ==  WR_REQ_FIRST) ? aw_cf_user : 0;
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          lcl_wr_ctx_valid <= 1'b0;
      else
          lcl_wr_ctx_valid <= burst_wr_ctx_valid;
  end
  
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          lcl_wr_ctx       <= {CTXW{1'b0}};
      else if(burst_wr_ctx_valid)
          lcl_wr_ctx       <= burst_wr_ctx;
@@ -527,8 +527,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
  //The state machine can deal with current ar* command in next cycle.
  //So there is no need to enter the fifo.
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      rd_cstate <= RD_IDLE;
    else
      rd_cstate <= rd_nstate;
@@ -564,8 +564,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
    else
        rd_nstate = RD_IDLE;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      rd_beat_counter <= 8'hFF;
    else if (rd_nstate == RD_IDLE)
      rd_beat_counter <= 8'hFF;
@@ -603,8 +603,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
    endcase
 
  assign rd_ea_next = rd_ea_aligned_q + rd_ea_incr_q;
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      lcl_rd_ea                  <= 64'h0;
      rd_ea_incr_q               <= 8'd128;
      rd_ea_aligned_q            <= 64'h0;
@@ -642,8 +642,8 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
  assign ar_cf_rd_en = ~ar_cf_empty && (rd_nstate == RD_REQ_FIRST);
 
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      lcl_rd_axi_id <= 0;
    end
    else if (rd_nstate == RD_IDLE) begin
@@ -656,17 +656,17 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
   assign burst_rd_ctx_valid = (rd_nstate == RD_REQ_FIRST); //One cycle earlier before lcl_rd_valid.
   assign burst_rd_ctx = (rd_nstate ==  RD_REQ_FIRST) ? ar_cf_user : 0;
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          lcl_rd_ctx_valid <= 1'b0;
      else
          lcl_rd_ctx_valid <= burst_rd_ctx_valid;
  end
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          lcl_rd_ctx       <= {CTXW{1'b0}};
      else if(burst_rd_ctx_valid)
          lcl_rd_ctx       <= burst_rd_ctx;
@@ -676,16 +676,16 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
 // WRITE RESPONSE CHANNEL
 //=============================================================================================
 //---- AXI write response ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_bvalid <= 1'b0;
    else if(lcl_wr_rsp_valid && lcl_wr_rsp_ready)
      s_axi_bvalid <= 1'b1;
    else if(s_axi_bready)
      s_axi_bvalid <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      s_axi_bid   <= 0;
      s_axi_bresp <= AXI_OKAY;
      s_axi_buser <= 0;
@@ -703,16 +703,16 @@ axi_slave_cmd_fifo # (.IDW(IDW), .CTXW(CTXW))  aw_cf (
 // READ RESPONSE CHANNEL
 //=============================================================================================
 //---- AXI read response ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_rvalid <= 1'b0;
    else if(lcl_rd_data_valid && lcl_rd_data_ready)
      s_axi_rvalid <= 1'b1;
    else if(s_axi_rready)
      s_axi_rvalid <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      s_axi_rid   <= 0;
      s_axi_ruser <= 0;
      s_axi_rresp <= AXI_OKAY;

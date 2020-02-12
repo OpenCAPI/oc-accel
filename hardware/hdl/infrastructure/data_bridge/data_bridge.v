@@ -41,7 +41,7 @@ module data_bridge #(
                 (
                    //---- synchronous clocks and reset ----------------------
                    input                 clk                        ,
-                   input                 rst_n                          ,
+                   input                 resetn                          ,
 
 
                    //----- lcl_   --------------------------------------
@@ -151,7 +151,7 @@ data_bridge_channel
                      )
                  data_brg_w (
                 /*input                */   .clk                 ( clk             ),
-                /*input                */   .rst_n               ( rst_n               ),
+                /*input                */   .resetn               ( resetn               ),
                 /*output               */   .buf_empty           ( wbuf_empty          ),
 
                 //---- local bus ---------------------
@@ -211,7 +211,7 @@ data_bridge_channel
                      )
                 data_brg_r (
                 /*input                */   .clk                 ( clk             ),
-                /*input                */   .rst_n               ( rst_n               ),
+                /*input                */   .resetn               ( resetn               ),
                 /*output               */   .buf_empty           ( rbuf_empty          ),
 
                 //---- local bus ---------------------

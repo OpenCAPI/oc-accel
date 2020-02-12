@@ -41,7 +41,7 @@
 )
 (
     input  ap_clk                    ,
-    input  ap_rst_n                  ,
+    input  ap_resetn                  ,
     output interrupt                 ,
     output [INT_BITS-2 : 0] interrupt_src             ,
     output [CONTEXT_BITS-1 : 0] interrupt_ctx             ,
@@ -145,7 +145,7 @@
     ) action_multi_process_0 (
 
         .clk                   (ap_clk   ) ,
-        .rst_n                 (ap_rst_n ) ,
+        .resetn                 (ap_resetn ) ,
     
         //---- AXI bus interfaced with OCACCEL core ----               
         // AXI write address channel      

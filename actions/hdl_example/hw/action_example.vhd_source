@@ -51,7 +51,7 @@ entity action_example is
     );
     port (
         action_clk              : in STD_LOGIC;
-        action_rst_n            : in STD_LOGIC;
+        action_resetn            : in STD_LOGIC;
         int_req_ack             : in STD_LOGIC;
         int_req                 : out std_logic;
         int_src                 : out std_logic_vector(INT_BITS-1 DOWNTO 0);
@@ -386,7 +386,7 @@ begin
   --mila_p16: ila_p16
   --  port MAP (
   --    clk => action_clk,
-  --    probe0 => app_start & app_idle & app_ready & app_done & action_rst_n & dma_rd_req & axi_host_mem_arvalid_tmp & do_memcopy & reg_0x30(3 downto 0) & dma_wr_req & axi_host_mem_awvalid_tmp & axi_host_mem_arready & axi_host_mem_awready
+  --    probe0 => app_start & app_idle & app_ready & app_done & action_resetn & dma_rd_req & axi_host_mem_arvalid_tmp & do_memcopy & reg_0x30(3 downto 0) & dma_wr_req & axi_host_mem_awvalid_tmp & axi_host_mem_arready & axi_host_mem_awready
   --  );  -- : 
 
 
@@ -422,7 +422,7 @@ action_axi_slave_inst : entity work.action_axi_slave
         app_idle_i      => app_idle,
         -- User ports ends
         S_AXI_ACLK  => action_clk,
-        S_AXI_ARESETN   => action_rst_n,
+        S_AXI_ARESETN   => action_resetn,
         S_AXI_AWADDR    => axi_ctrl_reg_awaddr,
         -- S_AXI_AWPROT    => axi_ctrl_reg_awprot,
         S_AXI_AWVALID   => axi_ctrl_reg_awvalid,
@@ -482,7 +482,7 @@ action_dma_axi_master_inst : entity work.action_axi_master
 
 
         M_AXI_ACLK  => action_clk,
-        M_AXI_ARESETN   => action_rst_n,
+        M_AXI_ARESETN   => action_resetn,
         M_AXI_AWID  => axi_host_mem_awid,
         M_AXI_AWADDR    => axi_host_mem_awaddr,
         M_AXI_AWLEN => axi_host_mem_awlen,
@@ -564,7 +564,7 @@ action_ddr_axi_master_inst : entity work.action_axi_master                      
       dma_wr_context_id       => (C_AXI_CARD_MEM0_AWUSER_WIDTH - 1 downto 0 =>'0'),      -- only for DDRI_USED=TRUE
 
       M_AXI_ACLK  => action_clk,                                                         -- only for DDRI_USED=TRUE
-      M_AXI_ARESETN   => action_rst_n,                                                   -- only for DDRI_USED=TRUE
+      M_AXI_ARESETN   => action_resetn,                                                   -- only for DDRI_USED=TRUE
       M_AXI_AWID  => axi_card_mem0_awid,                                                 -- only for DDRI_USED=TRUE
       M_AXI_AWADDR    => axi_card_mem0_awaddr,                                           -- only for DDRI_USED=TRUE
       M_AXI_AWLEN => axi_card_mem0_awlen,                                                -- only for DDRI_USED=TRUE
@@ -620,7 +620,7 @@ action_axi_nvme_inst : entity work.action_axi_nvme                              
       nvme_status       => nvme_status,                                                  -- only for NVME_USED=TRUE 
                                                                                          -- only for NVME_USED=TRUE 
       M_AXI_ACLK        => action_clk,                                                   -- only for NVME_USED=TRUE
-      M_AXI_ARESETN     => action_rst_n,                                                 -- only for NVME_USED=TRUE
+      M_AXI_ARESETN     => action_resetn,                                                 -- only for NVME_USED=TRUE
       M_AXI_AWID        => axi_nvme_awid,                                                -- only for NVME_USED=TRUE
       M_AXI_AWADDR      => axi_nvme_awaddr,                                              -- only for NVME_USED=TRUE
       M_AXI_AWLEN       => axi_nvme_awlen,                                               -- only for NVME_USED=TRUE
@@ -682,7 +682,7 @@ action_axi_nvme_inst : entity work.action_axi_nvme                              
               memcopy <= false;
               do_memcopy <= '0';
             end if;
-        if ( action_rst_n = '0' ) then
+        if ( action_resetn = '0' ) then
               fsm_app_q         <= IDLE;
               app_ready         <= '0';
               app_idle          <= '0';
@@ -870,7 +870,7 @@ action_axi_nvme_inst : entity work.action_axi_nvme                              
       if (rising_edge (action_clk)) then
         last_write_done   <= '0';
         mem_wr            <= '0';                                                        -- only for DDRI_USED=TRUE
-        if ( action_rst_n = '0' ) then
+        if ( action_resetn = '0' ) then
               fsm_copy_q         <= IDLE;
               dma_rd_req         <= '0';
               dma_wr_req         <= '0';
@@ -1051,7 +1051,7 @@ read_write_process:
       process(action_clk ) is
     begin
       if (rising_edge (action_clk)) then
-            if start_copy = '1' or action_rst_n = '0' or start_fill = '1' then
+            if start_copy = '1' or action_resetn = '0' or start_fill = '1' then
 
               tail              <= 0;
               head              <= 0;

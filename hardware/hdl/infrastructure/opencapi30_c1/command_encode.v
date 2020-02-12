@@ -24,7 +24,7 @@ module command_encode
                             )
                           ( 
                            input                      clk              ,
-                           input                      rst_n            ,
+                           input                      resetn            ,
                              
                            //---- configuration --------------------------
                            input      [011:0]         cfg_actag_base   ,
@@ -146,8 +146,8 @@ module command_encode
  assign dma_cmd_ready = tlx_cmd_rdy && (prt_cstate == IDLE) && ~fifo_prt_info_count[4];
 
 //---- output command when 1) bypass mode for 128B/64B: immediate; 2) partial mode: until partial sequencing's ready ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      tlx_cmd_valid <= 1'b0;
    else 
      tlx_cmd_valid <= bypass_mode || partial_valid;
@@ -165,8 +165,8 @@ module command_encode
 //      | |________________ 0: normal command, 1: partial command
 //      |__________________ 0: write, 1: read
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        tlx_cdata_bus     <= 1024'd0;
        tlx_cmd_ea_or_obj <= 68'd0;        
@@ -218,8 +218,8 @@ module command_encode
                 tlx_cmd_afutag    <= {MODE, 1'b1, partial_cnt, {prt_h,prt_l}, partial_tag};
               end
      
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        tlx_cmd_pasid <= 20'd0;
        tlx_cmd_actag <= 12'd0; 
@@ -250,8 +250,8 @@ module command_encode
 //=====================================================================================================================================
 
 //---- fill in partial information and data in FIFO when non-all-1s be is received ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        fifo_prt_info_wr_en <= 1'b0;
        fifo_prt_data_wr_en <= 1'b0;
@@ -273,7 +273,7 @@ module command_encode
              .DISTR(1)
              ) mfifo_prt_info (
                                .clk         (clk                ), // input clk
-                               .rst_n       (rst_n              ), // input rst
+                               .resetn       (resetn              ), // input rst
                                .din         (fifo_prt_info_din  ), // input [202 : 0] din
                                .wr_en       (fifo_prt_info_wr_en), // input wr_en
                                .rd_en       (fifo_prt_info_rd_en), // input rd_en
@@ -291,7 +291,7 @@ module command_encode
              .DISTR(1)
              ) mfifo_prt_data (
                                .clk         (clk                ), // input clk
-                               .rst_n       (rst_n              ), // input rst
+                               .resetn       (resetn              ), // input rst
                                .din         (fifo_prt_data_din  ), // input [1024 : 0] din
                                .wr_en       (fifo_prt_data_wr_en), // input wr_en
                                .rd_en       (fifo_prt_data_rd_en), // input rd_en
@@ -308,8 +308,8 @@ module command_encode
  assign partial_h  =  fifo_prt_info_dout[193];
 
 //---- delay FIFO out data once for the 2nd 64B partial command ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        fifo_prt_info_dout_sync   <= 203'd0;
        fifo_prt_data_dout_h_sync <= 512'd0;
@@ -321,8 +321,8 @@ module command_encode
      end
 
 //---- latch information for partial seqencer ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        partial_tag     <= {TAGW{1'b1}};
        partial_ea_128B <= 57'd0;
@@ -338,8 +338,8 @@ module command_encode
      end
 
 //---- adjust data position ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      partial_data <= 512'd0;
    else if(prt_cstate == CHECK_PARTIAL)
      casez({partial_h, partial_l})
@@ -351,14 +351,14 @@ module command_encode
        
 
 //---- input strobe to partial sequencer ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      strobe_valid <= 1'b0;
    else
      strobe_valid <= (prt_cstate == CHECK_PARTIAL) || ((prt_cstate == PARTIAL_L64B) && partial_next_pending && prt_cmd_enable);
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      strobe <= 64'd0;
    else if(prt_cstate == CHECK_PARTIAL)
      casez({partial_h, partial_l})
@@ -373,8 +373,8 @@ module command_encode
  assign partial_enable = tlx_cmd_rdy && ~bypass_mode;
 
 //---- next partial 64B pending ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      partial_next_pending <= 1'b0;
    else if((prt_cstate == PARTIAL_L64B) && partial_2nd && partial_done)
      partial_next_pending <= 1'b1;
@@ -384,7 +384,7 @@ module command_encode
 //---- partial command sequencing submodule ----
  partial_sequencer mpartial_sequencer (
                                        .clk              (clk           ),
-                                       .rst_n            (rst_n         ),
+                                       .resetn            (resetn         ),
                                        .partial_en       (partial_enable),
                                        .strobe           (strobe        ),
                                        .strobe_valid     (strobe_valid  ),
@@ -404,8 +404,8 @@ module command_encode
  assign prt_cmd_start = strobe_valid;
 
 //---- statemachine for partial command handling ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_cstate <= IDLE;
    else
      prt_cstate <= prt_nstate;
@@ -472,8 +472,8 @@ module command_encode
 //=================================================================================================================
 
 //---- DEBUG registers ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        debug_tlx_cnt_cmd <= 32'd0;
      end
@@ -490,8 +490,8 @@ module command_encode
  reg fir_fifo_prt_data_overflow;
  reg fir_fifo_prt_info_overflow;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        fir_fifo_prt_data_overflow <= 1'b0; 
        fir_fifo_prt_info_overflow <= 1'b0; 

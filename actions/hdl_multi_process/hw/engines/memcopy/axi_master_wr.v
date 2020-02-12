@@ -27,7 +27,7 @@ module axi_master_wr #(
                        )
                       (
                        input                              clk               ,
-                       input                              rst_n             , 
+                       input                              resetn             , 
                        input     [031:0]                  i_ocaccel_context    ,
                                                             
                        //---- AXI bus ----                   
@@ -98,9 +98,9 @@ module axi_master_wr #(
  assign m_axi_bready   = 1'b1;
  assign burst_sent     = m_axi_awvalid && m_axi_awready;
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          m_axi_awid <= 0;
      else if(burst_sent && (m_axi_awid == wr_id_num))
          m_axi_awid <= 0;
@@ -113,9 +113,9 @@ module axi_master_wr #(
  assign wr_id_num = wr_pattern[20:16];
 
  assign wr_len_plus_1 = {1'b0, wr_len} + 1'b1;
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          total_wr_beat_count <= 0;
      else if(wr_engine_start)
          total_wr_beat_count <= {8'b0, wr_number} * ({31'b0, wr_len_plus_1});
@@ -127,7 +127,7 @@ module axi_master_wr #(
 
 addr_send_channel mwr_addr_send (
            .clk                 (clk                ),
-           .rst_n               (rst_n              ),
+           .resetn               (resetn              ),
            .wrap_mode           (wrap_mode          ),
            .wrap_len            (wrap_len           ),
            .engine_start        (wr_engine_start    ),
@@ -149,7 +149,7 @@ addr_send_channel mwr_addr_send (
 ***********************************************************************/
 wr_data_send_channel mwr_data_send (
            .clk                 (clk                ),
-           .rst_n               (rst_n              ),
+           .resetn               (resetn              ),
            .m_axi_wdata         (m_axi_wdata        ),
            .m_axi_wlast         (m_axi_wlast        ),
            .m_axi_wvalid        (m_axi_wvalid       ),
@@ -167,9 +167,9 @@ wr_data_send_channel mwr_data_send (
 /***********************************************************************
 *                        write response channel                        *
 ***********************************************************************/
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             wr_wait_done <= 1'b0;
         else if(addr_send_done)
             wr_wait_done <= 1'b1;
@@ -177,9 +177,9 @@ wr_data_send_channel mwr_data_send (
             wr_wait_done <= 1'b0;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             wr_burst_cnt <= 0;
         else if(burst_sent && !resp_get)
             wr_burst_cnt <= wr_burst_cnt + 1'b1;
@@ -187,9 +187,9 @@ wr_data_send_channel mwr_data_send (
             wr_burst_cnt <= wr_burst_cnt - 1'b1;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             wr_error <= 1'b0;
         else if(resp_get)
             wr_error <= (m_axi_bresp != 0);

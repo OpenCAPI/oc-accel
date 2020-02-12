@@ -27,7 +27,7 @@ module rd_result_check_channel #(
                        )
                       (
                        input                           clk                ,
-                       input                           rst_n              , 
+                       input                           resetn              , 
                                                         
                        //---- AXI bus ----               
                          // AXI read address channel       
@@ -115,18 +115,18 @@ module rd_result_check_channel #(
     assign rd_id_num_plus_1 = {1'b0, rd_id_num} + 1'b1;
     assign axi_data_valid = m_axi_rvalid && m_axi_rready;
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             init_counter <= 5'b0;
         else if(cstate == INIT)
             init_counter <= init_counter + 1'b1;
     end
 
     //---- read result state machine ----
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             cstate <= IDLE;
         else
             cstate <= nstate;
@@ -165,9 +165,9 @@ module rd_result_check_channel #(
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             beat_counter <= 0;
         else if (cstate == BIAS1)
             beat_counter <= total_rd_beat_count;
@@ -175,9 +175,9 @@ module rd_result_check_channel #(
             beat_counter <= beat_counter - 1'b1;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin
             beat_bias <= 0;
             beat_gap_for_id <= 0;
@@ -191,9 +191,9 @@ module rd_result_check_channel #(
         end
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin
             id_bias_pre <= 0;
             init_id_bias_pre <= 0;
@@ -205,9 +205,9 @@ module rd_result_check_channel #(
         end
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             id_bias <= 0;
         else if(cstate == BIAS3)
             id_bias <= {1'b0, id_bias_pre} + {{(ID_WIDTH+9){1'b0}},beat_bias};
@@ -226,9 +226,9 @@ module rd_result_check_channel #(
         endcase
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             init_bias_for_idx <= 0;
         else if(cstate == BIAS3)
             init_bias_for_idx <= rd_init_data;
@@ -266,9 +266,9 @@ module rd_result_check_channel #(
             assign data_valid_for_idx[i] = axi_data_valid && (m_axi_rid == i);
             assign last_data_valid_for_idx[i] = data_valid_for_idx[i] && m_axi_rlast;
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     cycle_cnt[i] <= 0;
                 else if(last_data_valid_for_idx[i])
                     cycle_cnt[i] <= 0;
@@ -276,9 +276,9 @@ module rd_result_check_channel #(
                     cycle_cnt[i] <= cycle_cnt[i] + 1;
             end
                
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     base_data[i] <= 0;
                 else if(cstate == INIT && (init_counter == i))
                     base_data[i] <= init_bias_for_idx;
@@ -316,23 +316,23 @@ module rd_result_check_channel #(
     endgenerate
 
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             stage1_valid <= 0;
         else
             stage1_valid <= axi_data_valid;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             stage1_addr <= 0;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin
             stage1_base_data <= 0;
             stage1_cycle_cnt <= 0;
@@ -346,9 +346,9 @@ module rd_result_check_channel #(
         end
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin  
             stage2_valid       <= 0;
             stage2_addr        <= 0;
@@ -655,9 +655,9 @@ module rd_result_check_channel #(
 
     // read data error
     assign data_error = ((stage2_actual_data & stage2_data_mask) != stage2_expect_data);
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rd_error[1] <= 0;
         else if(stage2_valid)
             rd_error[1] <= data_error;
@@ -666,9 +666,9 @@ module rd_result_check_channel #(
     end
 
     // read response error
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rd_error[0] <= 0;
         else if(axi_data_valid)
             rd_error[0] <= (m_axi_rresp != 0);
@@ -678,9 +678,9 @@ module rd_result_check_channel #(
 
     assign rd_done = (cstate == DONE);
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rd_error_info <= 0;
         else if(stage2_valid && data_error)
             rd_error_info <= {stage2_actual_data[31:0], stage2_expect_data[31:0]};

@@ -29,7 +29,7 @@ module odma_h2a_st_engine #(
 )
 (
                    input                                          clk               ,
-                   input                                          rst_n             ,
+                   input                                          resetn             ,
                    //---------- Descriptor Interface ---------------------------//
                    output                                         dsc_ready         ,
                    input                                          dsc_valid         ,
@@ -181,8 +181,8 @@ always@(posedge clk)
         default: dsc_data_1 <= dsc_data_1;
     endcase
 
-always@(posedge clk or negedge rst_n)
-    if (!rst_n)
+always@(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_data_status <= 2'b00;
     else 
       casex ({dsc_data_status[1:0], dsc_valid, parser_ready})
@@ -246,8 +246,8 @@ assign axis_wdata_len = (dsc_len >> 7);
 //
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         rd_axi_id_reg <= 5'b0;
     else if (is_dsc_valid)
         rd_axi_id_reg <= {channel_id, engine_id};
@@ -256,8 +256,8 @@ always @(posedge clk or negedge rst_n)
 
 // lcl_rd_req_cnt for lcl read request beat counter
 // is_dsc_valid and lcl_rd_valid can not be pulled up at the same cycle
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_req_cnt <= 0;
     else
         case ({is_dsc_valid, lcl_rd_issue})
@@ -266,16 +266,16 @@ always @(posedge clk or negedge rst_n)
             default: lcl_rd_req_cnt <= lcl_rd_req_cnt;
         endcase
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_req_number <= 22'd0;
     else if (is_dsc_valid)
         lcl_rd_req_number <= lcl_req_len;
     else
         lcl_rd_req_number <= lcl_rd_req_number;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_src_addr <= 64'b0;
     else if (is_dsc_valid)
         lcl_src_addr <= src_addr;
@@ -297,8 +297,8 @@ assign lcl_rd_ctx_valid = 0;
 assign lcl_rd_be = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF;
 
 // parser_ready signal back to dsc_buffer
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         parser_ready <= 1;
     else if (is_dsc_valid)
         parser_ready <= 0;
@@ -317,8 +317,8 @@ always @(posedge clk or negedge rst_n)
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 // for dsc_onflight
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_onflight <= 1'b0;
     else if (is_dsc_valid)
         dsc_onflight <= 1'b1;
@@ -328,8 +328,8 @@ always @(posedge clk or negedge rst_n)
         dsc_onflight <= dsc_onflight;
 
 // for dsc_interrupt_req
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_interrupt_req <= 1'b0;
     else if (is_dsc_valid)
         dsc_interrupt_req <= interrupt_req;
@@ -339,8 +339,8 @@ always @(posedge clk or negedge rst_n)
         dsc_interrupt_req <= dsc_interrupt_req;
 
 // for dsc_channel_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_channel_id <= 2'b00;
     else if (is_dsc_valid)
         dsc_channel_id <= channel_id;
@@ -350,8 +350,8 @@ always @(posedge clk or negedge rst_n)
         dsc_channel_id <= dsc_channel_id;
 
 // for dsc_id_reg
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_id_reg <= 30'b0;
     else if (is_dsc_valid)
         dsc_id_reg <= dsc_id;
@@ -361,8 +361,8 @@ always @(posedge clk or negedge rst_n)
         dsc_id_reg <= dsc_id_reg;
 
 // for dsc_st_eop
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_st_eop <= 1'b0;
     else if (is_dsc_valid)
         dsc_st_eop <= st_eop;
@@ -373,8 +373,8 @@ always @(posedge clk or negedge rst_n)
 
 `ifdef ACTION_DATA_WIDTH_512
     // for dsc_axis_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc_axis_data_number <= 22'd0;
         else if (is_dsc_valid)
             dsc_axis_data_number <= (axis_wdata_len << 1);
@@ -384,8 +384,8 @@ always @(posedge clk or negedge rst_n)
             dsc_axis_data_number <= dsc_axis_data_number;
 
     // for dsc_axis_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc_axis_data_cnt <= 22'd0;
         else if (is_dsc_valid)
             dsc_axis_data_cnt <= (axis_wdata_len << 1);
@@ -395,8 +395,8 @@ always @(posedge clk or negedge rst_n)
             dsc_axis_data_cnt <= dsc_axis_data_cnt;
 `else
     // for dsc_axis_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc_axis_data_number <= 21'd0;
         else if (is_dsc_valid)
             dsc_axis_data_number <= axis_wdata_len;
@@ -406,8 +406,8 @@ always @(posedge clk or negedge rst_n)
             dsc_axis_data_number <= dsc_axis_data_number;
 
     // for dsc_axis_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc_axis_data_cnt <= 21'd0;
         else if (is_dsc_valid)
             dsc_axis_data_cnt <= axis_wdata_len;
@@ -421,8 +421,8 @@ assign dsc_axis_data_first_beat = (dsc_axis_data_cnt == dsc_axis_data_number) &&
 assign dsc_axis_data_last_beat = (dsc_axis_data_cnt == 21'd1) && dsc_onflight;
 
 // for dsc_lcl_rd_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_lcl_rd_error <= 1'b0;
     else if (dsc_lcl_rd_error)
         dsc_lcl_rd_error <= 1'b1;
@@ -432,8 +432,8 @@ always @(posedge clk or negedge rst_n)
         dsc_lcl_rd_error <= 1'b0;
 
 // for dsc_lcl_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_lcl_src_addr <= 64'h0;
     else if (is_dsc_valid)
         dsc_lcl_src_addr <= src_addr;
@@ -445,8 +445,8 @@ always @(posedge clk or negedge rst_n)
         dsc_lcl_src_addr <= dsc_lcl_src_addr;
 
 // for dsc_error_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_error_src_addr <= 64'h0;
     else if (dsc_lcl_rd_error)
         dsc_error_src_addr <= dsc_error_src_addr;
@@ -487,7 +487,7 @@ assign lcl_rd_rsp_ready_hint = ~(rdata_fifo_almost_full);
 // Xilinx Standard FIFO IP
 fifo_sync_32_1024i1024o rdata_fifo (
                           .clk          ( clk                      ),
-                          .srst         ( ~rst_n                   ),
+                          .srst         ( ~resetn                   ),
                           .din          ( rdata_fifo_din          ),
                           .wr_en        ( rdata_fifo_wen          ),
                           .rd_en        ( rdata_fifo_ren          ),
@@ -535,16 +535,16 @@ assign m_axis_tuser = 8'b0;
     
     assign rdata_fifo_ren = (~rdata_fifo_empty) && m_axis_tvalid && m_axis_tready && (~m_axis_wbeat_even);
 
-    //always @(posedge clk or negedge rst_n)
-    //    if (!rst_n)
+    //always @(posedge clk or negedge resetn)
+    //    if (!resetn)
     //        m_axis_tvalid_128B <= 1'b0;
     //    else
     //        m_axis_tvalid_128B <= (dsc_axis_data_cnt != 22'd0) && rdata_fifo_valid;
     assign m_axis_tvalid_128B = (dsc_axis_data_cnt != 22'd0) && rdata_fifo_valid;
 
 
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             m_axis_tvalid_64B_odd <= 1'b0;
         else if (m_axis_wbeat_even)
             m_axis_tvalid_64B_odd <= m_axis_tvalid_128B;
@@ -595,8 +595,8 @@ assign dsc_cmp_data = {190'b0,
                        dsc_axis_data_complete,
                        dsc_sts_error};
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_0 <= 1'b0;
     else if (cmp_valid_0)
         cmp_valid_0 <= (cmp_resp_0)? 1'b0 : cmp_valid_0;
@@ -611,8 +611,8 @@ always @(posedge clk)
     else
         cmp_data_0 <= 512'b0;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_1 <= 1'b0;
     else if (cmp_valid_1)
         cmp_valid_1 <= (cmp_resp_1)? 1'b0 : cmp_valid_1;
@@ -627,8 +627,8 @@ always @(posedge clk)
     else
         cmp_data_1 <= 512'b0;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_2 <= 1'b0;
     else if (cmp_valid_2)
         cmp_valid_2 <= (cmp_resp_2)? 1'b0 : cmp_valid_2;
@@ -643,8 +643,8 @@ always @(posedge clk)
     else
         cmp_data_2 <= 512'b0;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_3 <= 1'b0;
     else if (cmp_valid_3)
         cmp_valid_3 <= (cmp_resp_3)? 1'b0 : cmp_valid_3;

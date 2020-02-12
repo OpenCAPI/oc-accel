@@ -28,7 +28,7 @@ module odma_a2h_mm_engine #(
 )
 (
     input                           clk,
-    input                           rst_n,
+    input                           resetn,
     //----- dsc engine interface -----
     input                           dsc_valid,          //descriptor valid
     input  [255 : 0]                dsc_data,           //descriptor data
@@ -336,8 +336,8 @@ wire                            dsc_cmp_reg3_ch3_valid;             //descriptor
 //------------------------------------------------------------------------------
 // Read FSM
 //------------------------------------------------------------------------------
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     rd_fsm_cur_state <= READ_IDLE;
   else
     rd_fsm_cur_state <= rd_fsm_nxt_state;
@@ -412,7 +412,7 @@ assign dsc_dst_align_length   = dsc_dst_end_align_addr - dsc_dst_align_addr;
 // Xilinx IP: standard fifo
 fifo_sync_std_256x8 dsc_fifo (
   .clk          (clk           ),
-  .srst         (~rst_n        ),
+  .srst         (~resetn        ),
   .din          (dsc_fifo_din  ),
   .wr_en        (dsc_fifo_wr_en),
   .rd_en        (dsc_fifo_rd_en),
@@ -426,8 +426,8 @@ fifo_sync_std_256x8 dsc_fifo (
 // AXI read command
 //------------------------------------------------------------------------------
 // AXI read addr: start from dsc src addr, update when one cmd sent
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     dsc_src_cur_axi_start_addr <= 64'b0;
   else if(rd_fsm_state_write_reg)
     dsc_src_cur_axi_start_addr <= dsc_src_align_addr;
@@ -437,8 +437,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_src_cur_axi_start_addr <= dsc_src_cur_axi_start_addr;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_channel_id_l         <= 2'b0;
     dsc_src_end_align_addr_l <= 64'b0;
   end
@@ -484,8 +484,8 @@ assign axi_arcache  = 4'b0;
 // when register set cleared, perform shift operation
 // avoid clear at the same cycle of write operation
 // always write into the available register set with biggest set number
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg0_valid               <= 1'b0;
     dsc_flight_reg0_intr                <= 1'b0;
     dsc_flight_reg0_ch_id               <= 2'b0;
@@ -523,8 +523,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg1_valid               <= 1'b0;
     dsc_flight_reg1_intr                <= 1'b0;
     dsc_flight_reg1_ch_id               <= 2'b0;
@@ -562,8 +562,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg2_valid               <= 1'b0;
     dsc_flight_reg2_intr                <= 1'b0;
     dsc_flight_reg2_ch_id               <= 2'b0;
@@ -601,8 +601,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg3_valid               <= 1'b0;
     dsc_flight_reg3_intr                <= 1'b0;
     dsc_flight_reg3_ch_id               <= 2'b0;
@@ -699,8 +699,8 @@ end
 
 // when clear and update happened at same cycle
 // need to write the shift-in updating value
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg0_src_addr     <= 64'b0;
     dsc_flight_reg0_src_length   <= 28'b0;
   end
@@ -726,8 +726,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg1_src_addr     <= 64'b0;
     dsc_flight_reg1_src_length   <= 28'b0;
   end
@@ -753,8 +753,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg2_src_addr     <= 64'b0;
     dsc_flight_reg2_src_length   <= 28'b0;
   end
@@ -780,8 +780,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg3_src_addr     <= 64'b0;
     dsc_flight_reg3_src_length   <= 28'b0;
   end
@@ -811,8 +811,8 @@ assign dsc_flight_reg3_src_err_update = dsc_flight_reg3_src_match & ~dsc_flight_
 
 // when clear and update happened at same cycle
 // need to write the shift-in updating value
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg0_src_err_happen <= 1'b0;
     dsc_flight_reg0_src_err        <= 2'b0;
     dsc_flight_reg0_src_err_addr   <= 64'b0;
@@ -839,8 +839,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg1_src_err_happen <= 1'b0;
     dsc_flight_reg1_src_err        <= 2'b0;
     dsc_flight_reg1_src_err_addr   <= 64'b0;
@@ -867,8 +867,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg2_src_err_happen <= 1'b0;
     dsc_flight_reg2_src_err        <= 2'b0;
     dsc_flight_reg2_src_err_addr   <= 64'b0;
@@ -895,8 +895,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg3_src_err_happen <= 1'b0;
     dsc_flight_reg3_src_err        <= 2'b0;
     dsc_flight_reg3_src_err_addr   <= 64'b0;
@@ -976,8 +976,8 @@ reg  [1023: 0]                lcl_first_wr_data;                //lcl first beat
 // rlast data will send to local bus if it is the first beat
 // clear register when second 512-bit AXI data write done on
 // local bus with the first 512-bit data
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch0_valid <= 1'b0;
     axi_rdata_ch0_data  <= 512'b0;
   end
@@ -995,8 +995,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch1_valid <= 1'b0;
     axi_rdata_ch1_data  <= 512'b0;
   end
@@ -1014,8 +1014,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch2_valid <= 1'b0;
     axi_rdata_ch2_data  <= 512'b0;
   end
@@ -1033,8 +1033,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     axi_rdata_ch3_valid <= 1'b0;
     axi_rdata_ch3_data  <= 512'b0;
   end
@@ -1072,7 +1072,7 @@ assign rdata_fifo_rd_en = ~rdata_fifo_empty & (axi_rdata_wr | (lcl_wr_done & (~l
 // Xilinx IP: FWFT fifo
 fifo_sync_512x8 rdata_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rdata_fifo_din  ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -1087,7 +1087,7 @@ fifo_sync_512x8 rdata_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_9x8 rtag_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rtag_fifo_din   ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -1177,7 +1177,7 @@ assign rdata_fifo_rd_en = ~rdata_fifo_empty & lcl_wr_done;
 // Xilinx IP: FWFT fifo(FIFO IP max data width is 1024)
 fifo_sync_1024x8 rdata_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rdata_fifo_din  ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -1192,7 +1192,7 @@ fifo_sync_1024x8 rdata_fifo (
 // Xilinx IP: FWFT fifo
 fifo_sync_9x8 rtag_fifo (
   .clk          (clk             ),
-  .srst         (~rst_n          ),
+  .srst         (~resetn          ),
   .din          (rtag_fifo_din   ),
   .wr_en        (rdata_fifo_wr_en),
   .rd_en        (rdata_fifo_rd_en),
@@ -1342,8 +1342,8 @@ end
 
 // when clear and update happened at same cycle
 // need to write the shift-in updating value
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg0_dst_addr     <= 64'b0;
     dsc_flight_reg0_dst_length   <= 28'b0;
   end
@@ -1369,8 +1369,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg1_dst_addr     <= 64'b0;
     dsc_flight_reg1_dst_length   <= 28'b0;
   end
@@ -1396,8 +1396,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg2_dst_addr     <= 64'b0;
     dsc_flight_reg2_dst_length   <= 28'b0;
   end
@@ -1423,8 +1423,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg3_dst_addr     <= 64'b0;
     dsc_flight_reg3_dst_length   <= 28'b0;
   end
@@ -1497,8 +1497,8 @@ end
 // one descriptor lcl write cmds have one resp
 // when clear and update happened at same cycle
 // need to write the shift-in updating value
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) 
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) 
     dsc_flight_reg0_complete <= 1'b0;
   else if(dsc_flight_reg0_write) 
     dsc_flight_reg0_complete <= 1'b0;
@@ -1512,8 +1512,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_flight_reg0_complete <= dsc_flight_reg0_complete;    
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) 
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) 
     dsc_flight_reg1_complete <= 1'b0;
   else if(dsc_flight_reg1_write) 
     dsc_flight_reg1_complete <= 1'b0;
@@ -1527,8 +1527,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_flight_reg1_complete <= dsc_flight_reg1_complete;    
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) 
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) 
     dsc_flight_reg2_complete <= 1'b0;
   else if(dsc_flight_reg2_write) 
     dsc_flight_reg2_complete <= 1'b0;
@@ -1542,8 +1542,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_flight_reg2_complete <= dsc_flight_reg2_complete;    
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) 
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) 
     dsc_flight_reg3_complete <= 1'b0;
   else if(dsc_flight_reg3_write) 
     dsc_flight_reg3_complete <= 1'b0;
@@ -1563,8 +1563,8 @@ assign dsc_flight_reg3_rsp_err_update = dsc_flight_reg3_rsp_match & lcl_wr_rsp_c
 
 // when clear and update happened at same cycle
 // need to write the shift-in updating value
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg0_rsp_err        <= 1'b0;
     dsc_flight_reg0_rsp_err_addr   <= 64'b0;
   end
@@ -1586,8 +1586,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg1_rsp_err        <= 1'b0;
     dsc_flight_reg1_rsp_err_addr   <= 64'b0;
   end
@@ -1609,8 +1609,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg2_rsp_err        <= 1'b0;
     dsc_flight_reg2_rsp_err_addr   <= 64'b0;
   end
@@ -1632,8 +1632,8 @@ always@(posedge clk or negedge rst_n) begin
   end
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     dsc_flight_reg3_rsp_err        <= 1'b0;
     dsc_flight_reg3_rsp_err_addr   <= 64'b0;
   end
@@ -1787,8 +1787,8 @@ assign dsc_flight_reg3_commit_update = (~dsc_cmp_reg0_ch0_valid & ~dsc_cmp_reg1_
                                      | (~dsc_cmp_reg0_ch2_valid & ~dsc_cmp_reg1_ch2_valid & ~dsc_cmp_reg2_ch2_valid & dsc_cmp_reg3_ch2_valid & dsc_ch2_cmp_ready)
                                      | (~dsc_cmp_reg0_ch3_valid & ~dsc_cmp_reg1_ch3_valid & ~dsc_cmp_reg2_ch3_valid & dsc_cmp_reg3_ch3_valid & dsc_ch3_cmp_ready);
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     dsc_flight_reg0_commit <= 1'b0;
   else if(dsc_flight_reg0_clear & ~dsc_flight_reg1_commit_update)
     dsc_flight_reg0_commit <= dsc_flight_reg1_commit;    
@@ -1798,8 +1798,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_flight_reg0_commit <= dsc_flight_reg0_commit;    
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     dsc_flight_reg1_commit <= 1'b0;
   else if((dsc_flight_reg1_clear | dsc_flight_reg0_clear) & ~dsc_flight_reg2_commit_update)
     dsc_flight_reg1_commit <= dsc_flight_reg2_commit;    
@@ -1810,8 +1810,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_flight_reg1_commit <= dsc_flight_reg1_commit;    
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     dsc_flight_reg2_commit <= 1'b0;
   else if((dsc_flight_reg2_clear | dsc_flight_reg1_clear | dsc_flight_reg0_clear) & ~dsc_flight_reg3_commit_update)
     dsc_flight_reg2_commit <= dsc_flight_reg3_commit;    
@@ -1822,8 +1822,8 @@ always@(posedge clk or negedge rst_n) begin
     dsc_flight_reg2_commit <= dsc_flight_reg2_commit;    
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     dsc_flight_reg3_commit <= 1'b0;
   else if(dsc_flight_reg3_clear | dsc_flight_reg2_clear | dsc_flight_reg1_clear | dsc_flight_reg0_clear)
     dsc_flight_reg3_commit <= 1'b0;    

@@ -27,7 +27,7 @@ module axi_master_rd #(
                        )
                       (
                        input                          clk               ,
-                       input                          rst_n             , 
+                       input                          resetn             , 
                        input     [031:0]              i_ocaccel_context    ,
                                                         
                        //---- AXI bus ----               
@@ -91,9 +91,9 @@ module axi_master_rd #(
  assign m_axi_arlock   = 2'b00; // normal access  
  assign burst_sent     = m_axi_arvalid && m_axi_arready;
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          m_axi_arid <= 0;
      else if(burst_sent && (m_axi_arid == rd_id_num))
          m_axi_arid <= 0;
@@ -106,9 +106,9 @@ module axi_master_rd #(
  assign rd_id_num = rd_pattern[20:16];
 
  assign rd_len_plus_1 = {1'b0, rd_len} + 1'b1;
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          total_rd_beat_count <= 0;
      else if(rd_engine_start)
          total_rd_beat_count <= {8'b0, rd_number} * ({31'b0, rd_len_plus_1});
@@ -120,7 +120,7 @@ module axi_master_rd #(
 
 addr_send_channel mrd_addr_send (
            .clk                 (clk                ),
-           .rst_n               (rst_n              ),
+           .resetn               (resetn              ),
            .engine_start        (rd_engine_start    ),
            .wrap_mode           (wrap_mode          ),
            .wrap_len            (wrap_len           ),
@@ -139,7 +139,7 @@ addr_send_channel mrd_addr_send (
 
 rd_result_check_channel mrd_check (
            .clk                 (clk                ),
-           .rst_n               (rst_n              ),
+           .resetn               (resetn              ),
            .m_axi_rid           (m_axi_rid          ),
            .m_axi_rdata         (m_axi_rdata        ),
            .m_axi_rlast         (m_axi_rlast        ),

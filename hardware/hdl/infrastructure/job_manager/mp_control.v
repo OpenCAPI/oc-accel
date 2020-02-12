@@ -7,7 +7,7 @@ module mp_control #(
     parameter ADDR_WIDTH = 32
 )(
                       input             clk                   ,
-                      input             rst_n                 ,
+                      input             resetn                 ,
 
                       //---- AXI Lite bus----
                         // AXI write address channel
@@ -79,15 +79,15 @@ assign cmpl_ram_data_o = s_axi_wdata;
 ***********************************************************************/
 
 //---- write address capture ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      write_address <= 32'd0;
    else if(s_axi_awvalid & s_axi_awready)
      write_address <= s_axi_awaddr;
 
 //---- write address ready ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_awready <= 1'b0;
    else if(s_axi_awvalid)
      s_axi_awready <= 1'b1;
@@ -95,8 +95,8 @@ assign cmpl_ram_data_o = s_axi_wdata;
      s_axi_awready <= 1'b0;
 
 //---- write data ready ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_wready <= 1'b0;
    else if(process_start_o & !process_ready_i)
      s_axi_wready <= 1'b0;
@@ -113,8 +113,8 @@ assign cmpl_ram_data_o = s_axi_wdata;
 ***********************************************************************/
 
 //---- read registers ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_rdata <= 32'd0;
    else if(s_axi_arvalid & s_axi_arready)
      case(s_axi_araddr)
@@ -126,8 +126,8 @@ assign cmpl_ram_data_o = s_axi_wdata;
      endcase
 
 //---- address ready: deasserts once arvalid is seen; reasserts when current read is done ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_arready <= 1'b1;
    else if(s_axi_arvalid)
      s_axi_arready <= 1'b0;
@@ -135,8 +135,8 @@ assign cmpl_ram_data_o = s_axi_wdata;
      s_axi_arready <= 1'b1;
 
 //---- data ready: deasserts once rvalid is seen; reasserts when new address has come ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_rvalid <= 1'b0;
    else if (s_axi_arvalid & s_axi_arready)
      s_axi_rvalid <= 1'b1;
@@ -148,8 +148,8 @@ assign cmpl_ram_data_o = s_axi_wdata;
 ***********************************************************************/
 
 //---- axi write response ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_bvalid <= 1'b0;
    else if(s_axi_wvalid & s_axi_wready)
      s_axi_bvalid <= 1'b1;
@@ -181,8 +181,8 @@ addr_ram addr_ram_high(
     .dpo    (ram_read_data[63:32]  )
 );
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         REG_global_control <= 32'b0;
     else if(s_axi_wvalid & s_axi_wready & (write_address[20:0] == ADDR_GLOBAL_CONTROL))
         REG_global_control <= s_axi_wdata;
@@ -197,8 +197,8 @@ assign process_info_o = {7'b0,REG_global_control[15:8],process_id,ram_read_data}
 
 always@(posedge clk) process_id <= write_address[30:22];
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         process_start_o <= 1'b0;
     else if(ram_read)
         process_start_o <= 1'b1;

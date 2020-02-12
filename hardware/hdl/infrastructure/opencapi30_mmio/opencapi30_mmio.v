@@ -19,7 +19,7 @@
 module opencapi30_mmio (
                            input                  clock_tlx                          ,
                            input                  clock_afu                          ,
-                           input                  rst_n                            ,
+                           input                  resetn                            ,
                                         
                            //---- configuration ------------------------------------
                            input           [63:0] cfg_f1_mmio_bar0                 ,
@@ -166,8 +166,8 @@ module opencapi30_mmio (
 //=================================================================================================================
 
 //---- latch command info at the start ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      begin
        cmd_opcode  <= 8'd0;
        cmd_capptag <= 16'd0;
@@ -188,8 +188,8 @@ module opencapi30_mmio (
  assign cmd_rd = (cmd_opcode == TLX_AFU_CMD_OPCODE_PR_RD_MEM);
  assign cmd_dw = (cmd_pl == 3'b011);
      
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      begin
        cmd_valid      <= 1'b0;
        cmd_data_valid <= 1'b0;
@@ -201,8 +201,8 @@ module opencapi30_mmio (
      end
 
 //---- latch command data at the start ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      begin
        cmd_data <= 64'd0;
        cmd_data_bdi <= 1'b0;
@@ -259,16 +259,16 @@ module opencapi30_mmio (
 //
 //------------------------------------------------------------------------------
 
-always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      cmd_req <= 1'b0;
    else if(cmd_event)
      cmd_req <= 1'b1;
    else if(cmd_ack)
      cmd_req <= 1'b0;
 
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      begin
        { cmd_ack_pipe } <= 3'd0;
      end
@@ -277,22 +277,22 @@ always@(posedge clock_tlx or negedge rst_n)
        { cmd_ack_pipe } <= { cmd_ack_pipe , cmd_ack_afu };
      end
        
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      cmd_ack <= 1'b0;
    else
      cmd_ack <= (~cmd_ack_pipe[2] && cmd_ack_pipe[1]);
 
        
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      cmd_done <= 1'b0;
    else
      cmd_done <= cmd_req && cmd_ack;
 
 //---- request command data immediately after command valid, one 64B each time ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      afu_tlx_cmd_rd_req <= 1'b0;
    else
      afu_tlx_cmd_rd_req <= tlx_afu_cmd_valid && (tlx_afu_cmd_opcode == TLX_AFU_CMD_OPCODE_PR_WR_MEM);
@@ -316,8 +316,8 @@ always@(posedge clock_tlx or negedge rst_n)
  assign afu_tlx_rdata_bdi = 1'b0;
 
 //---- response request pipeline, acknowledge and data ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      begin
        { rsp_ack, rsp_req , rsp_req_pipe } <= 4'd0;
        { rsp_failed , rsp_failed_pipe }    <= 3'd0;
@@ -332,8 +332,8 @@ always@(posedge clock_tlx or negedge rst_n)
        rsp_data <= rsp_data_afu;
      end
        
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      rsp_pending <= 1'b0;
    else if(~rsp_ack && rsp_req)
      rsp_pending <= 1'b1;
@@ -343,15 +343,15 @@ always@(posedge clock_tlx or negedge rst_n)
  assign rsp_valid = rsp_pending && ~rsp_credit_run_out;
 
 //---- assert response valid when command not viable or response returned from MMIO ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      afu_tlx_resp_valid <= 1'b0;
    else
      afu_tlx_resp_valid <= cmd_incident || rsp_valid;
 
 //---- return response opcode and code ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      begin
        afu_tlx_resp_opcode <= AFU_TLX_RESP_OPCODE_NOP;
        afu_tlx_resp_code   <= AFU_TLX_RESP_CODE_NULL;
@@ -378,8 +378,8 @@ always@(posedge clock_tlx or negedge rst_n)
      end
 
 //---- response data ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn) 
      afu_tlx_rdata_bus <= 512'd0;
    else 
      case(cmd_addr[5:3])
@@ -395,7 +395,7 @@ always@(posedge clock_tlx or negedge rst_n)
 
 //---- credit management ----
  always@(posedge clock_tlx)
-   if(~rst_n) 
+   if(~resetn) 
      rsp_credit_cnt <= tlx_afu_resp_initial_credit;   // this should be set through soft resetting 
    else
      case({tlx_afu_resp_credit, afu_tlx_resp_valid})
@@ -405,7 +405,7 @@ always@(posedge clock_tlx or negedge rst_n)
      endcase
 
  always@(posedge clock_tlx)
-   if(~rst_n) 
+   if(~resetn) 
      rsp_data_credit_cnt <= tlx_afu_resp_data_initial_credit;
    else
      case({tlx_afu_resp_data_credit, afu_tlx_rdata_valid})
@@ -415,8 +415,8 @@ always@(posedge clock_tlx or negedge rst_n)
      endcase
 
 //---- credit deficiency alert ----
- always@(posedge clock_tlx or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clock_tlx or negedge resetn)
+   if(~resetn)
      rsp_credit_run_out <= 1'b0;
    else 
      rsp_credit_run_out <= (rsp_credit_cnt == 4'd0) || (rsp_data_credit_cnt == 6'd0);
@@ -428,8 +428,8 @@ always@(posedge clock_tlx or negedge rst_n)
 //=================================================================================================================
 
 //---- command request pipeline, acknowledge, data and address ----
- always@(posedge clock_afu or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_afu or negedge resetn)
+   if(~resetn) 
      begin
        { cmd_req_afu , cmd_req_afu_pipe } <= 3'd0;
        { cmd_wr_afu  , cmd_wr_afu_pipe  } <= 3'd0;
@@ -486,36 +486,36 @@ always@(posedge clock_tlx or negedge rst_n)
 //
 //------------------------------------------------------------------------------
 
- always@(posedge clock_afu or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_afu or negedge resetn)
+   if(~resetn) 
      rsp_req_afu <= 1'b0;
    else if(rsp_ack_afu)
      rsp_req_afu <= 1'b0;
    else if(mmio_done || mmio_failed)
      rsp_req_afu <= 1'b1;
 
- always@(posedge clock_afu or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_afu or negedge resetn)
+   if(~resetn) 
      rsp_failed_afu <= 1'b0;
    else if(rsp_ack_afu)
      rsp_failed_afu <= 1'b0;
    else if(mmio_failed)
      rsp_failed_afu <= 1'b1;
 
- always@(posedge clock_afu or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_afu or negedge resetn)
+   if(~resetn) 
      { rsp_ack_afu_pipe } <= 3'd0;
    else
      { rsp_ack_afu_pipe } <= { rsp_ack_afu_pipe , rsp_ack };
 
- always@(posedge clock_afu or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_afu or negedge resetn)
+   if(~resetn) 
      rsp_ack_afu <= 1'b0;
    else
      rsp_ack_afu <= (~rsp_ack_afu_pipe[2] && rsp_ack_afu_pipe[1]);
 
- always@(posedge clock_afu or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clock_afu or negedge resetn)
+   if(~resetn) 
      rsp_data_afu <= 64'd0;
    else if(mmio_done)
      rsp_data_afu <= mmio_dout;

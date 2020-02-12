@@ -21,7 +21,7 @@ module retry_queue
                      )
                         (
                          input                 clk          ,
-                         input                 rst_n        ,
+                         input                 resetn        ,
 
                          // backoff time countdown time limit
                          input      [003:0]    backoff_limit,
@@ -112,8 +112,8 @@ module retry_queue
  wire rsp_partial                    = rsp_typ[4];
 
 //---- push retry and xlate_pending responses in queue ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        fifo_retry_den  <= 1'b0;
        fifo_retry_din  <= 12'd0;
@@ -131,7 +131,7 @@ module retry_queue
              .FWFT       (0)
              ) mfifo_rty_tag (
                               .clk          (clk             ), // input clk
-                              .rst_n        (rst_n           ), // input rst
+                              .resetn        (resetn           ), // input rst
                               .din          (fifo_retry_din  ), // input [11 : 0] din
                               .wr_en        (fifo_retry_den  ), // input wr_en
                               .rd_en        (fifo_retry_rdrq ), // input rd_en
@@ -145,8 +145,8 @@ module retry_queue
  assign fifo_retry_rdrq = (cstate == RETRY_RELEASE);
 
 //---- retrieve retry responses ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      {rsp_is_partial, rsp_is_retry_backoff, rsp_is_xlate_pending, rty_pos, rty_tag} <= 12'd0;
    else if(fifo_retry_dv)
      {rsp_is_partial, rsp_is_retry_backoff, rsp_is_xlate_pending, rty_pos, rty_tag} <= fifo_retry_dout;
@@ -177,8 +177,8 @@ module retry_queue
 
 
 //---- backoff counter for retry ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      backoff_countdown <= 24'd0;
    else if(cstate == RETRY_BACKOFF)
      backoff_countdown <= backoff_countdown - 24'd1;
@@ -187,8 +187,8 @@ module retry_queue
 
 
 //---- balance counter for xlate_pending and xlate_done ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      xlate_pending_cnt <= 5'd0;
    else if(rsp_den)
      case(rsp_typ[3:0])
@@ -200,8 +200,8 @@ module retry_queue
 
 
 //---- statemachine ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      cstate <= IDLE;
    else
      cstate <= nstate;
@@ -248,8 +248,8 @@ module retry_queue
 
 
 //---- timing adjustment for xlate_pending and xlate_done comparison ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      retry_check_done_slide <= 3'b001;
    else 
      case(cstate)
@@ -260,8 +260,8 @@ module retry_queue
  assign retry_check_done = retry_check_done_slide[2];
 
 //---- store xlate_done response in RAM, addressed by afutag ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        ram_xlate_done_wena  <= 1'b0;
        ram_xlate_done_addra <= 6'd0;
@@ -288,8 +288,8 @@ module retry_queue
 
 
 //---- get xlate_done response out of RAM, addressed by afutag from retry FIFO ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      ram_xlate_done_addrb <= 6'd0;
    else
      ram_xlate_done_addrb <= fifo_retry_dout[6:0];
@@ -302,8 +302,8 @@ module retry_queue
  assign rty_valid = rty_rdy && (cstate == RETRY_NOW);
 
 //---- store the last retry tag to prevent repetitive retry on the same tag ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        last_rty_tag <= 7'd0;
        last_rty_pos <= 2'd0;
@@ -319,8 +319,8 @@ module retry_queue
 //   1) single tag, full 
 //   2) multiple responses with the same tag, partial
 // for partial, enable retry when new partial commands start to fire; otherwise when FIFO's empty
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      rep_retry_enable <= 1'b0;
    else if(rty_valid)
      rep_retry_enable <= 1'b0;

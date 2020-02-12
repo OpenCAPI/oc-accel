@@ -25,7 +25,7 @@ module data_bridge_channel
                           )
                         (
                          input                 clk                   ,
-                         input                 rst_n                 ,
+                         input                 resetn                 ,
 
                          //---- buffer empty indicatior -------
                          output                buf_empty             ,
@@ -187,8 +187,8 @@ module data_bridge_channel
 
 
 //---- signaling readiness to AXI slave ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      lcl_addr_ready <= 1'b0;
    else                                             // When:
      lcl_addr_ready <= recycle_tag_out_ready &&     //   1) Tag available in the recycling tag FIFO
@@ -201,14 +201,14 @@ module data_bridge_channel
  assign local_cmd_valid = (lcl_addr_valid && lcl_addr_ready);
 
 ////---- timing alignment for normal and retry data ----
-// always@(posedge clk or negedge rst_n)
-//   if(~rst_n) 
+// always@(posedge clk or negedge resetn)
+//   if(~resetn) 
 //     lcl_addr_ctx_real <= {CTXW{1'b0}};
 //   else if(lcl_addr_ctx_valid)
 //     lcl_addr_ctx_real <= lcl_addr_ctx;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        retry_tag_out_valid_sync <= 1'b0;
        local_cmd_valid_sync     <= 1'b0;
@@ -234,8 +234,8 @@ module data_bridge_channel
 //---- direct input data and info out to command encoder ----
 // When retry is enabled, select data/info from data buffer for retry
 // Otherwise, AXI data/info are routed to command encoder without delay
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        dma_cmd_valid <= 1'd0;
        dma_cmd_data  <= 1024'd0;
@@ -270,36 +270,36 @@ module data_bridge_channel
 //-------------------------------------------------------------------------------------------------------------------------------------
 
 //---- power up after reset ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      powerup_cnt <= 4'd0;
    else if(~&powerup_cnt)
      powerup_cnt <= powerup_cnt + 4'd1;
 
 //---- initialize FIFO contents at the start ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      fifo_rcy_init <= 1'b0;
    else if(&powerup_cnt[3:1] && ~powerup_cnt[0])
      fifo_rcy_init <= 1'b1;
    else if(&fifo_rcy_init_cnt)
      fifo_rcy_init <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      fifo_rcy_init_cnt <= {TAGW{1'b0}};
    else if(fifo_rcy_init)
      fifo_rcy_init_cnt <= fifo_rcy_init_cnt + 1'b1;
 
 //---- tag recycling FIFO (FWFT) ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      fifo_rcy_tag_wr_en <= 1'b0;
    else 
      fifo_rcy_tag_wr_en <= fifo_rcy_init || rec_valid;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      fifo_rcy_tag_din <= {TAGW{1'b0}};
    else if(fifo_rcy_init)
      fifo_rcy_tag_din <= fifo_rcy_init_cnt;
@@ -313,7 +313,7 @@ module data_bridge_channel
              .FWFT       (1)
              ) mfifo_rcy_tag (
                               .clk          (clk                 ), // input clk
-                              .rst_n        (rst_n               ), // input rst
+                              .resetn        (resetn               ), // input rst
                               .din          (fifo_rcy_tag_din    ), // input [6 : 0] din
                               .wr_en        (fifo_rcy_tag_wr_en  ), // input wr_en
                               .rd_en        (fifo_rcy_tag_rd_en  ), // input rd_en
@@ -355,8 +355,8 @@ module data_bridge_channel
 //-------------------------------------------------------------------------------------------------------------------------------------
 
 //---- fill in retry tag when response with retry request is available ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        retry_tag_in_valid <= 1'b0;
        retry_tag_in       <= {TAGW{1'b0}};
@@ -370,8 +370,8 @@ module data_bridge_channel
      end
      
 //---- interrupt when FIFO's half full ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      retry_intrpt <= 1'b0;
    else if(~fifo_rty_tag_empty)
      retry_intrpt <= 1'b0;
@@ -389,7 +389,7 @@ module data_bridge_channel
              .FWFT       (1)
              ) mfifo_rty_tag (
                               .clk          (clk                 ), // input clk
-                              .rst_n        (rst_n               ), // input rst
+                              .resetn        (resetn               ), // input rst
                               .din          (fifo_rty_tag_din    ), // input [8 : 0] din
                               .wr_en        (fifo_rty_tag_wr_en  ), // input wr_en
                               .rd_en        (fifo_rty_tag_rd_en  ), // input rd_en
@@ -409,8 +409,8 @@ module data_bridge_channel
  assign retry_pos_out       = fifo_rty_tag_dout[8:7];
 
 //---- extended mask for command BE, used to pick out retry high or low 64B command ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        retry_be <= 127'd0;
      end
@@ -436,8 +436,8 @@ module data_bridge_channel
 //     | DMA read  | response    |  command     |
 //     ------------------------------------------
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        buf_w_data_o_en <= 1'b0;
        buf_w_data_e_en <= 1'b0;
@@ -540,7 +540,7 @@ module data_bridge_channel
                     )
             mrd_order_mng (
                         .clk            (clk           ), 
-                        .rst_n          (rst_n         ), 
+                        .resetn          (resetn         ), 
                         .rsv_valid      (rsv_valid     ),  
                         .rsv_tag        (rsv_tag       ),   
                         .rsv_pos        (rsv_pos       ),   
@@ -574,7 +574,7 @@ module data_bridge_channel
                     )
                  mwr_order_mng (
                         .clk       (clk       ), 
-                        .rst_n     (rst_n     ), 
+                        .resetn     (resetn     ), 
                         .rsv_valid (rsv_valid ),  
                         .rsv_tag   (rsv_tag   ),   
                         .rsv_pos   (rsv_pos   ),   
@@ -598,16 +598,16 @@ module data_bridge_channel
  endgenerate
 
 //---- return data and response back to AXI, which should be one cycle later than reclaim channel ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      ret_valid_sync <= 1'b0;
    else if(ret_valid && ret_ready)
      ret_valid_sync <= 1'b1;
    else if(lcl_resp_ready)
      ret_valid_sync <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        ret_axi_id_sync <= {IDW{1'd0}};
        ret_resp_sync <= 'd0;
@@ -640,32 +640,32 @@ module data_bridge_channel
 // reg [31:0] rsp_idle_cnt;
 //
 ////---- DEBUG registers ----
-// always@(posedge clk or negedge rst_n)
-//   if(~rst_n) 
+// always@(posedge clk or negedge resetn)
+//   if(~resetn) 
 //     debug_axi_cmd_idle <= 1'b0;
 //   else if(local_cmd_valid)
 //     debug_axi_cmd_idle <= 1'b0;
 //   else if(cmd_idle_cnt == debug_axi_cmd_idle_lim)
 //     debug_axi_cmd_idle <= 1'b1;
 //
-// always@(posedge clk or negedge rst_n)
-//   if(~rst_n) 
+// always@(posedge clk or negedge resetn)
+//   if(~resetn) 
 //     cmd_idle_cnt <= 32'd0;
 //   else if(local_cmd_valid)
 //     cmd_idle_cnt <= 32'd0;
 //   else 
 //     cmd_idle_cnt <= cmd_idle_cnt + 32'd1;
 //
-// always@(posedge clk or negedge rst_n)
-//   if(~rst_n) 
+// always@(posedge clk or negedge resetn)
+//   if(~resetn) 
 //     debug_axi_rsp_idle <= 1'b0;
 //   else if(lcl_resp_valid)
 //     debug_axi_rsp_idle <= 1'b0;
 //   else if(rsp_idle_cnt == debug_axi_rsp_idle_lim)
 //     debug_axi_rsp_idle <= 1'b1;
 //
-// always@(posedge clk or negedge rst_n)
-//   if(~rst_n) 
+// always@(posedge clk or negedge resetn)
+//   if(~resetn) 
 //     rsp_idle_cnt <= 32'd0;
 //   else if(lcl_resp_valid)
 //     rsp_idle_cnt <= 32'd0;
@@ -674,16 +674,16 @@ module data_bridge_channel
 
 
 //---- DEBUG registers ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      debug_axi_cnt_cmd <= 32'd0;
    else if (debug_cnt_clear)
      debug_axi_cnt_cmd <= 32'd0;
    else if (lcl_addr_first)
      debug_axi_cnt_cmd <= debug_axi_cnt_cmd + 32'd1;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      debug_axi_cnt_rsp <= 32'd0;
    else if (debug_cnt_clear)
      debug_axi_cnt_rsp <= 32'd0;
@@ -691,8 +691,8 @@ module data_bridge_channel
      debug_axi_cnt_rsp <= debug_axi_cnt_rsp + 32'd1;
 
 //---- DEBUG register ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      debug_buf_cnt <= 8'd0;
    else 
      debug_buf_cnt <= (buf_empty)? 8'd0 : (8'd128 - fifo_rcy_tag_count);
@@ -701,8 +701,8 @@ module data_bridge_channel
  reg fir_fifo_rcy_tag_overflow;
  reg fir_fifo_rty_tag_overflow;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        fir_fifo_rcy_tag_overflow <= 1'b0;
        fir_fifo_rty_tag_overflow <= 1'b0;

@@ -24,7 +24,7 @@ module wr_order_mng_array
 
                           (
                             input                    clk       ,
-                            input                    rst_n     ,
+                            input                    resetn     ,
 
                             //reserve interface
                             input                    rsv_valid ,
@@ -192,9 +192,9 @@ module wr_order_mng_array
             assign reserve_beat_info_entry[i] = rsv_valid && (rsv_tag == i);
             //assign beat_info_valid_vector[i] = beat_info_ev[i];
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     beat_info_ev[i] <= 0;
                 else if(reserve_beat_info_entry[i])
                     beat_info_ev[i] <= 1;
@@ -212,9 +212,9 @@ module wr_order_mng_array
         end
     endgenerate 
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             for(p=0; p<ARYD; p=p+1)
             begin
                 beat_info_axi_id[p] <= 0;
@@ -223,9 +223,9 @@ module wr_order_mng_array
             beat_info_axi_id[rsv_tag] <= rsv_axi_id;
     end
                           
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             for(p=0; p<ARYD; p=p+1)
             begin
                 beat_info_last[p] <= 0;
@@ -251,9 +251,9 @@ module wr_order_mng_array
         for(j=0; j<IDN; j=j+1)
         begin:pre_ptr_array
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     pre_ptr_valid[j] <= 0;
                 else if(reserve_pre_ptr[j])
                     pre_ptr_valid[j] <= 1;
@@ -261,9 +261,9 @@ module wr_order_mng_array
                     pre_ptr_valid[j] <= 0;
             end
            
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     pre_ptr[j] <= 0;
                 else if(reserve_pre_ptr[j])
                     pre_ptr[j] <= rsv_tag;
@@ -280,26 +280,26 @@ module wr_order_mng_array
 
     //----2) read out the tag of the previous beat from pre_ptr array and 
     //----   sotre it to the rsv_pre_ptr_latch
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rsv_pre_ptr_latch <= 0;
         else if(rsv_valid)
             rsv_pre_ptr_latch <= pre_ptr[rsv_axi_id];
     end
 
     //----3) store the tag of the current beat to rsv_tag_latch 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rsv_tag_latch <= 0;
         else if(rsv_valid)
             rsv_tag_latch <= rsv_tag;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rsv_axi_id_latch <= 0;
         else if(rsv_valid)
             rsv_axi_id_latch <= rsv_axi_id;
@@ -312,17 +312,17 @@ module wr_order_mng_array
         begin:beat_info_nptr_array
 
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     beat_info_nxt_ptr[i] <= 0;
                 else if(reserve_nxt_ptr[i])
                     beat_info_nxt_ptr[i] <= rsv_tag_latch;
             end
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     beat_info_nptr_v[i] <= 0;
                 else if(clear_beat_info_entry[i])
                     beat_info_nptr_v[i] <= 0;
@@ -334,17 +334,17 @@ module wr_order_mng_array
         end
     endgenerate 
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rsv_valid_latch <= 0;
         else 
             rsv_valid_latch <= rsv_valid;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rsv_beat_nh_latch <= 0;
         else
             rsv_beat_nh_latch <= rsv_valid && pre_ptr_valid[rsv_axi_id] && (!clear_pre_ptr[rsv_axi_id]);
@@ -377,9 +377,9 @@ module wr_order_mng_array
             assign update_head_beat[j] = store_rsp_in[j] && beat_info_nptr_v[head_beat_tag[j]];
             assign clear_head_beat[j] = store_rsp_in[j] && (!beat_info_nptr_v[head_beat_tag[j]]);
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     head_beat_tag_valid[j] <= 0;
                 else if(reserve_new_head_beat[j])
                     head_beat_tag_valid[j] <= 1;
@@ -387,9 +387,9 @@ module wr_order_mng_array
                     head_beat_tag_valid[j] <= 0;
             end
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     head_beat_tag[j] <= 0;
                 else if(reserve_new_head_beat[j])
                     head_beat_tag[j] <= rsv_tag_latch;
@@ -426,9 +426,9 @@ module wr_order_mng_array
             assign rsp_hi_valid[i] = rsp_in[i] && rsp_pos[1];
             assign rsp_lo_valid[i] = rsp_in[i] && rsp_pos[0];
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     beat_info_rv[i][0] <= 0;
                 else if(reserve_beat_info_entry[i])
                     beat_info_rv[i][0] <= ~rsv_pos[0];
@@ -438,9 +438,9 @@ module wr_order_mng_array
                     beat_info_rv[i][0] <= 0; 
             end
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     beat_info_rv[i][1] <= 0;
                 else if(reserve_beat_info_entry[i])
                     beat_info_rv[i][1] <= ~rsv_pos[1];
@@ -450,9 +450,9 @@ module wr_order_mng_array
                     beat_info_rv[i][1] <= 0; 
             end
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     beat_info_rc[i] <= 0;
                 else if(rsp_in[i])
                     beat_info_rc[i] <= beat_info_rc[i] | nretry_rsp_code;
@@ -499,9 +499,9 @@ module wr_order_mng_array
 
     assign load_rsp_out = select_a ? priority_tmp_a : priority_tmp_b;
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             load_rsp_out_latch <= 0;
         `ifndef ENABLE_ODMA
         else if(rsp_latch_rdy && (|rdy_for_next_stage))
@@ -516,9 +516,9 @@ module wr_order_mng_array
         for(j=0; j<IDN; j=j+1)
         begin:rdy_to_rsp_latch_array
             
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                     rdy_to_rsp_valid[j] <= 0;
                 else if(store_rsp_in[j])
                     rdy_to_rsp_valid[j] <= 1;
@@ -531,9 +531,9 @@ module wr_order_mng_array
                 `endif
             end
 
-            always@(posedge clk or negedge rst_n)
+            always@(posedge clk or negedge resetn)
             begin
-                if(~rst_n)
+                if(~resetn)
                 begin
                     rdy_to_rsp_rc[j]   <= 0;
                     rdy_to_rsp_last[j] <= 0;
@@ -611,9 +611,9 @@ module wr_order_mng_array
     endgenerate
 
     `ifndef ENABLE_ODMA
-        always@(posedge clk or negedge rst_n)
+        always@(posedge clk or negedge resetn)
         begin
-            if(~rst_n)
+            if(~resetn)
                 ret_valid_latch <= 0;
             else if(rsp_latch_valid_o)
                 ret_valid_latch <= 1;
@@ -621,9 +621,9 @@ module wr_order_mng_array
                 ret_valid_latch <= 0;
         end
 
-        always@(posedge clk or negedge rst_n)
+        always@(posedge clk or negedge resetn)
         begin
-            if(~rst_n)
+            if(~resetn)
             begin
                 ret_tag <= 0;
                 ret_axi_id <= 0;
@@ -732,25 +732,25 @@ module wr_order_mng_array
     reg   [31:0]     ret_counter                 ;
     reg   [31:0]     ret_idle_counter            ;
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             rsv_counter <= 32'b0;
         else if (rsv_valid)
             rsv_counter <= rsv_counter + 1'b1;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
             ret_counter <= 32'b0;
         else if (ret_valid && ret_ready)
             ret_counter <= ret_counter + 1'b1;
     end
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(rst_n)
+        if(resetn)
             ret_idle_counter <= 32'b0;
         else if(ret_valid && ret_ready)
             ret_idle_counter <= 32'b0;
@@ -822,9 +822,9 @@ module wr_order_mng_array
     reg              ret_ready_sync4             ;
     reg   [ARYD-1:0] entry_valid_for_debug_sync4 ;
 
-    always@(posedge clk or negedge rst_n)
+    always@(posedge clk or negedge resetn)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin
             rsv_counter_sync1           <= 0 ;
             ret_counter_sync1           <= 0 ;
@@ -964,7 +964,7 @@ module wr_order_mng_array
   .probe0(
 //1+ 1+ 6+ 1+ 1+ 5+ 1+ 6+ 1+ 5+ 1+ 1+ 64 = 94
     {
-     rst_n                       ,//1+  //
+     resetn                       ,//1+  //
      rsv_counter_sync4           , 
      ret_counter_sync4           , 
      ret_idle_counter_sync4      , 

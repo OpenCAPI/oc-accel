@@ -25,7 +25,7 @@ module mmio_axilite_master
               )
               (
                      input                 clk                          ,
-                     input                 rst_n                            ,
+                     input                 resetn                            ,
 
 
                      //---- local information input --------------------------
@@ -103,7 +103,7 @@ module mmio_axilite_master
               )
         mmio_path_and_regs (
              .clk                        (clk                    ),
-             .rst_n                      (rst_n                      ),
+             .resetn                      (resetn                      ),
              .debug_info_clear           (debug_info_clear            ),
              .debug_bus_trans_protocol   (debug_bus_trans_protocol   ),
              .debug_bus_data_bridge      (debug_bus_data_bridge      ),
@@ -131,7 +131,7 @@ module mmio_axilite_master
 //---- AXI lite interface to action as master ----
  axilite_shim axilite_shim (
                                    .clk           (clk      ),
-                                   .rst_n         (rst_n        ),
+                                   .resetn         (resetn        ),
                                    .m_axi_awready (m_axi_awready),   
                                    .m_axi_awaddr  (m_axi_awaddr ),
                                    .m_axi_awprot  (m_axi_awprot ), // not supported

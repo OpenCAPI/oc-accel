@@ -39,7 +39,7 @@ module action_multi_process # (
 )
 (
     input              clk                      ,
-    input              rst_n                    , 
+    input              resetn                    , 
 
 
     //---- AXI bus interfaced with OCACCEL core ----               
@@ -127,7 +127,7 @@ module action_multi_process # (
     reg [0000:0] app_ready;
 
     always @(posedge clk) begin
-        if (rst_n == 0) begin
+        if (resetn == 0) begin
             app_ready <= 0;
         end else begin
             app_ready <= 1;
@@ -154,7 +154,7 @@ module action_multi_process # (
     ) multi_process_framework_0 (
 
         .clk                      (clk                             ) ,
-        .rst_n                    (rst_n                           ) ,
+        .resetn                    (resetn                           ) ,
         .m_axi_ocaccel_awid          (m_axi_ocaccel_awid                 ) ,
         .m_axi_ocaccel_awaddr        (m_axi_ocaccel_awaddr               ) ,
         .m_axi_ocaccel_awlen         (m_axi_ocaccel_awlen                ) ,

@@ -36,7 +36,7 @@ module odma_dummy_action #(
 )
 (
     input                                   clk,
-    input                                   rst_n,
+    input                                   resetn,
     // AXI SDRAM Interface
     output [DDR_AXI_ADDR_WIDTH-1 : 0 ]      ddr_axi_araddr,
     output [1 : 0 ]                         ddr_axi_arburst,
@@ -175,7 +175,7 @@ parameter AXIL_STRB_WIDTH = AXIL_DATA_WIDTH/8;
 // Xilinx IP
 axi_data_width_converter axi_converter (
   .s_axi_aclk       (clk),
-  .s_axi_aresetn    (rst_n),
+  .s_axi_aresetn    (resetn),
   .s_axi_awid       (axi_awid    ),
   .s_axi_awaddr     (axi_awaddr[DDR_AXI_ADDR_WIDTH-1 : 0]),
   .s_axi_awlen      (axi_awlen   ),
@@ -261,8 +261,8 @@ assign axi_ruser      = {AXI_RUSER_WIDTH{1'b0}};
 assign axi_buser      = {AXI_BUSER_WIDTH{1'b0}};
 
 // AXI lite slave
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     s_lite_arready <= 1'b1;
   else if(s_lite_arvalid)
     s_lite_arready <= 1'b0;
@@ -272,8 +272,8 @@ always@(posedge clk or negedge rst_n) begin
     s_lite_arready <= s_lite_arready;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     s_lite_rvalid <= 1'b0;
   else if(s_lite_arvalid & s_lite_arready)
     s_lite_rvalid <= 1'b1;
@@ -286,8 +286,8 @@ end
 assign s_lite_rdata = {AXIL_DATA_WIDTH{1'b0}};
 assign s_lite_rresp = 2'b0;
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     s_lite_awready <= 1'b0;
   else if(s_lite_awvalid)
     s_lite_awready <= 1'b1;
@@ -297,8 +297,8 @@ always@(posedge clk or negedge rst_n) begin
     s_lite_awready <= s_lite_awready;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     s_lite_wready <= 1'b0;
   else if(s_lite_awvalid & s_lite_awready)
     s_lite_wready <= 1'b1;
@@ -308,8 +308,8 @@ always@(posedge clk or negedge rst_n) begin
     s_lite_wready <= s_lite_wready;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     s_lite_bvalid <= 1'b0;
   else if(s_lite_wvalid & s_lite_wready)
     s_lite_bvalid <= 1'b1;

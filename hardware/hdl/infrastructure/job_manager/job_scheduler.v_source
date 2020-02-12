@@ -8,7 +8,7 @@ module job_scheduler #(
     parameter KERNEL_NUM = NUM_KERNELS
 )(
                     input             clk                   ,
-                    input             rst_n                 ,
+                    input             resetn                 ,
 
                     //---- manager ----
                     output                            dsc0_pull_o     ,
@@ -52,16 +52,16 @@ assign return_data_o = completion_info;
 genvar j;
 generate
   for (j = 0; j < KERNEL_NUM; j = j + 1) begin:kernel_logic_gen
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             engine_done_r[j] <= 1'b0;
         else if(engine_start[j])
             engine_done_r[j] <= 1'b0;
         else if(engine_done[j])
             engine_done_r[j] <= 1'b1;
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             kernel_busy[j] <= 1'b0;
         else if(engine_start[j] == 1'b1)
             kernel_busy[j] <= 1'b1;
@@ -70,8 +70,8 @@ generate
   end
 endgenerate
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         completion_kernel <= 6'b0;
     else if(completion_kernel == KERNEL_NUM - 1)
         completion_kernel <= 6'b0;
@@ -113,8 +113,8 @@ always@(*)
     endcase
 `endif
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         engine_start <= 'd0;
     //: my $kn = NUM_KERNELS;
     //: for (my $i = 0; $i < $kn; $i++) {

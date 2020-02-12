@@ -71,35 +71,35 @@ module fifo_async
  wire [ADDR_WIDTH:0] pcnt_2 = {{ADDR_WIDTH-2{1'b0}}, 2'b10};
  wire [ADDR_WIDTH-1:0] pcnt_max_2 = {{ADDR_WIDTH-1{1'b1}}, 1'b0};
  reg rd_en_sync;
- wire wr_rst_n = ~wr_rst;
- wire rd_rst_n = ~rd_rst;
+ wire wr_resetn = ~wr_rst;
+ wire rd_resetn = ~rd_rst;
  
  parameter DEPTH = 2**ADDR_WIDTH;
 
  assign wr_pnt_nxt = wr_pnt + pcnt_1;
 
- always@(posedge wr_clk or negedge wr_rst_n)
-   if(~wr_rst_n) 
+ always@(posedge wr_clk or negedge wr_resetn)
+   if(~wr_resetn) 
      wr_pnt <= pcnt_0;
    else if(wr_en && ~full)
      wr_pnt <= wr_pnt_nxt;
 
  assign wr_gray_nxt = (wr_pnt_nxt>>1) ^ wr_pnt_nxt;
 
- always@(posedge wr_clk or negedge wr_rst_n)
-   if(~wr_rst_n) 
+ always@(posedge wr_clk or negedge wr_resetn)
+   if(~wr_resetn) 
      wr_gray <= pcnt_0;
    else if(wr_en && ~full)
      wr_gray <= wr_gray_nxt;
 
- always@(posedge wr_clk or negedge wr_rst_n)
-   if(~wr_rst_n) 
+ always@(posedge wr_clk or negedge wr_resetn)
+   if(~wr_resetn) 
      {r2w_gray_sync2, r2w_gray_sync1} <= {pcnt_0, pcnt_0};
    else
      {r2w_gray_sync2, r2w_gray_sync1} <= {r2w_gray_sync1, rd_gray};
 
- always@(posedge wr_clk or negedge wr_rst_n)
-   if(~wr_rst_n) 
+ always@(posedge wr_clk or negedge wr_resetn)
+   if(~wr_resetn) 
      full <= 1'b0;
    else if((wr_gray_nxt == {~r2w_gray_sync2[ADDR_WIDTH:ADDR_WIDTH-1], r2w_gray_sync2[ADDR_WIDTH-2:0]}) && wr_en)
      full <= 1'b1;
@@ -117,8 +117,8 @@ module fifo_async
      end
  endgenerate
 
- always@(posedge wr_clk or negedge wr_rst_n)
-   if(~wr_rst_n) 
+ always@(posedge wr_clk or negedge wr_resetn)
+   if(~wr_resetn) 
      almost_full <= 1'b0;
    else if((((r2w_bin[ADDR_WIDTH] != wr_pnt_nxt[ADDR_WIDTH]) && (r2w_bin[ADDR_WIDTH-1:0] - wr_pnt_nxt[ADDR_WIDTH-1:0] <= pcnt_2))  || 
             ((r2w_bin[ADDR_WIDTH] == wr_pnt_nxt[ADDR_WIDTH]) && (wr_pnt_nxt[ADDR_WIDTH-1:0] - r2w_bin[ADDR_WIDTH-1:0] >= pcnt_max_2))))
@@ -127,15 +127,15 @@ module fifo_async
            ((r2w_bin[ADDR_WIDTH] == wr_pnt_nxt[ADDR_WIDTH]) && (wr_pnt_nxt[ADDR_WIDTH-1:0] - r2w_bin[ADDR_WIDTH-1:0] < pcnt_max_2)))
      almost_full <= 1'b0;
 
- always@(posedge wr_clk or negedge wr_rst_n)
-   if(~wr_rst_n) 
+ always@(posedge wr_clk or negedge wr_resetn)
+   if(~wr_resetn) 
      wr_data_count <= pcnt_0[ADDR_WIDTH-1:0];
    else 
      wr_data_count <= (r2w_bin[ADDR_WIDTH] == wr_pnt[ADDR_WIDTH])? (wr_pnt[ADDR_WIDTH-1:0] - r2w_bin[ADDR_WIDTH-1:0]) : 
                                                                    (DEPTH - (r2w_bin[ADDR_WIDTH-1:0] - wr_pnt[ADDR_WIDTH-1:0]));
 
- always@(posedge wr_clk or negedge wr_rst_n)
-   if(~wr_rst_n) 
+ always@(posedge wr_clk or negedge wr_resetn)
+   if(~wr_resetn) 
      overflow <= 1'b0;
    else
      overflow <= full && wr_en;
@@ -143,28 +143,28 @@ module fifo_async
 
  assign rd_pnt_nxt = rd_pnt + pcnt_1;
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      rd_pnt <= pcnt_0;
    else if(rd_en && ~empty)
      rd_pnt <= rd_pnt_nxt;
 
  assign rd_gray_nxt = (rd_pnt_nxt>>1) ^ rd_pnt_nxt;
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      rd_gray <= pcnt_0;
    else if(rd_en && ~empty)
      rd_gray <= rd_gray_nxt;
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      {w2r_gray_sync2, w2r_gray_sync1} <= {pcnt_0, pcnt_0};
    else
      {w2r_gray_sync2, w2r_gray_sync1} <= {w2r_gray_sync1, wr_gray};
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      empty <= 1'b1;
    else if((rd_gray_nxt == w2r_gray_sync2) && rd_en)
      empty <= 1'b1;
@@ -183,8 +183,8 @@ module fifo_async
      end
  endgenerate
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      almost_empty <= 1'b1;
    else if((((w2r_bin[ADDR_WIDTH] == rd_pnt_nxt[ADDR_WIDTH]) && (w2r_bin[ADDR_WIDTH-1:0] - rd_pnt_nxt[ADDR_WIDTH-1:0] <= pcnt_2)) ||
             ((w2r_bin[ADDR_WIDTH] != rd_pnt_nxt[ADDR_WIDTH]) && (rd_pnt_nxt[ADDR_WIDTH-1:0] - w2r_bin[ADDR_WIDTH-1:0] >= pcnt_max_2))))
@@ -193,21 +193,21 @@ module fifo_async
             ((w2r_bin[ADDR_WIDTH] != rd_pnt_nxt[ADDR_WIDTH]) && (rd_pnt_nxt[ADDR_WIDTH-1:0] - w2r_bin[ADDR_WIDTH-1:0] < pcnt_max_2)))
      almost_empty <= 1'b0;
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      rd_data_count <= pcnt_0[ADDR_WIDTH-1:0];
    else 
      rd_data_count <= (w2r_bin[ADDR_WIDTH] == rd_pnt[ADDR_WIDTH])? (w2r_bin[ADDR_WIDTH-1:0] - rd_pnt[ADDR_WIDTH-1:0]) : 
                                                                    (DEPTH - (rd_pnt[ADDR_WIDTH-1:0] - w2r_bin[ADDR_WIDTH-1:0]));
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      rd_en_sync <= 1'b0;
    else 
      rd_en_sync <= rd_en;
 
- always@(posedge rd_clk or negedge rd_rst_n)
-   if(~rd_rst_n) 
+ always@(posedge rd_clk or negedge rd_resetn)
+   if(~rd_resetn) 
      underflow <= 1'b0;
    else
      underflow <= empty && rd_en;

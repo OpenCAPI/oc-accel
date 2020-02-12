@@ -18,7 +18,7 @@
 
 module partial_sequencer (
                           input             clk              ,
-                          input             rst_n            ,
+                          input             resetn            ,
                           input             partial_en       ,
                           input      [63:0] strobe           ,
                           input             strobe_valid     ,
@@ -111,8 +111,8 @@ module partial_sequencer (
 //   32B -> 16B -> 8B (-> 8B...) -> 4B (-> 4B...) -> 2B (-> 2B) -> 1B (-> 1B...)
 //-----------------------------------------------------------------------------------------------------------------
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      cstate <= IDLE;
    else
      cstate <= nstate;
@@ -164,8 +164,8 @@ module partial_sequencer (
 // bit2: 4B
 // bit1: 2B
 // bit0: 1B
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      part_cmd_cyc <= 6'b100000;
    else if(cstate == IDLE)
      part_cmd_cyc <= 6'b100000;
@@ -257,8 +257,8 @@ module partial_sequencer (
        end
  endgenerate
  
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        s_1B  <= 64'd0;
        s_2B  <= 32'd0;
@@ -297,8 +297,8 @@ module partial_sequencer (
 
 
 //---- update strobe ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      sub_strb <= 64'd0;
    else if(strobe_valid)
      sub_strb <= strobe;
@@ -340,8 +340,8 @@ module partial_sequencer (
 //
 //-----------------------------------------------------------------------------------------------------------------
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      partial_ea <= 6'd0;
    else if(cstate == WR_CMD_XB)
      case(part_cmd_cyc)
@@ -386,8 +386,8 @@ module partial_sequencer (
  
  
 //---- partial length ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      partial_len <= 3'd0;
    else if(cstate == WR_CMD_XB)
      case(part_cmd_cyc)
@@ -403,8 +403,8 @@ module partial_sequencer (
 //---- partial effective address and length valid ----
 // sync twice to align with partial_done if any
 // make sure partial_valid align with partial_en, and deasserts when partial_en is 0
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        partial_valid_pre1 <= 1'b0;
        partial_valid_pre2 <= 1'b0;
@@ -415,8 +415,8 @@ module partial_sequencer (
        partial_valid_pre2 <= partial_valid_pre1;
      end
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      partial_valid_pending <= 1'b0;
    else if(partial_valid_pre1)
      partial_valid_pending <= 1'b1;
@@ -426,8 +426,8 @@ module partial_sequencer (
   assign partial_valid = partial_valid_pending && partial_en;
 
 //---- counter for a single sequence of partial commands, used in afutag to distinguish individual partial command ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      partial_cnt <= 5'd0;
    else if(cstate == IDLE)
      partial_cnt <= 5'd0;

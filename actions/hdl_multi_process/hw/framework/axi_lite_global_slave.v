@@ -21,7 +21,7 @@ module axi_lite_global_slave #(
     parameter ADDR_WIDTH = 32
 )(
                       input             clk                   ,
-                      input             rst_n                 ,
+                      input             resetn                 ,
 
                       //---- AXI Lite bus----
                         // AXI write address channel
@@ -147,8 +147,8 @@ endgenerate
  //assign o_interrupt = |REG_interrupt_mask;
  assign o_interrupt = interrupt_req_reg;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) begin
+ always@(posedge clk or negedge resetn)
+   if(~resetn) begin
      interrupt_req_reg <= 1'b0;
      interrupt_wait_soft_clear <= 1'b0;
    end
@@ -170,92 +170,92 @@ endgenerate
      end
    end
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      kernel_complete_prev <= {KERNEL_NUM{1'b1}};
    else
      kernel_complete_prev <= kernel_complete;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         job_done_r <= 1'b0;
     else
         job_done_r <= job_done;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         real_done <= 1'b0;
     else if(manager_start)
         real_done <= 1'b0;
     else if(job_done & !job_done_r)
         real_done <= 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt0 <= 32'b0;
     else if(manager_start)
         cnt0 <= 32'b0;
     else if(kernel_complete_posedge[0])
         cnt0 <= cnt0 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt1 <= 32'b0;
     else if(manager_start)
         cnt1 <= 32'b0;
     else if(kernel_complete_posedge[1])
         cnt1 <= cnt1 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt2 <= 32'b0;
     else if(manager_start)
         cnt2 <= 32'b0;
     else if(kernel_complete_posedge[2])
         cnt2 <= cnt2 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt3 <= 32'b0;
     else if(manager_start)
         cnt3 <= 32'b0;
     else if(kernel_complete_posedge[3])
         cnt3 <= cnt3 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt4 <= 32'b0;
     else if(manager_start)
         cnt4 <= 32'b0;
     else if(kernel_complete_posedge[4])
         cnt4 <= cnt4 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt5 <= 32'b0;
     else if(manager_start)
         cnt5 <= 32'b0;
     else if(kernel_complete_posedge[5])
         cnt5 <= cnt5 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt6 <= 32'b0;
     else if(manager_start)
         cnt6 <= 32'b0;
     else if(kernel_complete_posedge[6])
         cnt6 <= cnt6 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+ always@(posedge clk or negedge resetn)
+    if(!resetn)
         cnt7 <= 32'b0;
     else if(manager_start)
         cnt7 <= 32'b0;
     else if(kernel_complete_posedge[7])
         cnt7 <= cnt7 + 1'b1;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      REG_interrupt_mask <= 32'b0;
    else begin
      if ((REG_interrupt_mask[KERNEL_NUM-1:0] == {KERNEL_NUM{1'b0}}) & ~(s_axi_wvalid & s_axi_wready)) begin
@@ -274,8 +274,8 @@ endgenerate
      end
    end
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      pending_completed_kernels <= {KERNEL_NUM{1'b0}};
    else begin
      pending_completed_kernels <= (pending_completed_kernels | kernel_complete_posedge) & ~REG_interrupt_mask[KERNEL_NUM-1:0];
@@ -286,15 +286,15 @@ endgenerate
 ***********************************************************************/
 
 //---- write address capture ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      write_address <= 32'd0;
    else if(s_axi_awvalid & s_axi_awready)
      write_address <= s_axi_awaddr;
 
 //---- write address ready ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_awready <= 1'b0;
    else if(s_axi_awvalid)
      s_axi_awready <= 1'b1;
@@ -302,8 +302,8 @@ endgenerate
      s_axi_awready <= 1'b0;
 
 //---- write data ready ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_wready <= 1'b0;
    else if(s_axi_awvalid & s_axi_awready)
      s_axi_wready <= 1'b1;
@@ -317,8 +317,8 @@ endgenerate
  //assign write_data_interrupt_mask               = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_interrupt_mask)};
 
 //---- registers behaviour ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        REG_interrupt_control     <= 32'd0;
        //REG_interrupt_mask        <= 32'd0;
@@ -333,8 +333,8 @@ endgenerate
        default :;
      endcase
 
-always @(posedge clk or negedge rst_n) begin
-    if (~rst_n) begin
+always @(posedge clk or negedge resetn) begin
+    if (~resetn) begin
         completion_q <= 0;
     end
 end
@@ -347,8 +347,8 @@ assign REG_interrupt_control_rd = REG_interrupt_control;
 assign REG_interrupt_mask_rd = REG_interrupt_mask;
 
 //---- read registers ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_rdata <= 32'd0;
    else if(s_axi_arvalid & s_axi_arready)
      case(s_axi_araddr)
@@ -375,8 +375,8 @@ assign REG_interrupt_mask_rd = REG_interrupt_mask;
      endcase
 
 //---- address ready: deasserts once arvalid is seen; reasserts when current read is done ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_arready <= 1'b1;
    else if(s_axi_arvalid)
      s_axi_arready <= 1'b0;
@@ -384,8 +384,8 @@ assign REG_interrupt_mask_rd = REG_interrupt_mask;
      s_axi_arready <= 1'b1;
 
 //---- data ready: deasserts once rvalid is seen; reasserts when new address has come ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_rvalid <= 1'b0;
    else if (s_axi_arvalid & s_axi_arready)
      s_axi_rvalid <= 1'b1;
@@ -397,8 +397,8 @@ assign REG_interrupt_mask_rd = REG_interrupt_mask;
 ***********************************************************************/
 
 //---- axi write response ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      s_axi_bvalid <= 1'b0;
    else if(s_axi_wvalid & s_axi_wready)
      s_axi_bvalid <= 1'b1;
@@ -414,38 +414,38 @@ assign REG_interrupt_mask_rd = REG_interrupt_mask;
 *                        control                                       *
 ***********************************************************************/
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         REG_completion_size <= 32'b0;
     else if(s_axi_wvalid & s_axi_wready & (write_address == ADDR_CMPL_SIZE))
         REG_completion_size <= s_axi_wdata;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         REG_completion_addr_hi <= 32'b0;
     else if(s_axi_wvalid & s_axi_wready & (write_address == ADDR_CMPL_ADDR_HI))
         REG_completion_addr_hi <= s_axi_wdata;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         REG_completion_addr_lo <= 32'b0;
     else if(s_axi_wvalid & s_axi_wready & (write_address == ADDR_CMPL_ADDR_LO))
         REG_completion_addr_lo <= s_axi_wdata;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         REG_init_addr_lo <= 32'b0;
     else if(s_axi_wvalid & s_axi_wready & (write_address == ADDR_INIT_ADDR_LO))
         REG_init_addr_lo <= s_axi_wdata;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         REG_init_addr_hi <= 32'b0;
     else if(s_axi_wvalid & s_axi_wready & (write_address == ADDR_INIT_ADDR_HI))
         REG_init_addr_hi <= s_axi_wdata;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         REG_global_control <= 32'b0;
     else if(s_axi_wvalid & s_axi_wready & (write_address == ADDR_GLOBAL_CONTROL))
         REG_global_control <= s_axi_wdata;
@@ -461,8 +461,8 @@ assign job_done = !(|kernel_busy);
 genvar j;
 generate
   for (j = 0; j < KERNEL_NUM; j = j + 1) begin:kernel_busy_gen
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             kernel_busy[j] <= 1'b0;
         else if(kernel_start[j] == 1'b1)
             kernel_busy[j] <= 1'b1;
@@ -471,8 +471,8 @@ generate
   end
 endgenerate
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         kernel_start <= 8'b0;
     else if(job_start) begin
         casex(kernel_busy)

@@ -18,7 +18,7 @@
 
 module axilite_shim (
                         input             clk                   ,
-                        input             rst_n                 ,
+                        input             resetn                 ,
 
                         //---- master side AXI Lite bus ----
                           // AXI write address channel
@@ -73,24 +73,24 @@ module axilite_shim (
 //   lcl_mmio_ack       _______/-\__________/-\__
 //=========================================================
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      m_axi_awvalid <= 1'b0;
    else if(lcl_mmio_wr)
      m_axi_awvalid <= 1'b1;
    else if(m_axi_awready)
      m_axi_awvalid <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      m_axi_wvalid <= 1'b0;
    else if(lcl_mmio_wr)
      m_axi_wvalid <= 1'b1;
    else if(m_axi_wready)
      m_axi_wvalid <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        m_axi_wdata  <= 32'd0;
        m_axi_awaddr <= 32'd0;
@@ -101,14 +101,14 @@ module axilite_shim (
        m_axi_awaddr <= lcl_mmio_addr;
      end
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      m_axi_bready <= 1'b0;
    else 
      m_axi_bready <= ~(m_axi_awvalid || m_axi_wvalid);
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      lcl_mmio_ack <= 1'b0;
    else 
      lcl_mmio_ack <= (m_axi_bready && m_axi_bvalid);
@@ -124,24 +124,24 @@ module axilite_shim (
 //   lcl_mmio_addr      -------<=>----------<=>--
 //=========================================================
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      m_axi_arvalid <= 1'b0;
    else if(lcl_mmio_rd)
      m_axi_arvalid <= 1'b1;
    else if(m_axi_arready)
      m_axi_arvalid <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      m_axi_rready <= 1'b0;
    else if(lcl_mmio_rd)
      m_axi_rready <= 1'b1;
    else if(m_axi_rvalid)
      m_axi_rready <= 1'b0;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        m_axi_araddr <= 32'd0;
      end
@@ -150,14 +150,14 @@ module axilite_shim (
        m_axi_araddr <= lcl_mmio_addr;
      end
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      lcl_mmio_dout <= 32'b0;
    else if(m_axi_rready && m_axi_rvalid)
      lcl_mmio_dout <= m_axi_rdata;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      lcl_mmio_dv <= 1'b0;
    else 
      lcl_mmio_dv <= (m_axi_rready && m_axi_rvalid);
@@ -167,8 +167,8 @@ module axilite_shim (
 // common response for write and read channels
 //=========================================================
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      lcl_mmio_rsp <= 1'b0;
    else if(m_axi_bready && m_axi_bvalid)
      lcl_mmio_rsp <= (m_axi_bresp == 2'b00);

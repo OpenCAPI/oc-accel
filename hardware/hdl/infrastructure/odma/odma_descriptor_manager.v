@@ -20,7 +20,7 @@
 
 module odma_descriptor_manager (
         input                           clk             ,
-        input                           rst_n           ,
+        input                           resetn           ,
         //configure
         input      [063:0]              init_addr0      ,
         input      [063:0]              init_addr1      ,
@@ -176,14 +176,14 @@ module odma_descriptor_manager (
     assign manager_error = 64'b0;
     assign manager_start_w = {manager_start3,manager_start2,manager_start1,manager_start0};
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         manager_start_r <= 4'b0;
     else
         manager_start_r <= manager_start;
 
     always@(*)
-    if(!rst_n)
+    if(!resetn)
         total_num = 'd0;
     else case(read_channel)
             2'b00: total_num = ajacent_cnt0;
@@ -193,7 +193,7 @@ module odma_descriptor_manager (
         endcase
 
     always@(*)
-    if(!rst_n)
+    if(!resetn)
         next_addr = 'd0;
     else case(read_channel)
             2'b00: next_addr = next_addr0;
@@ -202,16 +202,16 @@ module odma_descriptor_manager (
             2'b11: next_addr = next_addr3;
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         read_start <= 1'b0;
     else if(lcl_rd_last & lcl_rd_valid & lcl_rd_ready)
         read_start <= 1'b0;
     else if(read_request0 | read_request1 | read_request2 | read_request3)
         read_start <= 1'b1;
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         read_channel <= 2'b00;
     else if(read_start)
         read_channel <= read_channel;
@@ -225,7 +225,7 @@ module odma_descriptor_manager (
         read_channel <= 2'b11;
 
     always@(*)
-    if(!rst_n)
+    if(!resetn)
         read_byte_enable = 128'b0;
     else if(lcl_rd_last)
         case(total_num[1:0])
@@ -237,8 +237,8 @@ module odma_descriptor_manager (
     else
         read_byte_enable = 128'hffffffffffffffffffffffffffffffff;
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         beat_cnt <= 4'b0;
     else if(lcl_rd_ready&lcl_rd_valid&lcl_rd_last)
         beat_cnt <= 4'b0;
@@ -249,8 +249,8 @@ module odma_descriptor_manager (
     assign read_request0 = !in_read0 & ((fifo_cnt0[4:0] + ajacent_cnt0[5:2] < 'd16) | fifo_empty0) & manager_start_r[0] & !channel0_done;
     assign manager_start0 = manager_start[0] & !manager_start_r[0];
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         channel0_done <= 1'b0;
     else if(manager_start0)
         channel0_done <= 1'b0;
@@ -262,16 +262,16 @@ module odma_descriptor_manager (
             2'b11: channel0_done <= lcl_rd_data[768];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         in_read0 <= 1'b0;
     else if(read_start & (read_channel == 2'b00))
         in_read0 <= 1'b1;
     else if(in_read0 & lcl_rd_data_last & lcl_rd_data_valid & !lcl_rd_rsp_code & (lcl_rd_data_axi_id[4:0] == 5'b00100))
         in_read0 <= 1'b0;
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         ajacent_cnt0 <= 6'h3f;
     else if(manager_start0)
         ajacent_cnt0 <= init_size0;
@@ -283,8 +283,8 @@ module odma_descriptor_manager (
             2'b00: ajacent_cnt0 <= lcl_rd_data[13:8];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         next_addr0 <= 'd0;
     else if(manager_start0)
         next_addr0 <= init_addr0;
@@ -296,8 +296,8 @@ module odma_descriptor_manager (
             2'b11: next_addr0 <= lcl_rd_data[1023:960];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             channel_id0 <= 30'b0;
         else if (manager_start0)
             channel_id0 <= 30'b0;
@@ -321,8 +321,8 @@ module odma_descriptor_manager (
             endcase
     end
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             current_valid0 <= 2'b00;
         else if(manager_start0 | unvalid_dsc0)
             current_valid0 <= 2'b00;
@@ -330,7 +330,7 @@ module odma_descriptor_manager (
             current_valid0 <= current_valid0 + 1'b1;
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             current_out0 = 256'b0;
         else case(current_valid0)
             2'b00: current_out0 = fifo_out0[255:0];
@@ -355,8 +355,8 @@ channel_fifo channel_fifo0 ( //256x64
     assign read_request1 = !in_read1 & ((fifo_cnt1[4:0] + ajacent_cnt1[5:2] < 'd16) | fifo_empty1) & manager_start_r[1] & !channel1_done;
     assign manager_start1 = manager_start[1] & !manager_start_r[1];
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         channel1_done <= 1'b0;
     else if(manager_start1)
         channel1_done <= 1'b0;
@@ -368,16 +368,16 @@ channel_fifo channel_fifo0 ( //256x64
             2'b11: channel1_done <= lcl_rd_data[768];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         in_read1 <= 1'b0;
     else if(read_start & (read_channel == 2'b01))
         in_read1 <= 1'b1;
     else if(in_read1 & lcl_rd_data_last & lcl_rd_data_valid & !lcl_rd_rsp_code & (lcl_rd_data_axi_id[4:0] == 5'b01100))
         in_read1 <= 1'b0;
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         ajacent_cnt1 <= 6'h3f;
     else if(manager_start1)
         ajacent_cnt1 <= init_size1;
@@ -389,8 +389,8 @@ channel_fifo channel_fifo0 ( //256x64
             2'b00: ajacent_cnt1 <= lcl_rd_data[13:8];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         next_addr1 <= 'd0;
     else if(manager_start1)
         next_addr1 <= init_addr1;
@@ -402,8 +402,8 @@ channel_fifo channel_fifo0 ( //256x64
             2'b11: next_addr1 <= lcl_rd_data[1023:960];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             channel_id1 <= 30'b0;
         else if (manager_start1)
             channel_id1 <= 30'b0;
@@ -427,8 +427,8 @@ channel_fifo channel_fifo0 ( //256x64
             endcase
     end
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             current_valid1 <= 2'b00;
         else if(manager_start1 | unvalid_dsc1)
             current_valid1 <= 2'b00;
@@ -436,7 +436,7 @@ channel_fifo channel_fifo0 ( //256x64
             current_valid1 <= current_valid1 + 1'b1;
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             current_out1 = 256'b0;
         else case(current_valid1)
             2'b00: current_out1 = fifo_out1[255:0];
@@ -461,8 +461,8 @@ channel_fifo channel_fifo1 ( //256x64
     assign read_request2 = !in_read2 & ((fifo_cnt2[4:0] + ajacent_cnt2[5:2] < 'd16) | fifo_empty2) & manager_start_r[2] & !channel2_done;
     assign manager_start2 = manager_start[2] & !manager_start_r[2];
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         channel2_done <= 1'b0;
     else if(manager_start2)
         channel2_done <= 1'b0;
@@ -474,16 +474,16 @@ channel_fifo channel_fifo1 ( //256x64
             2'b11: channel2_done <= lcl_rd_data[768];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         in_read2 <= 1'b0;
     else if(read_start & (read_channel == 2'b10))
         in_read2 <= 1'b1;
     else if(in_read2 & lcl_rd_data_last & lcl_rd_data_valid & !lcl_rd_rsp_code & (lcl_rd_data_axi_id[4:0] == 5'b10100))
         in_read2 <= 1'b0;
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         ajacent_cnt2 <= 6'h3f;
     else if(manager_start2)
         ajacent_cnt2 <= init_size2;
@@ -495,8 +495,8 @@ channel_fifo channel_fifo1 ( //256x64
             2'b00: ajacent_cnt2 <= lcl_rd_data[13:8];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         next_addr2 <= 'd0;
     else if(manager_start2)
         next_addr2 <= init_addr2;
@@ -508,8 +508,8 @@ channel_fifo channel_fifo1 ( //256x64
             2'b11: next_addr2 <= lcl_rd_data[1023:960];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             channel_id2 <= 30'b0;
         else if (manager_start2)
             channel_id2 <= 30'b0;
@@ -533,8 +533,8 @@ channel_fifo channel_fifo1 ( //256x64
             endcase
     end
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             current_valid2 <= 2'b00;
         else if(manager_start2 | unvalid_dsc2)
             current_valid2 <= 2'b00;
@@ -542,7 +542,7 @@ channel_fifo channel_fifo1 ( //256x64
             current_valid2 <= current_valid2 + 1'b1;
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             current_out2 = 256'b0;
         else case(current_valid2)
             2'b00: current_out2 = fifo_out2[255:0];
@@ -567,8 +567,8 @@ channel_fifo channel_fifo2 ( //256x64
     assign read_request3 = !in_read3 & ((fifo_cnt3[4:0] + ajacent_cnt3[5:2] < 'd16) | fifo_empty3) & manager_start_r[3] & !channel3_done;
     assign manager_start3 = manager_start[3] & !manager_start_r[3];
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         channel3_done <= 1'b0;
     else if(manager_start3)
         channel3_done <= 1'b0;
@@ -580,16 +580,16 @@ channel_fifo channel_fifo2 ( //256x64
             2'b11: channel3_done <= lcl_rd_data[768];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         in_read3 <= 1'b0;
     else if(read_start & (read_channel == 2'b11))
         in_read3 <= 1'b1;
     else if(in_read3 & lcl_rd_data_last & lcl_rd_data_valid & !lcl_rd_rsp_code & (lcl_rd_data_axi_id[4:0] == 5'b11100))
         in_read3 <= 1'b0;
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         ajacent_cnt3 <= 6'h3f;
     else if(manager_start3)
         ajacent_cnt3 <= init_size3;
@@ -601,8 +601,8 @@ channel_fifo channel_fifo2 ( //256x64
             2'b00: ajacent_cnt3 <= lcl_rd_data[13:8];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+    always@(posedge clk or negedge resetn)
+    if(!resetn)
         next_addr3 <= 'd0;
     else if(manager_start3)
         next_addr3 <= init_addr3;
@@ -614,8 +614,8 @@ channel_fifo channel_fifo2 ( //256x64
             2'b11: next_addr3 <= lcl_rd_data[1023:960];
         endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             channel_id3 <= 30'b0;
         else if (manager_start3)
             channel_id3 <= 30'b0;
@@ -639,8 +639,8 @@ channel_fifo channel_fifo2 ( //256x64
             endcase
     end
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             current_valid3 <= 2'b00;
         else if(manager_start3 | unvalid_dsc3)
             current_valid3 <= 2'b00;
@@ -648,7 +648,7 @@ channel_fifo channel_fifo2 ( //256x64
             current_valid3 <= current_valid3 + 1'b1;
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             current_out3 = 256'b0;
         else case(current_valid3)
             2'b00: current_out3 = fifo_out3[255:0];
@@ -673,7 +673,7 @@ channel_fifo channel_fifo3 ( //256x64
     assign eng_buf_write[0] = engine0_ready&!eng_buf_full[0];
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             eng_dsc_data0 = 256'b0;
         else
             case(engine0_channel)
@@ -684,7 +684,7 @@ channel_fifo channel_fifo3 ( //256x64
             endcase
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             engine0_ready = 1'b0;
         else
             case(engine0_channel)
@@ -694,8 +694,8 @@ channel_fifo channel_fifo3 ( //256x64
             2'b11:engine0_ready = !fifo_empty3 & !dsc_ch3_h2a & !dsc_ch3_axi_st & (current_out3[31:16] == 16'had4b);
             endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             engine0_channel <= 2'b00;
         else if(!eng_buf_full[0])
             engine0_channel <= engine0_channel + 1'b1;
@@ -704,7 +704,7 @@ channel_fifo channel_fifo3 ( //256x64
     assign eng_buf_write[1] = engine1_ready&!eng_buf_full[1];
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             eng_dsc_data1 = 1'b0;
         else
             case(engine1_channel)
@@ -715,7 +715,7 @@ channel_fifo channel_fifo3 ( //256x64
             endcase
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             engine1_ready = 1'b0;
         else
             case(engine1_channel)
@@ -725,8 +725,8 @@ channel_fifo channel_fifo3 ( //256x64
             2'b11:engine1_ready = !fifo_empty3 & !dsc_ch3_h2a & dsc_ch3_axi_st & (current_out3[31:16] == 16'had4b);
             endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             engine1_channel <= 2'b00;
         else if(!eng_buf_full[1])
             engine1_channel <= engine1_channel + 1'b1;
@@ -735,7 +735,7 @@ channel_fifo channel_fifo3 ( //256x64
     assign eng_buf_write[2] = engine2_ready&!eng_buf_full[2];
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             eng_dsc_data2 = 1'b0;
         else
             case(engine2_channel)
@@ -746,7 +746,7 @@ channel_fifo channel_fifo3 ( //256x64
             endcase
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             engine2_ready = 1'b0;
         else
             case(engine2_channel)
@@ -756,8 +756,8 @@ channel_fifo channel_fifo3 ( //256x64
             2'b11:engine2_ready = !fifo_empty3 & dsc_ch3_h2a & !dsc_ch3_axi_st & (current_out3[31:16] == 16'had4b);
             endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             engine2_channel <= 2'b00;
         else if(!eng_buf_full[2])
             engine2_channel <= engine2_channel + 1'b1;
@@ -766,7 +766,7 @@ channel_fifo channel_fifo3 ( //256x64
     assign eng_buf_write[3] = engine3_ready&!eng_buf_full[3];
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             eng_dsc_data3 = 1'b0;
         else
             case(engine3_channel)
@@ -777,7 +777,7 @@ channel_fifo channel_fifo3 ( //256x64
             endcase
 
     always@(*)
-        if(!rst_n)
+        if(!resetn)
             engine3_ready = 1'b0;
         else
             case(engine3_channel)
@@ -787,8 +787,8 @@ channel_fifo channel_fifo3 ( //256x64
             2'b11:engine3_ready = !fifo_empty3 & dsc_ch3_h2a & dsc_ch3_axi_st & (current_out3[31:16] == 16'had4b);
             endcase
 
-    always@(posedge clk or negedge rst_n)
-        if(!rst_n)
+    always@(posedge clk or negedge resetn)
+        if(!resetn)
             engine3_channel <= 2'b00;
         else if(!eng_buf_full[3])
             engine3_channel <= engine3_channel + 1'b1;

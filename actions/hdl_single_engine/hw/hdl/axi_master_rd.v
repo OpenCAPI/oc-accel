@@ -27,7 +27,7 @@ module axi_master_rd #(
                        )
                       (
                        input                          clk               ,
-                       input                          rst_n             , 
+                       input                          resetn             , 
                        input     [031:0]              i_ocaccel_context    ,
                                                         
                        //---- AXI bus ----               
@@ -93,7 +93,7 @@ module axi_master_rd #(
 
  always@(posedge clk)
  begin
-     if(~rst_n)
+     if(~resetn)
          m_axi_arid <= 0;
      else if(engine_start_pulse)
          m_axi_arid <= 0;
@@ -110,7 +110,7 @@ module axi_master_rd #(
  assign rd_len_plus_1 = {1'b0, rd_len} + 1'b1;
  always@(posedge clk)
  begin
-     if(~rst_n)
+     if(~resetn)
          total_rd_beat_count <= 0;
      else if(rd_engine_start)
          total_rd_beat_count <= {8'b0, rd_number} * ({31'b0, rd_len_plus_1});
@@ -122,7 +122,7 @@ module axi_master_rd #(
 
 addr_send_channel mrd_addr_send (
            .clk                 (clk                ),
-           .rst_n               (rst_n              ),
+           .resetn               (resetn              ),
            .engine_start        (rd_engine_start    ),
            .wrap_mode           (wrap_mode          ),
            .wrap_len            (wrap_len           ),
@@ -143,7 +143,7 @@ rd_result_check_channel #(
                 .ID_WIDTH     (ID_WIDTH)
 ) mrd_check (
            .clk                 (clk                ),
-           .rst_n               (rst_n              ),
+           .resetn               (resetn              ),
            .m_axi_rid           (m_axi_rid          ),
            .m_axi_rdata         (m_axi_rdata        ),
            .m_axi_rlast         (m_axi_rlast        ),

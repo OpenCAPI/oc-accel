@@ -20,7 +20,7 @@ module axi_lite_slave #(
     parameter ADDR_WIDTH = 32
 )(
                       input                            clk              ,
-                      input                            rst_n            ,
+                      input                            resetn            ,
 
                       //---- AXI Lite bus----
                         // AXI write address channel
@@ -209,14 +209,14 @@ module axi_lite_slave #(
 
 //---- write address capture ----
  always@(posedge clk)
-   if(~rst_n)
+   if(~resetn)
      write_address <= 32'd0;
    else if(s_axi_awvalid & s_axi_awready)
      write_address <= s_axi_awaddr;
 
 //---- write address ready ----
  always@(posedge clk)
-   if(~rst_n)
+   if(~resetn)
      s_axi_awready <= 1'b0;
    else if(s_axi_awvalid)
      s_axi_awready <= 1'b1;
@@ -225,7 +225,7 @@ module axi_lite_slave #(
 
 //---- write data ready ----
  always@(posedge clk)
-   if(~rst_n)
+   if(~resetn)
      s_axi_wready <= 1'b0;
    else if(s_axi_awvalid & s_axi_awready)
      s_axi_wready <= 1'b1;
@@ -252,7 +252,7 @@ module axi_lite_slave #(
 
 //---- write registers ----
  always@(posedge clk)
-   if(~rst_n)
+   if(~resetn)
      begin
        REG_ocaccel_control    <= 32'd0;
        REG_ocaccel_int_enable <= 32'd0;
@@ -364,7 +364,7 @@ wire both_done;
 
 
 always @(posedge clk) begin
-    if (~rst_n) begin
+    if (~resetn) begin
         ocaccel_start_q <= 0;
         engine_start_q <= 0;
     end
@@ -382,7 +382,7 @@ assign ocaccel_start_pulse = REG_ocaccel_control[0] & ~ocaccel_start_q;
 assign engine_start_pulse = REG_user_control[0] & ~engine_start_q;
 
 always @(posedge clk) begin
-    if (~rst_n) begin
+    if (~resetn) begin
        ocaccel_idle_q <= 0;
     end
     else if(soft_reset) begin
@@ -394,7 +394,7 @@ always @(posedge clk) begin
 end
        
 always @(posedge clk) begin
-    if (~rst_n) begin
+    if (~resetn) begin
         tt_counter_q <= 12'hFFF;
         engine_ready_q <= 0;
     end
@@ -411,7 +411,7 @@ always @(posedge clk) begin
 end
 
 always@(posedge clk)
-   if (~rst_n) begin
+   if (~resetn) begin
      REG_error_info  <= 64'd0;
    end
    else if(rd_error[1] && (!rd_error_q[1])) begin
@@ -419,7 +419,7 @@ always@(posedge clk)
    end
 
 always@(posedge clk)
-   if (~rst_n) begin
+   if (~resetn) begin
      rd_error_q      <= 0;
    end
    else if(soft_reset) begin
@@ -430,7 +430,7 @@ always@(posedge clk)
    end
 
 always@(posedge clk)
-   if (~rst_n) begin
+   if (~resetn) begin
      wr_error_q      <= 0;
    end
    else if(soft_reset) begin
@@ -441,7 +441,7 @@ always@(posedge clk)
    end
 
 always@(posedge clk)
-   if (~rst_n)
+   if (~resetn)
      rd_done_q <= 0;
    else if(soft_reset)
      rd_done_q <= 0;
@@ -449,7 +449,7 @@ always@(posedge clk)
      rd_done_q <= 1;
 
  always@(posedge clk)
-   if (~rst_n)
+   if (~resetn)
      wr_done_q <= 0;
    else if(soft_reset)
      wr_done_q <= 0;
@@ -474,7 +474,7 @@ assign REG_ocaccel_control_rd = {REG_ocaccel_control[31:4], 1'b1, ocaccel_idle_q
 
 //---- read registers ----
  always@(posedge clk)
-   if(~rst_n)
+   if(~resetn)
      s_axi_rdata <= 32'd0;
    else if(s_axi_arvalid & s_axi_arready)
      case(s_axi_araddr)
@@ -513,7 +513,7 @@ assign REG_ocaccel_control_rd = {REG_ocaccel_control[31:4], 1'b1, ocaccel_idle_q
 
 //---- address ready: deasserts once arvalid is seen; reasserts when current read is done ----
  always@(posedge clk)
-   if(~rst_n)
+   if(~resetn)
      s_axi_arready <= 1'b1;
    else if(s_axi_arvalid)
      s_axi_arready <= 1'b0;
@@ -522,7 +522,7 @@ assign REG_ocaccel_control_rd = {REG_ocaccel_control[31:4], 1'b1, ocaccel_idle_q
 
 //---- data ready: deasserts once rvalid is seen; reasserts when new address has come ----
  always@(posedge clk)
-   if(~rst_n)
+   if(~resetn)
      s_axi_rvalid <= 1'b0;
    else if (s_axi_arvalid & s_axi_arready)
      s_axi_rvalid <= 1'b1;
@@ -538,7 +538,7 @@ assign REG_ocaccel_control_rd = {REG_ocaccel_control[31:4], 1'b1, ocaccel_idle_q
 
 //---- axi write response ----
  always@(posedge clk)
-   if(~rst_n) 
+   if(~resetn) 
      s_axi_bvalid <= 1'b0;
    else if(s_axi_wvalid & s_axi_wready)
      s_axi_bvalid <= 1'b1;
@@ -555,7 +555,7 @@ assign REG_ocaccel_control_rd = {REG_ocaccel_control[31:4], 1'b1, ocaccel_idle_q
 *                        Four time trace RAMs                          *
 ***********************************************************************/
 always@(posedge clk)
-   if(~rst_n) begin
+   if(~resetn) begin
         current_cycle_L <= 32'd0;
         current_cycle_H <= 16'd0;
    end
@@ -585,7 +585,7 @@ wire clear_RAM;
 assign clear_RAM = REG_ocaccel_control[0] & ~engine_ready_q;
 
 always@(posedge clk)
-    if(~rst_n)
+    if(~resetn)
         tt_addr_rd_cmd <= 0;
     else if(soft_reset)
         tt_addr_rd_cmd <= 0;
@@ -597,7 +597,7 @@ always@(posedge clk)
         tt_addr_rd_cmd <= tt_addr_rd_cmd + 1;
 
 always@(posedge clk)
-    if(~rst_n)
+    if(~resetn)
         tt_addr_rd_rsp <= 0;
     else if(soft_reset)
         tt_addr_rd_rsp <= 0;
@@ -609,7 +609,7 @@ always@(posedge clk)
         tt_addr_rd_rsp <= tt_addr_rd_rsp + 1;
 
 always@(posedge clk)
-    if(~rst_n)
+    if(~resetn)
         tt_addr_wr_cmd <= 0;
     else if(soft_reset)
         tt_addr_wr_cmd <= 0;
@@ -621,7 +621,7 @@ always@(posedge clk)
         tt_addr_wr_cmd <= tt_addr_wr_cmd + 1;
 
 always@(posedge clk)
-    if(~rst_n)
+    if(~resetn)
         tt_addr_wr_rsp <= 0;
     else if(soft_reset)
         tt_addr_wr_rsp <= 0;

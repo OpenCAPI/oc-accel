@@ -24,7 +24,7 @@ module mmio # (
               )
         (
              input                clk                        ,
-             input                rst_n                      ,
+             input                resetn                      ,
 
              //---- OCACCEL debug -----------------------------
              input         [195:0]  debug_bus_data_bridge    ,
@@ -221,8 +221,8 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
  reg global_area_wr_ack, global_area_rd_ack;
 
 //---- action write/read valid pulse ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        lcl_mmio_wr <= 1'b0;
        lcl_mmio_rd <= 1'b0;
@@ -234,22 +234,22 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
      end
 
 //---- action register address ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      lcl_mmio_addr <= 32'd0;
    else
      lcl_mmio_addr <= {1'b0,mmio_addr[30:0]}; //Lower 31bits are transfered to Action.
 
 //---- action write data ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      lcl_mmio_din <= 32'd0;
    else
      lcl_mmio_din <= mmio_addr[2]? mmio_din[63:32] : mmio_din[31:0];
 
 //---- return failure when... ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      mmio_failed <= 1'b0;
    else
      mmio_failed <= (data_width_incompatible )                        ||  // 1. access with unwarrented data widths
@@ -258,8 +258,8 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
                     (global_area_rd_ack && raddr_decode_error);
 
 //---- return done when... ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      mmio_done <= 1'b0;
    else
      mmio_done <= ((lcl_mmio_ack || lcl_mmio_dv) && (lcl_mmio_rsp == 1'b1)) || // 1. receive good response from action
@@ -268,8 +268,8 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
 
 
 //---- READ ONLY resigers configuration ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        // BASEADDR_INFRASTRUCTURE
        REG_implementation_version  <= 64'd0;
@@ -330,8 +330,8 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
 
 
 //---- Write only/write read REGISTER writing ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        REG_command            <= 64'd0;
        REG_debug_clear        <= 64'd0;
@@ -370,8 +370,8 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
 
 
 //---- OCACCEL/ACTION REGISTER reading ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        mmio_dout <= 64'd0;
        raddr_decode_error <= 1'b0;
@@ -428,8 +428,8 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
    end
 
 //---- OCACCEL registers acknowledgement ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        global_area_wr_ack <= 1'b0;
        global_area_rd_ack <= 1'b0;
@@ -443,30 +443,30 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
 //---- local control signals output ----
  reg [3:0] ocaccel_reset_cnt;
  reg [3:0] action_reset_cnt;
- always@(posedge clk or negedge rst_n)   // soft reset lasts 16 cycles
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)   // soft reset lasts 16 cycles
+   if(~resetn)
      soft_reset_brdg_odma <= 1'b0;
    else if(&ocaccel_reset_cnt)
      soft_reset_brdg_odma <= 1'b0;
    else if(REG_command[0])
      soft_reset_brdg_odma <= 1'b1;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      ocaccel_reset_cnt <= 4'd0;
    else if(soft_reset_brdg_odma)
      ocaccel_reset_cnt <= ocaccel_reset_cnt + 4'd1;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      soft_reset_action <= 1'b0;
    else if(&action_reset_cnt)
      soft_reset_action <= 1'b0;
    else if(REG_command[0])
      soft_reset_action <= 1'b1;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      action_reset_cnt <= 4'd0;
    else if(soft_reset_action)
      action_reset_cnt <= action_reset_cnt + 4'd1;
@@ -474,8 +474,8 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
  assign debug_info_clear    = REG_debug_clear[0];
 
 //---- local status signals generation ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        bridge_idle <= 1'b0;
        tlx_busy    <= 1'b0;

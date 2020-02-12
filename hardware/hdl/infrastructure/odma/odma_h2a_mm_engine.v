@@ -25,7 +25,7 @@ module odma_h2a_mm_engine #(
 )
 (
                    input                                          clk               ,
-                   input                                          rst_n             ,
+                   input                                          resetn             ,
                    //---------- Descriptor Interface ---------------------------//
                    output                                         dsc_ready         ,
                    input                                          dsc_valid         ,
@@ -418,16 +418,16 @@ wire   [0027:0]    dst_len_without_first_burst;
 reg [27:0] lcl_rd_cnt;
 reg [27:0] lcl_rd_data_cnt;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_cnt <= 28'd0;
     else if (lcl_rd_valid && lcl_rd_ready && (lcl_rd_axi_id == 5'b00010))
         lcl_rd_cnt <= (lcl_rd_last)? 28'd0 : lcl_rd_cnt + 1;
     else
         lcl_rd_cnt <= lcl_rd_cnt;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_data_cnt <= 28'd0;
     else if (lcl_rd_data_valid && lcl_rd_rsp_ready[2] && (lcl_rd_data_axi_id == 5'b00010))
         lcl_rd_data_cnt <= (lcl_rd_data_last)? 28'd0 : lcl_rd_data_cnt + 1;
@@ -458,8 +458,8 @@ always @(posedge clk or negedge rst_n)
 
 
 
-always@(posedge clk or negedge rst_n)
-    if (!rst_n)
+always@(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_data_0 <= 256'b0;
     else 
         casex ({dsc_valid, parser_ready, dsc_data_status})
@@ -472,8 +472,8 @@ always@(posedge clk or negedge rst_n)
             default: dsc_data_0 <= dsc_data_0;
         endcase
 
-always@(posedge clk or negedge rst_n)
-    if (!rst_n)
+always@(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_data_1 <= 256'b0;
     else
         casex ({dsc_valid, parser_ready, dsc_data_status})
@@ -486,8 +486,8 @@ always@(posedge clk or negedge rst_n)
             default: dsc_data_1 <= dsc_data_1;
         endcase
 
-always@(posedge clk or negedge rst_n)
-    if (!rst_n)
+always@(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_data_status <= 2'b00;
     else 
       casex ({dsc_data_status[1:0], dsc_valid, parser_ready})
@@ -586,8 +586,8 @@ assign dst_data_4KB_align = (dst_len_without_first_burst[11:0] == 12'd0);
 assign dsc_cmp_cnt = dsc0_cmp + dsc1_cmp + dsc2_cmp + dsc3_cmp;
 // onflight descriptor counter
 // dsc_cmp_cnt from 3'd0 to 3'd4
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc_cnt <= 0;
     else
         case ({is_dsc_valid, dsc_cmp_cnt})
@@ -602,8 +602,8 @@ always @(posedge clk or negedge rst_n)
             default: dsc_cnt <= dsc_cnt;
         endcase
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         rd_axi_id_reg <= 5'b0;
     else if (is_dsc_valid)
         rd_axi_id_reg <= {channel_id, engine_id};
@@ -612,8 +612,8 @@ always @(posedge clk or negedge rst_n)
 
 // lcl_rd_req_cnt for lcl read request beat counter
 // is_dsc_valid and lcl_rd_valid can not be pulled up at the same cycle
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_req_cnt <= 0;
     else
         case ({is_dsc_valid, lcl_rd_issue})
@@ -622,32 +622,32 @@ always @(posedge clk or negedge rst_n)
             default: lcl_rd_req_cnt <= lcl_rd_req_cnt;
         endcase
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_req_number <= 22'd0;
     else if (is_dsc_valid)
         lcl_rd_req_number <= lcl_req_len;
     else
         lcl_rd_req_number <= lcl_rd_req_number;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_be_first <= 128'h0;
     else if (is_dsc_valid)
         lcl_rd_be_first <= lcl_first_be;
     else
         lcl_rd_be_first <= lcl_rd_be_first;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_rd_be_last <= 128'h0;
     else if (is_dsc_valid)
         lcl_rd_be_last <= lcl_last_be;
     else
         lcl_rd_be_last <= lcl_rd_be_last;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         lcl_src_addr <= 64'b0;
     else if (is_dsc_valid)
         lcl_src_addr <= {src_addr[63:7], 7'b0000000};
@@ -669,8 +669,8 @@ assign lcl_rd_ctx_valid = 0;
 assign lcl_rd_be = (lcl_rd_first)? lcl_rd_be_first : ((lcl_rd_last)? lcl_rd_be_last : 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF);
 
 // parser_ready signal back to dsc_buffer
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         parser_ready <= 1;
     else if (is_dsc_valid)
         parser_ready <= 0;
@@ -762,8 +762,8 @@ assign dsc3_axi_burst_issue = m_axi_wvalid && m_axi_wready && m_axi_wlast && (ax
 //*****************************************//
 
 // for dsc0_onflight
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_onflight <= 1'b0;
     else
         casex ({add_dsc0, dsc0_cmp, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -776,8 +776,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_interrupt_req
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_interrupt_req <= 1'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -789,8 +789,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_channel_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_channel_id <= 2'b00;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -802,8 +802,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_dsc_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_dsc_id <= 30'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -815,8 +815,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_axi_req_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_axi_req_number <= 16'd0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -828,8 +828,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc0_axi_req_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc0, dsc0_axi_req_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -842,8 +842,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc0_axi_burst_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_axi_burst_cnt <= 16'd0;
     else
         casex ({add_dsc0, dsc0_axi_burst_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -857,8 +857,8 @@ always @(posedge clk or negedge rst_n)
 
 // for dsc0_dst_addr
 // TODO: Address is not alignment with 4K
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         dsc0_dst_addr <= 64'h0;
     else
         case ({add_dsc0, dsc0_axi_req_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -871,8 +871,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 //for dsc0_first_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_first_awlen <= 8'h0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -884,8 +884,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc0_last_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_last_awlen <= 8'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -900,8 +900,8 @@ always @(posedge clk or negedge rst_n)
 `ifdef ACTION_DATA_WIDTH_512
 // TODO
     // for dsc0_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc0_axi_data_cnt <= 21'd0;
         else
             case ({add_dsc0, dsc0_axi_data_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -914,8 +914,8 @@ always @(posedge clk or negedge rst_n)
             endcase 
     
     // for dsc0_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc0_axi_data_number <= 21'd0;
         else
             case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -942,8 +942,8 @@ always @(posedge clk or negedge rst_n)
     assign dsc0_axi_data_last_beat_128B = (dsc0_axi_data_cnt == 21'd2 || dsc0_axi_data_cnt == 21'd1) && dsc0_onflight;
 `else
     // for dsc0_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc0_axi_data_cnt <= 21'd0;
         else
             case ({add_dsc0, dsc0_axi_data_issue, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -956,8 +956,8 @@ always @(posedge clk or negedge rst_n)
             endcase 
     
     // for dsc0_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc0_axi_data_number <= 21'd0;
         else
             case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -983,8 +983,8 @@ assign dsc0_axi_data_first_beat = (dsc0_axi_data_cnt == dsc0_axi_data_number) &&
 assign dsc0_axi_data_last_beat = (dsc0_axi_data_cnt == 21'd1) && dsc0_onflight;
 
 // for  dsc0_axi_wstrb_first
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc0_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -996,8 +996,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_axi_wstrb_last
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc0_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -1009,8 +1009,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_axi_resp_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_axi_resp_cnt <= 16'd0;
     else
         casex ({add_dsc0, dsc0_axi_resp_received, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -1023,8 +1023,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_lcl_rd_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_lcl_rd_error <= 1'b0;
     else if (dsc_move_1_0 || dsc_move_2_0 || dsc_move_3_0)
         case ({dsc_move_1_0, dsc_move_2_0, dsc_move_3_0 })
@@ -1041,8 +1041,8 @@ always @(posedge clk or negedge rst_n)
         dsc0_lcl_rd_error <= 1'b0;
 
 // for dsc0_lcl_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc0_lcl_src_addr <= 64'h0;
     else
     // TODO : when dsc_move_* is high, the lcl_rd_data_receive_dsc* is also high             
@@ -1056,8 +1056,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_error_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_error_src_addr <= 64'h0;
     else if (dsc_move_1_0 || dsc_move_2_0 || dsc_move_3_0)
         case ({dsc_move_1_0, dsc_move_2_0, dsc_move_3_0 })
@@ -1074,8 +1074,8 @@ always @(posedge clk or negedge rst_n)
         dsc0_error_src_addr <= 64'h0;
 
 // for dsc0_axi_wr_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_axi_wr_error <= 1'b0;
     else if (dsc_move_1_0 || dsc_move_2_0 || dsc_move_3_0)
         case ({dsc_move_1_0, dsc_move_2_0, dsc_move_3_0 })
@@ -1092,8 +1092,8 @@ always @(posedge clk or negedge rst_n)
         dsc0_axi_wr_error <= 1'b0;
 
 // for dsc0_axi_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc0_axi_dst_addr <= 64'h0;
     else
     // TODO : when dsc_move_* is high, the dsc*_axi_resp_received is also high             
@@ -1107,8 +1107,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc0_error_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_error_dst_addr <= 64'h0;
     else if (dsc_move_1_0 || dsc_move_2_0 || dsc_move_3_0)
         case ({dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -1130,8 +1130,8 @@ always @(posedge clk or negedge rst_n)
 //*****************************************//
 
 // for dsc1_onflight
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_onflight <= 1'b0;
     else
         casex ({add_dsc1, (dsc1_cmp | dsc_move_1_0), dsc_move_2_1, dsc_move_3_1})
@@ -1143,8 +1143,8 @@ always @(posedge clk or negedge rst_n)
         endcase
         
 // for dsc1_interrupt_req
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_interrupt_req <= 1'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1155,8 +1155,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_channel_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_channel_id <= 2'b00;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1167,8 +1167,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_dsc_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_dsc_id <= 30'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1179,8 +1179,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_axi_req_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_axi_req_number <= 16'd0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1191,8 +1191,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_axi_req_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc1, dsc1_axi_req_issue, dsc_move_2_1, dsc_move_3_1})
@@ -1204,8 +1204,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_axi_burst_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_axi_burst_cnt <= 16'd0;
     else
         casex ({add_dsc1, dsc1_axi_burst_issue, dsc_move_2_1, dsc_move_3_1})
@@ -1218,8 +1218,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_dst_addr
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         dsc1_dst_addr <= 64'h0;
     else
         case ({add_dsc1, dsc1_axi_req_issue, dsc_move_2_1, dsc_move_3_1})
@@ -1231,8 +1231,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_first_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_first_awlen <= 8'd0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1243,8 +1243,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_last_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_last_awlen <= 8'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1257,8 +1257,8 @@ always @(posedge clk or negedge rst_n)
 `ifdef ACTION_DATA_WIDTH_512
 // TODO
 // for dsc1_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc1_axi_data_cnt <= 21'd0;
         else
             casex ({add_dsc1, dsc1_axi_data_issue, dsc_move_2_1, dsc_move_3_1})
@@ -1270,8 +1270,8 @@ always @(posedge clk or negedge rst_n)
             endcase
     
     // for dsc1_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc1_axi_data_number <= 21'd0;
         else
             case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1296,8 +1296,8 @@ always @(posedge clk or negedge rst_n)
     assign dsc1_axi_data_last_beat_128B = (dsc1_axi_data_cnt == 21'd2 || dsc1_axi_data_cnt == 21'd1) && dsc1_onflight;
 `else
     // for dsc1_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc1_axi_data_cnt <= 21'd0;
         else
             casex ({add_dsc1, dsc1_axi_data_issue, dsc_move_2_1, dsc_move_3_1})
@@ -1309,8 +1309,8 @@ always @(posedge clk or negedge rst_n)
             endcase
     
     // for dsc1_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc1_axi_data_number <= 21'd0;
         else
             case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1335,8 +1335,8 @@ assign dsc1_axi_data_first_beat = (dsc1_axi_data_cnt == dsc1_axi_data_number) &&
 assign dsc1_axi_data_last_beat = (dsc1_axi_data_cnt == 21'd1) && dsc1_onflight;
 
 // for dsc1_axi_wstrb_first
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc1_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1347,8 +1347,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_axi_data_last_byte
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc1_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1359,8 +1359,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_axi_resp_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_axi_resp_cnt <= 16'd0;
     else
         casex ({add_dsc1, dsc1_axi_resp_received, dsc_move_2_1, dsc_move_3_1})
@@ -1372,8 +1372,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_lcl_rd_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_lcl_rd_error <= 1'b0;
     else if (dsc_move_2_1 || dsc_move_3_1)
         case ({dsc_move_2_1, dsc_move_3_1 })
@@ -1389,8 +1389,8 @@ always @(posedge clk or negedge rst_n)
         dsc1_lcl_rd_error <= 1'b0;
 
 // for dsc1_lcl_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc1_lcl_src_addr <= 64'h0;
     else
         case ({add_dsc1, lcl_rd_data_receive_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -1402,8 +1402,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_error_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_error_src_addr <= 64'h0;
     else if (dsc_move_2_1 || dsc_move_3_1)
         case ({dsc_move_2_1, dsc_move_3_1})
@@ -1419,8 +1419,8 @@ always @(posedge clk or negedge rst_n)
         dsc1_error_src_addr <= 64'h0;
 
 // for dsc1_axi_wr_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_axi_wr_error <= 1'b0;
     else if (dsc_move_2_1 || dsc_move_3_1)
         case ({dsc_move_2_1, dsc_move_3_1})
@@ -1436,8 +1436,8 @@ always @(posedge clk or negedge rst_n)
         dsc1_axi_wr_error <= 1'b0;
 
 // for dsc1_axi_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc1_axi_dst_addr <= 64'h0;
     else
         case ({add_dsc1, dsc1_axi_resp_received, dsc_move_2_1, dsc_move_3_1})
@@ -1449,8 +1449,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_error_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_error_dst_addr <= 64'h0;
     else if (dsc_move_2_1 || dsc_move_3_1)
         case ({dsc_move_2_1, dsc_move_3_1})
@@ -1471,8 +1471,8 @@ always @(posedge clk or negedge rst_n)
 //*****************************************//
 
 // for dsc2_onflight
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_onflight <= 1'b0;
     else
         casex ({add_dsc2, (dsc2_cmp || dsc_move_2_0 || dsc_move_2_1), dsc_move_3_2})
@@ -1483,8 +1483,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_interrupt_req
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_interrupt_req <= 1'b0;
     else 
         case ({add_dsc2, dsc_move_3_2})
@@ -1493,8 +1493,8 @@ always @(posedge clk or negedge rst_n)
             default: dsc2_interrupt_req <= dsc2_interrupt_req;
         endcase
 // for dsc2_channel_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_channel_id <= 2'b00;
     else 
         case ({add_dsc2, dsc_move_3_2})
@@ -1504,8 +1504,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_dsc_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_dsc_id <= 30'b0;
     else 
         case ({add_dsc2, dsc_move_3_2})
@@ -1515,8 +1515,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_axi_req_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_axi_req_number <= 16'd0;
     else
         case ({add_dsc2, dsc_move_3_2})
@@ -1526,8 +1526,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc2_axi_req_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc2, dsc2_axi_req_issue, dsc_move_3_2})
@@ -1538,8 +1538,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc2_axi_burst_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_axi_burst_cnt <= 16'd0;
     else
         casex ({add_dsc2, dsc2_axi_burst_issue, dsc_move_3_2})
@@ -1550,8 +1550,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc2_dst_addr
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         dsc2_dst_addr <= 64'h0;
     else
         case ({add_dsc2, dsc2_axi_req_issue, dsc_move_3_2})
@@ -1562,8 +1562,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_first_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_first_awlen <= 8'd0;
     else
         case ({add_dsc2, dsc_move_3_2})
@@ -1573,8 +1573,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_last_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_last_awlen <= 8'b0;
     else
         case ({add_dsc2, dsc_move_3_2})
@@ -1586,8 +1586,8 @@ always @(posedge clk or negedge rst_n)
 `ifdef ACTION_DATA_WIDTH_512
 // TODO
 // for dsc2_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc2_axi_data_cnt <= 21'd0;
         else
             casex ({add_dsc2, dsc2_axi_data_issue, dsc_move_3_2})
@@ -1598,8 +1598,8 @@ always @(posedge clk or negedge rst_n)
             endcase 
     
     // for dsc2_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc2_axi_data_number <= 21'd0;
         else
             case ({add_dsc2, dsc_move_3_2})
@@ -1623,8 +1623,8 @@ always @(posedge clk or negedge rst_n)
     assign dsc2_axi_data_last_beat_128B = (dsc2_axi_data_cnt == 21'd2 || dsc2_axi_data_cnt == 21'd1) && dsc2_onflight;
 `else
     // for dsc2_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc2_axi_data_cnt <= 21'd0;
         else
             casex ({add_dsc2, dsc2_axi_data_issue, dsc_move_3_2})
@@ -1635,8 +1635,8 @@ always @(posedge clk or negedge rst_n)
             endcase 
     
     // for dsc2_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc2_axi_data_number <= 21'd0;
         else
             case ({add_dsc2, dsc_move_3_2})
@@ -1660,8 +1660,8 @@ assign dsc2_axi_data_first_beat = (dsc2_axi_data_cnt == dsc2_axi_data_number) &&
 assign dsc2_axi_data_last_beat = (dsc2_axi_data_cnt == 21'd1) && dsc2_onflight;
 
 // for dsc2_axi_wstrb_first
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc2_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc2, dsc_move_3_2})
@@ -1671,8 +1671,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_axi_data_last_byte
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc2_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc2, dsc_move_3_2})
@@ -1682,8 +1682,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_axi_resp_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_axi_resp_cnt <= 16'd0;
     else
         casex ({add_dsc2, dsc2_axi_resp_received, dsc_move_3_2})
@@ -1694,8 +1694,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_lcl_rd_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_lcl_rd_error <= 1'b0;
     else if (dsc_move_3_2)
         dsc2_lcl_rd_error <= dsc3_lcl_rd_error;
@@ -1707,8 +1707,8 @@ always @(posedge clk or negedge rst_n)
         dsc2_lcl_rd_error <= 1'b0;
 
 // for dsc2_lcl_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc2_lcl_src_addr <= 64'h0;
     else
         case ({add_dsc2, lcl_rd_data_receive_dsc2, dsc_move_3_2})
@@ -1719,8 +1719,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_error_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_error_src_addr <= 64'h0;
     else if (dsc_move_3_2)
         dsc2_error_src_addr <= dsc3_error_src_addr;
@@ -1732,8 +1732,8 @@ always @(posedge clk or negedge rst_n)
         dsc2_error_src_addr <= 64'h0;
 
 // for dsc2_axi_wr_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_axi_wr_error <= 1'b0;
     else if (dsc_move_3_2)
         dsc2_axi_wr_error <= dsc3_axi_wr_error;
@@ -1745,8 +1745,8 @@ always @(posedge clk or negedge rst_n)
         dsc2_axi_wr_error <= 1'b0;
 
 // for dsc2_axi_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc2_axi_dst_addr <= 64'h0;
     else
         case ({add_dsc2, dsc2_axi_resp_received, dsc_move_3_0})
@@ -1757,8 +1757,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_error_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_error_dst_addr <= 64'h0;
     else if (dsc_move_3_2)
         dsc2_error_dst_addr <= dsc3_error_dst_addr;
@@ -1774,8 +1774,8 @@ always @(posedge clk or negedge rst_n)
 //*****************************************//
 
 // for dsc3_onflight
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_onflight <= 1'b0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1785,8 +1785,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_interrupt_req
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_interrupt_req <= 1'b0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1796,8 +1796,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_channel_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_channel_id <= 2'b00;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1807,8 +1807,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_dsc_id
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_dsc_id <= 30'b0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1818,8 +1818,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_axi_req_number
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_axi_req_number <= 16'd0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1829,8 +1829,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc3_axi_req_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_axi_req_cnt <= 16'd0;
     else
         case ({add_dsc3, dsc3_axi_req_issue, dsc3_clear})
@@ -1841,8 +1841,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc3_axi_burst_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_axi_burst_cnt <= 16'd0;
     else
         casex ({add_dsc3, dsc3_axi_burst_issue, dsc3_clear})
@@ -1853,8 +1853,8 @@ always @(posedge clk or negedge rst_n)
         endcase 
 
 // for dsc3_dst_addr
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         dsc3_dst_addr <= 64'h0;
     else
         case ({add_dsc3, dsc3_axi_req_issue, dsc3_clear})
@@ -1865,8 +1865,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_first_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_first_awlen <= 8'd0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1876,8 +1876,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_last_awlen
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_last_awlen <= 8'b0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1889,8 +1889,8 @@ always @(posedge clk or negedge rst_n)
 `ifdef ACTION_DATA_WIDTH_512
 // TODO
     // for dsc3_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc3_axi_data_cnt <= 21'd0;
         else
             casex ({add_dsc3, dsc3_axi_data_issue, dsc3_clear})
@@ -1901,8 +1901,8 @@ always @(posedge clk or negedge rst_n)
             endcase 
     
     // for dsc3_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc3_axi_data_number <= 21'd0;
         else
             case ({add_dsc3, dsc3_clear})
@@ -1926,8 +1926,8 @@ always @(posedge clk or negedge rst_n)
     assign dsc3_axi_data_last_beat_128B = (dsc3_axi_data_cnt == 21'd2 || dsc3_axi_data_cnt == 21'd1) && dsc3_onflight;
 `else
     // for dsc3_axi_data_cnt
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc3_axi_data_cnt <= 21'd0;
         else
             casex ({add_dsc3, dsc3_axi_data_issue, dsc3_clear})
@@ -1938,8 +1938,8 @@ always @(posedge clk or negedge rst_n)
             endcase 
     
     // for dsc3_axi_data_number
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             dsc3_axi_data_number <= 21'd0;
         else
             case ({add_dsc3, dsc3_clear})
@@ -1963,8 +1963,8 @@ assign dsc3_axi_data_first_beat = (dsc3_axi_data_cnt == dsc3_axi_data_number) &&
 assign dsc3_axi_data_last_beat = (dsc3_axi_data_cnt == 21'd1) && dsc3_onflight;
 
 // for dsc3_axi_wstrb_first
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc3_axi_wstrb_first <= 128'b0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1974,8 +1974,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_axi_data_last_byte
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc3_axi_wstrb_last <= 128'b0;
     else
         case ({add_dsc3, dsc3_clear})
@@ -1985,8 +1985,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_axi_resp_cnt
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_axi_resp_cnt <= 16'd0;
     else
         case ({add_dsc3, dsc3_axi_resp_received, dsc3_clear})
@@ -1997,8 +1997,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_lcl_rd_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_lcl_rd_error <= 1'b0;
     else if (dsc3_clear)
         dsc3_lcl_rd_error <= 1'b0;
@@ -2010,8 +2010,8 @@ always @(posedge clk or negedge rst_n)
         dsc3_lcl_rd_error <= 1'b0;
 
 // for dsc3_lcl_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc3_lcl_src_addr <= 64'h0;
     else
         case ({add_dsc3, lcl_rd_data_receive_dsc3, dsc3_clear})
@@ -2022,8 +2022,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_error_src_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_error_src_addr <= 64'h0;
     else if (dsc3_clear)
         dsc3_error_src_addr <= 64'h0;
@@ -2035,8 +2035,8 @@ always @(posedge clk or negedge rst_n)
         dsc3_error_src_addr <= 64'h0;
 
 // for dsc3_axi_wr_error
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_axi_wr_error <= 1'b0;
     else if (dsc3_clear)
         dsc3_axi_wr_error <= 1'b0;
@@ -2048,8 +2048,8 @@ always @(posedge clk or negedge rst_n)
         dsc3_axi_wr_error <= 1'b0;
 
 // for dsc3_axi_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
          dsc3_axi_dst_addr <= 64'h0;
     else
         case ({add_dsc3, dsc3_axi_resp_received, dsc3_clear})
@@ -2060,8 +2060,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_error_dst_addr
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_error_dst_addr <= 64'h0;
     else if (dsc3_clear)
         dsc3_error_dst_addr <= 64'h0;
@@ -2095,8 +2095,8 @@ assign dsc2_axi_resp_complete = (dsc2_axi_resp_cnt == 16'd0) && dsc2_onflight;
 assign dsc3_axi_resp_complete = (dsc3_axi_resp_cnt == 16'd0) && dsc3_onflight;          
 
 // for dsc0_axi_wr_status[3:0]
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_axi_wr_status <= 4'b0000;
     else if (add_dsc0)
         dsc0_axi_wr_status <= 4'b0001;
@@ -2117,8 +2117,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc1_axi_wr_status[3:0]
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_axi_wr_status <= 4'b0000;
     else if (add_dsc1)
         dsc1_axi_wr_status <= 4'b0001;
@@ -2138,8 +2138,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc2_axi_wr_status[3:0]
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_axi_wr_status <= 4'b0000;
     else if (add_dsc2)
         dsc2_axi_wr_status <= 4'b0001;
@@ -2156,8 +2156,8 @@ always @(posedge clk or negedge rst_n)
         endcase
 
 // for dsc3_axi_wr_status[3:0]
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_axi_wr_status <= 4'b0000;
     else if (add_dsc3)
         dsc3_axi_wr_status <= 4'b0001;
@@ -2272,7 +2272,7 @@ assign lcl_rd_rsp_ready_hint[3] = ~(rdata_fifo3_almost_full);
 // Xilinx Standard FIFO IP
 fifo_sync_32_1024i1024o rdata_fifo0 (
                           .clk          ( clk                      ),
-                          .srst         ( ~rst_n                   ),
+                          .srst         ( ~resetn                   ),
                           .din          ( rdata_fifo0_din          ),
                           .wr_en        ( rdata_fifo0_wen          ),
                           .rd_en        ( rdata_fifo0_ren          ),
@@ -2288,7 +2288,7 @@ assign rdata_fifo0_empty = (rdata_fifo0_cnt == 6'd0);
 
 fifo_sync_32_1024i1024o rdata_fifo1 (
                           .clk          ( clk                      ),
-                          .srst         ( ~rst_n                   ),
+                          .srst         ( ~resetn                   ),
                           .din          ( rdata_fifo1_din          ),
                           .wr_en        ( rdata_fifo1_wen          ),
                           .rd_en        ( rdata_fifo1_ren          ),
@@ -2304,7 +2304,7 @@ assign rdata_fifo1_empty = (rdata_fifo1_cnt == 6'd0);
 
 fifo_sync_32_1024i1024o rdata_fifo2 (
                           .clk          ( clk                      ),
-                          .srst         ( ~rst_n                   ),
+                          .srst         ( ~resetn                   ),
                           .din          ( rdata_fifo2_din          ),
                           .wr_en        ( rdata_fifo2_wen          ),
                           .rd_en        ( rdata_fifo2_ren          ),
@@ -2320,7 +2320,7 @@ assign rdata_fifo2_empty = (rdata_fifo2_cnt == 6'd0);
 
 fifo_sync_32_1024i1024o rdata_fifo3 (
                           .clk          ( clk                      ),
-                          .srst         ( ~rst_n                   ),
+                          .srst         ( ~resetn                   ),
                           .din          ( rdata_fifo3_din          ),
                           .wr_en        ( rdata_fifo3_wen          ),
                           .rd_en        ( rdata_fifo3_ren          ),
@@ -2488,8 +2488,8 @@ end
         endcase
     end
 
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             m_axi_wvalid_odd <= 1'b0;
         else
             m_axi_wvalid_odd <= m_axi_wvalid_even;         
@@ -2504,8 +2504,8 @@ end
         endcase
     end
 
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             m_axi_wdata_64B_odd <= 512'b0;
         else
             m_axi_wdata_64B_odd <= m_axi_wdata_128B[1023:512];
@@ -2519,8 +2519,8 @@ end
             default: m_axi_wstrb_128B = 128'h0;
         endcase
 
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
+    always @(posedge clk or negedge resetn)
+        if (!resetn)
             m_axi_wstrb_64B_odd <= 64'h0;
         else
             m_axi_wstrb_64B_odd <= m_axi_wstrb_128B[127:64];
@@ -2703,8 +2703,8 @@ assign dsc3_cmp_data = {190'b0,
                         dsc3_sts_error};
 
 // for completion bus of channel 0
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_0 <= 1'b0;
     else if (cmp_valid_0)
         cmp_valid_0 <= (cmp_resp_0)? 1'b0 : cmp_valid_0;
@@ -2728,8 +2728,8 @@ always @(posedge clk or negedge rst_n)
             default: cmp_valid_0 <= 1'b0;
         endcase
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_data_0 <= 512'b0;
     else 
         case ({dsc0_axi_resp_complete, dsc1_axi_resp_complete, dsc2_axi_resp_complete, dsc3_axi_resp_complete})
@@ -2773,8 +2773,8 @@ always @(*) begin
 end
 
 // for completion bus of channel 1 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_1 <= 1'b0;
     else if (cmp_valid_1)
         cmp_valid_1 <= (cmp_resp_1)? 1'b0 : cmp_valid_1;
@@ -2798,8 +2798,8 @@ always @(posedge clk or negedge rst_n)
             default: cmp_valid_1 <= 1'b0;
         endcase
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_data_1 <= 512'b0;
     else 
         case ({dsc0_axi_resp_complete, dsc1_axi_resp_complete, dsc2_axi_resp_complete, dsc3_axi_resp_complete})
@@ -2843,8 +2843,8 @@ always @(*) begin
 end
 
 // for completion bus of channel 2 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_2 <= 1'b0;
     else if (cmp_valid_2)
         cmp_valid_2 <= (cmp_resp_2)? 1'b0 : cmp_valid_2;
@@ -2868,8 +2868,8 @@ always @(posedge clk or negedge rst_n)
             default: cmp_valid_2 <= 1'b0;
         endcase
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_data_2 <= 512'b0;
     else 
         case ({dsc0_axi_resp_complete, dsc1_axi_resp_complete, dsc2_axi_resp_complete, dsc3_axi_resp_complete})
@@ -2913,8 +2913,8 @@ always @(*) begin
 end
 
 // for completion bus of channel 3 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_valid_3 <= 1'b0;
     else if (cmp_valid_3)
         cmp_valid_3 <= (cmp_resp_3)? 1'b0 : cmp_valid_3;
@@ -2938,8 +2938,8 @@ always @(posedge clk or negedge rst_n)
             default: cmp_valid_3 <= 1'b0;
         endcase
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         cmp_data_3 <= 512'b0;
     else 
         case ({dsc0_axi_resp_complete, dsc1_axi_resp_complete, dsc2_axi_resp_complete, dsc3_axi_resp_complete})
@@ -2988,8 +2988,8 @@ assign dsc1_cmp = ((cmp_valid_0 && cmp_resp_0 && (cmp0_dsc_id == 2'd1))) || ((cm
 assign dsc2_cmp = ((cmp_valid_0 && cmp_resp_0 && (cmp0_dsc_id == 2'd2))) || ((cmp_valid_1 && cmp_resp_1 && (cmp1_dsc_id == 2'd2))) || ((cmp_valid_2 && cmp_resp_2 && (cmp2_dsc_id == 2'd2))) || ((cmp_valid_3 && cmp_resp_3 && (cmp3_dsc_id == 2'd2)));
 assign dsc3_cmp = ((cmp_valid_0 && cmp_resp_0 && (cmp0_dsc_id == 2'd3))) || ((cmp_valid_1 && cmp_resp_1 && (cmp1_dsc_id == 2'd3))) || ((cmp_valid_2 && cmp_resp_2 && (cmp2_dsc_id == 2'd3))) || ((cmp_valid_3 && cmp_resp_3 && (cmp3_dsc_id == 2'd3)));
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc0_cmp_status <= 1'b0;
     else if (add_dsc0 || dsc_move_1_0 || dsc_move_2_0 || dsc_move_3_0)
         case ({add_dsc0, dsc_move_1_0, dsc_move_2_0, dsc_move_3_0})
@@ -3004,8 +3004,8 @@ always @(posedge clk or negedge rst_n)
     else
         dsc0_cmp_status <= dsc0_cmp_status;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc1_cmp_status <= 1'b0;
     else if (add_dsc1 || dsc_move_2_1 || dsc_move_3_1)
         case ({add_dsc1, dsc_move_2_1, dsc_move_3_1})
@@ -3019,8 +3019,8 @@ always @(posedge clk or negedge rst_n)
     else
         dsc1_cmp_status <= dsc1_cmp_status;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc2_cmp_status <= 1'b0;
     else if (add_dsc2 || dsc_move_3_2)
         case ({add_dsc2, dsc_move_3_2})
@@ -3033,8 +3033,8 @@ always @(posedge clk or negedge rst_n)
     else
         dsc2_cmp_status <= dsc2_cmp_status;
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         dsc3_cmp_status <= 1'b0;
     else if (add_dsc3 || dsc3_clear)
         dsc3_cmp_status <= 1'b0;

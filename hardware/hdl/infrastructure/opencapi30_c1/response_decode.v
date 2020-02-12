@@ -23,7 +23,7 @@ module response_decode
                         )
                       ( 
                        input                 clk                       ,
-                       input                 rst_n                     ,
+                       input                 resetn                     ,
 
                        //---- configuration --------------------------
                        input      [0003:0]   cfg_backoff_timer         ,
@@ -229,14 +229,14 @@ module response_decode
 
 
 //---- latch signals once ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      rsp_valid  <= 1'd0;
    else
      rsp_valid  <= tlx_rsp_valid;          
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        rsp_afutag <= 16'd0;
        rsp_opcode <= 8'd0;
@@ -368,7 +368,7 @@ module response_decode
              .DISTR(1)
              ) mfifo_rsp_good (
                                .clk     (clk                ),
-                               .rst_n   (rst_n              ),
+                               .resetn   (resetn              ),
                                .din     (fifo_rsp_good_din  ),
                                .wr_en   (fifo_rsp_good_den  ),
                                .rd_en   (fifo_rsp_good_rdrq ),
@@ -380,8 +380,8 @@ module response_decode
 
 //---- FIFO to buffer data of good response ----
  // ODD data and bdi
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        fifo_rspdat_o_din <= 1024'd0;
        fifo_rspdat_o_den <= 1'b0;
@@ -399,7 +399,7 @@ module response_decode
              .DISTR(1)
              ) mfifo_rspdat_o (
                                .clk     (clk                ),
-                               .rst_n   (rst_n              ),
+                               .resetn   (resetn              ),
                                .din     (fifo_rspdat_o_din  ),
                                .wr_en   (fifo_rspdat_o_den  ),
                                .rd_en   (fifo_rspdat_o_rdrq ),
@@ -409,8 +409,8 @@ module response_decode
                                );
 
  // EVEN data and bdi
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        fifo_rspdat_e_din <= 1024'd0;
        fifo_rspdat_e_den <= 1'b0;
@@ -428,7 +428,7 @@ module response_decode
              .DISTR(1)
              ) mfifo_rspdat_e (
                                .clk     (clk                ),
-                               .rst_n   (rst_n              ),
+                               .resetn   (resetn              ),
                                .din     (fifo_rspdat_e_din  ),
                                .wr_en   (fifo_rspdat_e_den  ),
                                .rd_en   (fifo_rspdat_e_rdrq ),
@@ -441,8 +441,8 @@ module response_decode
  wire fifo_tri_rsp_good_empty = fifo_rsp_good_empty || fifo_rspdat_o_empty || fifo_rspdat_e_empty;
  reg  fifo_rsp_good_rdrq_orig;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      fifo_rsp_good_rdrq_orig <= 1'b0;
    else 
      fifo_rsp_good_rdrq_orig <= ~fifo_tri_rsp_good_empty;
@@ -456,16 +456,16 @@ module response_decode
  assign fifo_rsp_good_partial_dv = (fifo_rsp_good_dv &&  fifo_rsp_good_dout[9]);
 
 //---- tmporary register for partial read data combination ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      tmp_partial_rd_data_o <= 512'd0;
    else if(prt_rsp_available)
      tmp_partial_rd_data_o <= 512'd0;
    else if(fifo_rsp_good_partial_dv && ~fifo_rsp_good_dout[7])
      tmp_partial_rd_data_o <= (tmp_partial_rd_data_o | fifo_rspdat_o_dout[511:0]);
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      tmp_partial_rd_data_e <= 512'd0;
    else if(prt_rsp_available)
      tmp_partial_rd_data_e <= 512'd0;
@@ -484,7 +484,7 @@ module response_decode
              .DISTR(1)
              ) mfifo_rsp_bad (
                               .clk     (clk               ),
-                              .rst_n   (rst_n             ),
+                              .resetn   (resetn             ),
                               .din     (fifo_rsp_bad_din  ),
                               .wr_en   (fifo_rsp_bad_den  ),
                               .rd_en   (fifo_rsp_bad_rdrq ),
@@ -498,14 +498,14 @@ module response_decode
  assign fifo_rsp_bad_full_dv = fifo_rsp_bad_dv;
 
  reg fifo_rsp_good_den_sync;
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      fifo_rsp_good_den_sync <= 1'b0;
    else
      fifo_rsp_good_den_sync <= fifo_rsp_good_den;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      all_fifos_emptied <= 1'b1;
    else if(fifo_rsp_good_den_sync)
      all_fifos_emptied <= 1'b0;
@@ -536,7 +536,7 @@ module response_decode
                   retry_queue
                            (
                            .clk          (clk              ),
-                           .rst_n        (rst_n            ),
+                           .resetn        (resetn            ),
                            .backoff_limit(cfg_backoff_timer),
                            .prt_cmd_start(prt_cmd_start    ),
                            .rty_busy     (rty_busy         ),
@@ -584,8 +584,8 @@ module response_decode
 //=================================================================================================================
 
 //---- inflight partial command counter ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_inflight_cnt <= 5'd0;
    else 
      case({prt_cmd_valid, (response_partial && ~response_xlate_pending && rsp_valid)})
@@ -595,8 +595,8 @@ module response_decode
      endcase
 
 //---- valid partial response data counter, incrementing when valid response of partial is received, decrementing when valid data is popped ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_data_cnt <= 5'd0;
    else if(MODE)
      case({(response_partial_done && rsp_valid), fifo_rsp_good_partial_dv})
@@ -606,8 +606,8 @@ module response_decode
      endcase
 
 //---- indicate partial commands have all been sent ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_commands_allout <= 1'b0;
    else if(prt_cmd_enable)
      prt_commands_allout <= 1'b0;
@@ -615,8 +615,8 @@ module response_decode
      prt_commands_allout <= 1'b1;
 
 //---- indicate all partial responses but not all data have all been received, for read mode only ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_responses_allin <= 1'b0;
    else if(prt_rsp_end)
      prt_responses_allin <= 1'b0;
@@ -642,15 +642,15 @@ module response_decode
  assign prt_rsp_end = (MODE)? (prt_rsp_last_no_data || prt_rsp_last_all_data) : prt_rsp_last;
 
 //---- delay partial commands enabling to make safe distance between 2 partial batches ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_rsp_end_shift <= 8'd0;
    else 
      prt_rsp_end_shift <= {prt_rsp_end_shift[6:0], prt_rsp_end};
 
 //---- pending to acknowledge the last batch of partial commands ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_rsp_pending <= 1'b0;
    else if(prt_rsp_end)
      prt_rsp_pending <= 1'b1;
@@ -658,8 +658,8 @@ module response_decode
      prt_rsp_pending <= 1'b0;
 
 //---- indicate that at least one out of all responses is retry ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_rsp_retry <= 1'b0;
    else if(prt_rsp_available)
      prt_rsp_retry <= 1'b0;
@@ -667,8 +667,8 @@ module response_decode
      prt_rsp_retry <= 1'b1;
 
 //---- indicate that at least one out of all responses is done ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_rsp_done <= 1'b0;
    else if(prt_rsp_available)
      prt_rsp_done <= 1'b0;
@@ -676,8 +676,8 @@ module response_decode
      prt_rsp_done <= 1'b1;
 
 //---- indicate that at least one out of all responses is failed ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_rsp_failed <= 1'b0;
    else if(prt_rsp_available)
      prt_rsp_failed <= 1'b0;
@@ -690,8 +690,8 @@ module response_decode
  assign prt_valid = prt_rsp_available && ~prt_rsp_retry;
 
 //---- just in case when there's still retry in FIFO which might be re-sent ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      rty_in_progress <= 1'b0;
    else if(prt_rsp_end_shift[7])
      rty_in_progress <= 1'b1;
@@ -701,8 +701,8 @@ module response_decode
  assign end_of_partial_batch = rty_in_progress && ~rty_busy;
 
 //---- asserts to notify partial sequencer that all responses have been received ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_cmd_enable <= 1'b1;
    else if(prt_cmd_start)
      prt_cmd_enable <= 1'b0;
@@ -710,8 +710,8 @@ module response_decode
      prt_cmd_enable <= 1'b1;
 
 //---- overall partial commands response, being good only when all responses are good ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      prt_rsp_code <= RESP_GOOD;
    else if(prt_rsp_available)
      begin
@@ -722,8 +722,8 @@ module response_decode
      end
 
 //---- position and tag information for partial response ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        prt_pos <= 2'd0;
        prt_tag <= 7'd0;
@@ -746,8 +746,8 @@ module response_decode
 //=================================================================================================================
 
 //---- read data, tag and pos ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        dma_resp_valid <= 1'b0;
        dma_resp_data  <= 1024'd0;
@@ -775,8 +775,8 @@ module response_decode
      end
 
 //---- reponse type: 3'b001: good; 3'b010: bad; 3'b100: retry ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      dma_resp_code <= 3'd0;
    else if(MODE)
      case({fifo_rsp_good_full_dv,fifo_rsp_bad_full_dv,rty_valid,prt_valid})
@@ -802,8 +802,8 @@ module response_decode
 //=================================================================================================================
 
 //---- DEBUG registers ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      begin
        debug_tlx_cnt_rsp       <= 32'b0;
        debug_tlx_cnt_retry     <= 32'b0;
@@ -845,8 +845,8 @@ module response_decode
  reg            fir_fifo_rspdat_e_overflow;
  reg            fir_fifo_retry_overflow;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        fir_fifo_rsp_good_overflow <= 1'b0; 
        fir_fifo_rsp_bad_overflow  <= 1'b0; 

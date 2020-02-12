@@ -50,7 +50,7 @@ module action_wrapper #(
 )
 (
     input  ap_clk                    ,
-    input  ap_rst_n                  ,
+    input  ap_resetn                  ,
     output interrupt                 ,
     output [SOURCE_BITS-1  : 0] interrupt_src             ,
     output [CONTEXT_BITS-1 : 0] interrupt_ctx             ,
@@ -148,7 +148,7 @@ module action_wrapper #(
     parameter CONTEXT_BITS                   = `CTXW)
 (
     input  ap_clk                    ,
-    input  ap_rst_n                  ,
+    input  ap_resetn                  ,
     output interrupt                 ,
     output [SOURCE_BITS-1  : 0] interrupt_src             ,
     output [CONTEXT_BITS-1 : 0] interrupt_ctx             ,
@@ -266,7 +266,7 @@ module action_wrapper #(
 //    //odma_axi_slave is ready, codes are as follows
 //    odma_axi_slave  axi_slave(
 //    /*input                              */   .clk           ( ap_clk         ),
-//    /*input                              */   .rst_n         ( ap_rst_n       ),
+//    /*input                              */   .resetn         ( ap_resetn       ),
 //    /* AXI4 read addr interface */
 //    /*input  [AXI_ADDR_WIDTH-1 : 0]      */   .axi_araddr    ( axi_mm_araddr     ),         
 //    /*input  [1 : 0]                     */   .axi_arburst   ( axi_mm_arburst    ),        
@@ -325,7 +325,7 @@ module action_wrapper #(
 //        .AXIS_DATA_WIDTH    ( AXIS_DATA_WIDTH )
 //    ) st_slave(
 //        .clk                (ap_clk),
-//        .rst_n              (ap_rst_n),
+//        .resetn              (ap_resetn),
 //        .axis_tvalid        (m_axis_tvalid),
 //        .axis_tready        (m_axis_tready),
 //        .axis_tdata         (m_axis_tdata),
@@ -342,7 +342,7 @@ module action_wrapper #(
 //        .AXIS_DATA_WIDTH    ( AXIS_DATA_WIDTH )
 //    ) st_master(
 //        .clk                (ap_clk),
-//        .rst_n              (ap_rst_n),
+//        .resetn              (ap_resetn),
 //        .axis_tvalid        (s_axis_tvalid),
 //        .axis_tready        (s_axis_tready),
 //        .axis_tdata         (s_axis_tdata),
@@ -356,7 +356,7 @@ module action_wrapper #(
 ////odma_axi_lite_slave is ready, codes are as follows		  
 //odma_axi_lite_slave 		lite_slave(
 //    .clk           (ap_clk         ),
-//    .aresetn       (ap_rst_n       ),
+//    .aresetn       (ap_resetn       ),
 //    
 //    .s_lite_arvalid(a_s_axi_arvalid),        
 //    .s_lite_araddr (a_s_axi_araddr ),         

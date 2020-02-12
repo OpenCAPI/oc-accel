@@ -56,8 +56,8 @@ connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins bd_infra/opencapi
 connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins flash_vpd_wrapper/clock_afu]
 
 connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins flash_vpd_wrapper/reset_afu_n]
-connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins bd_infra/opencapi30_mmio/rst_n]
-connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins bd_act/action_wrapper/rst_n]
+connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins bd_infra/opencapi30_mmio/resetn]
+connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins bd_act/action_wrapper/resetn]
 
 
 # Create Ports

@@ -23,7 +23,7 @@ module context_surveil
                   )
 ( 
                              input                      clk                   ,
-                             input                      rst_n                 ,
+                             input                      resetn                 ,
 
                              //---- configuration --------------------------------------
                              input      [011:0]         cfg_actag_base        ,
@@ -119,9 +119,9 @@ module context_surveil
 //-----------------------------------------------------------------------------------------------------------
  assign s1_ready = (s2_ready && (!send_assign_actag));
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          s1_cmd_valid <= 1'b0;
      else if(tlx_i_cmd_valid && s1_ready)
          s1_cmd_valid <= 1'b1;
@@ -129,9 +129,9 @@ module context_surveil
          s1_cmd_valid <= 1'b0;
  end
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
      begin
          s1_cmd_opcode    <= 0;     
          s1_cmd_actag     <= 0;    
@@ -160,9 +160,9 @@ module context_surveil
  assign ram_wr_addr = s1_cmd_actag[5:0];
  assign ram_data_i = {s1_cmd_pasid[CTXW-1:6], 1'b1};
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          send_assign_actag_dly <= 1'b0;
      else 
          send_assign_actag_dly <= send_assign_actag;
@@ -173,24 +173,24 @@ module context_surveil
 //-----------------------------------------------------------------------------------------------------------
  assign s2_ready = tlx_afu_cmd_ready; 
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          s2_cmd_valid <= 1'b0;
      else
          s2_cmd_valid <= s1_cmd_valid && s2_ready;
  end
 
- always@(posedge clk or negedge rst_n)
+ always@(posedge clk or negedge resetn)
  begin
-     if(~rst_n)
+     if(~resetn)
          s2_cmd_opcode <= 0;
      else if(s1_cmd_valid && s2_ready)
          s2_cmd_opcode <= send_assign_actag ? AFU_TLX_CMD_OPCODE_ASSIGN_ACTAG : s1_cmd_opcode;
  end
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
    begin
        s2_cmd_actag     <= 0;    
        s2_cmd_ea_or_obj <= 0;        

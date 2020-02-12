@@ -21,7 +21,7 @@ module interrupt_tlx
                    parameter CTXW = 9
                   ) 
                        input                 clk              ,
-                       input                 rst_n            ,
+                       input                 resetn            ,
 
                        //---- configuration --------------------------------------
                        input      [011:0]    cfg_actag_base   ,
@@ -97,15 +97,15 @@ module interrupt_tlx
  localparam    [3:0] TLX_AFU_RESP_CODE_FAILED                 = 4'b1110;      // -- Machine Check
 
 //store interrupt_src to interrupt_src_sync when interrupt is set, this signal is stored for reuse when retry
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      interrupt_src_sync <= 0;
    else if(interrupt)
      interrupt_src_sync <= interrupt_src;
 
 //---- TLX command ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        tlx_cmd_valid  <= 1'd0;
        tlx_cmd_obj    <= 68'd0;
@@ -121,8 +121,8 @@ module interrupt_tlx
      end
 
 //---- interrupt pasid and actag ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        tlx_cmd_pasid <= 20'd0;
        tlx_cmd_actag <= 12'd0; 
@@ -147,8 +147,8 @@ module interrupt_tlx
 
 
 //---- interrupt command sending and response receiving statemachine ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      cstate <= IDLE;
    else
      cstate <= nstate;
@@ -229,8 +229,8 @@ module interrupt_tlx
 
 
 //---- backoff counter for retry ----
- always@(posedge clk or negedge rst_n)
-   if(~rst_n)
+ always@(posedge clk or negedge resetn)
+   if(~resetn)
      backoff_countdown <= 24'd0;
    else if(cstate == INT_BACKOFF)
      backoff_countdown <= backoff_countdown - 24'd1;

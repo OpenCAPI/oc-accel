@@ -33,7 +33,7 @@ module action_memcopy # (
 )
 (
 input                                          clk                  ,
-input                                          rst_n                ,
+input                                          resetn                ,
 
 
 //---- AXI bus interfaced with OCACCEL core ----
@@ -152,7 +152,7 @@ wire  [31:0]    ocaccel_context       ;
            .ADDR_WIDTH   (C_S_AXI_CTRL_REG_ADDR_WIDTH   )
  ) maxi_lite_slave (
                       .clk                ( clk                ) ,
-                      .rst_n              ( rst_n              ) ,
+                      .resetn              ( resetn              ) ,
                       .s_axi_baseaddr     (s_axi_ocaccel_baseaddr ),
                       .s_axi_awready      ( s_axi_ocaccel_awready ) ,
                       .s_axi_awaddr       ( s_axi_ocaccel_awaddr  ) ,//32b
@@ -227,7 +227,7 @@ wire  [31:0]    ocaccel_context       ;
                 .BUSER_WIDTH  (C_M_AXI_HOST_MEM_BUSER_WIDTH  )
                 ) maxi_master_wr( 
        .clk                (clk                ),
-       .rst_n              (rst_n), 
+       .resetn              (resetn), 
        .m_axi_awid         (m_axi_ocaccel_awid    ), 
        .m_axi_awaddr       (m_axi_ocaccel_awaddr  ), 
        .m_axi_awlen        (m_axi_ocaccel_awlen   ),
@@ -276,7 +276,7 @@ wire  [31:0]    ocaccel_context       ;
                 .BUSER_WIDTH  (C_M_AXI_HOST_MEM_BUSER_WIDTH  )
                 ) maxi_master_rd( 
       .clk                (clk                ),
-      .rst_n              (rst_n), 
+      .resetn              (resetn), 
       .m_axi_arid         (m_axi_ocaccel_arid    ),
       .m_axi_araddr       (m_axi_ocaccel_araddr  ),
       .m_axi_arlen        (m_axi_ocaccel_arlen   ),

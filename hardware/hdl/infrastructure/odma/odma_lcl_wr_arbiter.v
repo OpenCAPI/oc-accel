@@ -20,7 +20,7 @@ module odma_lcl_wr_arbiter #(
 )
 (
                     input                             clk                  ,
-                    input                             rst_n                ,
+                    input                             resetn                ,
                     //--------------- LCL Write Interface -----------------//
                     //-------------- Write Addr/Data Channel --------------//
                     output reg                            lcl_wr_valid         ,
@@ -106,8 +106,8 @@ wire no_valid;
 
 
 // for wr_req_cmp_grant
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         wr_req_cmp_grant <= 1'b0;
     else if (wr_req_arb_en)
         case ({wr_req_cmp_grant, wr_req_mm_grant, wr_req_st_grant})
@@ -128,8 +128,8 @@ always @(posedge clk or negedge rst_n)
         wr_req_cmp_grant <= wr_req_cmp_grant;
         
 // for wr_req_mm_grant
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         wr_req_mm_grant <= 1'b0;
     else if (wr_req_arb_en)
         case ({wr_req_cmp_grant, wr_req_mm_grant, wr_req_st_grant})
@@ -150,8 +150,8 @@ always @(posedge clk or negedge rst_n)
         wr_req_mm_grant <= wr_req_mm_grant;
         
 // for wr_req_st_grant
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         wr_req_st_grant <= 1'b0;
     else if (wr_req_arb_en)
         case ({wr_req_cmp_grant, wr_req_mm_grant, wr_req_st_grant})
@@ -193,8 +193,8 @@ always @(*) begin
     endcase
 end
 
-always @(posedge clk or negedge rst_n)
-    if (!rst_n)
+always @(posedge clk or negedge resetn)
+    if (!resetn)
         wr_req_arb_en_extend <= 1'b0;
     else if (wr_req_arb_en && no_arb)
         wr_req_arb_en_extend <= 1'b1;

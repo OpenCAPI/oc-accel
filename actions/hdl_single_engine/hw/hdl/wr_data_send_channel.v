@@ -18,7 +18,7 @@
 module wr_data_send_channel
                       (
                        input                           clk                ,
-                       input                           rst_n              , 
+                       input                           resetn              , 
 
                        //---- AXI bus ----
                           // AXI write data channel
@@ -67,7 +67,7 @@ module wr_data_send_channel
     //---- write data send state machine ----
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             cstate <= IDLE;
         else
             cstate <= nstate;
@@ -97,7 +97,7 @@ module wr_data_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             beat_bias <= 0;
         else if(cstate == BIAS1)
             beat_bias <= beat_bias_selected;
@@ -118,7 +118,7 @@ module wr_data_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             base_data <= 0;
         else if(cstate == BIAS1)
             base_data <= wr_init_data;
@@ -153,7 +153,7 @@ module wr_data_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             beat_counter <= 0;
         else if (cstate == BIAS1)
             beat_counter <= total_wr_beat_count;
@@ -168,7 +168,7 @@ module wr_data_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             stage1_cycle_cnt <= 5'b0;
         else if(stage1_wlast)
             stage1_cycle_cnt <= 5'b0;
@@ -467,7 +467,7 @@ module wr_data_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             wr_len_counter_stage1 <= 0;
         else if(cstate == BIAS1)
             wr_len_counter_stage1 <= wr_len;
@@ -481,7 +481,7 @@ module wr_data_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
             m_axi_wvalid <= 1'b0;
         else if(stage1_valid)
             m_axi_wvalid <= 1'b1;
@@ -491,7 +491,7 @@ module wr_data_send_channel
 
     always@(posedge clk)
     begin
-        if(~rst_n)
+        if(~resetn)
         begin
             m_axi_wdata <= 1024'b0;
             m_axi_wlast <= 1'b0;

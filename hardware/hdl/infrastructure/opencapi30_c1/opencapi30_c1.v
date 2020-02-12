@@ -50,7 +50,7 @@ module opencapi30_c1
                    //---- synchronous clocks and reset ----------------------
                    input                 clock_tlx                        ,
                    input                 clock_afu                        ,
-                   input                 rst_n                            ,
+                   input                 resetn                            ,
 
                    //---- configurations ------------------------------------
                    input      [0003:0]   cfg_infra_backoff_timer              ,
@@ -311,7 +311,7 @@ reg   [0019:0] cfg_pasid_mask;
 tlx_cmd_converter tlx_cmd_conv (
                 /*input                 */   .clock_tlx                         ( clock_tlx                         ),
                 /*input                 */   .clock_afu                         ( clock_afu                         ),
-                /*input                 */   .rst_n                           ( rst_n                           ),
+                /*input                 */   .resetn                           ( resetn                           ),
 
                 //---- configuration ---------------------------------
                 /*input      [007:0]    */   .cfg_bdf_bus                     ( cfg_infra_bdf_bus               ),
@@ -389,7 +389,7 @@ tlx_cmd_converter tlx_cmd_conv (
 tlx_rsp_converter tlx_rsp_conv(
                 /*input                 */   .clock_tlx                         ( clock_tlx                         ),
                 /*input                 */   .clock_afu                         ( clock_afu                         ),
-                /*input                 */   .rst_n                           ( rst_n                           ),
+                /*input                 */   .resetn                           ( resetn                           ),
 
                 //---- TLX side interface --------------------------------
                   // response
@@ -463,7 +463,7 @@ command_encode
                   )
                 cmd_enc_w (
                 /*input                 */   .clk                          ( clock_afu                      ),
-                /*input                 */   .rst_n                        ( rst_n                        ),
+                /*input                 */   .resetn                        ( resetn                        ),
 
                 //---- configuration ---------------------------------
                 /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
@@ -515,7 +515,7 @@ command_encode
                   )
                 cmd_enc_r  (
                 /*input                 */   .clk                          ( clock_afu                      ),
-                /*input                 */   .rst_n                        ( rst_n                        ),
+                /*input                 */   .resetn                        ( resetn                        ),
 
                 //---- configuration ---------------------------------
                 /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
@@ -572,7 +572,7 @@ response_decode
                  )
                 rsp_dec_w (
                 /*input                 */   .clk               ( clock_afu           ),
-                /*input                 */   .rst_n             ( rst_n             ),
+                /*input                 */   .resetn             ( resetn             ),
 
                 //---- configuration --------------------------------------
                 /*input      [0003:0]   */   .cfg_backoff_timer ( cfg_infra_backoff_timer ),
@@ -624,7 +624,7 @@ response_decode
                   )
                 rsp_dec_r (
                 /*input                */   .clk               ( clock_afu           ),
-                /*input                */   .rst_n             ( rst_n             ),
+                /*input                */   .resetn             ( resetn             ),
 
                 //---- configuration --------------------------------------
                 /*input      [0003:0]  */    .cfg_backoff_timer(cfg_infra_backoff_timer  ),
@@ -672,7 +672,7 @@ response_decode
 
  interrupt_tlx interrupt_tlx (
                        /*input              */  .clk              (clock_afu             ),
-                       /*input              */  .rst_n            (rst_n               ),
+                       /*input              */  .resetn            (resetn               ),
                        /*input      [011:0] */  .cfg_actag_base   (cfg_actag_base      ),
                        /*input      [019:0] */  .cfg_pasid_base   (cfg_pasid_base      ),
                        /*input      [019:0] */  .cfg_pasid_mask   (cfg_pasid_mask      ),

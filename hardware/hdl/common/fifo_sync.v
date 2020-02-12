@@ -24,7 +24,7 @@ module fifo_sync
                   )
                  (
                   input clk,
-                  input rst_n,
+                  input resetn,
                   input wr_en,
                   input [DATA_WIDTH-1:0] din,
                   input rd_en,
@@ -56,14 +56,14 @@ module fifo_sync
  reg rd_en_sync;
  reg wr_en_dly;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      wr_pnt <= pcnt_0;
    else if(wr_en && ~full)
      wr_pnt <= wr_pnt + pcnt_1;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      wr_en_dly <= 0;
    else
      wr_en_dly <= wr_en;  // fifo cannot be read immediately after the first wr_en, data can only be valid on the port in the 2nd cycle after the first wr_en
@@ -73,16 +73,16 @@ module fifo_sync
  assign ram_wa = wr_pnt;
  assign dout = ram_do;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      rd_pnt <= pcnt_0;
    else if(rd_en && ~empty)
      rd_pnt <= rd_pnt + pcnt_1;
 
  assign ram_ra = (FWFT)? (rd_en? (rd_pnt+1): rd_pnt) : rd_pnt;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      valid_entry_cnt <= ecnt_0;
    else
      casez({wr_en_dly, rd_en, full, empty})
@@ -92,14 +92,14 @@ module fifo_sync
        default :;
      endcase
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      rd_en_sync <= 1'b0;
    else 
      rd_en_sync <= rd_en;
 
- always@(posedge clk or negedge rst_n)
-   if(~rst_n) 
+ always@(posedge clk or negedge resetn)
+   if(~resetn) 
      begin
        underflow <= 1'b0;
        overflow <= 1'b0;

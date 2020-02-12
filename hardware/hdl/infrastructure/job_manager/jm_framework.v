@@ -18,7 +18,7 @@ module jm_framework #(
     parameter HOST_AWIDTH = 64
 )(
         input                           clk             ,
-        input                           rst_n           ,
+        input                           resetn           ,
 
         output      [KERNEL_NUM-1:0]    engine_start    ,
         output      [HOST_DWIDTH-1:0]   jd_payload      ,
@@ -123,7 +123,7 @@ mp_control #(
         .ADDR_WIDTH     ( LITE_AWIDTH   )
  ) mp_control1 (
         .clk                        ( clk                   ),
-        .rst_n                      ( rst_n                 ),
+        .resetn                      ( resetn                 ),
         .s_axi_awready              ( s_axi_awready         ),
         .s_axi_awaddr               ( s_axi_awaddr          ),//32b
         .s_axi_awprot               ( s_axi_awprot          ),//3b
@@ -163,7 +163,7 @@ job_manager #(
         .ADDR_WIDTH     ( HOST_AWIDTH   )
     )job_manager0 (
         .clk                        ( clk                   ),
-        .rst_n                      ( rst_n                 ),
+        .resetn                      ( resetn                 ),
         .process_info_i             ( process_info_w        ),
         .process_start_i            ( process_start_w       ),
         .process_ready_o            ( process_ready_w       ),
@@ -202,7 +202,7 @@ job_scheduler #(
         .KERNEL_NUM     ( KERNEL_NUM    )
     )job_scheduler0(
         .clk                        ( clk                   ),
-        .rst_n                      ( rst_n                 ),
+        .resetn                      ( resetn                 ),
         .dsc0_pull_o                ( dsc0_pull_w           ),
         .dsc0_ready_i               ( dsc0_ready_w          ),
         .dsc0_data_i                ( dsc0_data_w           ),
@@ -226,7 +226,7 @@ job_completion #(
         .ADDR_WIDTH     ( HOST_AWIDTH   )
     )job_completion0(
         .clk                        ( clk                   ),
-        .rst_n                      ( rst_n                 ),
+        .resetn                      ( resetn                 ),
         .cmpl_ram_addr_i            ( cmpl_ram_addr_w       ),
         .cmpl_ram_hi_i              ( cmpl_ram_hi_w         ),
         .cmpl_ram_lo_i              ( cmpl_ram_lo_w         ),

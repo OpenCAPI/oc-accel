@@ -26,7 +26,7 @@ USE work.action_types.ALL;
 ENTITY action_wrapper IS
   PORT (
     ap_clk                     : IN STD_LOGIC;
-    ap_rst_n                   : IN STD_LOGIC;
+    ap_resetn                   : IN STD_LOGIC;
     interrupt                  : OUT STD_LOGIC;
     interrupt_src              : OUT STD_LOGIC_VECTOR(INT_BITS-1 DOWNTO 0);
     interrupt_ctx              : OUT STD_LOGIC_VECTOR(CONTEXT_BITS-1 DOWNTO 0);
@@ -223,7 +223,7 @@ ARCHITECTURE STRUCTURE OF action_wrapper IS
 
     PORT (
       action_clk               : IN  STD_LOGIC;
-      action_rst_n             : IN  STD_LOGIC;
+      action_resetn             : IN  STD_LOGIC;
       int_req                  : OUT STD_LOGIC;
       int_src                  : OUT STD_LOGIC_VECTOR(INT_BITS-1 DOWNTO 0);
       int_ctx                  : OUT STD_LOGIC_VECTOR(CONTEXT_BITS-1 DOWNTO 0);
@@ -422,7 +422,7 @@ action_0: COMPONENT action_example
   )
   PORT MAP (
     action_clk                 => ap_clk,
-    action_rst_n               => ap_rst_n,
+    action_resetn               => ap_resetn,
     int_req                    => interrupt,
     int_src                    => interrupt_src,
     int_ctx                    => interrupt_ctx,

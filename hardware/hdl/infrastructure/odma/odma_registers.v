@@ -22,7 +22,7 @@ module odma_registers #(
 )
 (
     input                           clk,
-    input                           rst_n,
+    input                           resetn,
     //----- Host AXI lite slave interface -----
     input                           h_s_axi_arvalid,        //AXI read address valid
     input  [ADDR_WIDTH-1 : 0]       h_s_axi_araddr,         //AXI read address
@@ -404,8 +404,8 @@ reg  [31:0] reg_dma_common_dsc_credit_en;
 //------------------------------------------------------------------------------
 // Read command
 //--------------------------------
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     rd_fsm_cur_state <= READ_IDLE;
   else
     rd_fsm_cur_state <= rd_fsm_nxt_state;
@@ -455,8 +455,8 @@ assign byp_rd_req_valid  = is_action_rd_req & h_s_axi_arready;
 assign host_rd_req_valid = is_odma_rd_req & h_s_axi_arready;
 
 // latch bypassing read request/data
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     byp_axi_araddr <= {ADDR_WIDTH{1'b0}};
   else if(byp_rd_req_valid)
     byp_axi_araddr <= h_s_axi_araddr;
@@ -464,8 +464,8 @@ always@(posedge clk or negedge rst_n) begin
     byp_axi_araddr <= byp_axi_araddr;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     byp_axi_rdata <= {DATA_WIDTH{1'b0}};
     byp_axi_rresp <= 2'b0;
   end
@@ -484,8 +484,8 @@ assign a_m_axi_arvalid = rd_fsm_state_read_req;
 assign a_m_axi_araddr  = byp_axi_araddr;
 
 // data ready to action
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     a_m_axi_rready <= 1'b0;
   else if(rd_fsm_state_wait_rd_rsp & a_m_axi_rvalid)
     a_m_axi_rready <= 1'b1;
@@ -498,8 +498,8 @@ end
 //--------------------------------
 // Write command
 //--------------------------------
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     wr_fsm_cur_state <= WRITE_IDLE;
   else
     wr_fsm_cur_state <= wr_fsm_nxt_state;
@@ -562,8 +562,8 @@ assign byp_wr_req_valid  = is_action_wr_req & h_s_axi_awready;
 assign host_wr_req_valid = is_odma_wr_req & h_s_axi_awready;
 
 // latch odma write valid for resp valid generate
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     host_wr_req_valid_l <= 1'b0;
   else if(host_wr_req_valid)
     host_wr_req_valid_l <= 1'b1;
@@ -574,8 +574,8 @@ always@(posedge clk or negedge rst_n) begin
 end
 
 // latch bypassing write request/data
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     byp_axi_awaddr <= {ADDR_WIDTH{1'b0}};
   else if(byp_wr_req_valid)
     byp_axi_awaddr <= h_s_axi_awaddr;
@@ -583,8 +583,8 @@ always@(posedge clk or negedge rst_n) begin
     byp_axi_awaddr <= byp_axi_awaddr;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
     byp_axi_wdata <= {DATA_WIDTH{1'b0}};
     byp_axi_wstrb <= {STRB_WIDTH{1'b0}};
   end
@@ -606,8 +606,8 @@ assign a_m_axi_wdata   = byp_axi_wdata;
 assign a_m_axi_wstrb   = byp_axi_wstrb;
 
 // resp ready to action
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     a_m_axi_bready <= 1'b0;
   else if(wr_fsm_state_wait_wr_rsp & a_m_axi_bvalid)
     a_m_axi_bready <= 1'b1;
@@ -618,8 +618,8 @@ always@(posedge clk or negedge rst_n) begin
 end
 
 // latch write resp from action
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     byp_axi_bresp <= 2'b0;
   else if(wr_fsm_state_wait_wr_rsp & a_m_axi_bvalid)
     byp_axi_bresp <= a_m_axi_bresp;
@@ -631,8 +631,8 @@ end
 // Host Write Registers
 //------------------------------------------------------------------------------
 // write address capture
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     host_axi_awaddr <= {ADDR_WIDTH{1'b0}};
   else if(host_wr_req_valid)
     host_axi_awaddr <= h_s_axi_awaddr;
@@ -641,8 +641,8 @@ always@(posedge clk or negedge rst_n) begin
 end
 
 // write address ready
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     h_s_axi_awready <= 1'b0;
   else if(wr_fsm_state_write_idle & h_s_axi_awvalid)
     h_s_axi_awready <= 1'b1;
@@ -653,8 +653,8 @@ always@(posedge clk or negedge rst_n) begin
 end
 
 // write data ready
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     h_s_axi_wready <= 1'b0;
   else if(h_s_axi_awvalid & h_s_axi_awready)
     h_s_axi_wready <= 1'b1;
@@ -668,8 +668,8 @@ end
 assign host_axi_wr_mask    = {{8{h_s_axi_wstrb[3]}},{8{h_s_axi_wstrb[2]}},{8{h_s_axi_wstrb[1]}},{8{h_s_axi_wstrb[0]}}};
 assign host_axi_wdata_mask = h_s_axi_wdata & host_axi_wr_mask;
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n) begin
+always@(posedge clk or negedge resetn) begin
+  if(~resetn) begin
 `ifndef ENABLE_ODMA_ST_MODE
     reg_h2a_ch0_id                  <= 32'h1FC00004; 
     reg_h2a_ch1_id                  <= 32'h1FC00104;                             
@@ -986,8 +986,8 @@ end
 //--------------------------------
 //generate pulse of control register run bit setting
 //--------------------------------
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     h2a_ch0_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `H2A_CH0_CTRL) | (host_axi_awaddr == `H2A_CH0_CTRL_W1S)))
@@ -998,8 +998,8 @@ always@(posedge clk or negedge rst_n) begin
     h2a_ch0_run_bit_set <= h2a_ch0_run_bit_set;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     h2a_ch1_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `H2A_CH1_CTRL) | (host_axi_awaddr == `H2A_CH1_CTRL_W1S)))
@@ -1010,8 +1010,8 @@ always@(posedge clk or negedge rst_n) begin
     h2a_ch1_run_bit_set <= h2a_ch1_run_bit_set;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     h2a_ch2_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `H2A_CH2_CTRL) | (host_axi_awaddr == `H2A_CH2_CTRL_W1S)))
@@ -1022,8 +1022,8 @@ always@(posedge clk or negedge rst_n) begin
     h2a_ch2_run_bit_set <= h2a_ch2_run_bit_set;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     h2a_ch3_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `H2A_CH3_CTRL) | (host_axi_awaddr == `H2A_CH3_CTRL_W1S)))
@@ -1034,8 +1034,8 @@ always@(posedge clk or negedge rst_n) begin
     h2a_ch3_run_bit_set <= h2a_ch3_run_bit_set;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     a2h_ch0_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `A2H_CH0_CTRL) | (host_axi_awaddr == `A2H_CH0_CTRL_W1S)))
@@ -1046,8 +1046,8 @@ always@(posedge clk or negedge rst_n) begin
     a2h_ch0_run_bit_set <= a2h_ch0_run_bit_set;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     a2h_ch1_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `A2H_CH1_CTRL) | (host_axi_awaddr == `A2H_CH1_CTRL_W1S)))
@@ -1058,8 +1058,8 @@ always@(posedge clk or negedge rst_n) begin
     a2h_ch1_run_bit_set <= a2h_ch1_run_bit_set;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     a2h_ch2_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `A2H_CH2_CTRL) | (host_axi_awaddr == `A2H_CH2_CTRL_W1S)))
@@ -1070,8 +1070,8 @@ always@(posedge clk or negedge rst_n) begin
     a2h_ch2_run_bit_set <= a2h_ch2_run_bit_set;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     a2h_ch3_run_bit_set <= 1'b0;
   else if(h_s_axi_wvalid & h_s_axi_wready & host_axi_wdata_mask[0]
         & ((host_axi_awaddr == `A2H_CH3_CTRL) | (host_axi_awaddr == `A2H_CH3_CTRL_W1S)))
@@ -1085,8 +1085,8 @@ end
 //--------------------------------
 //channel status register
 //--------------------------------
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch0_stat <= 32'b0;
   //reset on control register run bit setting
   else if(h2a_ch0_run_bit_set)
@@ -1104,8 +1104,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch0_stat <= reg_h2a_ch0_stat;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch1_stat <= 32'b0;
   else if(h2a_ch1_run_bit_set)
     reg_h2a_ch1_stat <= 32'b0;
@@ -1119,8 +1119,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch1_stat <= reg_h2a_ch1_stat;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch2_stat <= 32'b0;
   else if(h2a_ch2_run_bit_set)
     reg_h2a_ch2_stat <= 32'b0;
@@ -1134,8 +1134,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch2_stat <= reg_h2a_ch2_stat;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch3_stat <= 32'b0;
   else if(h2a_ch3_run_bit_set)
     reg_h2a_ch3_stat <= 32'b0;
@@ -1149,8 +1149,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch3_stat <= reg_h2a_ch3_stat;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch0_stat <= 32'b0;
   else if(a2h_ch0_run_bit_set)
     reg_a2h_ch0_stat <= 32'b0;
@@ -1164,8 +1164,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch0_stat <= reg_a2h_ch0_stat;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch1_stat <= 32'b0;
   else if(a2h_ch1_run_bit_set)
     reg_a2h_ch1_stat <= 32'b0;
@@ -1179,8 +1179,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch1_stat <= reg_a2h_ch1_stat;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch2_stat <= 32'b0;
   else if(a2h_ch2_run_bit_set)
     reg_a2h_ch2_stat <= 32'b0;
@@ -1194,8 +1194,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch2_stat <= reg_a2h_ch2_stat;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch3_stat <= 32'b0;
   else if(a2h_ch3_run_bit_set)
     reg_a2h_ch3_stat <= 32'b0;
@@ -1212,8 +1212,8 @@ end
 //--------------------------------
 //completed descriptor count register
 //--------------------------------
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch0_cmp_dsc_cnt <= 32'b0;
   //reset on control register run bit setting
   else if(h2a_ch0_run_bit_set)
@@ -1225,8 +1225,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch0_cmp_dsc_cnt <= reg_h2a_ch0_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch1_cmp_dsc_cnt <= 32'b0;
   else if(h2a_ch1_run_bit_set)
     reg_h2a_ch1_cmp_dsc_cnt <= 32'b0;
@@ -1236,8 +1236,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch1_cmp_dsc_cnt <= reg_h2a_ch1_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch2_cmp_dsc_cnt <= 32'b0;
   else if(h2a_ch2_run_bit_set)
     reg_h2a_ch2_cmp_dsc_cnt <= 32'b0;
@@ -1247,8 +1247,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch2_cmp_dsc_cnt <= reg_h2a_ch2_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_h2a_ch3_cmp_dsc_cnt <= 32'b0;
   else if(h2a_ch3_run_bit_set)
     reg_h2a_ch3_cmp_dsc_cnt <= 32'b0;
@@ -1258,8 +1258,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_h2a_ch3_cmp_dsc_cnt <= reg_h2a_ch3_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch0_cmp_dsc_cnt <= 32'b0;
   else if(a2h_ch0_run_bit_set)
     reg_a2h_ch0_cmp_dsc_cnt <= 32'b0;
@@ -1269,8 +1269,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch0_cmp_dsc_cnt <= reg_a2h_ch0_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch1_cmp_dsc_cnt <= 32'b0;
   else if(a2h_ch1_run_bit_set)
     reg_a2h_ch1_cmp_dsc_cnt <= 32'b0;
@@ -1280,8 +1280,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch1_cmp_dsc_cnt <= reg_a2h_ch1_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch2_cmp_dsc_cnt <= 32'b0;
   else if(a2h_ch2_run_bit_set)
     reg_a2h_ch2_cmp_dsc_cnt <= 32'b0;
@@ -1291,8 +1291,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch2_cmp_dsc_cnt <= reg_a2h_ch2_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     reg_a2h_ch3_cmp_dsc_cnt <= 32'b0;
   else if(a2h_ch3_run_bit_set)
     reg_a2h_ch3_cmp_dsc_cnt <= 32'b0;
@@ -1302,8 +1302,8 @@ always@(posedge clk or negedge rst_n) begin
     reg_a2h_ch3_cmp_dsc_cnt <= reg_a2h_ch3_cmp_dsc_cnt;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     host_axi_bvalid <= 1'b0;
   else if(host_wr_req_valid_l & h_s_axi_wvalid & h_s_axi_wready)
     host_axi_bvalid <= 1'b1;
@@ -1321,8 +1321,8 @@ assign h_s_axi_bresp  = wr_fsm_state_send_wr_rsp ? byp_axi_bresp : 2'd0;
 // Host Read Registers
 //------------------------------------------------------------------------------
 // read address ready
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     h_s_axi_arready <= 1'b0;
   else if(rd_fsm_state_read_idle & h_s_axi_arvalid)
     h_s_axi_arready <= 1'b1;
@@ -1333,8 +1333,8 @@ always@(posedge clk or negedge rst_n) begin
 end
 
 // odma read data valid
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     host_axi_rvalid <= 1'b0;
   else if(host_rd_req_valid)
     host_axi_rvalid <= 1'b1;
@@ -1344,8 +1344,8 @@ always@(posedge clk or negedge rst_n) begin
     host_axi_rvalid <= host_axi_rvalid;
 end
 
-always@(posedge clk or negedge rst_n) begin
-  if(~rst_n)
+always@(posedge clk or negedge resetn) begin
+  if(~resetn)
     host_axi_rdata <= 32'd0;
   else if(host_rd_req_valid)
     case(h_s_axi_araddr)

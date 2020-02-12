@@ -47,7 +47,7 @@ module odma #(
 (
                 //------ synchronous clock and reset signals -----// 
                 input                           clk               ,
-                input                           rst_n             ,
+                input                           resetn             ,
                 input                           action_interrupt  ,
                 output                          action_interrupt_ack,
                 input  [0008:0]                 action_interrupt_ctx,
@@ -299,7 +299,7 @@ odma_registers #(
                 )
                registers (
   /*input                          */      .clk                  ( clk                  ),
-  /*input                          */      .rst_n                ( rst_n                ),
+  /*input                          */      .resetn                ( resetn                ),
   /* Host AXI lite slave interface */
   /*input                          */      .h_s_axi_arvalid      ( h_s_axi_arvalid      ),
   /*input  [ADDR_WIDTH-1 : 0]      */      .h_s_axi_araddr       ( h_s_axi_araddr       ),
@@ -467,7 +467,7 @@ assign eng_buf_full = {!h2a_st_dsc_ready, !h2a_mm_dsc_ready, !a2h_st_dsc_ready, 
 
 odma_descriptor_manager descriptor_manager (
          /*input                */         .clk                ( clk                    ),
-         /*input                */         .rst_n              ( rst_n                  ),
+         /*input                */         .resetn              ( resetn                  ),
          /*configure            */
          /*input      [0063:0]  */         .init_addr0         ( dsc_ch0_dsc_addr       ),
          /*input      [0063:0]  */         .init_addr1         ( dsc_ch1_dsc_addr       ),
@@ -649,7 +649,7 @@ wire [0031:0]        cmp_lcl_wr_rsp_ready;
 
 odma_completion_manager completion_manager (
          /*input                */          .clk               ( clk                  ),
-         /*input                */          .rst_n             ( rst_n                ),
+         /*input                */          .resetn             ( resetn                ),
          /*interrupt            */
          /*input                */          .action_interrupt         ( action_interrupt    ),
          /*input [0008:0]        */         .action_interrupt_ctx     ( action_interrupt_ctx),
@@ -787,7 +787,7 @@ wire                st_lcl_rd_rsp_ready_hint;
                         )
           h2a_mm_engine (
              /*input                              */  .clk                ( clk                   ),
-             /*input                              */  .rst_n              ( rst_n                 ),
+             /*input                              */  .resetn              ( resetn                 ),
              /* Descriptor Interface */
              /*output                             */  .dsc_ready          ( h2a_mm_dsc_ready      ),
              /*input                              */  .dsc_valid          ( eng_buf_write[2]      ),
@@ -861,7 +861,7 @@ wire                st_lcl_rd_rsp_ready_hint;
                         )
           h2a_st_engine (
              /*input                              */  .clk                ( clk                   ),
-             /*input                              */  .rst_n              ( rst_n                 ),
+             /*input                              */  .resetn              ( resetn                 ),
              /* Descriptor Interface */
              /*output                             */  .dsc_ready          ( h2a_st_dsc_ready      ),
              /*input                              */  .dsc_valid          ( eng_buf_write[3]      ),
@@ -974,7 +974,7 @@ wire [0031:0]        st_lcl_wr_rsp_ready;
                         )
           a2h_mm_engine (
              /*input                              */  .clk               ( clk                ),
-             /*input                              */  .rst_n             ( rst_n              ),
+             /*input                              */  .resetn             ( resetn              ),
              /* dsc engine interface              */
              /*input                              */  .dsc_valid         ( eng_buf_write[0]   ),
              /*input  [255 : 0]                   */  .dsc_data          ( a2h_mm_dsc_data    ),
@@ -1040,7 +1040,7 @@ wire [0031:0]        st_lcl_wr_rsp_ready;
                         )
           a2h_st_engine (
              /*input                              */  .clk               ( clk                ),
-             /*input                              */  .rst_n             ( rst_n              ),
+             /*input                              */  .resetn             ( resetn              ),
              /* dsc engine interface              */
              /*input                              */  .dsc_valid         ( eng_buf_write[1]   ),
              /*input  [255 : 0]                   */  .dsc_data          ( a2h_st_dsc_data    ),
@@ -1092,7 +1092,7 @@ odma_lcl_rd_arbiter  #(
                       )
        lcl_rd_arbiter (
          /*input                             */   .clk                    ( clk                    ),
-         /*input                             */   .rst_n                  ( rst_n                  ),
+         /*input                             */   .resetn                  ( resetn                  ),
          /* LCL Read Interface */ 
          /* Read Addr/Req Channel */
          /*output reg                        */   .lcl_rd_valid           ( lcl_rd_valid           ),
@@ -1176,7 +1176,7 @@ odma_lcl_wr_arbiter #(
                      )              
       lcl_wr_arbiter (
           /*input                             */   .clk                   ( clk                   ),
-          /*input                             */   .rst_n                 ( rst_n                 ),
+          /*input                             */   .resetn                 ( resetn                 ),
           /* LCL Write Interface */ 
           /* Write Addr/Data Channel */
           /*output reg                        */   .lcl_wr_valid          ( lcl_wr_valid          ),

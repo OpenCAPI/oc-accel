@@ -19,7 +19,7 @@ module multi_process_framework #(
     parameter CONTEXT_BITS                   = 8
 )(
     input              clk                      ,
-    input              rst_n                    ,
+    input              resetn                    ,
 
 
     //---- AXI bus interfaced with OCACCEL core ----
@@ -265,7 +265,7 @@ module multi_process_framework #(
                 .C_M_AXI_HOST_MEM_BUSER_WIDTH  (C_M_AXI_HOST_MEM_BUSER_WIDTH  )
             ) memcopy (
                 .clk                    (clk                    ),
-                .rst_n                  (rst_n                  ),
+                .resetn                  (resetn                  ),
 
                 //---- AXI bus interfaced with OCACCEL core ----
                 // AXI write address channel
@@ -392,7 +392,7 @@ module multi_process_framework #(
     //8-to-1 AXI MM interconnect
     host_axi_interconnect_0 axi_mm_X (
         .INTERCONNECT_ACLK           ( clk),
-        .INTERCONNECT_ARESETN        ( rst_n),
+        .INTERCONNECT_ARESETN        ( resetn),
 
         //: my $kn = NUM_ENGINES;
         //: for (my $i = 0; $i < $kn; $i++) {
@@ -484,7 +484,7 @@ module multi_process_framework #(
     //1-to-8 AXI-lite crossbar (demux)
     host_axi_lite_crossbar_0 axi_lite_X (
         .aclk(clk)
-        ,.aresetn(rst_n)
+        ,.aresetn(resetn)
         ,.s_axi_awaddr( s_axi_ocaccel_awaddr_no_pasid )
         ,.s_axi_awprot( s_axi_ocaccel_awprot )
         ,.s_axi_awvalid( s_axi_ocaccel_awvalid )
@@ -534,7 +534,7 @@ module multi_process_framework #(
         .ADDR_WIDTH   (32                             )
     ) maxi_lite_global_slave (
         .clk                        (clk                   ),
-        .rst_n                      (rst_n                 ),
+        .resetn                      (resetn                 ),
         .s_axi_awready              (kernel_s_axi_ocaccel_awready [ ENGINE_NUM]    ),
         .s_axi_awaddr               (kernel_s_axi_ocaccel_awaddr  [ ENGINE_NUM]     ),//32b
         .s_axi_awprot               (kernel_s_axi_ocaccel_awprot  [ ENGINE_NUM]     ),//3b
@@ -575,7 +575,7 @@ module multi_process_framework #(
     // TODO: no job manager and completion manager for now.
     //completion_manager completion_manager0(
     //                        .clk                    (clk                    ),
-    //                        .rst_n                  (rst_n                  ),
+    //                        .resetn                  (resetn                  ),
     //                        .kernel_start           (kernel_i_start         ),
     //                        .kernel_complete        (kernel_complete_p      ),
     //                        .system_register        (system_register        ),
@@ -615,7 +615,7 @@ module multi_process_framework #(
     //
     //job_manager job_manager0 (
     //                        .clk                    (clk                    ),
-    //                        .rst_n                  (rst_n                  ),
+    //                        .resetn                  (resetn                  ),
     //                        .init_addr              (init_addr              ),
     //                        .manager_start          (manager_start          ),
     //                        .new_job                (new_job                ),

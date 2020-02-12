@@ -12,7 +12,7 @@ module job_completion #(
     parameter ADDR_WIDTH = 64
 )(
     input                           clk                 ,
-    input                           rst_n               ,
+    input                           resetn               ,
     input       [PASID_WIDTH-1:0]   cmpl_ram_addr_i     ,
     input                           cmpl_ram_hi_i       ,
     input                           cmpl_ram_lo_i       ,
@@ -63,24 +63,24 @@ reg     [RETURN_WIDTH-1:0]  cur_return_code;
 
 always@(posedge clk) if(cmpl_fifo_pull) cur_return_code <= cmpl_fifo_out;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         m_axi_awvalid <= 1'b0;
     else if(m_axi_wvalid)
         m_axi_awvalid <= 1'b1;
     else if(m_axi_awvalid & m_axi_awready)
         m_axi_awvalid <= 1'b0;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         m_axi_wvalid <= 1'b0;
     else if(cmpl_fifo_pull)
         m_axi_wvalid <= 1'b1;
     else if(m_axi_wvalid & m_axi_wready)
         m_axi_wvalid <= 1'b0;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         in_write <= 1'b0;
     else if(cmpl_fifo_pull)
         in_write <= 1'b1;
@@ -108,7 +108,7 @@ always@(posedge clk or negedge rst_n)
 
 completion_fifo fifo_completion (
     .clk        (clk                ),
-    .rst        (!rst_n             ),
+    .rst        (!resetn             ),
     .din        (return_data_i      ),
     .wr_en      (complete_push_i    ),
     .rd_en      (cmpl_fifo_pull     ),
@@ -143,8 +143,8 @@ assign cmpl_ram_wdata_hi = cmpl_ram_hi_i ? cmpl_ram_data_i : next_cmpl_addr[63:3
 assign next_cmpl_addr = cmpl_addr + 'd128;
 assign cmpl_ram_waddr = (cmpl_ram_lo_i | cmpl_ram_hi_i) ? cmpl_ram_addr_i : cmpl_read_addr;
 
-always@(posedge clk or negedge rst_n)
-    if(!rst_n)
+always@(posedge clk or negedge resetn)
+    if(!resetn)
         cmpl_addr_update <= 1'b0;
     else if(m_axi_awvalid & m_axi_awready)
         cmpl_addr_update <= 1'b1;
