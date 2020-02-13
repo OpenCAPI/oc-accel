@@ -279,7 +279,8 @@ module oc_host_if (
   wire            clock_156_25;
   wire            send_first;
   wire            dlx_tlx_link_up_din;
-  reg             reset_n_q;
+  reg             reset_tlx_n_q;
+  reg             reset_afu_n_q;
   reg             dlx_tlx_link_up_q;
   wire [2:0]      unused;
 
@@ -457,6 +458,8 @@ reg             dlx_tlx_link_up_last;
 reg             link_gate;
 
 
+wire            wire_reset_afu_n;
+
 //=============================================================================
 //=============================================================================
 //                           Sub Module Instances
@@ -594,7 +597,7 @@ DLx_phy_vio_0 DLx_phy_vio_0_inst (
     (
       // -- Clocks, Reset, Ready
       .clock                            (clock_tlx                       ) // -- input
-     ,.reset_n                          (reset_n_q                     ) // -- input
+     ,.reset_n                          (reset_tlx_n_q                     ) // -- input
      ,.tlx_afu_ready                    (wire_tlx_afu_ready                   ) // output
      ,.afu_tlx_cmd_initial_credit       (wire_afu_tlx_cmd_initial_credit      ) // input  [6:0]
      ,.afu_tlx_cmd_credit               (wire_afu_tlx_cmd_credit              ) // input
@@ -722,7 +725,7 @@ DLx_phy_vio_0 DLx_phy_vio_0_inst (
 //                            oc_cfg instance
 oc_cfg cfg (
   .clock                             (clock_tlx                        ) //   input
- ,.reset_n                           (reset_n_q                        ) //   input
+ ,.reset_n                           (reset_tlx_n_q                        ) //   input
  ,.ro_device                         (ro_device                        ) //   input  [4:0]
  ,.ro_dlx0_version                   (ro_dlx0_version                  ) //   input  [31:0]
  ,.ro_tlx0_version                   (ro_tlx0_version                  ) //   input  [31:0]
@@ -1007,8 +1010,8 @@ oc_cfg cfg (
 
 oc_function_cfg_only func_cfg_only(
     .clock_tlx                              ( clock_tlx                          )
-  , .reset_in                               ( ~reset_n_q                         )  // (positive active)
-  , .reset_afu_n_out                        ( reset_afu_n                        )  // out
+  , .reset_in                               ( ~reset_tlx_n_q                         )  // (positive active)
+  , .reset_afu_n_out                        ( wire_reset_afu_n                   )  // out
     // -------------------------------------------------------------
     // Configuration Sequencer Interface [CFG_SEQ -> CFG_Fn (n=1-7)]
     // -------------------------------------------------------------
@@ -1095,11 +1098,16 @@ assign dlx_tlx_link_up_din = dlx_tlx_link_up;
 //     dlx_tlx_link_up: ______________/^^^^^^^^^^^^^^^^^
 //     Use it as "low-level effective" reset_n 
 always@(posedge clock_tlx) begin
-     reset_n_q           <= dlx_tlx_link_up;
+     reset_tlx_n_q       <= dlx_tlx_link_up;
      dlx_tlx_link_up_q   <= dlx_tlx_link_up_din;
 end
 
-assign reset_tlx_n = reset_n_q;
+assign reset_tlx_n = reset_tlx_n_q;
+
+always@(posedge clock_afu) begin
+     reset_afu_n_q <= wire_reset_afu_n;
+end
+assign reset_afu_n = reset_afu_n_q;
 
 vio_reset_n vio_reset_n_inst_tlx
   (
