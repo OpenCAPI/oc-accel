@@ -609,16 +609,16 @@ DLx_phy_vio_0 DLx_phy_vio_0_inst (
      ,.tlx_afu_cmd_pl                   (wire_tlx_afu_cmd_pl                  ) // output [2:0]
      ,.tlx_afu_cmd_be                   (wire_tlx_afu_cmd_be                  ) // output [63:0]
 
-     ,.cfg_tlx_initial_credit           (cfg_tlx_initial_credit          ) // input  [3:0]
-     ,.cfg_tlx_credit_return            (cfg_tlx_credit_return           ) // input
-     ,.tlx_cfg_valid                    (tlx_cfg_valid                   ) // output
-     ,.tlx_cfg_opcode                   (tlx_cfg_opcode                  ) // output [7:0]
-     ,.tlx_cfg_pa                       (tlx_cfg_pa                      ) // output [63:0]
-     ,.tlx_cfg_t                        (tlx_cfg_t                       ) // output
-     ,.tlx_cfg_pl                       (tlx_cfg_pl                      ) // output [2:0]
-     ,.tlx_cfg_capptag                  (tlx_cfg_capptag                 ) // output [15:0]
-     ,.tlx_cfg_data_bus                 (tlx_cfg_data_bus                ) // output [31:0]
-     ,.tlx_cfg_data_bdi                 (tlx_cfg_data_bdi                ) // output
+     ,.cfg_tlx_initial_credit           (cfg0_tlx_initial_credit          ) // input  [3:0]
+     ,.cfg_tlx_credit_return            (cfg0_tlx_credit_return           ) // input
+     ,.tlx_cfg_valid                    (tlx_cfg0_valid                   ) // output
+     ,.tlx_cfg_opcode                   (tlx_cfg0_opcode                  ) // output [7:0]
+     ,.tlx_cfg_pa                       (tlx_cfg0_pa                      ) // output [63:0]
+     ,.tlx_cfg_t                        (tlx_cfg0_t                       ) // output
+     ,.tlx_cfg_pl                       (tlx_cfg0_pl                      ) // output [2:0]
+     ,.tlx_cfg_capptag                  (tlx_cfg0_capptag                 ) // output [15:0]
+     ,.tlx_cfg_data_bus                 (tlx_cfg0_data_bus                ) // output [31:0]
+     ,.tlx_cfg_data_bdi                 (tlx_cfg0_data_bdi                ) // output
 
      ,.afu_tlx_resp_initial_credit      (wire_afu_tlx_resp_initial_credit     ) // input  [6:0]
      ,.afu_tlx_resp_credit              (wire_afu_tlx_resp_credit             ) // input
@@ -678,14 +678,14 @@ DLx_phy_vio_0 DLx_phy_vio_0_inst (
      ,.afu_tlx_rdata_bus                (wire_afu_tlx_rdata_bus               ) // input  [511:0]
      ,.afu_tlx_rdata_bdi                (wire_afu_tlx_rdata_bdi               ) // input
 
-     ,.cfg_tlx_resp_valid               (cfg_tlx_resp_valid              ) // input
-     ,.cfg_tlx_resp_opcode              (cfg_tlx_resp_opcode             ) // input  [7:0]
-     ,.cfg_tlx_resp_capptag             (cfg_tlx_resp_capptag            ) // input  [15:0]
-     ,.cfg_tlx_resp_code                (cfg_tlx_resp_code               ) // input  [3:0]
-     ,.tlx_cfg_resp_ack                 (tlx_cfg_resp_ack                ) // output
-     ,.cfg_tlx_rdata_offset             (cfg_tlx_rdata_offset            ) // input  [3:0]
-     ,.cfg_tlx_rdata_bus                (cfg_tlx_rdata_bus               ) // input  [31:0]
-     ,.cfg_tlx_rdata_bdi                (cfg_tlx_rdata_bdi               ) // input
+     ,.cfg_tlx_resp_valid               (cfg0_tlx_resp_valid              ) // input
+     ,.cfg_tlx_resp_opcode              (cfg0_tlx_resp_opcode             ) // input  [7:0]
+     ,.cfg_tlx_resp_capptag             (cfg0_tlx_resp_capptag            ) // input  [15:0]
+     ,.cfg_tlx_resp_code                (cfg0_tlx_resp_code               ) // input  [3:0]
+     ,.tlx_cfg_resp_ack                 (tlx_cfg0_resp_ack                ) // output
+     ,.cfg_tlx_rdata_offset             (cfg0_tlx_rdata_offset            ) // input  [3:0]
+     ,.cfg_tlx_rdata_bus                (cfg0_tlx_rdata_bus               ) // input  [31:0]
+     ,.cfg_tlx_rdata_bdi                (cfg0_tlx_rdata_bdi               ) // input
 
      ,.dlx_tlx_flit_valid               (dlx_tlx_flit_valid              ) // input
      ,.dlx_tlx_flit                     (dlx_tlx_flit                    ) // input  [511:0]
@@ -817,25 +817,25 @@ oc_cfg cfg (
  ,.afu_tlx_rdata_bdi                 (wire_afu_tlx_rdata_bdi                ) //   output
 
  // cfg0 Talk to TLX
- ,.tlx_cfg0_valid                    (tlx_cfg_valid                   ) //   input
- ,.tlx_cfg0_opcode                   (tlx_cfg_opcode                  ) //   input  [7:0]
- ,.tlx_cfg0_pa                       (tlx_cfg_pa                      ) //   input  [63:0]
- ,.tlx_cfg0_t                        (tlx_cfg_t                       ) //   input
- ,.tlx_cfg0_pl                       (tlx_cfg_pl                      ) //   input  [2:0]
- ,.tlx_cfg0_capptag                  (tlx_cfg_capptag                 ) //   input  [15:0]
- ,.tlx_cfg0_data_bus                 (tlx_cfg_data_bus                ) //   input  [31:0]
- ,.tlx_cfg0_data_bdi                 (tlx_cfg_data_bdi                ) //   input
+ ,.tlx_cfg0_valid                    (tlx_cfg0_valid                   ) //   input
+ ,.tlx_cfg0_opcode                   (tlx_cfg0_opcode                  ) //   input  [7:0]
+ ,.tlx_cfg0_pa                       (tlx_cfg0_pa                      ) //   input  [63:0]
+ ,.tlx_cfg0_t                        (tlx_cfg0_t                       ) //   input
+ ,.tlx_cfg0_pl                       (tlx_cfg0_pl                      ) //   input  [2:0]
+ ,.tlx_cfg0_capptag                  (tlx_cfg0_capptag                 ) //   input  [15:0]
+ ,.tlx_cfg0_data_bus                 (tlx_cfg0_data_bus                ) //   input  [31:0]
+ ,.tlx_cfg0_data_bdi                 (tlx_cfg0_data_bdi                ) //   input
 
- ,.cfg0_tlx_initial_credit           (cfg_tlx_initial_credit          ) //   output [3:0]
- ,.cfg0_tlx_credit_return            (cfg_tlx_credit_return           ) //   output
- ,.cfg0_tlx_resp_valid               (cfg_tlx_resp_valid              ) //   output
- ,.cfg0_tlx_resp_opcode              (cfg_tlx_resp_opcode             ) //   output [7:0]
- ,.cfg0_tlx_resp_capptag             (cfg_tlx_resp_capptag            ) //   output [15:0]
- ,.cfg0_tlx_resp_code                (cfg_tlx_resp_code               ) //   output [3:0]
- ,.cfg0_tlx_rdata_offset             (cfg_tlx_rdata_offset            ) //   output [3:0]
- ,.cfg0_tlx_rdata_bus                (cfg_tlx_rdata_bus               ) //   output [31:0]
- ,.cfg0_tlx_rdata_bdi                (cfg_tlx_rdata_bdi               ) //   output
- ,.tlx_cfg0_resp_ack                 (tlx_cfg_resp_ack                ) //   input
+ ,.cfg0_tlx_initial_credit           (cfg0_tlx_initial_credit          ) //   output [3:0]
+ ,.cfg0_tlx_credit_return            (cfg0_tlx_credit_return           ) //   output
+ ,.cfg0_tlx_resp_valid               (cfg0_tlx_resp_valid              ) //   output
+ ,.cfg0_tlx_resp_opcode              (cfg0_tlx_resp_opcode             ) //   output [7:0]
+ ,.cfg0_tlx_resp_capptag             (cfg0_tlx_resp_capptag            ) //   output [15:0]
+ ,.cfg0_tlx_resp_code                (cfg0_tlx_resp_code               ) //   output [3:0]
+ ,.cfg0_tlx_rdata_offset             (cfg0_tlx_rdata_offset            ) //   output [3:0]
+ ,.cfg0_tlx_rdata_bus                (cfg0_tlx_rdata_bus               ) //   output [31:0]
+ ,.cfg0_tlx_rdata_bdi                (cfg0_tlx_rdata_bdi               ) //   output
+ ,.tlx_cfg0_resp_ack                 (tlx_cfg0_resp_ack                ) //   input
  //,.cfg_f1_octrl00_resync_credits     (cfg_f1_octrl00_resync_credits    )
 
  //--------------- Talk to VPD ------------------

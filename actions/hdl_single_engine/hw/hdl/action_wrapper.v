@@ -236,4 +236,7 @@ module action_wrapper #(
         .i_action_version      (32'h00000002)  //Hardware Version
     );
     
+    assign interrupt=1'b0;
+    assign interrupt_src = 64'b0;
+    assign interrupt_ctx = 0;
 endmodule
