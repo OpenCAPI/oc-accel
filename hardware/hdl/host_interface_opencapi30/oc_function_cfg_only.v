@@ -153,7 +153,7 @@ module oc_function_cfg_only (
 ;
 
 wire   cfg_f1_reset;
-assign cfg_f1_reset = (reset == 1'b1 || cfg_f1_ofunc_function_reset == 1'b1) ? 1'b1 : 1'b0;   // Apply on hardware reset OR software cmd (Function Reset)
+assign cfg_f1_reset = (reset_in == 1'b1 || cfg_f1_ofunc_function_reset == 1'b1) ? 1'b1 : 1'b0;   // Apply on hardware reset OR software cmd (Function Reset)
 
 //=============================================================================
 //                             cfg_func1 instance
@@ -162,7 +162,7 @@ cfg_func1 cfg_f1
       // -- Clocks & Reset
       .clock                               ( clock_tlx ),                                     // -- input
       .reset                               ( cfg_f1_reset ),                              // -- input
-      .device_reset                        ( reset ),                                     // -- input
+      .device_reset                        ( reset_in ),                                     // -- input
 
       // -- READ ONLY field inputs
       // -- Configuration Space Header
@@ -271,11 +271,13 @@ assign resync_credits_afu00          = cfg_f1_octrl00_afu_unique[0];   // Make a
 
 
 // Set AFU reset on either: card reset OR function reset OR software reset to AFU 0
-assign reset_afu00 = ( reset == 1'b1        ||
+assign reset_afu00 = ( reset_in == 1'b1        ||
                        cfg_f1_reset == 1'b1 ||
                       (cfg_f1_octrl00_reset_afu == 1'b1 && cfg_f1_octrl00_afu_control_index == 6'b000000) ) ? 1'b1 : 1'b0;
 
-assign reset_afu_n_out = ~reset_afu00;
+reg reset_afu_n_out;
+always @ (posedge clock_afu)
+    reset_afu_n_out <= ~reset_afu00;
 
 
 //=============================================================================
