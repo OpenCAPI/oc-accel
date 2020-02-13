@@ -275,7 +275,7 @@ assign reset_afu00 = ( reset_in == 1'b1        ||
                        cfg_f1_reset == 1'b1 ||
                       (cfg_f1_octrl00_reset_afu == 1'b1 && cfg_f1_octrl00_afu_control_index == 6'b000000) ) ? 1'b1 : 1'b0;
 
-assign reset_afu_n_out <= ~reset_afu00;
+assign reset_afu_n_out = ~reset_afu00;
 
 assign cfg_f1_csh_mmio_bar0_mask = 64'hFFFF_FFFF_0000_0000; //FIXME this should be bar0_size but doesn't link 
 //=============================================================================
