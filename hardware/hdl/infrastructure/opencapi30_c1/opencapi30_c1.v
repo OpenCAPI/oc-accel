@@ -529,13 +529,13 @@ command_encode
                 /*input                 */   .prt_cmd_enable               ( r_prt_cmd_enable             ),
 
                 //---- DMA interface ---------------------------------
-                /*output                */   .dma_cmd_ready                ( dma_r_cmd_ready                ),
-                /*input                 */   .dma_cmd_valid                ( dma_r_cmd_valid                ),
-                /*input      [1023:0]   */   .dma_cmd_data                 ( dma_r_cmd_data                 ),
-                /*input      [0127:0]   */   .dma_cmd_be                   ( dma_r_cmd_be                   ),
-                /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_r_cmd_ea                   ),
-                /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_r_cmd_tag                  ),
-                /*input      [CTXW-1:0] */   .dma_cmd_ctx                  ( dma_r_cmd_ctx                  ),
+                /*output                */   .dma_cmd_ready                ( dma_rd_cmd_ready                ),
+                /*input                 */   .dma_cmd_valid                ( dma_rd_cmd_valid                ),
+                /*input      [1023:0]   */   .dma_cmd_data                 ( dma_rd_cmd_data                 ),
+                /*input      [0127:0]   */   .dma_cmd_be                   ( dma_rd_cmd_be                   ),
+                /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_rd_cmd_ea                   ),
+                /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_rd_cmd_tag                  ),
+                /*input      [CTXW-1:0] */   .dma_cmd_ctx                  ( dma_rd_cmd_ctx                  ),
 
                 //---- TLX interface ---------------------------------
                   // command
