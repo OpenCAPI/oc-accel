@@ -279,7 +279,7 @@ reg reset_afu_n_out;
 always @ (posedge clock_afu)
     reset_afu_n_out <= ~reset_afu00;
 
-
+assign cfg_f1_csh_mmio_bar0_mask = 64'hFFFF_FFFF_0000_0000; //FIXME this should be bar0_size but doesn't link 
 //=============================================================================
 //                             oc_afu_cfg_only instance
 oc_afu_cfg_only  oc_afu_cfg_only
