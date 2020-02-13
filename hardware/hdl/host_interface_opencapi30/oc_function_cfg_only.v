@@ -197,7 +197,7 @@ cfg_func1 cfg_f1
       .cfg_ro_octrl00_actag_len_supported  ( f1_ro_octrl00_actag_len_supported ),         // -- input    // -- Default is 32 acTags
 
       // -- Assigned configuration values
-      .cfg_ro_function                     ( 3'b001 ),                               // -- input
+      .cfg_ro_function                     ( 3'b001 ),                                    // -- input
 
       // -- Functional interface
       .cfg_function                        ( cfg_function[2:0] ),                         // -- input    // -- Targeted Function
