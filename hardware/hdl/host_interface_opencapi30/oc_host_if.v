@@ -457,6 +457,8 @@ reg             dlx_tlx_link_up_last;
 reg             link_gate;
 
 
+wire            wire_reset_afu_n;
+
 //=============================================================================
 //=============================================================================
 //                           Sub Module Instances
@@ -1008,7 +1010,7 @@ oc_cfg cfg (
 oc_function_cfg_only func_cfg_only(
     .clock_tlx                              ( clock_tlx                          )
   , .reset_in                               ( ~reset_n_q                         )  // (positive active)
-  , .reset_afu_n_out                        ( reset_afu_n                        )  // out
+  , .reset_afu_n_out                        ( wire_reset_afu_n                   )  // out
     // -------------------------------------------------------------
     // Configuration Sequencer Interface [CFG_SEQ -> CFG_Fn (n=1-7)]
     // -------------------------------------------------------------
@@ -1100,6 +1102,9 @@ always@(posedge clock_tlx) begin
 end
 
 assign reset_tlx_n = reset_n_q;
+always@(posedge clock_afu) begin
+     reset_afu_n <= wire_reset_afu_n;
+end
 
 vio_reset_n vio_reset_n_inst_tlx
   (
