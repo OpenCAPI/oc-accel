@@ -45,12 +45,12 @@ from ocaccel_utils import msg
 
 class SimSession:
     def __init__(self, simulator_name = 'xsim', testcase_cmd = 'ocaccel_example', testcase_args = "",\
-                 ocse_root = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
+                 ocse_path = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
                  sim_timeout = 600, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
         # prepare the environment
         self.simulator_name = simulator_name
         self.testcase_cmd = testcase_cmd
-        self.ocse_root = ocse_root
+        self.ocse_path = ocse_path
         self.ocaccel_root = ocaccel_root
         self.sim_timeout = sim_timeout
         self.unit_sim = unit_sim
@@ -66,7 +66,7 @@ class SimSession:
         self.simulator = Simulator(simulator_name, self.ocaccel_root, self.sim_timeout, self.unit_sim, self.sv_seed, self.unit_test, self.uvm_ver, self.wave)
         # No OCSE if in unit sim mode
         if self.unit_sim == False:
-            self.ocse = OCSE(ocse_root, self.simulator.simout, self.sim_timeout)
+            self.ocse = OCSE(ocse_path, self.simulator.simout, self.sim_timeout)
         self.testcase = Testcase(testcase_cmd, self.simulator.simout, testcase_args)
 
     def run(self):
@@ -100,15 +100,15 @@ class SimSession:
         source(pathjoin(env['OCACCEL_ROOT'], '.ocaccel_config.sh'))
         source(pathjoin(env['OCACCEL_ROOT'], 'ocaccel_env.sh'))
 
-        self.action_root = env['ACTION_ROOT']
+        self.action_root = pathjoin(self.ocaccel_root, 'actions', env['ACTION_NAME'])
 
         env['PATH'] = ":".join((env['PATH'],\
                 pathjoin(env['OCACCEL_ROOT'], 'software', 'tools'),\
-                pathjoin(env['ACTION_ROOT'], 'sw')))
+                pathjoin(self.action_root, 'sw')))
 
         if self.unit_sim == False:
-            if not isdir(self.ocse_root):
-                print self.ocse_root + " not exist!"
+            if not isdir(self.ocse_path):
+                print self.ocse_path + " not exist!"
                 exit("OCSE ROOT is not valid! Exiting ...")
 
     def setup_ld_libraries(self):
@@ -118,8 +118,8 @@ class SimSession:
         if self.unit_sim == False:
             env['LD_LIBRARY_PATH'] = \
                     ":".join((env['LD_LIBRARY_PATH'],\
-                              pathjoin(self.ocse_root, 'afu_driver', 'src'),\
-                              pathjoin(self.ocse_root, 'libocxl'),\
+                              pathjoin(self.ocse_path, 'afu_driver', 'src'),\
+                              pathjoin(self.ocse_path, 'libocxl'),\
                               pathjoin(self.ocaccel_root, 'software', 'lib')))
     def print_env(self):
         msg.header_msg("OCACCEL ROOT\t %s" % self.ocaccel_root)
@@ -249,7 +249,7 @@ class Simulator:
             sim_args += " -input ncrun.tcl -r"
             unit_args = "".join(("+UVM_TESTNAME=", self.unit_test, " -seed ", self.sv_seed, " +UVM_VERBOSITY=", self.uvm_ver, " -coverage a -covfile ", self.ocaccel_root, "/hardware/setup/cov.ccf", " -covoverwrite -covtest ", self.unit_test))
             if self.unit_sim == False:
-                sim_top  = "work.top"
+                sim_top  = "work.top_wrapper"
             else:
                 sim_top  = "work.unit_top"
             self.sim_log  = pathjoin(self.simout, "sim.log")
@@ -299,7 +299,7 @@ class Simulator:
             if self.wave:
                 sim_args += "-t xsaet.tcl" 
             sim_args += " -t xsrun.tcl"
-            sim_top  = "top"
+            sim_top  = "top_wrapper"
             self.sim_log  = pathjoin(self.simout, "sim.log")
 
             self.simulator_pid =\
@@ -335,22 +335,22 @@ class Simulator:
         msg.header_msg(" Simulator running successfully on socket: %s" % host_shim)
 
 class OCSE:
-    def __init__(self, ocse_root = os.path.abspath('../ocse'), simout = '.', timeout = 300):
-        self.ocse_root = ocse_root
+    def __init__(self, ocse_path = os.path.abspath('../ocse'), simout = '.', timeout = 300):
+        self.ocse_path = ocse_path
         self.simout = simout
         self.timeout = timeout
         self.ocse_pid = None
         self.setup()
 
     def print_env(self):
-        msg.header_msg("OCSE_ROOT\t %s" % self.ocse_root)
+        msg.header_msg("OCSE_PATH\t %s" % self.ocse_path)
 
     def run(self):
         self.run_ocse()
         self.get_ocse_server_dat()
         
     def prepare_ocse_parms(self):
-        copyfile(pathjoin(self.ocse_root, "ocse", "ocse.parms"),\
+        copyfile(pathjoin(self.ocse_path, "ocse", "ocse.parms"),\
                  pathjoin(self.simout))
 
     def setup(self):
@@ -365,7 +365,7 @@ class OCSE:
 
     def run_ocse(self):
         self.ocse_log = pathjoin(self.simout, "ocse.log")
-        ocse_cmd = pathjoin(self.ocse_root, "ocse", "ocse")
+        ocse_cmd = pathjoin(self.ocse_path, "ocse", "ocse")
 
         self.ocse_pid =\
                 run_in_background(cmd = ocse_cmd, work_dir = self.simout, log = self.ocse_log)

@@ -42,9 +42,6 @@ ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 export ACTION_ROOT=$(OCACCEL_ROOT)/actions/$(ACTION_NAME)
 SIMULATOR ?= nosim
 
-
-
-
 ## variables just for this Makefile
 SETUP_DIR=$(OCACCEL_HARDWARE_ROOT)/setup
 SIM_DIR=$(OCACCEL_HARDWARE_ROOT)/sim
@@ -54,6 +51,19 @@ IP_REPO_DIR=$(BUILD_DIR)/ip_repo
 INTERFACES_DIR=$(BUILD_DIR)/interfaces
 VIV_PROJ_DIR=$(BUILD_DIR)/viv_project
 
+HDL_ROOT := $(OCACCEL_HARDWARE_ROOT)/hdl
+SCRIPT_ROOT := $(OCACCEL_HARDWARE_ROOT)/setup
+
+COMMON_VERILOG_SRCS := $(shell find $(HDL_ROOT)/common                    -name "*.v"   -or -name "*.sv")
+INFRA_VERILOG_SRCS  := $(shell find $(HDL_ROOT)/infrastructure            -name "*.v"   -or -name "*.sv")
+HOST_VERILOG_SRCS   := $(shell find $(HDL_ROOT)/host_interface_opencapi30 -name "*.v"   -or -name "*.sv")
+
+COMMON_SCRIPT_SRCS  := $(shell find $(SCRIPT_ROOT)/common                 -name "*.tcl" -or -name "*.sh")
+COMMON_SCRIPT_SRCS  += $(shell find $(SCRIPT_ROOT)/create_framework       -name "*.tcl" -or -name "*.sh")
+HOST_SCRIPT_SRCS    := $(shell find $(SCRIPT_ROOT)/package_hostside       -name "*.tcl" -or -name "*.sh")
+INFRA_SCRIPT_SRCS   := $(shell find $(SCRIPT_ROOT)/package_infrastructure -name "*.tcl" -or -name "*.sh")
+SIM_SCRIPT_SRCS     := $(shell find $(SCRIPT_ROOT)/simulation             -name "*.tcl" -or -name "*.sh")
+ACTION_SCRIPT_SRCS  := $(shell find $(SCRIPT_ROOT)/simulation             -name "*.tcl" -or -name "*.sh")
 
 OCACCEL_SIMULATORS += xsim xcelium
 templog=/dev/null
@@ -208,31 +218,31 @@ action_hw: prepare_logs
 
 ###############################################################################
 # Build the vivado project
-define_interfaces:
+define_interfaces: $(COMMON_SCRIPT_SRCS)
 	@echo -e "[DEFINE INTERFACE....] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/common/define_interfaces.tcl -notrace -log $(LOGS_DIR)/define_interfaces.log  -journal $(LOGS_DIR)/define_interfaces.jou > $(templog) 
 	@echo -e "[DEFINE INTERFACE....] done  `date +"%T %a %b %d %Y"`";
 
-package_hostside:
+package_hostside: $(HOST_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(HOST_SCRIPT_SRCS)
 	@echo -e "[PACKAGE HOSTSIDE....] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_hostside/package_hostside_ips.tcl -notrace -log $(LOGS_DIR)/package_hostside_ips.log -journal $(LOGS_DIR)/package_hostside_ips.jou > $(templog)
 	@echo -e "[PACKAGE HOSTSIDE....] done  `date +"%T %a %b %d %Y"`";
 
-package_infrastructure:
+package_infrastructure: $(INFRA_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(INFRA_SCRIPT_SRCS)
 	@echo -e "[PACKAGE INFRA.......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou > $(templog)
 #	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
-package_action:
+package_action: $(ACTION_SCRIPT_SRCS)
 	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
 #	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
-top_project:
+top_project: $(COMMON_VERILOG_SRCS) $(COMMON_VERILOG_SRCS)
 	@echo -e "[CREATE TOP PROJECT..] start `date +"%T %a %b %d %Y"`";
-	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_framework.log  -journal $(LOGS_DIR)/create_framework.jou > $(templog)
+	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_top.log  -journal $(LOGS_DIR)/create_top.jou > $(templog)
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
 hw_project: ocaccel_preprocess action_hw define_interfaces package_hostside package_infrastructure package_action top_project

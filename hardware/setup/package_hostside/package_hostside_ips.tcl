@@ -23,13 +23,55 @@ set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
 
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
+set simulator           $::env(SIMULATOR)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 
 set tcl_dir             $root_dir/setup/package_hostside
 source $root_dir/setup/common/common_funcs.tcl
 
 
+#------------------------------------------------------------------------------
+proc package_oc_host_if_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
 
+   puts "    <<< Package customer design $ip_name to $ip_path"
+   set vendor "opencapi.org"
+   set lib "ocaccel"
+   set ver "1.0"
+   set project viv_${ip_name}
+   set project_dir $proj_path/$project
+   create_project $project $project_dir -part $fpga_part -force
+
+   # Set 'sources_1' fileset object, create list of all nececessary verilog files
+   set obj [get_filesets sources_1]
+   
+   
+   # Add source files and import
+   source $addfile_script
+
+   #------------------------------------------------------------------------------
+   # Add interface path to allow auto-infering
+   set_property ip_repo_paths  $if_path [current_project]
+   update_ip_catalog -rebuild -scan_changes
+   # Start to package this project as an IP
+   ipx::package_project -root $ip_path/$ip_name -import_files -force -vendor $vendor -library $lib -taxonomy /UserIP
+
+   if { $simulator != "nosim" } {
+       ipx::add_file src/oc_host_if.sv [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+   }
+
+   foreach bus [dict keys $bus_array] {
+       set mode [dict get $bus_array $bus]
+       ipx::infer_bus_interfaces $vendor:$lib:${bus}_rtl:$ver [ipx::current_core]
+       if { $mode ne "" } {
+           set_property interface_mode $mode [ipx::get_bus_interfaces ${lib}_${bus} -of_objects [ipx::current_core]]
+       }
+   }
+   ipx::create_xgui_files [ipx::current_core]
+   ipx::update_checksums [ipx::current_core]
+   ipx::save_core [ipx::current_core]
+
+   close_project
+}
 
 ##proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
 #############################################################################
@@ -40,13 +82,13 @@ set bus_array [dict create tlx_afu "master" \
                           cfg_infra_c1 "master"  \
                           oc_phy  ""        \
              ]
-my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/build/ip_repo    \
-                     $root_dir/build/interfaces \
-                     $fpga_part           \
-                     oc_host_if           \
-                     $tcl_dir/add_opencapi30_host_if.tcl      \
-                     $bus_array
+package_oc_host_if_ip $root_dir/build/temp_projs \
+                      $root_dir/build/ip_repo    \
+                      $root_dir/build/interfaces \
+                      $fpga_part           \
+                      oc_host_if           \
+                      $tcl_dir/add_opencapi30_host_if.tcl      \
+                      $bus_array
 
 ############################################################################
 set bus_array [dict create cfg_flsh "slave"   \

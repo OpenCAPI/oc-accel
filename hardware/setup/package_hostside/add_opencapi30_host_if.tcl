@@ -130,11 +130,6 @@ set verilog_host_if [list \
   $host_if_dir/oc_host_if.v \
 ]
 
-if { $simulator != "nosim" } {
-  puts "	                Simulation with $simulator enabled, adding $host_if_dir/sim_only/oc_host_if.sv"
-  lappend verilog_host_if $host_if_dir/sim_only/oc_host_if.sv
-}
-
 if {$transceiver_type eq "bypass"} {
     set phy_package [list {*}$verilog_bypass]
 } else {
@@ -164,16 +159,21 @@ set file "cfg_func0_init.v"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "Verilog Header" -objects $file_obj
 
-# set the property of simulation-only files
+if { $simulator != "nosim" } {
+  puts "	                Simulation with $simulator enabled, adding $host_if_dir/sim_only/oc_host_if.sv"
+  add_files -norecurse -fileset sim_1 $host_if_dir/sim_only/oc_host_if.sv
+}
+
 set_property used_in_synthesis      true  [get_files $host_if_dir/oc_host_if.v]
 set_property used_in_implementation true  [get_files $host_if_dir/oc_host_if.v]
 set_property used_in_simulation     false [get_files $host_if_dir/oc_host_if.v]
-
 if { $simulator != "nosim" } {
   set_property used_in_synthesis      false [get_files $host_if_dir/sim_only/oc_host_if.sv]
   set_property used_in_implementation false [get_files $host_if_dir/sim_only/oc_host_if.sv]
   set_property used_in_simulation     true  [get_files $host_if_dir/sim_only/oc_host_if.sv]
 }
+
+#move_files -fileset sim_1 [get_files $host_if_dir/sim_only/oc_host_if.sv]
 
 ############################################################################
 # Add constraint files
@@ -216,4 +216,8 @@ source $fpga_card_dir/tcl/create_vio_DLx_phy_vio_0.tcl
 source $fpga_card_dir/tcl/create_vio_reset_n.tcl
 source $fpga_card_dir/tcl/create_DLx_PHY_${transceiver_type}_${transceiver_speed}g.tcl
 
+set_property top oc_host_if [get_filesets sources_1]
+set_property top oc_host_if [get_filesets sim_1]
+
 update_compile_order -fileset sources_1
+update_compile_order -fileset sim_1

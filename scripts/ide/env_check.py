@@ -55,12 +55,12 @@ def env_check(options):
 
     if options.no_run_sim == False or options.no_make_model == False:
         if options.simulator.lower() != "nosim" and options.unit_sim != True:
-            if isdir(pathjoin(options.ocse_root, "ocse")) and\
-               isdir(pathjoin(options.ocse_root, "afu_driver")) and\
-               isdir(pathjoin(options.ocse_root, "libocxl")):
-                msg.ok_msg_blue("OCSE path %s is valid" % options.ocse_root)
+            if isdir(pathjoin(options.ocse_path, "ocse")) and\
+               isdir(pathjoin(options.ocse_path, "afu_driver")) and\
+               isdir(pathjoin(options.ocse_path, "libocxl")):
+                msg.ok_msg_blue("OCSE path %s is valid" % options.ocse_path)
             else:
-                msg.fail_msg("OCSE path %s is not valid! Exiting ... " % options.ocse_root)
+                msg.fail_msg("OCSE path %s is not valid! Exiting ... " % options.ocse_path)
 
     if isdir(pathjoin(options.ocaccel_root, "actions")) and\
        isdir(pathjoin(options.ocaccel_root, "hardware")) and\

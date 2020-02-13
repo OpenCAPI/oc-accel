@@ -447,9 +447,9 @@ wire           wire_tlx_afu_cmd_data_bdi;
 wire   [511:0] wire_tlx_afu_cmd_data_bus;
 wire           wire_afu_tlx_resp_rd_req;
 wire   [2:0]   wire_afu_tlx_resp_rd_cnt;
-wire           wire_tlx_afu_resp_data_valid;
-wire           wire_tlx_afu_resp_data_bdi;
-wire   [511:0] wire_tlx_afu_resp_data_bus;
+reg            reg_tlx_afu_resp_data_valid;
+reg            reg_tlx_afu_resp_data_bdi;
+reg    [511:0] reg_tlx_afu_resp_data_bus;
 wire           cfg0_tlx_xmit_tmpl_config_0;
 wire           cfg0_tlx_xmit_tmpl_config_1;
 wire           cfg0_tlx_xmit_tmpl_config_2;
@@ -854,7 +854,8 @@ reg             afu_tlx_rdata_valid_top;
 reg [511:0]     afu_tlx_rdata_bus_top;
 reg             afu_tlx_rdata_bdi_top;
 
-
+reg [0:63]     simulationTime ;
+reg            simulationError;
 
 //=============================================================================
 //                  TLX instance
@@ -1073,6 +1074,7 @@ initial begin
     ro_device_top    <= 5'b0;   //Updated per Jeff R's note of 23/Jun/2017
 end
 
+parameter RESET_CYCLES = 9;
 reg clock_tlx_reg;
 reg clock_afu_reg;
 // Integers
@@ -1118,7 +1120,7 @@ initial begin
     sys_reset_n_q <= 1 ;
 end
 
-always @ (posedge tlx_clock) begin
+always @ (posedge clock_tlx) begin
     afu_tlx_resp_credit_top         <= wire_afu_tlx_resp_credit;
     afu_tlx_resp_initial_credit_top <= wire_afu_tlx_resp_initial_credit;
     afu_tlx_cmd_credit_top          <= wire_afu_tlx_cmd_credit;
@@ -1154,15 +1156,15 @@ always @ (posedge tlx_clock) begin
     afu_tlx_rdata_valid_top         <= wire_afu_tlx_rdata_valid;
     afu_tlx_rdata_bus_top           <= wire_afu_tlx_rdata_bus;
     afu_tlx_rdata_bdi_top           <= wire_afu_tlx_rdata_bdi;
-    cfg0_tlx_initial_credit_top     <= cfg_tlx_initial_credit; // new
-    cfg0_tlx_credit_return_top      <= cfg_tlx_credit_return;  // new lgt
-    cfg0_tlx_resp_valid_top         <= cfg_tlx_resp_valid;
-    cfg0_tlx_resp_opcode_top        <= cfg_tlx_resp_opcode;
-    cfg0_tlx_resp_capptag_top       <= cfg_tlx_resp_capptag;
-    cfg0_tlx_resp_code_top          <= cfg_tlx_resp_code;
-    cfg0_tlx_rdata_offset_top       <= cfg_tlx_rdata_offset;
-    cfg0_tlx_rdata_bus_top          <= cfg_tlx_rdata_bus;
-    cfg0_tlx_rdata_bdi_top          <= cfg_tlx_rdata_bdi;
+    cfg0_tlx_initial_credit_top     <= cfg0_tlx_initial_credit; // new
+    cfg0_tlx_credit_return_top      <= cfg0_tlx_credit_return;  // new lgt
+    cfg0_tlx_resp_valid_top         <= cfg0_tlx_resp_valid;
+    cfg0_tlx_resp_opcode_top        <= cfg0_tlx_resp_opcode;
+    cfg0_tlx_resp_capptag_top       <= cfg0_tlx_resp_capptag;
+    cfg0_tlx_resp_code_top          <= cfg0_tlx_resp_code;
+    cfg0_tlx_rdata_offset_top       <= cfg0_tlx_rdata_offset;
+    cfg0_tlx_rdata_bus_top          <= cfg0_tlx_rdata_bus;
+    cfg0_tlx_rdata_bdi_top          <= cfg0_tlx_rdata_bdi;
 end
 
 // Pass Through Signals
@@ -1192,10 +1194,10 @@ assign  wire_tlx_afu_cmd_flag    = tlx_afu_cmd_flag_top;
 assign  wire_tlx_afu_cmd_os      = tlx_afu_cmd_os_top;
 
 // Table 5: TLX to AFU Response Data Interface
-always @( negedge tlx_clock ) begin
-    wire_tlx_afu_resp_data_valid <= tlx_afu_resp_data_valid_dly1;
-    wire_tlx_afu_resp_data_bus   <= tlx_afu_resp_data_bus_dly1;
-    wire_tlx_afu_resp_data_bdi   <= tlx_afu_resp_data_bdi_dly1;
+always @( negedge clock_tlx ) begin
+    reg_tlx_afu_resp_data_valid <= tlx_afu_resp_data_valid_dly1;
+    reg_tlx_afu_resp_data_bus   <= tlx_afu_resp_data_bus_dly1;
+    reg_tlx_afu_resp_data_bdi   <= tlx_afu_resp_data_bdi_dly1;
 end
 
 // Table 6: TLX to AFU Command Data Interface
@@ -1228,15 +1230,15 @@ assign  tlx_cfg0_in_rcv_rate_capability_3 = tlx_cfg0_in_rcv_rate_capability_3_to
 assign  cfg_ro_ovsec_tlx0_version         = cfg_ro_ovsec_tlx0_version_top;
 assign  cfg_ro_ovsec_dlx0_version         = cfg_ro_ovsec_dlx0_version_top;
 
-assign  tlx_cfg_valid            = tlx_cfg0_valid_top;
-assign  tlx_cfg_opcode           = tlx_cfg0_opcode_top;
-assign  tlx_cfg_pa               = tlx_cfg0_pa_top;
-assign  tlx_cfg_t                = tlx_cfg0_t_top;
-assign  tlx_cfg_pl               = tlx_cfg0_pl_top;
-assign  tlx_cfg_capptag          = tlx_cfg0_capptag_top;
-assign  tlx_cfg_data_bus         = tlx_cfg0_data_bus_top;
-assign  tlx_cfg_data_bdi         = tlx_cfg0_data_bdi_top;
-assign  tlx_cfg_resp_ack         = tlx_cfg0_resp_ack_top;
+assign  tlx_cfg0_valid            = tlx_cfg0_valid_top;
+assign  tlx_cfg0_opcode           = tlx_cfg0_opcode_top;
+assign  tlx_cfg0_pa               = tlx_cfg0_pa_top;
+assign  tlx_cfg0_t                = tlx_cfg0_t_top;
+assign  tlx_cfg0_pl               = tlx_cfg0_pl_top;
+assign  tlx_cfg0_capptag          = tlx_cfg0_capptag_top;
+assign  tlx_cfg0_data_bus         = tlx_cfg0_data_bus_top;
+assign  tlx_cfg0_data_bdi         = tlx_cfg0_data_bdi_top;
+assign  tlx_cfg0_resp_ack         = tlx_cfg0_resp_ack_top;
 assign  ro_dlx0_version          = 32'b0;
 assign  tlx0_cfg_oc4_tlx_version = 32'b0;
 
@@ -1253,19 +1255,19 @@ assign  flsh_cfg_rresp_sim       = 2'b0;
 
 // a block to delay the resp_data path 1 cycle
 // todo: variable number of cycles from 1 to n
-always @ ( negedge tlx_clock ) begin
+always @ ( negedge clock_tlx ) begin
     tlx_afu_resp_data_valid_dly1 <= tlx_afu_resp_data_valid_top;
     tlx_afu_resp_data_bus_dly1   <= tlx_afu_resp_data_bus_top;
     tlx_afu_resp_data_bdi_dly1   <= tlx_afu_resp_data_bdi_top;
 end
 
-always @ ( negedge tlx_clock ) begin
+always @ ( negedge clock_tlx ) begin
     tlx_afu_resp_data_valid_dly2 <= tlx_afu_resp_data_valid_dly1;
     tlx_afu_resp_data_bus_dly2   <= tlx_afu_resp_data_bus_dly1;
     tlx_afu_resp_data_bdi_dly2   <= tlx_afu_resp_data_bdi_dly1;
 end
 
-wire vpd_cfg_rdata_sim [32:0];
+wire [31:0] vpd_cfg_rdata_sim;
 wire vpd_cfg_done_sim;
 assign vpd_cfg_rdata_sim [31:0] = 32'h00000000;
 assign vpd_cfg_done_sim = 1'b0;
@@ -1439,9 +1441,9 @@ oc_cfg cfg (
     ,.tlx_afu_cmd_data_bus              (wire_tlx_afu_cmd_data_bus             ) //   input  [511:0]
     ,.afu_tlx_resp_rd_req               (wire_afu_tlx_resp_rd_req              ) //   output
     ,.afu_tlx_resp_rd_cnt               (wire_afu_tlx_resp_rd_cnt              ) //   output [2:0]
-    ,.tlx_afu_resp_data_valid           (wire_tlx_afu_resp_data_valid          ) //   input
-    ,.tlx_afu_resp_data_bdi             (wire_tlx_afu_resp_data_bdi            ) //   input
-    ,.tlx_afu_resp_data_bus             (wire_tlx_afu_resp_data_bus            ) //   input  [511:0]
+    ,.tlx_afu_resp_data_valid           (reg_tlx_afu_resp_data_valid           ) //   input
+    ,.tlx_afu_resp_data_bdi             (reg_tlx_afu_resp_data_bdi             ) //   input
+    ,.tlx_afu_resp_data_bus             (reg_tlx_afu_resp_data_bus             ) //   input  [511:0]
 
     ,.cfg0_tlx_xmit_tmpl_config_0       (cfg0_tlx_xmit_tmpl_config_0      ) //   output
     ,.cfg0_tlx_xmit_tmpl_config_1       (cfg0_tlx_xmit_tmpl_config_1      ) //   output
@@ -1497,25 +1499,25 @@ oc_cfg cfg (
     ,.afu_tlx_rdata_bdi                 (wire_afu_tlx_rdata_bdi                ) //   output
 
     // cfg0 Talk to TLX
-    ,.tlx_cfg0_valid                    (tlx_cfg_valid                   ) //   input
-    ,.tlx_cfg0_opcode                   (tlx_cfg_opcode                  ) //   input  [7:0]
-    ,.tlx_cfg0_pa                       (tlx_cfg_pa                      ) //   input  [63:0]
-    ,.tlx_cfg0_t                        (tlx_cfg_t                       ) //   input
-    ,.tlx_cfg0_pl                       (tlx_cfg_pl                      ) //   input  [2:0]
-    ,.tlx_cfg0_capptag                  (tlx_cfg_capptag                 ) //   input  [15:0]
-    ,.tlx_cfg0_data_bus                 (tlx_cfg_data_bus                ) //   input  [31:0]
-    ,.tlx_cfg0_data_bdi                 (tlx_cfg_data_bdi                ) //   input
+    ,.tlx_cfg0_valid                    (tlx_cfg0_valid                   ) //   input
+    ,.tlx_cfg0_opcode                   (tlx_cfg0_opcode                  ) //   input  [7:0]
+    ,.tlx_cfg0_pa                       (tlx_cfg0_pa                      ) //   input  [63:0]
+    ,.tlx_cfg0_t                        (tlx_cfg0_t                       ) //   input
+    ,.tlx_cfg0_pl                       (tlx_cfg0_pl                      ) //   input  [2:0]
+    ,.tlx_cfg0_capptag                  (tlx_cfg0_capptag                 ) //   input  [15:0]
+    ,.tlx_cfg0_data_bus                 (tlx_cfg0_data_bus                ) //   input  [31:0]
+    ,.tlx_cfg0_data_bdi                 (tlx_cfg0_data_bdi                ) //   input
 
-    ,.cfg0_tlx_initial_credit           (cfg_tlx_initial_credit          ) //   output [3:0]
-    ,.cfg0_tlx_credit_return            (cfg_tlx_credit_return           ) //   output
-    ,.cfg0_tlx_resp_valid               (cfg_tlx_resp_valid              ) //   output
-    ,.cfg0_tlx_resp_opcode              (cfg_tlx_resp_opcode             ) //   output [7:0]
-    ,.cfg0_tlx_resp_capptag             (cfg_tlx_resp_capptag            ) //   output [15:0]
-    ,.cfg0_tlx_resp_code                (cfg_tlx_resp_code               ) //   output [3:0]
-    ,.cfg0_tlx_rdata_offset             (cfg_tlx_rdata_offset            ) //   output [3:0]
-    ,.cfg0_tlx_rdata_bus                (cfg_tlx_rdata_bus               ) //   output [31:0]
-    ,.cfg0_tlx_rdata_bdi                (cfg_tlx_rdata_bdi               ) //   output
-    ,.tlx_cfg0_resp_ack                 (tlx_cfg_resp_ack                ) //   input
+    ,.cfg0_tlx_initial_credit           (cfg0_tlx_initial_credit          ) //   output [3:0]
+    ,.cfg0_tlx_credit_return            (cfg0_tlx_credit_return           ) //   output
+    ,.cfg0_tlx_resp_valid               (cfg0_tlx_resp_valid              ) //   output
+    ,.cfg0_tlx_resp_opcode              (cfg0_tlx_resp_opcode             ) //   output [7:0]
+    ,.cfg0_tlx_resp_capptag             (cfg0_tlx_resp_capptag            ) //   output [15:0]
+    ,.cfg0_tlx_resp_code                (cfg0_tlx_resp_code               ) //   output [3:0]
+    ,.cfg0_tlx_rdata_offset             (cfg0_tlx_rdata_offset            ) //   output [3:0]
+    ,.cfg0_tlx_rdata_bus                (cfg0_tlx_rdata_bus               ) //   output [31:0]
+    ,.cfg0_tlx_rdata_bdi                (cfg0_tlx_rdata_bdi               ) //   output
+    ,.tlx_cfg0_resp_ack                 (tlx_cfg0_resp_ack                ) //   input
     //,.cfg_f1_octrl00_resync_credits     (cfg_f1_octrl00_resync_credits    )
 
     //--------------- Talk to VPD ------------------
@@ -1777,7 +1779,7 @@ assign dlx_tlx_link_up_din = dlx_tlx_link_up;
 //     Use it as "low-level effective" reset_n 
 always@(posedge clock_tlx_reg) begin
     //reset_n_q           <= dlx_tlx_link_up;
-    reset_n_q           <= reset;
+    reset_n_q           <= ~reset;
     dlx_tlx_link_up_q   <= dlx_tlx_link_up_din;
 end
 

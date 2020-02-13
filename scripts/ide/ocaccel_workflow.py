@@ -33,7 +33,7 @@ The wrapper to guide through the whole OC-ACCEL workflow.
 
 Example:
 * Run the full flow from configuration to simulation:
-`./ocaccel_workflow.py --ocse_root <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
+`./ocaccel_workflow.py --ocse_path <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
 * Skip the simulation model build:
 `./ocaccel_workflow.py --no_make_model -o <path to ocse root> -s xcelium -t "ocaccel_example -a 6 -vv"`
 * Run testcase in an pop-up xterm:
@@ -41,7 +41,7 @@ Example:
 * Clean the environment before running:
 `./ocaccel_workflow.py -c --no_make_model -o <path to ocse root> -s xcelium -t terminal`
 * Run in interactive mode:
-`./ocaccel_workflow.py -i --ocse_root <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
+`./ocaccel_workflow.py -i --ocse_path <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
 * Run in unit sim model:
 `./ocaccel_workflow.py --unit_sim --simulator xcelium`
 '''
@@ -71,7 +71,7 @@ parser.add_option("-v", "--verbose",
 parser.add_option("-i", "--interactive",
                   action="store_true", dest="interactive", default=False,
                   help="Don't use the interactive mode during the flow, default: %default")
-parser.add_option("-o", "--ocse_root", dest="ocse_root", default=None,
+parser.add_option("-o", "--ocse_path", dest="ocse_path", default=None,
                   help="Path to OCSE root. No default value.", metavar="DIRECTORY")
 parser.add_option("-r", "--ocaccel_root", dest="ocaccel_root", default=os.path.abspath("."),
                   help="Path to ocaccel root, default: %default", metavar="DIRECTORY")
@@ -105,13 +105,13 @@ parser.add_option("--uvm_ver", dest="uvm_ver", default="UVM_LOW",
 parser.add_option("--no_wave",
                   action="store_true", dest="no_wave", default=False,
                   help="Don't dump waveform for simulation. default: %default")
-(options, args) = parser.parse_args()
+(options, cmd) = parser.parse_args()
 
 ocaccel_workflow_log = "./ocaccel_workflow.log"
 ocaccel_workflow_make_model_log = "./ocaccel_workflow.make_model.log"
 ocaccel_workflow_make_image_log = "./ocaccel_workflow.make_image.log"
-if options.ocse_root is not None:
-    options.ocse_root = os.path.abspath(options.ocse_root)
+if options.ocse_path is not None:
+    options.ocse_path = os.path.abspath(options.ocse_path)
 options.ocaccel_root = os.path.abspath(options.ocaccel_root)
 if options.action_root is not None:
     options.action_root = os.path.abspath(options.action_root)
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         sim = SimSession(simulator_name = options.simulator,\
                          testcase_cmd = testcase_cmd,\
                          testcase_args = testcase_args,\
-                         ocse_root = options.ocse_root,\
+                         ocse_path = options.ocse_path,\
                          ocaccel_root = options.ocaccel_root,\
                          sim_timeout = options.sim_timeout,\
                          unit_sim = options.unit_sim,\

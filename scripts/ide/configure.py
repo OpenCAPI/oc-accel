@@ -23,6 +23,7 @@ from os.path import isdir as isdir
 from os.path import isfile as isfile
 from os.path import join as pathjoin
 from shutil import copyfile
+from ocaccel_utils import source
 from ocaccel_utils import run_to_stdout
 from ocaccel_utils import run_and_wait
 from ocaccel_utils import msg
@@ -35,7 +36,7 @@ class Configuration:
         self.ocaccel_env_file = pathjoin(options.ocaccel_root, "ocaccel_env.sh")
         self.ocaccel_cfg_file = pathjoin(options.ocaccel_root, ".ocaccel_config")
         self.ocaccel_root = options.ocaccel_root
-        self.ocse_root = options.ocse_root
+        self.ocse_path = options.ocse_path
         self.action_root = options.action_root
         self.simulator = options.simulator
         self.options = options
@@ -52,8 +53,8 @@ class Configuration:
             sed_file(self.ocaccel_env_file, 'ACTION_ROOT\s*=\s*(.*)', 'ACTION_ROOT=' + self.action_root)
     
     def setup_cfg(self):
-        if self.ocse_root is not None:
-            ocse_line = 'OCSE_PATH="%s"' % self.ocse_root
+        if self.ocse_path is not None:
+            ocse_line = 'OCSE_PATH="%s"' % self.ocse_path
             if isfile(self.ocaccel_cfg_file):
                 sed_file(self.ocaccel_cfg_file, "\s*OCSE_PATH\s*=.*", ocse_line)
             else:
@@ -86,31 +87,34 @@ class Configuration:
             sed_file(self.ocaccel_cfg_file, '\s*SIMULATOR\s*=\s*".*"\s*$', 'SIMULATOR="%s"' % self.simulator.lower())
     
         if isfile(self.ocaccel_env_file):
-            sed_file(self.ocaccel_env_file, "^.*OCSE_ROOT\s*=.*", "", remove_matched_line = True)
+            sed_file(self.ocaccel_env_file, "^.*ocse_path\s*=.*", "", remove_matched_line = True)
     
     def update_cfg(self):
         if isfile(self.ocaccel_cfg_file):
+            source(self.ocaccel_cfg_file)
             self.simulator = search_file_group_1(self.ocaccel_cfg_file, 'SIMULATOR\s*=\s*"(.*)"')
-            self.ocse_root = os.path.expanduser(search_file_group_1(self.ocaccel_cfg_file, 'OCSE_PATH\s*=\s*"(.*)"'))
-            if self.ocse_root is not None:
-                sed_file(self.ocaccel_cfg_file, "\s*OCSE_PATH\s*=.*", "OCSE_PATH=\"" + os.path.abspath(self.ocse_root) + "\"")
+            self.ocse_path = os.path.expanduser(search_file_group_1(self.ocaccel_cfg_file, 'OCSE_PATH\s*=\s*"(.*)"'))
+
+            if self.ocse_path is not None:
+                sed_file(self.ocaccel_cfg_file, "\s*OCSE_PATH\s*=.*", "OCSE_PATH=\"" + os.path.abspath(self.ocse_path) + "\"")
         else:
             self.simulator = "nosim"
-            self.ocse_root = os.path.abspath("../ocse")
+            self.ocse_path = os.path.abspath("../ocse")
 
         self.options.simulator = self.simulator
-        self.options.ocse_root = os.path.abspath(self.ocse_root)
+        self.options.ocse_path = os.path.abspath(self.ocse_path)
  
     def print_cfg(self):
         if isfile(self.ocaccel_env_file):
             msg.header_msg("\t%s\t%s" % ("ACTION_ROOT", search_file_group_1(self.ocaccel_env_file, 'ACTION_ROOT\s*=\s*(.*)')))
     
         if isfile(self.ocaccel_cfg_file):
-            msg.header_msg("\t%s\t%s" % ("FPGACARD",  search_file_group_1(self.ocaccel_cfg_file, 'FPGACARD\s*=\s*"(.*)"')))
-            msg.header_msg("\t%s\t%s" % ("FPGACHIP",  search_file_group_1(self.ocaccel_cfg_file, 'FPGACHIP\s*=\s*"(.*)"')))
-            msg.header_msg("\t%s\t%s" % ("SIMULATOR", search_file_group_1(self.ocaccel_cfg_file, 'SIMULATOR\s*=\s*"(.*)"')))
-            msg.header_msg("\t%s\t%s" % ("CAPI_VER",  search_file_group_1(self.ocaccel_cfg_file, 'CAPI_VER\s*=\s*"(.*)"')))
-            msg.header_msg("\t%s\t%s" % ("OCSE_ROOT", search_file_group_1(self.ocaccel_cfg_file, 'OCSE_PATH\s*=\s*"(.*)"')))
+            msg.header_msg("\t%s\t%s" % ("ACTION_NAME" , search_file_group_1(self.ocaccel_cfg_file , 'ACTION_NAME\s*=\s*"(.*)"')))
+            msg.header_msg("\t%s\t%s" % ("FPGACARD"    , search_file_group_1(self.ocaccel_cfg_file , 'FPGACARD\s*=\s*"(.*)"')))
+            msg.header_msg("\t%s\t%s" % ("FPGACHIP"    , search_file_group_1(self.ocaccel_cfg_file , 'FPGACHIP\s*=\s*"(.*)"')))
+            msg.header_msg("\t%s\t%s" % ("SIMULATOR"   , search_file_group_1(self.ocaccel_cfg_file , 'SIMULATOR\s*=\s*"(.*)"')))
+            msg.header_msg("\t%s\t%s" % ("CAPI_VER"    , search_file_group_1(self.ocaccel_cfg_file , 'CAPI_VER\s*=\s*"(.*)"')))
+            msg.header_msg("\t%s\t%s" % ("OCSE_PATH"   , search_file_group_1(self.ocaccel_cfg_file , 'OCSE_PATH\s*=\s*"(.*)"')))
     
     def configure(self):
         msg.ok_msg_blue("--------> Configuration") 
@@ -135,8 +139,8 @@ class Configuration:
                 msg.warn_msg("=====================================================================")
                 msg.warn_msg("==== Failed to bringup the configuration window.                 ====")
                 msg.warn_msg("==== Please check if libncurses5-dev is installed on your system.====")
-                msg.warn_msg("==== Also check if 'https://github.com/guillon/kconfig' ")
-                msg.warn_msg("====     is accessible from your system.                         ====")
+                msg.warn_msg("==== Also check if 'https://github.com/guillon/kconfig' is       ====")
+                msg.warn_msg("==== accessible from your system.                                ====")
                 msg.fail_msg("================= Configuration FAILED! =============================");
 
         self.setup_ocaccel_env()

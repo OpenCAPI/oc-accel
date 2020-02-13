@@ -306,9 +306,9 @@ int main(int argc, char *argv[])
 
 	// Allocate the card that will be used
         if(card_no == 0)
-                snprintf(device, sizeof(device)-1, "IBM,oc-snap");
+                snprintf(device, sizeof(device)-1, "IBM,oc-accel");
         else
-                snprintf(device, sizeof(device)-1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card_no);
+                snprintf(device, sizeof(device)-1, "/dev/ocxl/IBM,oc-accel.000%d:00:00.1.0", card_no);
 
 	card = ocaccel_card_alloc_dev(device, OCACCEL_VENDOR_ID_IBM,
 				   OCACCEL_DEVICE_ID_OCACCEL);

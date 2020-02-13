@@ -46,7 +46,7 @@ proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_s
    update_ip_catalog -rebuild -scan_changes
    # Start to package this project as an IP
    ipx::package_project -root $ip_path/$ip_name -import_files -force -vendor $vendor -library $lib -taxonomy /UserIP
-   
+
    foreach bus [dict keys $bus_array] {
        set mode [dict get $bus_array $bus]
        ipx::infer_bus_interfaces $vendor:$lib:${bus}_rtl:$ver [ipx::current_core]
