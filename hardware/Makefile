@@ -371,6 +371,7 @@ clean:
 	@$(RM)    .hw_project_done
 	@$(RM) -r $(OCACCEL_PREPROCESS_FILES)                   \
 	          $(OCACCEL_MODELS)                         \
+	          ip_repo/*                         \
 	          *build
 	@$(RM) $(OCACCEL_ROOT)/hardware/hdl/common/*_tmp
 	@$(RM) $(OCACCEL_ROOT)/hardware/setup/build_image/bitstream_date.txt
