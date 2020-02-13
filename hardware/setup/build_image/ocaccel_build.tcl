@@ -91,6 +91,9 @@ if { $lsf_run == "TRUE"} {
 # Generate bitstream
 append IMAGE_NAME [format {_%s} $::env(TIMING_WNS)]
 
+puts "Env TIMING_WNS is $::env(TIMING_WNS)"
+puts "lablimit is $timing_lablimit"
+
 if { [expr $::env(TIMING_WNS) < $timing_lablimit ] } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: TIMING FAILED" $widthCol4 "" ]
     # EXIT!!!!
@@ -100,7 +103,7 @@ if { [expr $::env(TIMING_WNS) < $timing_lablimit ] } {
     if { [expr $::env(TIMING_WNS) >= 0 ] } {
         puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "TIMING OK" $widthCol4 "" ]
     } else {
-        puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "WARNING: TIMING FAILED, but may be OK for lab use" $widthCol4 ""
+        puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "WARNING: TIMING FAILED, but may be OK for lab use" $widthCol4 "" ]
     }
     ###########################
     #  Write bitstream
