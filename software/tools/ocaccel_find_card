@@ -146,7 +146,7 @@ function detect_ocaccel_cards() {
 	# Find all OC cards in the system
 	if [ -d /sys/class/ocxl ]; then
 		
-	        allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
+	        allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-accel./OPENCAPI-/g | awk -F"-" '{print $2}'`
 		allcards_array=($allcards)
 		# get number of cards in system
 		n=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' | wc -w`
@@ -228,7 +228,7 @@ function detect_oc_card_name()
 
         wait_no_flash_oc
         # Find all OC cards in the system
-        allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
+        allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-accel./OPENCAPI-/g | awk -F"-" '{print $2}'`
         allcards_array=($allcards)
         mycard=${allcards_array[$card]::-2}
 

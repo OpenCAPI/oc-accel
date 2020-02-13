@@ -30,7 +30,7 @@ capi20=`grep CAPI20 .ocaccel_config|cut -d = -f 2`
 cd hardware/sim
 if [ $simulator == "xsim" ]; then
   if [ -d "xsim" ]; then
-    xsim -gui xsim/latest/top.wdb -view debug3_action_gmem_ddr4.wcfg
+    xsim -gui xsim/latest/top_wrapper.wdb -view debug3_action_gmem_ddr4.wcfg
   else
     echo "Please launch a simulation (make sim) prior to see traces"
   fi

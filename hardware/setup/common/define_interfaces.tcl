@@ -169,6 +169,7 @@ set port_list_dma_wr [list \
         dma_wr_cmd_be       \
         dma_wr_cmd_ea       \
         dma_wr_cmd_tag      \
+        dma_wr_cmd_ctx      \
         dma_wr_resp_valid   \
         dma_wr_resp_data    \
         dma_wr_resp_tag     \
@@ -183,6 +184,7 @@ set port_list_dma_rd [list \
         dma_rd_cmd_be       \
         dma_rd_cmd_ea       \
         dma_rd_cmd_tag      \
+        dma_rd_cmd_ctx      \
         dma_rd_resp_valid   \
         dma_rd_resp_data    \
         dma_rd_resp_tag     \
@@ -208,6 +210,8 @@ set port_list_lcl_wr [list \
          lcl_wr_rsp_code          \
          lcl_wr_rsp_ctx           \
          lcl_wr_rsp_ready         \
+         lcl_wr_ctx               \
+         lcl_wr_ctx_valid         \
          ]
 
 set port_list_lcl_rd [list \
@@ -226,6 +230,8 @@ set port_list_lcl_rd [list \
          lcl_rd_data_ctx          \
          lcl_rd_rsp_code          \
          lcl_rd_data_ready        \
+         lcl_rd_ctx               \
+         lcl_rd_ctx_valid         \
          ]
 
 

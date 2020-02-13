@@ -103,9 +103,9 @@ static void* ocaccel_open (struct mdev_ctx* mctx)
      * E.g. /dev/ocxl/IBM,MEMCPY3.0000:00:00.1.0
      */
     if (mctx->card == 0) {
-        snprintf (device, sizeof (device) - 1, "IBM,oc-snap");
+        snprintf (device, sizeof (device) - 1, "IBM,oc-accel");
     } else {
-        snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", mctx->card);
+        snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-accel.000%d:00:00.1.0", mctx->card);
     }
 
     VERBOSE3 ("[%s] Enter: %s\n", __func__, device);

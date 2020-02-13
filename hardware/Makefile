@@ -89,7 +89,7 @@ OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/ocaccel_global_v
 ifeq ($(PLATFORM),x86_64)
 
 # TODO: the phony list needs updating
-.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project define_interfaces package_infrastructure package_hostside package_action top_project image ocse software app model xsim xcelium clean
+.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project define_interfaces package_infrastructure package_hostside package_action top_project image ocse software app model sim xsim xcelium clean
 
 all: model image
 
@@ -358,7 +358,7 @@ sim: check_simulator
 	@$(MAKE) -s .model_$(SIMULATOR)
 	@echo -e "[SIMULATION........] start `date +"%T %a %b %d %Y"`"
 	@echo "                        SIMULATOR is set to $(SIMULATOR)"
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd sim; ./run_sim; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_make_model --simulator_start_timeout 60; fi
 	@echo -e "[SIMULATION........] done  `date +"%T %a %b %d %Y"`"
 	@echo " To display traces, execute: ./display_traces"
 

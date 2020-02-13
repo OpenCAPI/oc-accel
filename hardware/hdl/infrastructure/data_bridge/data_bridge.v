@@ -55,6 +55,8 @@ module data_bridge #(
                    input     [1023:0]     lcl_wr_data                   ,
                    input                  lcl_wr_idle                   ,
                    output                 lcl_wr_ready                  ,
+                   input                  lcl_wr_ctx_valid              ,
+                   input      [CTXW-1:0]  lcl_wr_ctx                    ,
                   // write response channel
                    output                 lcl_wr_rsp_valid              ,
                    output      [IDW-1:0]  lcl_wr_rsp_axi_id             ,
@@ -72,6 +74,8 @@ module data_bridge #(
                    input                  lcl_rd_last                   ,
                    input                  lcl_rd_idle                   ,
                    output                 lcl_rd_ready                  ,
+                   input                  lcl_rd_ctx_valid              ,
+                   input      [CTXW-1:0]  lcl_rd_ctx                    ,
                   // read response & data channel
                    output                 lcl_rd_data_valid             ,
                    output      [IDW-1:0] lcl_rd_data_axi_id            ,
@@ -89,6 +93,7 @@ module data_bridge #(
                    output     [0127:0]  dma_wr_cmd_be                    ,
                    output     [0063:0]  dma_wr_cmd_ea                    ,
                    output     [TAGW-1:0]  dma_wr_cmd_tag                   ,
+                   output     [CTXW-1:0]  dma_wr_cmd_ctx                   ,
 
                    input                dma_wr_resp_valid                ,
                    input      [1023:0]  dma_wr_resp_data                 ,//N/A
@@ -102,6 +107,7 @@ module data_bridge #(
                    output     [0127:0]  dma_rd_cmd_be                    ,
                    output     [0063:0]  dma_rd_cmd_ea                    ,
                    output     [TAGW-1:0]  dma_rd_cmd_tag                   ,
+                   output     [CTXW-1:0]  dma_rd_cmd_ctx                   ,
 
                    input                dma_rd_resp_valid                ,
                    input      [1023:0]  dma_rd_resp_data                 ,
@@ -160,7 +166,9 @@ data_bridge_channel
                 /*output reg           */   .lcl_addr_ready      ( lcl_wr_ready        ),
                 /*input                */   .lcl_addr_valid      ( lcl_wr_valid        ),
                 /*input      [0063:0]  */   .lcl_addr_ea         ( lcl_wr_ea           ),
-                /*input      [IDW-1:0]*/   .lcl_addr_axi_id     ( lcl_wr_axi_id       ),
+                /*input                */   .lcl_addr_ctx        ( lcl_wr_ctx          ),
+                /*input      [CTXW-1:0]*/   .lcl_addr_ctx_valid  ( lcl_wr_ctx_valid    ),
+                /*input      [IDW-1:0]*/    .lcl_addr_axi_id     ( lcl_wr_axi_id       ),
                 /*input                */   .lcl_addr_first      ( lcl_wr_first        ),
                 /*input                */   .lcl_addr_last       ( lcl_wr_last         ),
                 /*input      [0127:0]  */   .lcl_addr_be         ( lcl_wr_be           ),
@@ -183,6 +191,7 @@ data_bridge_channel
                 /*output reg [0127:0]  */   .dma_cmd_be          ( dma_wr_cmd_be          ),
                 /*output reg [0063:0]  */   .dma_cmd_ea          ( dma_wr_cmd_ea          ),
                 /*output reg [0005:0]  */   .dma_cmd_tag         ( dma_wr_cmd_tag         ),
+                /*output reg [CTXW-1:0]*/   .dma_cmd_ctx         ( dma_wr_cmd_ctx         ),
 
                 //---- response decoder --------------
                 /*input                */   .dma_resp_valid      ( dma_wr_resp_valid      ),
@@ -220,6 +229,8 @@ data_bridge_channel
                 /*output reg           */   .lcl_addr_ready      ( lcl_rd_ready        ),
                 /*input                */   .lcl_addr_valid      ( lcl_rd_valid        ),
                 /*input      [0063:0]  */   .lcl_addr_ea         ( lcl_rd_ea           ),
+                /*input                */   .lcl_addr_ctx        ( lcl_rd_ctx          ),
+                /*input      [CTXW-1:0]*/   .lcl_addr_ctx_valid  ( lcl_rd_ctx_valid    ),
                 /*input      [IDW-1:0] */   .lcl_addr_axi_id     ( lcl_rd_axi_id       ),
                 /*input                */   .lcl_addr_first      ( lcl_rd_first        ),
                 /*input                */   .lcl_addr_last       ( lcl_rd_last         ),
@@ -244,6 +255,7 @@ data_bridge_channel
                 /*output reg [0127:0]  */   .dma_cmd_be          ( dma_rd_cmd_be        ),
                 /*output reg [0063:0]  */   .dma_cmd_ea          ( dma_rd_cmd_ea        ),
                 /*output reg [0005:0]  */   .dma_cmd_tag         ( dma_rd_cmd_tag       ),
+                /*output reg [CTXW-1:0]*/   .dma_cmd_ctx         ( dma_rd_cmd_ctx       ),
 
                 //---- response decoder --------------
                 /*input                */   .dma_resp_valid      ( dma_rd_resp_valid    ),

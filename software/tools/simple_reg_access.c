@@ -23,7 +23,7 @@
 #include <time.h>
 
 #include "libocxl.h"
-#define DEVICE "IBM,oc-snap"
+#define DEVICE "IBM,oc-accel"
 
 static int verbose = 1;
 int main()

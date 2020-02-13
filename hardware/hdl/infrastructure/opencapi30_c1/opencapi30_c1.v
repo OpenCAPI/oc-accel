@@ -110,6 +110,7 @@ module opencapi30_c1
                    input     [0127:0]    dma_wr_cmd_be          ,
                    input     [0063:0]    dma_wr_cmd_ea          ,
                    input   [TAGW-1:0]    dma_wr_cmd_tag         ,
+                   input   [CTXW-1:0]    dma_wr_cmd_ctx         ,
 
                           //---- response decoder --------------
                    output                dma_wr_resp_valid      ,
@@ -124,6 +125,7 @@ module opencapi30_c1
                    input     [0127:0]    dma_rd_cmd_be        ,
                    input     [0063:0]    dma_rd_cmd_ea        ,
                    input   [TAGW-1:0]    dma_rd_cmd_tag       ,
+                   input   [CTXW-1:0]    dma_rd_cmd_ctx       ,
 
                           //---- response decoder --------------
                    output                dma_rd_resp_valid    ,
@@ -466,8 +468,8 @@ command_encode
                 /*input                 */   .resetn                        ( resetn                        ),
 
                 //---- configuration ---------------------------------
-                /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
-                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_pasid_base               ),
+                /*input      [011:0]    */   .cfg_actag_base               ( cfg_infra_actag_base         ),
+                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_infra_pasid_base         ),
                 /*input      [019:0]    */   .cfg_pasid_mask               ( cfg_pasid_mask               ),
 
                 //---- communication with command decoder -----
@@ -518,8 +520,8 @@ command_encode
                 /*input                 */   .resetn                        ( resetn                        ),
 
                 //---- configuration ---------------------------------
-                /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
-                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_pasid_base               ),
+                /*input      [011:0]    */   .cfg_actag_base               ( cfg_infra_actag_base         ),
+                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_infra_pasid_base         ),
                 /*input      [019:0]    */   .cfg_pasid_mask               ( cfg_pasid_mask               ),
 
                 //---- communication with command decoder -----
@@ -671,10 +673,10 @@ response_decode
 //===============================================================================================================
 
  interrupt_tlx interrupt_tlx (
-                       /*input              */  .clk              (clock_afu             ),
-                       /*input              */  .resetn            (resetn               ),
-                       /*input      [011:0] */  .cfg_actag_base   (cfg_actag_base      ),
-                       /*input      [019:0] */  .cfg_pasid_base   (cfg_pasid_base      ),
+                       /*input              */  .clk              (clock_afu           ),
+                       /*input              */  .resetn           (resetn              ),
+                       /*input      [011:0] */  .cfg_actag_base   (cfg_infra_actag_base),
+                       /*input      [019:0] */  .cfg_pasid_base   (cfg_infra_pasid_base),
                        /*input      [019:0] */  .cfg_pasid_mask   (cfg_pasid_mask      ),
                        /*input      [003:0] */  .backoff_limit    (cfg_backoff_timer   ),
                        /*input              */  .interrupt_enable (1'b1                ),
