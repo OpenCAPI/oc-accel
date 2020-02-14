@@ -88,6 +88,9 @@ add_files -norecurse $project_dir/${project}.srcs/sources_1/bd/$bd_name/hdl/${bd
 
 # use bypass
 # Is it a good way to organize like this?
+#        $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \
+#
+#
 add_files -fileset constrs_1 -norecurse  [list \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/gty_properties.xdc \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/main_pinout.xdc \
@@ -95,7 +98,6 @@ add_files -fileset constrs_1 -norecurse  [list \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/main_timing.xdc \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/bitstream_config.xdc \
                                          $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_pinout.xdc \
-                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \
                                          ] 
 
 close_project
