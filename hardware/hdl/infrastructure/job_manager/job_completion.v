@@ -12,7 +12,7 @@ module job_completion #(
     parameter ADDR_WIDTH = 64
 )(
     input                           clk                 ,
-    input                           resetn               ,
+    input                           resetn              ,
     input       [PASID_WIDTH-1:0]   cmpl_ram_addr_i     ,
     input                           cmpl_ram_hi_i       ,
     input                           cmpl_ram_lo_i       ,
@@ -107,15 +107,15 @@ always@(posedge clk or negedge resetn)
     assign m_axi_awaddr     = cmpl_addr;
 
 completion_fifo fifo_completion (
-    .clk        (clk                ),
-    .rst        (!resetn             ),
-    .din        (return_data_i      ),
-    .wr_en      (complete_push_i    ),
-    .rd_en      (cmpl_fifo_pull     ),
-    .dout       (cmpl_fifo_out      ),
-    .full       (cmpl_fifo_full     ),
-    .empty      (cmpl_fifo_empty    ),
-    .data_count (cmpl_fifo_count    )
+    .clk        ( clk               ),
+    .rst        ( !resetn           ),
+    .din        ( return_data_i     ),
+    .wr_en      ( complete_push_i   ),
+    .rd_en      ( cmpl_fifo_pull    ),
+    .dout       ( cmpl_fifo_out     ),
+    .full       ( cmpl_fifo_full    ),
+    .empty      ( cmpl_fifo_empty   ),
+    .data_count ( cmpl_fifo_count   )
 );
 
 addr_ram cpml_ram_low(
@@ -128,7 +128,7 @@ addr_ram cpml_ram_low(
 );
 
 addr_ram cpml_ram_high(
-    .clk    (clk                ),
+    .clk    ( clk               ),
     .d      ( cmpl_ram_wdata_hi ),
     .dpra   ( cmpl_read_addr    ),
     .a      ( cmpl_ram_waddr    ),

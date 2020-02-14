@@ -12,7 +12,7 @@ module job_manager #(
     parameter ADDR_WIDTH = 64
 )(
         input                           clk             ,
-        input                           resetn           ,
+        input                           resetn          ,
         input       [PINFO_WIDTH-1:0]   process_info_i  ,
         input                           process_start_i ,
         output                          process_ready_o ,
@@ -76,14 +76,14 @@ module job_manager #(
     assign m_axi_rready   = 1'b1;
 
 process_fifo fifo_process (
-    .clk        (clk                ),
-    .rst        (!resetn             ),
-    .din        (process_fifo_in    ),
-    .wr_en      (process_fifo_push  ),
-    .rd_en      (process_fifo_pull  ),
-    .dout       (process_fifo_out   ),
-    .full       (process_fifo_full  ),
-    .empty      (process_fifo_empty ),
+    .clk        ( clk               ),
+    .rst        ( !resetn           ),
+    .din        ( process_fifo_in   ),
+    .wr_en      ( process_fifo_push ),
+    .rd_en      ( process_fifo_pull ),
+    .dout       ( process_fifo_out  ),
+    .full       ( process_fifo_full ),
+    .empty      ( process_fifo_empty),
     .data_count (                   )
 );
 
@@ -116,15 +116,15 @@ process_fifo fifo_process (
             m_axi_arvalid <= 1'b1;
 
 descriptor_fifo fifo_descriptor (
-    .clk        (clk            ), // input clk
-    .rst        (!resetn         ), // input rst
-    .din        (dsc_fifo_in        ), // input [511 : 0] din
-    .wr_en      (dsc_fifo_push      ), // input wr_en
-    .rd_en      (dsc_fifo_pull      ), // input rd_en
-    .dout       (dsc_fifo_out       ), // output [511 : 0] dout
-    .full       (dsc_fifo_full      ), // output full
-    .empty      (dsc_fifo_empty     ), // output empty
-    .data_count (dsc_fifo_cnt       ) // output [4 : 0] data_count
+    .clk        ( clk               ), // input clk
+    .rst        ( !resetn           ), // input rst
+    .din        ( dsc_fifo_in       ), // input [511 : 0] din
+    .wr_en      ( dsc_fifo_push     ), // input wr_en
+    .rd_en      ( dsc_fifo_pull     ), // input rd_en
+    .dout       ( dsc_fifo_out      ), // output [511 : 0] dout
+    .full       ( dsc_fifo_full     ), // output full
+    .empty      ( dsc_fifo_empty    ), // output empty
+    .data_count ( dsc_fifo_cnt      ) // output [4 : 0] data_count
 );
 
     assign dsc_fifo_in = {23'b0, process_num, m_axi_rdata[991:0]};
