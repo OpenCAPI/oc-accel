@@ -1,11 +1,13 @@
 #!/bin/bash
 
 if [ ! -z $CTEPATH ]; then
-    export XILINX_VIVADO=$CTEPATH/tools/xilinx/2018.3.1/Vivado/2018.3
-    export CDS_LEVEL=18.03.010
+    #export XILINX_VIVADO=$CTEPATH/tools/xilinx/2018.3.1/Vivado/2018.3
+    export XILINX_VIVADO=/afs/bb/proj/fpga/xilinx/Vivado/2019.2
+    #export CDS_LEVEL=18.03.010
+    export CDS_LEVEL=19.03.008
     export CDS_INST_DIR=$CTEPATH/tools/cds/Xcelium/${CDS_LEVEL}
 else
-    export XILINX_VIVADO=/tools/Xilinx/Vivado/2019.1
+    export XILINX_VIVADO=/tools/Xilinx/Vivado/2019.2
     export CDS_INST_DIR=/tools/cadence/installs/XCELIUM1903.008
 fi
 

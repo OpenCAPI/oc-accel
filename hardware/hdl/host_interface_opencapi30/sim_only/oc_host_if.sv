@@ -584,139 +584,12 @@ reg             timed_start_reload;
 reg             dlx_tlx_link_up_last;
 reg             link_gate;
 
-
-//=============================================================================
-//=============================================================================
-//                           Sub Module Instances
-//=============================================================================
-//=============================================================================
-
-//=============================================================================
-//                      phy_vio instance
-DLx_phy_vio_0 DLx_phy_vio_0_inst (
-    .clk        (clock_156_25)                               // -- [0:0] < input
-    ,.probe_in0  (ocde)                                       // -- [0:0] < input
-    ,.probe_in1  (iprog_go_or)                                // -- [0:0] < input
-    ,.probe_in2  (cfg_icap_reload_en)                         // -- [0:0] < input
-    ,.probe_in3  (init_retry_ctr_int)                         // -- [3:0] < input
-    ,.probe_in4  (link_gate)                                  // -- [7:0] < input
-    ,.probe_in5  (8'b0)                                       // -- [7:0] < input
-    ,.probe_in6  (8'b0)                                       // -- [7:0] < input
-    ,.probe_in7  (gtwiz_reset_tx_done_vio_sync)               // -- [0:0] < input
-    ,.probe_in8  (gtwiz_reset_rx_done_vio_sync)               // -- [0:0] < input
-    ,.probe_in9  (gtwiz_buffbypass_tx_done_vio_sync)          // -- [0:0] < input
-    ,.probe_in10 (gtwiz_buffbypass_rx_done_vio_sync)          // -- [0:0] < input
-    ,.probe_in11 (gtwiz_buffbypass_tx_error_vio_sync)         // -- [0:0] < input
-    ,.probe_in12 (gtwiz_buffbypass_rx_error_vio_sync)         // -- [0:0] < input
-    ,.probe_out0 (hb_gtwiz_reset_all_vio_int)                 // -- [0:0] > output
-    ,.probe_out1 (unused[0])                                  // -- [0:0] > output
-    ,.probe_out2 (hb0_gtwiz_reset_tx_pll_and_datapath_int)    // -- [0:0] > output
-    ,.probe_out3 (hb0_gtwiz_reset_tx_datapath_int)            // -- [0:0] > output
-    ,.probe_out4 (hb_gtwiz_reset_rx_pll_and_datapath_vio_int) // -- [0:0] > output
-    ,.probe_out5 (hb_gtwiz_reset_rx_datapath_vio_int)         // -- [0:0] > output
-    ,.probe_out6 (spoof_reset)                                // -- [0:0] > output
-);
-
-//=============================================================================
-// -- DLX & PHY instance
-
-dlx_phy_wrap dlx_phy
-(
-    // -- Differential reference clock inputs
-    .mgtrefclk1_x0y0_p                           ( mgtrefclk1_x0y0_p )             // -- input
-    ,.mgtrefclk1_x0y0_n                           ( mgtrefclk1_x0y0_n )             // -- input
-    ,.mgtrefclk1_x0y1_p                           ( mgtrefclk1_x0y1_p )             // -- input
-    ,.mgtrefclk1_x0y1_n                           ( mgtrefclk1_x0y1_n )             // -- input
-    ,.freerun_clk_p                               ( freerun_clk_p )                 // -- input
-    ,.freerun_clk_n                               ( freerun_clk_n )                 // -- input
-
-    ,.ch0_gtyrxn_in                               ( ch0_gtyrxn_in )                 // -- input
-    ,.ch0_gtyrxp_in                               ( ch0_gtyrxp_in )                 // -- input
-    ,.ch0_gtytxn_out                              ( ch0_gtytxn_out )                // -- output
-    ,.ch0_gtytxp_out                              ( ch0_gtytxp_out )                // -- output
-    ,.ch1_gtyrxn_in                               ( ch1_gtyrxn_in )                 // -- input
-    ,.ch1_gtyrxp_in                               ( ch1_gtyrxp_in )                 // -- input
-    ,.ch1_gtytxn_out                              ( ch1_gtytxn_out )                // -- output
-    ,.ch1_gtytxp_out                              ( ch1_gtytxp_out )                // -- output
-    ,.ch2_gtyrxn_in                               ( ch2_gtyrxn_in )                 // -- input
-    ,.ch2_gtyrxp_in                               ( ch2_gtyrxp_in )                 // -- input
-    ,.ch2_gtytxn_out                              ( ch2_gtytxn_out )                // -- output
-    ,.ch2_gtytxp_out                              ( ch2_gtytxp_out )                // -- output
-    ,.ch3_gtyrxn_in                               ( ch3_gtyrxn_in )                 // -- input
-    ,.ch3_gtyrxp_in                               ( ch3_gtyrxp_in )                 // -- input
-    ,.ch3_gtytxn_out                              ( ch3_gtytxn_out )                // -- output
-    ,.ch3_gtytxp_out                              ( ch3_gtytxp_out )                // -- output
-    ,.ch4_gtyrxn_in                               ( ch4_gtyrxn_in )                 // -- input
-    ,.ch4_gtyrxp_in                               ( ch4_gtyrxp_in )                 // -- input
-    ,.ch4_gtytxn_out                              ( ch4_gtytxn_out )                // -- output
-    ,.ch4_gtytxp_out                              ( ch4_gtytxp_out )                // -- output
-    ,.ch5_gtyrxn_in                               ( ch5_gtyrxn_in )                 // -- input
-    ,.ch5_gtyrxp_in                               ( ch5_gtyrxp_in )                 // -- input
-    ,.ch5_gtytxn_out                              ( ch5_gtytxn_out )                // -- output
-    ,.ch5_gtytxp_out                              ( ch5_gtytxp_out )                // -- output
-    ,.ch6_gtyrxn_in                               ( ch6_gtyrxn_in )                 // -- input
-    ,.ch6_gtyrxp_in                               ( ch6_gtyrxp_in )                 // -- input
-    ,.ch6_gtytxn_out                              ( ch6_gtytxn_out )                // -- output
-    ,.ch6_gtytxp_out                              ( ch6_gtytxp_out )                // -- output
-    ,.ch7_gtyrxn_in                               ( ch7_gtyrxn_in )                 // -- input
-    ,.ch7_gtyrxp_in                               ( ch7_gtyrxp_in )                 // -- input
-    ,.ch7_gtytxn_out                              ( ch7_gtytxn_out )                // -- output
-    ,.ch7_gtytxp_out                              ( ch7_gtytxp_out )                // -- output
-
-    ,.dlx_config_info                             ( dlx_config_info[31:0] )         // -- output
-    ,.ro_dlx_version                              ( ro_dlx0_version[31:0] )          // -- output [31:0]
-    ,.dlx_tlx_init_flit_depth                     ( dlx_tlx_init_flit_depth[2:0] )  // -- output
-    ,.dlx_tlx_flit                                ( dlx_tlx_flit[511:0] )           // -- output
-    ,.dlx_tlx_flit_crc_err                        ( dlx_tlx_flit_crc_err )          // -- output
-    ,.dlx_tlx_flit_credit                         ( dlx_tlx_flit_credit )           // -- output
-    ,.dlx_tlx_flit_valid                          ( dlx_tlx_flit_valid )            // -- output
-    ,.dlx_tlx_link_up                             ( dlx_tlx_link_up )               // -- output
-
-    ,.tlx_dlx_debug_encode                        ( tlx_dlx_debug_encode[3:0] )     // -- input
-    ,.tlx_dlx_debug_info                          ( tlx_dlx_debug_info[31:0] )      // -- input
-    ,.tlx_dlx_flit                                ( tlx_dlx_flit[511:0] )           // -- input
-    ,.tlx_dlx_flit_valid                          ( tlx_dlx_flit_valid )            // -- input
-
-    ,.send_first                                  ( send_first )                    // -- input
-    ,.ocde                                        ( ocde )                          // -- input
-    //,.tx_clk_402MHz                               ( clock_tlx )                   // -- output
-    //,.tx_clk_201MHz                               ( clock_afu )                   // -- output
-    ,.tx_clk_402MHz                               ( )                               // -- output
-    ,.tx_clk_201MHz                               ( )                               // -- output
-    ,.hb_gtwiz_reset_clk_freerun_buf_int          ( clock_156_25 )                  // -- output
-
-    ,.init_done_int                               ( init_done_int )                               // -- output
-    ,.init_retry_ctr_int                          ( init_retry_ctr_int[3:0] )                     // -- output
-    ,.gtwiz_reset_tx_done_vio_sync                ( gtwiz_reset_tx_done_vio_sync )                // -- output
-    ,.gtwiz_reset_rx_done_vio_sync                ( gtwiz_reset_rx_done_vio_sync )                // -- output
-    ,.gtwiz_buffbypass_tx_done_vio_sync           ( gtwiz_buffbypass_tx_done_vio_sync )           // -- output
-    ,.gtwiz_buffbypass_rx_done_vio_sync           ( gtwiz_buffbypass_rx_done_vio_sync )           // -- output
-    ,.gtwiz_buffbypass_tx_error_vio_sync          ( gtwiz_buffbypass_tx_error_vio_sync )          // -- output
-    ,.gtwiz_buffbypass_rx_error_vio_sync          ( gtwiz_buffbypass_rx_error_vio_sync )          // -- output
-    ,.hb_gtwiz_reset_all_vio_int                  ( hb_gtwiz_reset_all_vio_int )                  // -- input
-    ,.hb0_gtwiz_reset_tx_pll_and_datapath_int     ( hb0_gtwiz_reset_tx_pll_and_datapath_int )     // -- input
-    ,.hb0_gtwiz_reset_tx_datapath_int             ( hb0_gtwiz_reset_tx_datapath_int )             // -- input
-    ,.hb_gtwiz_reset_rx_pll_and_datapath_vio_int  ( hb_gtwiz_reset_rx_pll_and_datapath_vio_int )  // -- input
-    ,.hb_gtwiz_reset_rx_datapath_vio_int          ( hb_gtwiz_reset_rx_datapath_vio_int )          // -- input
-
-    // -- IBERT Logic
-    ,.rxlpmen_in                                  ( rxlpmen_int[7:0] )                            // -- input
-    ,.rxrate_in                                   ( rxrate_int[23:0] )                            // -- input
-    ,.txdiffctrl_in                               ( txdiffctrl_int[39:0] )                        // -- input
-    ,.txpostcursor_in                             ( txpostcursor_int[39:0] )                      // -- input
-    ,.txprecursor_in                              ( txprecursor_int[39:0] )                        // -- input
-
-    `ifdef BUFFER_ELASTIC
-        ,.drpaddr_in                                  ( drpaddr_int[79:0] )                           // -- input
-        ,.drpclk_in                                   ( drpclk_int[7:0] )                             // -- input
-        ,.drpdi_in                                    ( drpdi_int[127:0] )                            // -- input
-        ,.drpen_in                                    ( drpen_int[7:0] )                              // -- input
-        ,.drpwe_in                                    ( drpwe_int[7:0] )                              // -- input
-        ,.eyescanreset_in                             ( eyescanreset_int[7:0] )                       // -- input
-        ,.drpdo_out                                   ( drpdo_int[127:0] )                            // -- output
-        ,.drprdy_out                                  ( drprdy_int[7:0] )                              // -- output
-    `endif
-);
+parameter RESET_CYCLES = 9;
+reg clock_tlx_reg;
+reg clock_afu_reg;
+// Integers
+integer         i;
+integer         resetCnt;
 
 // Table 1: TLX to AFU Response Interface
 reg              tlx_afu_resp_valid_top;
@@ -856,6 +729,20 @@ reg             afu_tlx_rdata_bdi_top;
 
 reg [0:63]     simulationTime ;
 reg            simulationError;
+
+//=============================================================================
+//=============================================================================
+//                           Sub Module Instances
+//=============================================================================
+//=============================================================================
+
+//=============================================================================
+//                      phy_vio instance
+// NO PHY_VIO for simulation
+
+//=============================================================================
+// -- DLX & PHY instance
+// NO DLX and PHY for simulation
 
 //=============================================================================
 //                  TLX instance
@@ -1074,13 +961,6 @@ initial begin
     ro_device_top    <= 5'b0;   //Updated per Jeff R's note of 23/Jun/2017
 end
 
-parameter RESET_CYCLES = 9;
-reg clock_tlx_reg;
-reg clock_afu_reg;
-// Integers
-integer         i;
-integer         resetCnt;
-
 // Clock generation
 always begin
     clock_tlx_reg = !clock_tlx_reg; #1.25;
@@ -1271,134 +1151,6 @@ wire [31:0] vpd_cfg_rdata_sim;
 wire vpd_cfg_done_sim;
 assign vpd_cfg_rdata_sim [31:0] = 32'h00000000;
 assign vpd_cfg_done_sim = 1'b0;
-
-//  ocx_tlx_top  tlx
-//    (
-//      // -- Clocks,Reset,Ready
-//      .clock                            (clock_tlx                       ) // -- input
-//     ,.reset_n                          (reset_n_q                     ) // -- input
-//     ,.tlx_afu_ready                    (wire_tlx_afu_ready                   ) // output
-//     ,.afu_tlx_cmd_initial_credit       (wire_afu_tlx_cmd_initial_credit      ) // input  [6:0]
-//     ,.afu_tlx_cmd_credit               (wire_afu_tlx_cmd_credit              ) // input
-//     ,.tlx_afu_cmd_valid                (wire_tlx_afu_cmd_valid               ) // output
-//     ,.tlx_afu_cmd_opcode               (wire_tlx_afu_cmd_opcode              ) // output [7:0]
-//     ,.tlx_afu_cmd_dl                   (wire_tlx_afu_cmd_dl                  ) // output [1:0]
-//     ,.tlx_afu_cmd_end                  (wire_tlx_afu_cmd_end                 ) // output
-//     ,.tlx_afu_cmd_pa                   (wire_tlx_afu_cmd_pa                  ) // output [63:0]
-//     ,.tlx_afu_cmd_flag                 (wire_tlx_afu_cmd_flag                ) // output [3:0]
-//     ,.tlx_afu_cmd_os                   (wire_tlx_afu_cmd_os                  ) // output
-//     ,.tlx_afu_cmd_capptag              (wire_tlx_afu_cmd_capptag             ) // output [15:0]
-//     ,.tlx_afu_cmd_pl                   (wire_tlx_afu_cmd_pl                  ) // output [2:0]
-//     ,.tlx_afu_cmd_be                   (wire_tlx_afu_cmd_be                  ) // output [63:0]
-//
-//     ,.cfg_tlx_initial_credit           (cfg_tlx_initial_credit          ) // input  [3:0]
-//     ,.cfg_tlx_credit_return            (cfg_tlx_credit_return           ) // input
-//     ,.tlx_cfg_valid                    (tlx_cfg_valid                   ) // output
-//     ,.tlx_cfg_opcode                   (tlx_cfg_opcode                  ) // output [7:0]
-//     ,.tlx_cfg_pa                       (tlx_cfg_pa                      ) // output [63:0]
-//     ,.tlx_cfg_t                        (tlx_cfg_t                       ) // output
-//     ,.tlx_cfg_pl                       (tlx_cfg_pl                      ) // output [2:0]
-//     ,.tlx_cfg_capptag                  (tlx_cfg_capptag                 ) // output [15:0]
-//     ,.tlx_cfg_data_bus                 (tlx_cfg_data_bus                ) // output [31:0]
-//     ,.tlx_cfg_data_bdi                 (tlx_cfg_data_bdi                ) // output
-//
-//     ,.afu_tlx_resp_initial_credit      (wire_afu_tlx_resp_initial_credit     ) // input  [6:0]
-//     ,.afu_tlx_resp_credit              (wire_afu_tlx_resp_credit             ) // input
-//     ,.tlx_afu_resp_valid               (wire_tlx_afu_resp_valid              ) // output
-//     ,.tlx_afu_resp_opcode              (wire_tlx_afu_resp_opcode             ) // output [7:0]
-//     ,.tlx_afu_resp_afutag              (wire_tlx_afu_resp_afutag             ) // output [15:0]
-//     ,.tlx_afu_resp_code                (wire_tlx_afu_resp_code               ) // output [3:0]
-//     ,.tlx_afu_resp_pg_size             (wire_tlx_afu_resp_pg_size            ) // output [5:0]
-//     ,.tlx_afu_resp_dl                  (wire_tlx_afu_resp_dl                 ) // output [1:0]
-//     ,.tlx_afu_resp_dp                  (wire_tlx_afu_resp_dp                 ) // output [1:0]
-//     ,.tlx_afu_resp_host_tag            (wire_tlx_afu_resp_host_tag           ) // output [23:0]
-//     ,.tlx_afu_resp_cache_state         (wire_tlx_afu_resp_cache_state        ) // output [3:0]
-//     ,.tlx_afu_resp_addr_tag            (wire_tlx_afu_resp_addr_tag           ) // output [17:0]
-//     ,.afu_tlx_cmd_rd_req               (wire_afu_tlx_cmd_rd_req              ) // input
-//     ,.afu_tlx_cmd_rd_cnt               (wire_afu_tlx_cmd_rd_cnt              ) // input  [2:0]
-//     ,.tlx_afu_cmd_data_valid           (wire_tlx_afu_cmd_data_valid          ) // output
-//     ,.tlx_afu_cmd_data_bus             (wire_tlx_afu_cmd_data_bus            ) // output [511:0]
-//     ,.tlx_afu_cmd_data_bdi             (wire_tlx_afu_cmd_data_bdi            ) // output
-//     ,.afu_tlx_resp_rd_req              (wire_afu_tlx_resp_rd_req             ) // input
-//     ,.afu_tlx_resp_rd_cnt              (wire_afu_tlx_resp_rd_cnt             ) // input  [2:0]
-//     ,.tlx_afu_resp_data_valid          (wire_tlx_afu_resp_data_valid         ) // output
-//     ,.tlx_afu_resp_data_bus            (wire_tlx_afu_resp_data_bus           ) // output [511:0]
-//     ,.tlx_afu_resp_data_bdi            (wire_tlx_afu_resp_data_bdi           ) // output
-//     ,.tlx_afu_cmd_initial_credit       (wire_tlx_afu_cmd_initial_credit      ) // output [3:0]
-//     ,.tlx_afu_cmd_credit               (wire_tlx_afu_cmd_credit              ) // output
-//     ,.afu_tlx_cmd_valid                (wire_afu_tlx_cmd_valid               ) // input
-//     ,.afu_tlx_cmd_opcode               (wire_afu_tlx_cmd_opcode              ) // input  [7:0]
-//     ,.afu_tlx_cmd_actag                (wire_afu_tlx_cmd_actag               ) // input  [11:0]
-//     ,.afu_tlx_cmd_stream_id            (wire_afu_tlx_cmd_stream_id           ) // input  [3:0]
-//     ,.afu_tlx_cmd_ea_or_obj            (wire_afu_tlx_cmd_ea_or_obj           ) // input  [67:0]
-//     ,.afu_tlx_cmd_afutag               (wire_afu_tlx_cmd_afutag              ) // input  [15:0]
-//     ,.afu_tlx_cmd_dl                   (wire_afu_tlx_cmd_dl                  ) // input  [1:0]
-//     ,.afu_tlx_cmd_pl                   (wire_afu_tlx_cmd_pl                  ) // input  [2:0]
-//     ,.afu_tlx_cmd_os                   (wire_afu_tlx_cmd_os                  ) // input
-//     ,.afu_tlx_cmd_be                   (wire_afu_tlx_cmd_be                  ) // input  [63:0]
-//     ,.afu_tlx_cmd_flag                 (wire_afu_tlx_cmd_flag                ) // input  [3:0]
-//     ,.afu_tlx_cmd_endian               (wire_afu_tlx_cmd_endian              ) // input
-//     ,.afu_tlx_cmd_bdf                  (wire_afu_tlx_cmd_bdf                 ) // input  [15:0]
-//     ,.afu_tlx_cmd_pasid                (wire_afu_tlx_cmd_pasid               ) // input  [19:0]
-//     ,.afu_tlx_cmd_pg_size              (wire_afu_tlx_cmd_pg_size             ) // input  [5:0]
-//     ,.tlx_afu_cmd_data_initial_credit  (wire_tlx_afu_cmd_data_initial_credit ) // output [5:0]
-//     ,.tlx_afu_cmd_data_credit          (wire_tlx_afu_cmd_data_credit         ) // output
-//     ,.afu_tlx_cdata_valid              (wire_afu_tlx_cdata_valid             ) // input
-//     ,.afu_tlx_cdata_bus                (wire_afu_tlx_cdata_bus               ) // input  [511:0]
-//     ,.afu_tlx_cdata_bdi                (wire_afu_tlx_cdata_bdi               ) // input
-//     ,.tlx_afu_resp_initial_credit      (wire_tlx_afu_resp_initial_credit     ) // output [3:0]
-//     ,.tlx_afu_resp_credit              (wire_tlx_afu_resp_credit             ) // output
-//     ,.afu_tlx_resp_valid               (wire_afu_tlx_resp_valid              ) // input
-//     ,.afu_tlx_resp_opcode              (wire_afu_tlx_resp_opcode             ) // input  [7:0]
-//     ,.afu_tlx_resp_dl                  (wire_afu_tlx_resp_dl                 ) // input  [1:0]
-//     ,.afu_tlx_resp_capptag             (wire_afu_tlx_resp_capptag            ) // input  [15:0]
-//     ,.afu_tlx_resp_dp                  (wire_afu_tlx_resp_dp                 ) // input  [1:0]
-//     ,.afu_tlx_resp_code                (wire_afu_tlx_resp_code               ) // input  [3:0]
-//     ,.tlx_afu_resp_data_initial_credit (wire_tlx_afu_resp_data_initial_credit) // output [5:0]
-//     ,.tlx_afu_resp_data_credit         (wire_tlx_afu_resp_data_credit        ) // output
-//     ,.afu_tlx_rdata_valid              (wire_afu_tlx_rdata_valid             ) // input
-//     ,.afu_tlx_rdata_bus                (wire_afu_tlx_rdata_bus               ) // input  [511:0]
-//     ,.afu_tlx_rdata_bdi                (wire_afu_tlx_rdata_bdi               ) // input
-//
-//     ,.cfg_tlx_resp_valid               (cfg_tlx_resp_valid              ) // input
-//     ,.cfg_tlx_resp_opcode              (cfg_tlx_resp_opcode             ) // input  [7:0]
-//     ,.cfg_tlx_resp_capptag             (cfg_tlx_resp_capptag            ) // input  [15:0]
-//     ,.cfg_tlx_resp_code                (cfg_tlx_resp_code               ) // input  [3:0]
-//     ,.tlx_cfg_resp_ack                 (tlx_cfg_resp_ack                ) // output
-//     ,.cfg_tlx_rdata_offset             (cfg_tlx_rdata_offset            ) // input  [3:0]
-//     ,.cfg_tlx_rdata_bus                (cfg_tlx_rdata_bus               ) // input  [31:0]
-//     ,.cfg_tlx_rdata_bdi                (cfg_tlx_rdata_bdi               ) // input
-//
-//     ,.dlx_tlx_flit_valid               (dlx_tlx_flit_valid              ) // input
-//     ,.dlx_tlx_flit                     (dlx_tlx_flit                    ) // input  [511:0]
-//     ,.dlx_tlx_flit_crc_err             (dlx_tlx_flit_crc_err            ) // input
-//     ,.dlx_tlx_link_up                  (dlx_tlx_link_up_q               ) // input
-//     ,.dlx_tlx_flit_credit              (dlx_tlx_flit_credit             ) // input
-//     ,.dlx_tlx_init_flit_depth          (dlx_tlx_init_flit_depth         ) // input  [2:0]
-//     ,.tlx_dlx_flit_valid               (tlx_dlx_flit_valid              ) // output
-//     ,.tlx_dlx_flit                     (tlx_dlx_flit                    ) // output [511:0]
-//     ,.tlx_dlx_debug_encode             (tlx_dlx_debug_encode            ) // output [3:0]
-//     ,.tlx_dlx_debug_info               (tlx_dlx_debug_info              ) // output [31:0]
-//     ,.dlx_tlx_dlx_config_info          (dlx_config_info                 ) // input  [31:0]
-//
-//     ,.cfg_tlx_xmit_tmpl_config_0       (cfg_tlx_xmit_tmpl_config_0      ) // input
-//     ,.cfg_tlx_xmit_tmpl_config_1       (cfg_tlx_xmit_tmpl_config_1      ) // input
-//     ,.cfg_tlx_xmit_tmpl_config_2       (cfg_tlx_xmit_tmpl_config_2      ) // input
-//     ,.cfg_tlx_xmit_tmpl_config_3       (cfg_tlx_xmit_tmpl_config_3      ) // input
-//     ,.cfg_tlx_xmit_rate_config_0       (cfg_tlx_xmit_rate_config_0      ) // input  [3:0]
-//     ,.cfg_tlx_xmit_rate_config_1       (cfg_tlx_xmit_rate_config_1      ) // input  [3:0]
-//     ,.cfg_tlx_xmit_rate_config_2       (cfg_tlx_xmit_rate_config_2      ) // input  [3:0]
-//     ,.cfg_tlx_xmit_rate_config_3       (cfg_tlx_xmit_rate_config_3      ) // input  [3:0]
-//     ,.tlx_cfg_in_rcv_tmpl_capability_0 (tlx_cfg_in_rcv_tmpl_capability_0) // output
-//     ,.tlx_cfg_in_rcv_tmpl_capability_1 (tlx_cfg_in_rcv_tmpl_capability_1) // output
-//     ,.tlx_cfg_in_rcv_tmpl_capability_2 (tlx_cfg_in_rcv_tmpl_capability_2) // output
-//     ,.tlx_cfg_in_rcv_tmpl_capability_3 (tlx_cfg_in_rcv_tmpl_capability_3) // output
-//     ,.tlx_cfg_in_rcv_rate_capability_0 (tlx_cfg_in_rcv_rate_capability_0) // output [3:0]
-//     ,.tlx_cfg_in_rcv_rate_capability_1 (tlx_cfg_in_rcv_rate_capability_1) // output [3:0]
-//     ,.tlx_cfg_in_rcv_rate_capability_2 (tlx_cfg_in_rcv_rate_capability_2) // output [3:0]
-//     ,.tlx_cfg_in_rcv_rate_capability_3 (tlx_cfg_in_rcv_rate_capability_3) // output [3:0]
-//     ,.tlx_cfg_oc3_tlx_version          (ro_tlx0_version                  ) // output [31:0]
-//);
 
 //=============================================================================
 //                            oc_cfg instance
@@ -1785,14 +1537,7 @@ end
 
 assign reset_tlx_n = reset_n_q;
 
-vio_reset_n vio_reset_n_inst_tlx
-(
-    .clk        ( clock_tlx_reg ),// -- input
-    .probe_in0  ( dlx_tlx_link_up ),// -- input wire [0 : 0] probe_in0
-    .probe_in1  ( tlx_afu_ready ),// -- input wire [0 : 0] probe_in1
-    .probe_out0 ( unused[2] )        // -- output
-);
-
+// NO vio_reset_n for simulation
 
 //=============================================================================
 // -- Control ICAP for image reload

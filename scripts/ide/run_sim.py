@@ -251,7 +251,7 @@ class Simulator:
             if self.unit_sim == False:
                 sim_top  = "work.top_wrapper"
             else:
-                sim_top  = "work.unit_top"
+                sim_top  = "work.unit_top_wrapper"
             self.sim_log  = pathjoin(self.simout, "sim.log")
 
             if self.unit_sim == False:

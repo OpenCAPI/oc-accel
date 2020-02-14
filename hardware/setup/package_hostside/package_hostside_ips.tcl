@@ -31,7 +31,7 @@ source $root_dir/setup/common/common_funcs.tcl
 
 
 #------------------------------------------------------------------------------
-proc package_oc_host_if_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
+proc package_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
 
    puts "    <<< Package customer design $ip_name to $ip_path"
    set vendor "opencapi.org"
@@ -56,7 +56,19 @@ proc package_oc_host_if_ip {proj_path ip_path if_path fpga_part ip_name addfile_
    ipx::package_project -root $ip_path/$ip_name -import_files -force -vendor $vendor -library $lib -taxonomy /UserIP
 
    if { $simulator != "nosim" } {
-       ipx::add_file src/oc_host_if.sv [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+       ipx::add_file src/${ip_name}.sv [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+
+       # Remove IPs from simulation
+       if {$ip_name == "oc_host_if" } {
+           ipx::remove_file src/vio_reset_n/vio_reset_n.xci [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+           ipx::remove_file src/DLx_phy/DLx_phy.xci [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+           ipx::remove_file src/DLx_phy_vio_0/DLx_phy_vio_0.xci [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+       }
+
+       if {$ip_name == "flash_vpd_wrapper"} {
+           ipx::remove_file src/axi_quad_spi_0/axi_quad_spi_0.xci [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+           ipx::remove_file src/axi_hwicap_0/axi_hwicap_0.xci [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+       }
    }
 
    foreach bus [dict keys $bus_array] {
@@ -82,23 +94,23 @@ set bus_array [dict create tlx_afu "master" \
                           cfg_infra_c1 "master"  \
                           oc_phy  ""        \
              ]
-package_oc_host_if_ip $root_dir/build/temp_projs \
-                      $root_dir/build/ip_repo    \
-                      $root_dir/build/interfaces \
-                      $fpga_part           \
-                      oc_host_if           \
-                      $tcl_dir/add_opencapi30_host_if.tcl      \
-                      $bus_array
+package_ip $root_dir/build/temp_projs \
+           $root_dir/build/ip_repo    \
+           $root_dir/build/interfaces \
+           $fpga_part           \
+           oc_host_if           \
+           $tcl_dir/add_opencapi30_host_if.tcl      \
+           $bus_array
 
 ############################################################################
 set bus_array [dict create cfg_flsh "slave"   \
                            cfg_vpd "slave"     \
              ]
-my_package_custom_ip $root_dir/build/temp_projs \
-                     $root_dir/build/ip_repo    \
-                     $root_dir/build/interfaces \
-                     $fpga_part           \
-                     flash_vpd_wrapper    \
-                     $fpga_card_dir/tcl/add_flash_vpd_wrapper.tcl      \
-                     $bus_array
+package_ip $root_dir/build/temp_projs \
+           $root_dir/build/ip_repo    \
+           $root_dir/build/interfaces \
+           $fpga_part           \
+           flash_vpd_wrapper    \
+           $fpga_card_dir/tcl/add_flash_vpd_wrapper.tcl      \
+           $bus_array
 
