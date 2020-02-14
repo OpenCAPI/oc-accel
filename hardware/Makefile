@@ -157,9 +157,7 @@ prepare_project: check_ocaccel_settings prepare_logs
 	@mkdir -p $(BUILD_DIR);
 	@mkdir -p $(INTERFACES_DIR);
 	@mkdir -p $(IP_REPO_DIR);
-	@mkdir -p $(BUILD_DIR)/Reports;
 	@mkdir -p $(BUILD_DIR)/Images;
-	@mkdir -p $(BUILD_DIR)/Checkpoints;
 	@if [ ! -e $(OCACCEL_HARDWARE_ROOT)/oc-accel-bsp/README.md ]; then \
 		cd $(OCACCEL_ROOT); \
 		git submodule update --init --recursive hardware/oc-accel-bsp; \
@@ -242,7 +240,7 @@ package_action: $(ACTION_SCRIPT_SRCS)
 
 top_project: $(COMMON_VERILOG_SRCS) $(COMMON_VERILOG_SRCS)
 	@echo -e "[CREATE TOP PROJECT..] start `date +"%T %a %b %d %Y"`";
-	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top.tcl -notrace -log $(LOGS_DIR)/create_top.log  -journal $(LOGS_DIR)/create_top.jou > $(templog)
+	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).log  -journal $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
 hw_project: ocaccel_preprocess action_hw define_interfaces package_hostside package_infrastructure package_action top_project
@@ -260,9 +258,12 @@ image: hw_project
 	@echo "A complete FPGA bitstream build got kicked off.";
 	@echo "This might take more than an hour depending on the machine used";
 	@echo "The process may be terminated by pressing <CTRL>-C at any time.";
-	@echo "After termination it can be restarted later."; echo
+	@echo "The project is placed at $(BUILD_DIR)/top_project";
+	@echo "Use the Vivado GUI to open top_project and debug if necessary.";
+	@echo "Reports and Checkpoints are under $(BUILD_DIR)/top_project/top_project.runs";
 	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/build_image/ocaccel_build.tcl -notrace -log $(LOGS_DIR)/ocaccel_build.log -journal $(LOGS_DIR)/ocaccel_build.jou > $(templog)
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "Bitstreams are here: $(BUILD_DIR)/Images"
 
 
 ocse: prepare_logs

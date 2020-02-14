@@ -9,7 +9,7 @@ module axi_lite_adaptor #(
         parameter   WRITEREG_NUMBER = 14
        )(
         input                               clk                 ,
-        input                               rst_n               ,
+        input                               resetn              ,
         input                               engine_start        ,
         output                              engine_ready        ,
         input       [DSC_WIDTH-1:0]         engine_data         ,
@@ -70,24 +70,24 @@ always @(posedge clk)
     else if(s_axi_rvalid & s_axi_rready & (s_axi_rresp == 2'b00))
         shift_vector <= {shift_vector[991:0],s_axi_rdata};
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         write_cnt <= 'd31;
     else if(engine_start)
         write_cnt <= 'd0;
     else if(s_axi_wvalid & s_axi_wready)
         write_cnt <= write_cnt + 1'b1;
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         s_axi_awvalid <= 1'b0;
     else if(s_axi_awvalid & s_axi_awready)
         s_axi_awvalid <= 1'b0;
     else if((s_axi_awaddr != 'h80) & s_axi_awready)
         s_axi_awvalid <= 1'b1;
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         s_axi_awaddr <= 'h80;
     else if(engine_start)
         s_axi_awaddr <= 'd0;
@@ -96,24 +96,24 @@ always @(posedge clk or negedge rst_n)
     else if(s_axi_awvalid & s_axi_awready)
         s_axi_awaddr <= s_axi_awaddr + 4;
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         engine_finish <= 1'b0;
     else if(complete_ready & complete_accept)
         engine_finish <= 1'b0;
     else if(engine_interrupt)
         engine_finish <= 1'b1;
 
-always @(posedge clk or negedge rst_n)
-	if(!rst_n)
+always @(posedge clk or negedge resetn)
+	if(!resetn)
         complete_ready <= 1'b0;
     else if(engine_finish & (read_cnt == READREG_NUMBER))
         complete_ready <= 1'b1;
     else if(complete_accept)
         complete_ready <= 1'b0;
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         s_axi_araddr_r <= 32'h80000000;
     else if(engine_interrupt)
         s_axi_araddr_r <= READ_BASE_ADDR;
@@ -122,8 +122,8 @@ always @(posedge clk or negedge rst_n)
     else if(s_axi_arvalid & s_axi_arready)
         s_axi_araddr_r <= s_axi_araddr_r + 4;
 
-always @(posedge clk or negedge rst_n)
-    if(!rst_n)
+always @(posedge clk or negedge resetn)
+    if(!resetn)
         read_cnt <= 'd31;
     else if(engine_start)
         read_cnt <= 'd0;

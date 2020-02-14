@@ -18,14 +18,14 @@ module jm_framework #(
     parameter HOST_AWIDTH = 64
 )(
         input                           clk             ,
-        input                           resetn           ,
+        input                           resetn          ,
 
         output      [KERNEL_NUM-1:0]    engine_start    ,
-        output      [HOST_DWIDTH-1:0]   jd_payload      ,
-        input       [KERNEL_NUM-1:0]    engine_done     ,
-    `ifdef RETURN_CODE_ENABLE
-        input       [RETURN_WIDTH-65:0] return_code     ,
-    `endif
+        output      [HOST_DWIDTH-1:0]   engine_data     ,
+        input       [KERNEL_NUM-1:0]    engine_ready    ,
+        input       [KERNEL_NUM-1:0]    complete_ready  ,
+        output      [KERNEL_NUM-1:0]    complete_accept ,
+        input       [RETURN_WIDTH*KERNEL_NUM-1:0] complete_data,
         //---- AXI Lite bus----
           // AXI write address channel
         output                          s_axi_awready   ,
@@ -92,9 +92,9 @@ module jm_framework #(
         output      [003:0]             job_m_axi_arregion ,
         output                          job_m_axi_arvalid  ,
         input                           job_m_axi_arready  ,
-          // axi_ocaccel read data channel
+          // AXI read data channel
         output                          job_m_axi_rready   ,
-        input       [ARUSER_WIDTH-1:0]  job_m_axi_ruser    ,// no use
+        input       [ARUSER_WIDTH-1:0]  job_m_axi_ruser    ,
         input       [ID_WIDTH-1:0]      job_m_axi_rid      ,
         input       [HOST_DWIDTH-1:0]   job_m_axi_rdata    ,
         input       [001:0]             job_m_axi_rresp    ,
@@ -123,7 +123,7 @@ mp_control #(
         .ADDR_WIDTH     ( LITE_AWIDTH   )
  ) mp_control1 (
         .clk                        ( clk                   ),
-        .resetn                      ( resetn                 ),
+        .resetn                     ( resetn                ),
         .s_axi_awready              ( s_axi_awready         ),
         .s_axi_awaddr               ( s_axi_awaddr          ),//32b
         .s_axi_awprot               ( s_axi_awprot          ),//3b
@@ -163,7 +163,7 @@ job_manager #(
         .ADDR_WIDTH     ( HOST_AWIDTH   )
     )job_manager0 (
         .clk                        ( clk                   ),
-        .resetn                      ( resetn                 ),
+        .resetn                     ( resetn                ),
         .process_info_i             ( process_info_w        ),
         .process_start_i            ( process_start_w       ),
         .process_ready_o            ( process_ready_w       ),
@@ -202,7 +202,7 @@ job_scheduler #(
         .KERNEL_NUM     ( KERNEL_NUM    )
     )job_scheduler0(
         .clk                        ( clk                   ),
-        .resetn                      ( resetn                 ),
+        .resetn                     ( resetn                ),
         .dsc0_pull_o                ( dsc0_pull_w           ),
         .dsc0_ready_i               ( dsc0_ready_w          ),
         .dsc0_data_i                ( dsc0_data_w           ),
@@ -210,11 +210,11 @@ job_scheduler #(
         .complete_push_o            ( complete_push_w       ),
         .return_data_o              ( return_data_w         ),
         .engine_start               ( engine_start          ),
-        .jd_payload                 ( jd_payload            ),
-    `ifdef RETURN_CODE_ENCABLE
-        .return_code                ( return_code           ),
-    `endif
-        .engine_done                ( engine_done           )
+        .engine_ready               ( engine_ready          ),
+        .engine_data                ( engine_data           ),
+        .complete_ready             ( complete_ready        ),
+        .complete_accept            ( complete_accept       ),
+        .complete_data              ( complete_data         )
         );
 
 job_completion #(
@@ -226,7 +226,7 @@ job_completion #(
         .ADDR_WIDTH     ( HOST_AWIDTH   )
     )job_completion0(
         .clk                        ( clk                   ),
-        .resetn                      ( resetn                 ),
+        .resetn                     ( resetn                ),
         .cmpl_ram_addr_i            ( cmpl_ram_addr_w       ),
         .cmpl_ram_hi_i              ( cmpl_ram_hi_w         ),
         .cmpl_ram_lo_i              ( cmpl_ram_lo_w         ),

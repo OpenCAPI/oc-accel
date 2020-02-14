@@ -6,8 +6,8 @@ module mp_control #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-                      input             clk                   ,
-                      input             resetn                 ,
+                      input             clk                 ,
+                      input             resetn              ,
 
                       //---- AXI Lite bus----
                         // AXI write address channel
@@ -118,7 +118,7 @@ assign cmpl_ram_data_o = s_axi_wdata;
      s_axi_rdata <= 32'd0;
    else if(s_axi_arvalid & s_axi_arready)
      case(s_axi_araddr)
-//       ADDR_OCACCEL_ACTION_TYPE     : s_axi_rdata <= i_action_type;
+//       ADDR_SNAP_ACTION_TYPE     : s_axi_rdata <= i_action_type;
        ADDR_GLOBAL_CONTROL       : s_axi_rdata <= REG_global_control;
 //       ADDR_INIT_ADDR_HI         : s_axi_rdata <= REG_init_addr_hi;
 //       ADDR_INIT_ADDR_LO         : s_axi_rdata <= REG_init_addr_lo;
@@ -164,21 +164,21 @@ assign cmpl_ram_data_o = s_axi_wdata;
 ***********************************************************************/
 
 addr_ram addr_ram_low(
-    .clk    (clk            ),
-    .d      (ram_write_data ),
-    .dpra   (ram_read_addr  ),
-    .a      (ram_write_addr ),
-    .we     (ram_write1     ),
-    .dpo    (ram_read_data[31:0]  )
+    .clk    ( clk                   ),
+    .d      ( ram_write_data        ),
+    .dpra   ( ram_read_addr         ),
+    .a      ( ram_write_addr        ),
+    .we     ( ram_write1            ),
+    .dpo    ( ram_read_data[31:0]   )
 );
 
 addr_ram addr_ram_high(
-    .clk    (clk            ),
-    .d      (ram_write_data ),
-    .dpra   (ram_read_addr  ),
-    .a      (ram_write_addr ),
-    .we     (ram_write0     ),
-    .dpo    (ram_read_data[63:32]  )
+    .clk    ( clk                   ),
+    .d      ( ram_write_data        ),
+    .dpra   ( ram_read_addr         ),
+    .a      ( ram_write_addr        ),
+    .we     ( ram_write0            ),
+    .dpo    ( ram_read_data[63:32]  )
 );
 
 always@(posedge clk or negedge resetn)
