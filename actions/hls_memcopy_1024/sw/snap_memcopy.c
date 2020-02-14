@@ -35,7 +35,7 @@ int verbose_flag = 0;
 
 static const char *version = GIT_VERSION;
 
-static const char *mem_tab[] = { "HOST_DRAM", "FPGA_BRAM", "HBM_P0", "HBM_P1"};
+static const char *mem_tab[] = { "HOST_DRAM", "LCL_MEM0", "TYPE_NVME", "FPGA_BRAM" };
 
 /*
  * @brief	prints valid command line options
@@ -48,9 +48,9 @@ static void usage(const char *prog)
 	       "  -C, --card <cardno>        can be (0...3)\n"
 	       "  -i, --input <file.bin>     input file.\n"
 	       "  -o, --output <file.bin>    output file.\n"
-	       "  -A, --type-in <HOST_DRAM,  HBM_P0, UNUSED, ...>.\n"
+	       "  -A, --type-in <HOST_DRAM,  LCL_MEM0, UNUSED, ...>.\n"
 	       "  -a, --addr-in <addr>       address e.g. in CARD_RAM.\n"
-	       "  -D, --type-out <HOST_DRAM, HBM_P0, UNUSED, ...>.\n"
+	       "  -D, --type-out <HOST_DRAM, LCL_MEM0, UNUSED, ...>.\n"
 	       "  -d, --addr-out <addr>      address e.g. in CARD_RAM.\n"
 	       "  -s, --size <size>          size of data.\n"
 	       "  -m, --mode <mode>          mode flags.\n"
@@ -63,7 +63,7 @@ static void usage(const char *prog)
 	       "\n"
 	       "NOTES : \n"
 	       "  - HOST_DRAM is the Host machine (Power cpu based) attached memory\n"
-	       "  - HBM_P0 is the FPGA HBM attached memory Port 0\n"
+	       "  - LCL_MEM0 is the FPGA HBM or CARD DDR attached memory Port 0\n"
 	       "  - When providing an input file, a corresponding memory allocation will be performed\n"
 	       "    in the HOST_DRAM at the reported adress\n"
 	       "    and then used for transfer, using its size, the same occurs with an output file,\n"
@@ -88,14 +88,14 @@ static void usage(const char *prog)
 	       "echo WRITE 512MB to Host - one direction - (t1!=t2 since buffer is 256KB)\n"
 	       "snap_memcopy -C0 -o t2 -s0x20000000\n"
 	       "\n"
-	       "echo READ 512MB from HBM_P0 - one direction\n"
-	       "snap_memcopy -C0 -A HBM_P0 -a0x0 -s0x20000000\n"
-	       "echo WRITE 512MB to HBM_P0 - one direction\n"
-	       "snap_memcopy -C0 -D HBM_P0 -d0x0 -s0x20000000\n"
+	       "echo READ 512MB from LCL_MEM0 - one direction\n"
+	       "snap_memcopy -C0 -A LCL_MEM0 -a0x0 -s0x20000000\n"
+	       "echo WRITE 512MB to LCL_MEM0 - one direction\n"
+	       "snap_memcopy -C0 -D LCL_MEM0 -d0x0 -s0x20000000\n"
 	       "\n"
-	       "echo MOVE 512MB from Host to HBM_P0 back to Host and compare\n"
-	       "snap_memcopy -C0 -i t1 -D HBM_P0 -d 0x0\n"
-	       "snap_memcopy -C0 -o t2 -A HBM_P0 -a 0x0 -s0x20000000\n"
+	       "echo MOVE 512MB from Host to LCL_MEM0 back to Host and compare\n"
+	       "snap_memcopy -C0 -i t1 -D LCL_MEM0 -d 0x0\n"
+	       "snap_memcopy -C0 -o t2 -A LCL_MEM0 -a 0x0 -s0x20000000\n"
 	       "diff t1 t2\n"
 	       "\n"
 	       "Example for a simulation\n"
@@ -103,14 +103,14 @@ static void usage(const char *prog)
 	       "oc_maint -vv\n"
 	       "echo create a 4KB file with random data \n"
 	       "rm t2; dd if=/dev/urandom of=t1 bs=1K count=4\n"
-	       "echo READ file t1 from host memory THEN write it at @0x0 in HBM_P0\n"
-	       "snap_memcopy -i t1 -D HBM_P0 -d 0x0 -t70 \n"
-	       "echo READ 4KB from HBM_P0 at @0x0 THEN write them to Host and file t2\n"
-	       "snap_memcopy -o t2 -A HBM_P0 -a 0x0 -s0x1000 -t70 \n"
+	       "echo READ file t1 from host memory THEN write it at @0x0 in LCL_MEM0\n"
+	       "snap_memcopy -i t1 -D LCL_MEM0 -d 0x0 -t70 \n"
+	       "echo READ 4KB from LCL_MEM0 at @0x0 THEN write them to Host and file t2\n"
+	       "snap_memcopy -o t2 -A LCL_MEM0 -a 0x0 -s0x1000 -t70 \n"
 	       "diff t1 t2\n"
 	       "\n"
 	       "echo same test using polling instead of IRQ waiting for the result\n"
-	       "snap_memcopy -o t2 -A HBM_P0 -a 0x0 -s0x1000 -N\n"
+	       "snap_memcopy -o t2 -A LCL_MEM0 -a 0x0 -s0x1000 -N\n"
 	       "\n",
 	       prog);
 }
@@ -207,8 +207,8 @@ int main(int argc, char *argv[])
 			/* input data */
 		case 'A':
 			space = optarg;
-			if (strcmp(space, "HBM_P0") == 0)
-				type_in = SNAP_ADDRTYPE_HBM_P0;
+			if (strcmp(space, "LCL_MEM0") == 0)
+				type_in = SNAP_ADDRTYPE_LCL_MEM0;
 			else if (strcmp(space, "HOST_DRAM") == 0)
 				type_in = SNAP_ADDRTYPE_HOST_DRAM;
 			else {
@@ -222,8 +222,8 @@ int main(int argc, char *argv[])
 			/* output data */
 		case 'D':
 			space = optarg;
-			if (strcmp(space, "HBM_P0") == 0)
-				type_out = SNAP_ADDRTYPE_HBM_P0;
+			if (strcmp(space, "LCL_MEM0") == 0)
+				type_out = SNAP_ADDRTYPE_LCL_MEM0;
 			else if (strcmp(space, "HOST_DRAM") == 0)
 				type_out = SNAP_ADDRTYPE_HOST_DRAM;
 			else {
@@ -312,19 +312,25 @@ int main(int argc, char *argv[])
 		addr_out = (unsigned long)obuff;
 	}
 
+	char type_in_txt[20], type_out_txt[20];
+	if (type_in == SNAP_ADDRTYPE_LCL_MEM0)  strcpy(type_in_txt,  "HBM or DDR Port 0");
+	else 	                                strcpy(type_in_txt,  mem_tab[type_in%4]);
+	if (type_out == SNAP_ADDRTYPE_LCL_MEM0) strcpy(type_out_txt, "HBM or DDR Port 0");
+	else 	                                strcpy(type_out_txt,  mem_tab[type_out%4]);
+
 	printf("PARAMETERS:\n"
 	       "  input:       %s\n"
 	       "  output:      %s\n"
-	       "  type_in:     %x %s\n"
+	       "  type_in:     %x: %s\n"
 	       "  addr_in:     %016llx\n"
-	       "  type_out:    %x %s\n"
+	       "  type_out:    %x: %s\n"
 	       "  addr_out:    %016llx\n"
 	       "  size_in/out: %08lx\n"
 	       "  mode:        %08x\n",
 	       input  ? input  : "unknown",
 	       output ? output : "unknown",
-	       type_in,  mem_tab[type_in%4],  (long long)addr_in,
-	       type_out, mem_tab[type_out%4], (long long)addr_out,
+	       type_in,  type_in_txt,  (long long)addr_in,
+	       type_out, type_out_txt, (long long)addr_out,
 	       size, mode);
 
 	// Allocate the card that will be used
@@ -417,7 +423,7 @@ int main(int argc, char *argv[])
 	mib_sec = (diff_usec == 0) ? 0.0 : (double)size / diff_usec;
 
 	fprintf(stdout, "memcopy of %lld bytes took %lld usec @ %.3f MiB/sec (from %s to %s)\n",
-		(long long)size, (long long)diff_usec, mib_sec, mem_tab[type_in%4], mem_tab[type_out%4]);
+		(long long)size, (long long)diff_usec, mib_sec, type_in_txt, type_out_txt);
         fprintf(stdout, "This time represents the register transfer time + memcopy action time\n");       
 
 	snap_detach_action(action);
