@@ -37,9 +37,9 @@ clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(act
 .PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
 
 help:
-	@echo "Main targets for the SNAP Framework make process:";
+	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";
-	@echo "* snap_config    Configure SNAP framework";
+	@echo "* oc_config      Configure OC-Accel framework";
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
 	@echo "* sim            Start a simulation";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
@@ -55,6 +55,13 @@ help:
 	@echo "The hardware related targets 'model', 'image', 'hardware', 'hw_project' and 'sim'";
 	@echo "do only exist on an x86 platform";
 	@echo;
+	@echo "Few tools to help debug";
+	@echo "-----------------------";
+	@echo "* ./display_traces       Display traces to debug action code";
+	@echo "* ./oc_debug_timing      Display timing failing paths when image generation fails";
+	@echo "* ./ocaccel_workflow.py  Drives you through the whole process flow";
+	@echo;
+
 
 ifeq ($(PLATFORM),x86_64)
 all: $(software_subdirs) $(action_subdirs) $(hardware_subdirs)
@@ -143,10 +150,18 @@ snap_config:
 	@$(MAKE) -s menuconfig || exit 1
 	@$(MAKE) -s snap_env snap_env_parm=config
 	@echo "SNAP config done" &>/dev/null
+	@echo "-----------"
+	@echo "  Suggested next step: to run a simulation,      execute: make sim" &>/dev/null
+	@echo "                    or to build the FPGA binary, execute: make image" &>/dev/null
+
 
 $(snap_config_sh):
 	@$(MAKE) -s menuconfig || exit 1
 	@echo "SNAP config done" &>/dev/null
+	@echo "-----------"
+	@echo "  Suggested next step: to run a simulation,      execute: make sim" &>/dev/null
+	@echo "                    or to build the FPGA binary, execute: make image" &>/dev/null
+
 
 # Prepare SNAP Environment
 $(snap_env_sh) snap_env: $(snap_config_sh)
