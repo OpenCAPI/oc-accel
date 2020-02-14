@@ -51,8 +51,10 @@ extern "C" {
 /* FIXME Constants are too long, I like to type less */
 #define SNAP_ADDRTYPE_UNUSED             0xffff
 #define SNAP_ADDRTYPE_HOST_DRAM          0x0000 /* this is fine, always there */
-#define SNAP_ADDRTYPE_CARD_DRAM          0x0001 /* card specific */
-#define SNAP_ADDRTYPE_NVME               0x0002 /* card specific */
+#define SNAP_ADDRTYPE_NVME               0x0001 /* card specific */
+#define SNAP_ADDRTYPE_CARD_DRAM          0x0002 /* card specific */
+#define SNAP_ADDRTYPE_LCL_MEM0           0x0002 /* same port than CARD_DRAM as 1rst local port */
+#define SNAP_ADDRTYPE_LCL_MEM1           0x0003 /* card specific */
 #define SNAP_ADDRTYPE_zzz                0x0003 /* ? */
 
 #define SNAP_ADDRFLAG_END                0x0001 /* last element in the list */
