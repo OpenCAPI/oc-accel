@@ -94,7 +94,7 @@ int OcaccelJobManager::initializeDescriptors()
         }
 
         for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
-            JobDescriptor job_descriptor (descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
+            JobDescriptor job_descriptor ((uint8_t*) descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
 
             //Bit7: Enable interrupt. Default Value: 0
             //Bit6: Write Completion Info back. Default Value: 1
@@ -133,7 +133,7 @@ void OcaccelJobManager::dumpDescriptorBlock (tDescriptorBlock descriptor_block)
     int num_descriptors_in_current_block = descriptor_block.second;
 
     for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
-        JobDescriptor job_descriptor (descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
+        JobDescriptor job_descriptor ((uint8_t*)descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
         job_descriptor.dump();
     }
 }
@@ -216,23 +216,23 @@ int OcaccelJobManager::run()
     uint32_t completion_buffer_address_hi = (uint32_t) ((((uint64_t) m_completion_status_buffer) >> 32) & 0xFFFFFFFF);
 
     // Setup the descriptor base address
-    if (acaccel_action_write32 (m_ocaccel_card, REG_JM_INIT_ADDR_LO, descriptor_start_address_lo)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_INIT_ADDR_LO, descriptor_start_address_lo)) {
         printf ("ERROR: failed to set job descriptor start address!\n");
         return -1;
     }
 
-    if (acaccel_action_write32 (m_ocaccel_card, REG_JM_INIT_ADDR_HI, descriptor_start_address_hi)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_INIT_ADDR_HI, descriptor_start_address_hi)) {
         printf ("ERROR: failed to set job descriptor start address!\n");
         return -1;
     }
 
     // Setup the completion buffer address
-    if (acaccel_action_write32 (m_ocaccel_card, REG_JM_CMPL_ADDR_LO, completion_buffer_address_lo)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_CMPL_ADDR_LO, completion_buffer_address_lo)) {
         printf ("ERROR: failed to set completion buffer address!\n");
         return -1;
     }
 
-    if (acaccel_action_write32 (m_ocaccel_card, REG_JM_CMPL_ADDR_HI, completion_buffer_address_hi)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_CMPL_ADDR_HI, completion_buffer_address_hi)) {
         printf ("ERROR: failed to set completion buffer address!\n");
         return -1;
     }
@@ -240,7 +240,7 @@ int OcaccelJobManager::run()
     uint32_t jm_control_word = (uint32_t) num_descriptors_of_first_block << 8;
     jm_control_word |= 0x1;
 
-    if (acaccel_action_write32 (m_ocaccel_card, REG_JM_CONTROL, jm_control_word)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_CONTROL, jm_control_word)) {
         printf ("ERROR: failed to set job manager control register!\n");
         return -1;
     }
@@ -251,7 +251,8 @@ int OcaccelJobManager::run()
 
 void OcaccelJobManager::clear()
 {
-    std::for_each (m_descriptor_block_pointers.begin(), m_descriptor_block_pointers.end(), freeDescriptorBlock);
+    std::for_each (m_descriptor_block_pointers.begin(), m_descriptor_block_pointers.end(),
+            [this] (tDescriptorBlock& i) { freeDescriptorBlock(i); });
     m_status = eStatus::EMPTY;
 }
 
@@ -268,5 +269,6 @@ OcaccelJobManager::eStatus OcaccelJobManager::status()
 
 void OcaccelJobManager::dump()
 {
-    std::for_each (m_descriptor_block_pointers.begin(), m_descriptor_block_pointers.end(), dumpDescriptorBlock);
+    std::for_each (m_descriptor_block_pointers.begin(), m_descriptor_block_pointers.end(),
+            [this] (tDescriptorBlock& i) { dumpDescriptorBlock(i); });
 }

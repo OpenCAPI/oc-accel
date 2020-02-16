@@ -18,6 +18,8 @@
 #include <vector>
 #include <utility>
 #include <iostream>
+#include <stdio.h>
+#include <string.h>
 #include "libocaccel.h"
 
 // An helper function provides interface for users to manipulate descriptors
