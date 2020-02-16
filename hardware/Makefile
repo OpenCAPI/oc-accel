@@ -132,7 +132,6 @@ check_ocaccel_settings:
 	@echo "                        INFRA_TEMPLATE  = $(INFRA_TEMPLATE_SELECTION)"
 	@echo "                        ACTION_TEMPLATE = $(ACTION_TEMPLATE_SELECTION)"
 	@echo "                        ILA_DEBUG       = $(ILA_DEBUG)"
-	@echo "                        FLASH_USED      = $(FLASH_USED)"
 	@echo "                        FLASH_INTERFACE = $(FLASH_INTERFACE)"
 	@echo "                        FLASH_SIZE      = $(FLASH_SIZE)"
 	@if [ `echo "$(ILA_DEBUG)" | tr a-z A-Z` == "TRUE" ]; then \
@@ -258,10 +257,9 @@ image: hw_project
 	@echo "A complete FPGA bitstream build got kicked off.";
 	@echo "This might take more than an hour depending on the machine used";
 	@echo "The process may be terminated by pressing <CTRL>-C at any time.";
-	@echo "If the build fails, ";
-	@echo "Check log file \"hardware/logs/ocaccel_build.log\"";
+	@echo "If the build fails, check log file \"hardware/logs/ocaccel_build.log\"";
 	@echo "Use Vivado GUI to open project: vivado hardware/build/top_project/top_project.xpr";
-	@echo "Reports and Checkpoints are also under the top_project sub directories."
+	@echo "Reports and Checkpoints are also under the top_project's sub directories."
 	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/build_image/ocaccel_build.tcl -notrace -log $(LOGS_DIR)/ocaccel_build.log -journal $(LOGS_DIR)/ocaccel_build.jou > $(templog)
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
 	@echo -e "Bitstreams are here: $(BUILD_DIR)/Images"
