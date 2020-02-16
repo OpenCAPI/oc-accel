@@ -98,6 +98,7 @@ ifeq (${HAS_GIT},y)
 	VERSION:=$(GIT_BRANCH)
 endif
 
+CXXFLAGS ?= --std=c++11 -O3 -I. -I../include
 CFLAGS ?= -W -Wall  -Wwrite-strings -Wextra -O2 -g \
 	-Wmissing-prototypes # -Wstrict-prototypes -Warray-bounds
 
@@ -153,6 +154,7 @@ endif
 #
 ifdef BUILD_SIMCODE
 CFLAGS += -D_SIM_ -I`realpath $(OCSE_PATH)/libocxl` -I`realpath $(OCSE_PATH)/common` -DOPENCAPI30
+CXXFLAGS += -D_SIM_ -I`realpath $(OCSE_PATH)/libocxl` -I`realpath $(OCSE_PATH)/common` -DOPENCAPI30
 LDFLAGS += -L`realpath $(OCSE_PATH)/libocxl`
 endif
 

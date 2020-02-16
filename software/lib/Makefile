@@ -29,6 +29,7 @@ libversion = $(VERSION)
 CAPI_VER = opencapi30
 
 CFLAGS += -fPIC -fno-strict-aliasing
+CXXFLAGS += -fPIC -D_GNU_SOURCE 
 
 ifeq ($(CAPI_VER),opencapi30)
 LDLIBS += -locxl -lpthread
@@ -49,8 +50,10 @@ projA = $(libnameA).a \
 	$(libnameA).so.$(libversion)
 
 srcA = ocaccel.c
+srcCPP = ocaccel_job_manager.cpp
 
 objsA = $(srcA:.c=.o)
+objsA += $(srcCPP:.cpp=.o)
 
 projs += $(projA)
 
@@ -87,8 +90,11 @@ install: all
 
 # general things
 %.o: %.c
-	$(CC) -c $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $(CFLAGS) $< -o $@
-	$(CC) -MM $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $(CFLAGS) $< > $*.d
+	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -MM $(CFLAGS) $< > $*.d
+
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $($(@:.o=)_CPPFLAGS) $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
 clean distclean:
 	$(RM) *.o *.d $(projs) *.so *.so.* *~
