@@ -63,10 +63,13 @@ $(OCACCEL_ROOT)/software/lib/libocaccel.so:
 
 ### Generic rule to build a tool
 %: %.o
-	$(CC) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
+	$(CXX) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
 
 %.o: %.c
 	$(CC) -c $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $(CFLAGS) $< -o $@
+
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $($(@:.o=)_CPPFLAGS) $< -o $@
 
 install: all
 	@mkdir -p $(DESTDIR)/bin
