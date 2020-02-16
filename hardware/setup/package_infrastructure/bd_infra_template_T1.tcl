@@ -39,10 +39,6 @@ connect_bd_intf_net [get_bd_intf_pins $bd_hier/bridge_axi_slave/ocaccel_lcl_rd] 
 
 
 connect_bd_net [get_bd_pins $bd_hier/mmio_axilite_master/debug_info_clear] [get_bd_pins $bd_hier/opencapi30_c1/debug_info_clear]
-connect_bd_net [get_bd_pins $bd_hier/bridge_axi_slave/lcl_wr_ctx_valid] [get_bd_pins $bd_hier/opencapi30_c1/lcl_wr_ctx_valid]
-connect_bd_net [get_bd_pins $bd_hier/bridge_axi_slave/lcl_rd_ctx_valid] [get_bd_pins $bd_hier/opencapi30_c1/lcl_rd_ctx_valid]
-connect_bd_net [get_bd_pins $bd_hier/bridge_axi_slave/lcl_wr_ctx] [get_bd_pins $bd_hier/opencapi30_c1/lcl_wr_ctx]
-connect_bd_net [get_bd_pins $bd_hier/bridge_axi_slave/lcl_rd_ctx] [get_bd_pins $bd_hier/opencapi30_c1/lcl_rd_ctx]
 connect_bd_net [get_bd_pins $bd_hier/data_bridge/debug_bus] [get_bd_pins $bd_hier/mmio_axilite_master/debug_bus_data_bridge]
 
 # Connect clocks so top just needs to connect one clock

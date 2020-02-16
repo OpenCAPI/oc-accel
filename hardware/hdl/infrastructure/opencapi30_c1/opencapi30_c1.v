@@ -134,11 +134,6 @@ module opencapi30_c1
                    output      [0001:0]  dma_rd_resp_pos      ,
                    output      [0002:0]  dma_rd_resp_code     ,
 
-                   // context
-                   input      [008:0]    lcl_wr_ctx            ,
-                   input      [008:0]    lcl_rd_ctx            ,
-                   input                 lcl_wr_ctx_valid      ,
-                   input                 lcl_rd_ctx_valid      ,
 
                    // interrupt
                    output                interrupt_ack          ,

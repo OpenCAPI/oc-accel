@@ -50,6 +50,7 @@ connect_bd_intf_net [get_bd_intf_pins bd_infra/mmio_axilite_master/m_axi] [get_b
 #Clock and resets
 
 connect_bd_net [get_bd_pins oc_host_if/clock_tlx] [get_bd_pins bd_infra/opencapi30_mmio/clock_tlx]
+connect_bd_net [get_bd_pins oc_host_if/clock_tlx] [get_bd_pins flash_vpd_wrapper/clock_tlx]
 
 connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins bd_act/action_wrapper/clk]
 connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins bd_infra/opencapi30_mmio/clock_afu]

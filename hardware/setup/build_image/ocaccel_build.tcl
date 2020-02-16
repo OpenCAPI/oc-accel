@@ -71,6 +71,9 @@ if { $lsf_run == "TRUE"} {
 
 } else {
     # Use default strategy
+    # Tentative settings 
+    set_property STEPS.SYNTH_DESIGN.ARGS.FANOUT_LIMIT              150     [get_runs synth_1]
+
     launch_runs impl_1 -jobs 8
     wait_on_run [get_runs impl_1]
     puts "impl_1 finished."
