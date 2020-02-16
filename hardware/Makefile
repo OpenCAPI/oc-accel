@@ -258,12 +258,14 @@ image: hw_project
 	@echo "A complete FPGA bitstream build got kicked off.";
 	@echo "This might take more than an hour depending on the machine used";
 	@echo "The process may be terminated by pressing <CTRL>-C at any time.";
-	@echo "The project is placed at $(BUILD_DIR)/top_project";
-	@echo "Use the Vivado GUI to open top_project and debug if necessary.";
-	@echo "Reports and Checkpoints are under $(BUILD_DIR)/top_project/top_project.runs";
+	@echo "If the build fails, ";
+	@echo "Check log file \"hardware/logs/ocaccel_build.log\"";
+	@echo "Use Vivado GUI to open project: vivado hardware/build/top_project/top_project.xpr";
+	@echo "Reports and Checkpoints are also under the top_project sub directories."
 	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/build_image/ocaccel_build.tcl -notrace -log $(LOGS_DIR)/ocaccel_build.log -journal $(LOGS_DIR)/ocaccel_build.jou > $(templog)
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
 	@echo -e "Bitstreams are here: $(BUILD_DIR)/Images"
+	@echo -e ""
 
 
 ocse: prepare_logs
