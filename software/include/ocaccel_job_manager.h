@@ -46,13 +46,14 @@ public:
 
     void dump()
     {
-        printf ("==========");
+        printf ("==================\n");
+        printf ("Address: %p\n", m_data);
 
         for (int i = 0; i < c_job_descriptor_size / 4; i++) {
-            printf ("0X%08X\n", * (((uint32_t*)m_data) + i));
+            printf ("Word %02d - %08X\n", i, * (((uint32_t*)m_data) + i));
         }
 
-        printf ("==========");
+        printf ("==================\n");
     }
 
 private:
@@ -137,6 +138,7 @@ public:
 
     // Constants
     static const int c_descriptors_in_a_block  =   32;
+    static const int c_completion_entry_size   =   128;
     static const uint64_t REG_JM_CONTROL       =   0x24;
     static const uint64_t REG_JM_INIT_ADDR_LO  =   0x28;
     static const uint64_t REG_JM_INIT_ADDR_HI  =   0x2C;
