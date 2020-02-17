@@ -39,7 +39,7 @@ clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(act
 help:
 	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";
-	@echo "* oc_config      Configure OC-Accel framework";
+	@echo "* snap_config    Configure OC-Accel framework";
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
 	@echo "* sim            Start a simulation";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
