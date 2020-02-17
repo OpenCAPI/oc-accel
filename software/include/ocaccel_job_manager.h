@@ -195,7 +195,7 @@ private:
 
 public:
     // Get the descriptor at the given index
-    JobDescriptor* getJobDescriptor (int idx);
+    JobDescriptor getJobDescriptor (int idx);
 
     // Set the number of job descriptors
     void setNumberOfDescriptors (int num_descriptors);

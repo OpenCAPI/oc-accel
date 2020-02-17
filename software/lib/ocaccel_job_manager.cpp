@@ -82,7 +82,7 @@ int OcaccelJobManager::initializeDescriptors()
 {
     uint32_t job_descriptor_id = 1;
 
-    for (int block_idx = 0; block_idx < m_descriptor_block_pointers.size(); block_idx++) {
+    for (size_t block_idx = 0; block_idx < m_descriptor_block_pointers.size(); block_idx++) {
         void* descriptor_block_pointer = m_descriptor_block_pointers[block_idx].first;
         int num_descriptors_in_current_block = m_descriptor_block_pointers[block_idx].second;
         uint8_t num_descriptors_in_next_block = 0;
@@ -120,6 +120,8 @@ int OcaccelJobManager::initializeDescriptors()
             job_descriptor_id++;
         }
     }
+
+    return 0;
 }
 
 void OcaccelJobManager::freeDescriptorBlock (tDescriptorBlock descriptor_block)
@@ -152,6 +154,23 @@ bool OcaccelJobManager::isAllJobsDone()
     }
 
     return true;
+}
+
+JobDescriptor OcaccelJobManager::getJobDescriptor (int idx)
+{
+    if (m_number_of_descriptors <= idx) {
+        printf ("ERROR: out of index when gettting job descriptors!\n");
+        printf ("ERROR: idx %d, m_number_of_descriptors %d!\n", idx, m_number_of_descriptors);
+        JobDescriptor job_descriptor(NULL);
+        return job_descriptor;
+    }
+
+    int block_idx = idx / ((int) m_descriptor_block_pointers.size());
+    int desc_idx = idx % ((int) m_descriptor_block_pointers.size());
+    void* descriptor_block_pointer = m_descriptor_block_pointers[block_idx].first;
+    JobDescriptor job_descriptor ((uint8_t*) descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
+
+    return job_descriptor;
 }
 
 void OcaccelJobManager::setNumberOfDescriptors (int num_descriptors)
@@ -193,6 +212,8 @@ int OcaccelJobManager::initialize()
     }
 
     m_status = eStatus::INITIALIZED;
+
+    return 0;
 }
 
 int OcaccelJobManager::run()

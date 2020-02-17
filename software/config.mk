@@ -98,7 +98,7 @@ ifeq (${HAS_GIT},y)
 	VERSION:=$(GIT_BRANCH)
 endif
 
-CXXFLAGS ?= --std=c++11 -O3 -I. -I../include
+CXXFLAGS ?= --std=c++11 -O3 -I. -I../include -Wwrite-strings -Wextra
 CFLAGS ?= -W -Wall  -Wwrite-strings -Wextra -O2 -g \
 	-Wmissing-prototypes # -Wstrict-prototypes -Warray-bounds
 
@@ -111,6 +111,7 @@ CFLAGS += -DOPENCAPI30
 
 # General settings: Include and library search path
 CFLAGS += -I$(OCACCEL_ROOT)/software/include
+CXXFLAGS += -I$(OCACCEL_ROOT)/software/include
 LDFLAGS += -L$(OCACCEL_ROOT)/software/lib
 
 # Force 32-bit build
@@ -162,3 +163,4 @@ DESTDIR ?= /usr
 LIB_INSTALL_PATH ?= $(DESTDIR)/lib64
 INCLUDE_INSTALL_PATH ?= $(DESTDIR)/include
 MAN_INSTALL_PATH ?= $(DESTDIR)/share/man/man1
+CFLAGS += -I$(OCACCEL_ROOT)/software/include
