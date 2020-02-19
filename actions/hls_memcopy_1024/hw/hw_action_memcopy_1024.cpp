@@ -44,11 +44,15 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
         
 //========================data from buffer_gmem======================================//
         if (memory_in_type == SNAP_ADDRTYPE_HOST_DRAM) {
+
+           // From Host to Host => same 1024 bits data width
            if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
                memcpy((snap_membus_1024_t  *) (dout_gmem + output_address_1024),
                    buffer_gmem, size_in_bytes_to_transfer);
        	       rc = 0;
            }
+
+           // From Host to LCL_mem => data width conversion from 1024 to 512 bits
            else if(memory_out_type == SNAP_ADDRTYPE_LCL_MEM0) {
                wb_gbuf2dbuf_loop: 
                for (int k=0; k<size_in_words_1024; k++) {
@@ -68,6 +72,8 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
         }
 //=========================data from buffer_LCLmem=====================================//
         else if (memory_in_type == SNAP_ADDRTYPE_LCL_MEM0) {
+
+           // From LCL_mem to Host=> data width conversion from 512 to 1024 bits
            if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
                wb_dbuf2gbuf_loop: 
                for (int k=0; k<size_in_words_1024; k++) {
@@ -82,6 +88,8 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
                    buffer_gmem, size_in_bytes_to_transfer);
                rc = 0;
            }
+
+           // From LCL_mem to LCL_mem => same 512 bits data width
            else if(memory_out_type == SNAP_ADDRTYPE_LCL_MEM0) {
                memcpy((snap_membus_512_t  *) (lcl_mem0 + output_address),
                    buffer_LCLmem, size_in_bytes_to_transfer);
@@ -173,7 +181,7 @@ static void process_action(snap_membus_1024_t *din_gmem,
 	snapu64_t OutputAddress_512;
 	snapu64_t address_xfer_offset_512;
 	snap_membus_1024_t  buf_gmem[MAX_NB_OF_WORDS_READ_1024];
-	snap_membus_512_t   buf_ddrmem[MAX_NB_OF_WORDS_READ_512];
+	snap_membus_512_t   buf_LCLmem[MAX_NB_OF_WORDS_READ_512];
 	// if 4096 bytes max => 64 words
 
 	// byte address received need to be aligned with port width
@@ -216,12 +224,12 @@ static void process_action(snap_membus_1024_t *din_gmem,
 		rc |= read_burst_of_data_from_mem(din_gmem, lcl_mem0,
 			act_reg->Data.in.type,
 			InputAddress_1024 + address_xfer_offset_1024, InputAddress_512 + address_xfer_offset_512,
-            buf_gmem, buf_ddrmem, xfer_size);
+            buf_gmem, buf_LCLmem, xfer_size);
 
 		rc |= write_burst_of_data_to_mem(dout_gmem, lcl_mem0,
 			act_reg->Data.in.type, act_reg->Data.out.type,
 			OutputAddress_1024 + address_xfer_offset_1024, OutputAddress_512 + address_xfer_offset_512,
-            buf_gmem, buf_ddrmem, xfer_size);
+            buf_gmem, buf_LCLmem, xfer_size);
 
 		action_xfer_size -= xfer_size;
 		address_xfer_offset_1024 += (snapu64_t)(xfer_size >> ADDR_RIGHT_SHIFT_1024);
