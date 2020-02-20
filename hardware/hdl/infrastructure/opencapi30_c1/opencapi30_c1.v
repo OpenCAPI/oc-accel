@@ -92,8 +92,12 @@ module opencapi30_c1
                    input      [0015:0]   tlx_afu_resp_afutag            ,
                    input      [0007:0]   tlx_afu_resp_opcode            ,
                    input      [0003:0]   tlx_afu_resp_code              ,
+                   input      [0005:0]   tlx_afu_resp_pg_size           , //not used
                    input      [0001:0]   tlx_afu_resp_dl                ,
                    input      [0001:0]   tlx_afu_resp_dp                ,
+                   input      [0023:0]   tlx_afu_resp_host_tag          , //not used
+                   input      [0003:0]   tlx_afu_resp_cache_state       , //not used
+                   input      [0017:0]   tlx_afu_resp_addr_tag          , //not used
                    output                afu_tlx_resp_rd_req            ,
                    output     [0002:0]   afu_tlx_resp_rd_cnt            ,
                    input                 tlx_afu_resp_data_valid        ,

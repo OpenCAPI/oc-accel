@@ -168,8 +168,12 @@ module oc_host_if (
    , output [7:0]                           tlx_afu_resp_opcode
    , output [15:0]                          tlx_afu_resp_afutag
    , output [3:0]                           tlx_afu_resp_code
+   , output  [5:0]                          tlx_afu_resp_pg_size  
    , output [1:0]                           tlx_afu_resp_dl
    , output [1:0]                           tlx_afu_resp_dp
+   , output  [23:0]                         tlx_afu_resp_host_tag
+   , output  [3:0]                          tlx_afu_resp_cache_state
+   , output  [17:0]                         tlx_afu_resp_addr_tag
    , input                                  afu_tlx_resp_rd_req
    , input [2:0]                            afu_tlx_resp_rd_cnt
    , output                                 tlx_afu_resp_data_valid
@@ -702,22 +706,22 @@ DLx_phy_vio_0 DLx_phy_vio_0_inst (
      ,.tlx_dlx_debug_info               (tlx_dlx_debug_info              ) // output [31:0]
      ,.dlx_tlx_dlx_config_info          (dlx_config_info                 ) // input  [31:0]
 
-     ,.cfg_tlx_xmit_tmpl_config_0       (cfg_tlx_xmit_tmpl_config_0      ) // input
-     ,.cfg_tlx_xmit_tmpl_config_1       (cfg_tlx_xmit_tmpl_config_1      ) // input
-     ,.cfg_tlx_xmit_tmpl_config_2       (cfg_tlx_xmit_tmpl_config_2      ) // input
-     ,.cfg_tlx_xmit_tmpl_config_3       (cfg_tlx_xmit_tmpl_config_3      ) // input
-     ,.cfg_tlx_xmit_rate_config_0       (cfg_tlx_xmit_rate_config_0      ) // input  [3:0]
-     ,.cfg_tlx_xmit_rate_config_1       (cfg_tlx_xmit_rate_config_1      ) // input  [3:0]
-     ,.cfg_tlx_xmit_rate_config_2       (cfg_tlx_xmit_rate_config_2      ) // input  [3:0]
-     ,.cfg_tlx_xmit_rate_config_3       (cfg_tlx_xmit_rate_config_3      ) // input  [3:0]
-     ,.tlx_cfg_in_rcv_tmpl_capability_0 (tlx_cfg_in_rcv_tmpl_capability_0) // output
-     ,.tlx_cfg_in_rcv_tmpl_capability_1 (tlx_cfg_in_rcv_tmpl_capability_1) // output
-     ,.tlx_cfg_in_rcv_tmpl_capability_2 (tlx_cfg_in_rcv_tmpl_capability_2) // output
-     ,.tlx_cfg_in_rcv_tmpl_capability_3 (tlx_cfg_in_rcv_tmpl_capability_3) // output
-     ,.tlx_cfg_in_rcv_rate_capability_0 (tlx_cfg_in_rcv_rate_capability_0) // output [3:0]
-     ,.tlx_cfg_in_rcv_rate_capability_1 (tlx_cfg_in_rcv_rate_capability_1) // output [3:0]
-     ,.tlx_cfg_in_rcv_rate_capability_2 (tlx_cfg_in_rcv_rate_capability_2) // output [3:0]
-     ,.tlx_cfg_in_rcv_rate_capability_3 (tlx_cfg_in_rcv_rate_capability_3) // output [3:0]
+     ,.cfg_tlx_xmit_tmpl_config_0       (cfg0_tlx_xmit_tmpl_config_0      ) // input
+     ,.cfg_tlx_xmit_tmpl_config_1       (cfg0_tlx_xmit_tmpl_config_1      ) // input
+     ,.cfg_tlx_xmit_tmpl_config_2       (cfg0_tlx_xmit_tmpl_config_2      ) // input
+     ,.cfg_tlx_xmit_tmpl_config_3       (cfg0_tlx_xmit_tmpl_config_3      ) // input
+     ,.cfg_tlx_xmit_rate_config_0       (cfg0_tlx_xmit_rate_config_0      ) // input  [3:0]
+     ,.cfg_tlx_xmit_rate_config_1       (cfg0_tlx_xmit_rate_config_1      ) // input  [3:0]
+     ,.cfg_tlx_xmit_rate_config_2       (cfg0_tlx_xmit_rate_config_2      ) // input  [3:0]
+     ,.cfg_tlx_xmit_rate_config_3       (cfg0_tlx_xmit_rate_config_3      ) // input  [3:0]
+     ,.tlx_cfg_in_rcv_tmpl_capability_0 (tlx_cfg0_in_rcv_tmpl_capability_0) // output
+     ,.tlx_cfg_in_rcv_tmpl_capability_1 (tlx_cfg0_in_rcv_tmpl_capability_1) // output
+     ,.tlx_cfg_in_rcv_tmpl_capability_2 (tlx_cfg0_in_rcv_tmpl_capability_2) // output
+     ,.tlx_cfg_in_rcv_tmpl_capability_3 (tlx_cfg0_in_rcv_tmpl_capability_3) // output
+     ,.tlx_cfg_in_rcv_rate_capability_0 (tlx_cfg0_in_rcv_rate_capability_0) // output [3:0]
+     ,.tlx_cfg_in_rcv_rate_capability_1 (tlx_cfg0_in_rcv_rate_capability_1) // output [3:0]
+     ,.tlx_cfg_in_rcv_rate_capability_2 (tlx_cfg0_in_rcv_rate_capability_2) // output [3:0]
+     ,.tlx_cfg_in_rcv_rate_capability_3 (tlx_cfg0_in_rcv_rate_capability_3) // output [3:0]
      ,.tlx_cfg_oc3_tlx_version          (ro_tlx0_version                  ) // output [31:0]
 );
 
