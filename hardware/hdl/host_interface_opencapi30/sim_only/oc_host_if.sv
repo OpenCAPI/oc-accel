@@ -166,8 +166,12 @@ module oc_host_if (
     ,output [7:0]                           tlx_afu_resp_opcode
     ,output [15:0]                          tlx_afu_resp_afutag
     ,output [3:0]                           tlx_afu_resp_code
+    ,output  [5:0]                          tlx_afu_resp_pg_size     
     ,output [1:0]                           tlx_afu_resp_dl
     ,output [1:0]                           tlx_afu_resp_dp
+    ,output  [23:0]                         tlx_afu_resp_host_tag
+    ,output  [3:0]                          tlx_afu_resp_cache_state
+    ,output  [17:0]                         tlx_afu_resp_addr_tag    
     ,input                                  afu_tlx_resp_rd_req
     ,input [2:0]                            afu_tlx_resp_rd_cnt
     ,output                                 tlx_afu_resp_data_valid
