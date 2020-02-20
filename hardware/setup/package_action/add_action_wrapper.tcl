@@ -24,6 +24,7 @@ set fpga_part           $::env(FPGACHIP)
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 set common_dir          $root_dir/hdl/common
+set hls_support         $::env(HLS_SUPPORT)
 
 set action_hw_dir       $::env(ACTION_ROOT)/hw
 
@@ -50,7 +51,15 @@ set obj [get_filesets sources_1]
 
 #set files [list {*}$hdl_source ]
 
-add_files -scan_for_includes -fileset $obj $action_hdl_dir
+
+if { $hls_support == "TRUE" } {
+    add_files -scan_for_includes -fileset $obj $action_hw_dir/syn_verilog_link
+    add_files -scan_for_includes -fileset $obj $action_hw_dir/wrapper
+
+} else {
+    add_files -scan_for_includes -fileset $obj $action_hdl_dir
+}
+
 
 #set file "ocaccel_global_vars.v"
 #set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
