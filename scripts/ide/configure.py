@@ -99,7 +99,7 @@ class Configuration:
 
             if self.ocse_path is not None:
                 sed_file(self.ocaccel_cfg_file,        "\s*OCSE_PATH\s*=.*",          "OCSE_PATH=\""          + os.path.abspath(self.ocse_path) + "\"")
-                sed_file(self.ocaccel_cfg_file_sh,     "\s*export\s*OCSE_PATH\s*=.*",          "export OCSE_PATH=\""          + os.path.abspath(self.ocse_path) + "\"")
+                sed_file(self.ocaccel_cfg_file_sh,     "\s*export\s*OCSE_PATH\s*=.*",          "export OCSE_PATH="          + os.path.abspath(self.ocse_path) + "")
                 sed_file(self.ocaccel_cfg_file_cflags, "\"\s*-DCONFIG_OCSE_PATH\s*=.*\"", "\"-DCONFIG_OCSE_PATH=" + os.path.abspath(self.ocse_path) + "\"")
         else:
             self.simulator = "nosim"
