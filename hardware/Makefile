@@ -344,11 +344,11 @@ $(OCACCEL_MODELS):
 
 ifeq ($(UNIT_SIM_USED),TRUE)
 model: check_simulator 
-	@$(MAKE) -s $(SIMULATOR)
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
 
 else
 model: check_simulator
-	@$(MAKE) -s $(SIMULATOR)
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
 
 endif
 
