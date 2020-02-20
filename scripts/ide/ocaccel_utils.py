@@ -210,6 +210,11 @@ def run_to_stdout(cmd, work_dir):
     proc.communicate()
     return proc.returncode
 
+def run_and_get_output(cmd):
+    proc = subprocess.Popen(shlex.split(cmd),\
+                            stdout=subprocess.PIPE)
+    return proc.communicate()[0]
+
 def mkdirs(path):
     try:
         os.makedirs(path)

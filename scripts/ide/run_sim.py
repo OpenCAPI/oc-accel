@@ -37,6 +37,7 @@ from ocaccel_utils import mkdirs
 from ocaccel_utils import run_in_background
 from ocaccel_utils import run_and_wait
 from ocaccel_utils import run_and_poll
+from ocaccel_utils import run_and_get_output
 from ocaccel_utils import grep_file
 from ocaccel_utils import search_file_group_1
 from ocaccel_utils import progress_bar
@@ -409,8 +410,20 @@ class Testcase:
         self.test_log = pathjoin(self.simout, self.cmd + ".log")
         rc = None 
         if self.cmd == "terminal":
-            cmd = "xterm -title \"testcase window, look at log in \"" + self.test_log
-            rc = run_and_wait(cmd = cmd, work_dir = self.simout, log = self.test_log)
+            if "TMUX" in os.environ:
+                cmd = "tmux new-window -c %s" % self.simout
+                pid = run_in_background(cmd = cmd, work_dir = self.simout, log = self.test_log)
+                cmd = "tmux list-panes -F '#{pane_pid}'"
+                out = run_and_get_output(cmd = cmd)
+                print out
+                pid = out.strip('\n').split('\n')[-1]
+                msg.ok_msg_blue("Tmux started with PID %s" % pid)
+                cmd = "tail --pid=%s -f /dev/null" % pid
+                rc = run_and_wait(cmd = cmd, work_dir = self.simout, log = self.test_log)
+            else:
+                cmd = "xterm -title \"testcase window, look at log in \"" + self.test_log
+                rc = run_and_wait(cmd = cmd, work_dir = self.simout, log = self.test_log)
+
         else:
             cmd = " ".join((self.cmd, self.args))
             rc = run_and_poll(cmd = cmd, work_dir = self.simout, log = self.test_log)

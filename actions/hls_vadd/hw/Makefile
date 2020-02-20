@@ -64,7 +64,7 @@ all:
 	@ln -s $(hls_build_dir)/$(solution_name)/syn/verilog $(ACTION_ROOT)/hw/syn_verilog_link 
 
 clean:
-	@rm $(ACTION_ROOT)/hw/hls/vivado_hls.log
+	@rm -f $(ACTION_ROOT)/hw/hls/vivado_hls.log
 	@rm -fr $(hls_build_dir)
 	@rm -f $(ACTION_ROOT)/hw/syn_verilog_link
 # If you have the action code outside of the default ocaccel directory structure, 

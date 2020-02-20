@@ -286,6 +286,7 @@ app: software
 	@$(MAKE) -C $(ACTION_ROOT)/sw        >> $(LOGS_DIR)/compile_sw.log 2>&1; \
 	if [ $$? -ne 0 ]; then \
 		echo -e "                        Error: please look into $(LOGS_DIR)/compile_sw.log";  \
+		exit -1; \
 	fi
 	@echo -e "[COMPILE APPLICATION.] done  `date +"%T %a %b %d %Y"`"
 
