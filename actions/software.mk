@@ -37,9 +37,6 @@ endif
 # This rule should be the 1st one to find (default)
 all: all_build
 
-# Include sub-Makefile if there are any
-# -include *.mk
-
 # This rule needs to be behind all the definitions above
 all_build: $(projs)
 
@@ -50,15 +47,9 @@ $(libs): $(LIBS)
 $(OCACCEL_ROOT)/software/lib/libocaccel.so:
 	$(MAKE) -C `dirname $@`
 
-
-# Resolve dependencies to required libraries
-#$(projs) $(libs): $(OCSE_PATH)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so
-#
-#$(OCSE_PATH)/libcxl/libcxl.so $(OCACCEL_ROOT)/software/lib/libocaccel.so:
-#	$(MAKE) -C `dirname $@`
-
 ### Deactivate existing implicit rule
 %: %.c
+%: %.cpp
 %: %.sh
 
 ### Generic rule to build a tool

@@ -18,6 +18,7 @@
 #include <vector>
 #include <utility>
 #include <iostream>
+#include <memory>
 #include <stdio.h>
 #include <string.h>
 #include "libocaccel.h"
@@ -29,8 +30,8 @@ public:
     static const int c_job_descriptor_size = 128;
     friend class OcaccelJobManager;
 
-    JobDescriptor (void* in_data)
-        : m_data (static_cast<uint8_t*> (in_data))
+    JobDescriptor (uint8_t* in_data)
+        : m_data (in_data)
     {
     }
 
@@ -110,6 +111,8 @@ private:
     uint8_t* m_data;
 };
 
+typedef std::shared_ptr<JobDescriptor> JobDescriptorPtr;
+
 // Job Manager to manage interaction with the Manager in oc-accel hardware when job-manager is enabled.
 // Use Singleton design pattern to ensure this object only has 1 instance across the whole application.
 //
@@ -125,10 +128,10 @@ public:
     // OcaccelJobManager& job_Manager_2 = OcaccelJobManager::getManager();
     // <job_Manager_1 is the same as job_Manager_2>
     // <use job_Manager_1/2 anywhere you want>
-    static OcaccelJobManager & getManager()
+    static std::shared_ptr<OcaccelJobManager> getManager()
     {
         static OcaccelJobManager job_Manager;
-        return job_Manager;
+        return std::shared_ptr<OcaccelJobManager>(&job_Manager);
     }
 
     // Remove copy functions to avoid extra instance
@@ -197,7 +200,7 @@ private:
 
 public:
     // Get the descriptor at the given index
-    JobDescriptor getJobDescriptor (int idx);
+    JobDescriptorPtr getJobDescriptorPtr (int idx);
 
     // Set the number of job descriptors
     void setNumberOfDescriptors (int num_descriptors);
@@ -241,5 +244,7 @@ private:
     // The current status of the manager
     eStatus m_status;
 };
+
+typedef std::shared_ptr<OcaccelJobManager> OcaccelJobManagerPtr;
 
 #endif //__OCACCEL_JOB_MANAGER_H__

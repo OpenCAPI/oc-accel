@@ -160,21 +160,19 @@ bool OcaccelJobManager::isAllJobsDone()
     return true;
 }
 
-JobDescriptor OcaccelJobManager::getJobDescriptor (int idx)
+JobDescriptorPtr OcaccelJobManager::getJobDescriptorPtr (int idx)
 {
     if (m_number_of_descriptors <= idx) {
         printf ("ERROR: out of index when gettting job descriptors!\n");
         printf ("ERROR: idx %d, m_number_of_descriptors %d!\n", idx, m_number_of_descriptors);
-        JobDescriptor job_descriptor(NULL);
-        return job_descriptor;
+        return std::make_shared<JobDescriptor> ((uint8_t*)NULL);
     }
 
     int block_idx = idx / c_descriptors_in_a_block;
     int desc_idx = idx % c_descriptors_in_a_block;
     void* descriptor_block_pointer = m_descriptor_block_pointers[block_idx].first;
     JobDescriptor job_descriptor ((uint8_t*) descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
-
-    return job_descriptor;
+    return std::make_shared<JobDescriptor> ((uint8_t*) descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
 }
 
 void OcaccelJobManager::setNumberOfDescriptors (int num_descriptors)
