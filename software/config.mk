@@ -98,9 +98,13 @@ ifeq (${HAS_GIT},y)
 	VERSION:=$(GIT_BRANCH)
 endif
 
-CXXFLAGS ?= --std=c++11 -O3 -I. -I../include -Wwrite-strings -Wextra
+CXXFLAGS ?= --std=c++11 -O3 -I. -I../include \
+	    -Wwrite-strings \
+	    -Wextra \
+	    -Wno-unused-function
 CFLAGS ?= -W -Wall  -Wwrite-strings -Wextra -O2 -g \
-	-Wmissing-prototypes # -Wstrict-prototypes -Warray-bounds
+	-Wmissing-prototypes \
+	-Wno-unused-function
 
 CFLAGS += -DGIT_VERSION=\"$(VERSION)\" \
 	-I. -I../include -D_GNU_SOURCE=1

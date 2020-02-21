@@ -26,6 +26,7 @@
 #include <sysexits.h>                /* standart application exit codes */
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <limits.h>
 
@@ -116,6 +117,18 @@ extern int verbose_flag;
 #ifndef CLOCK_MONOTONIC_RAW
 #define   clock_gettime(clk_id, tp) ({ int val = 0; val; })
 #endif
+
+/*        Get Time in msec */
+static unsigned long tget_ms (void)
+{
+    struct timeval now;
+    unsigned long tms;
+
+    gettimeofday (&now, NULL);
+    tms = (unsigned long) (now.tv_sec * 1000) +
+          (unsigned long) (now.tv_usec / 1000);
+    return tms;
+}
 
 /**
  * str_to_num - Convert string into number and cope with endings like

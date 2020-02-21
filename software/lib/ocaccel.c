@@ -153,19 +153,6 @@ static const char* ocaccel_card_id_2_name (int card_id)
     return ocaccel_card_2_name_tab[i].card_name;
 }
 
-
-/*        Get Time in msec */
-static unsigned long tget_ms (void)
-{
-    struct timeval now;
-    unsigned long tms;
-
-    gettimeofday (&now, NULL);
-    tms = (unsigned long) (now.tv_sec * 1000) +
-          (unsigned long) (now.tv_usec / 1000);
-    return tms;
-}
-
 static void* hw_ocaccel_card_alloc_dev (const char* path,
                                      uint16_t vendor_id,
                                      uint16_t device_id)

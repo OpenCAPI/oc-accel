@@ -73,7 +73,7 @@ int OcaccelJobManager::allocateDescriptors (int num_descriptors)
         descriptors_remained -= num_descriptors_in_current_block;
     }
 
-    printf ("blocks allocated %z\n", m_descriptor_block_pointers.size());
+    printf ("blocks allocated %zu\n", m_descriptor_block_pointers.size());
     m_number_of_descriptor_blocks = m_descriptor_block_pointers.size();
     return 0;
 }
