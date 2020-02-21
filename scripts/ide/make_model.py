@@ -32,7 +32,9 @@ def make_model(log, options, timeout = 2592000):
     if rc == 0:
         msg.ok_msg("OCACCEL simulation model generated")
     else:
-        msg.warn_msg("Failed to make simulation model, check log in %s" % log)
+        if options.quite:
+            msg.warn_msg("Failed to make simulation model, check log in %s" % log)
+
         msg.fail_msg("Failed to make simulation model! Exiting ... ")
 
 if __name__ == '__main__':
