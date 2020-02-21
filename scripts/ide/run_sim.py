@@ -415,7 +415,6 @@ class Testcase:
                 pid = run_in_background(cmd = cmd, work_dir = self.simout, log = self.test_log)
                 cmd = "tmux list-panes -F '#{pane_pid}'"
                 out = run_and_get_output(cmd = cmd)
-                print out
                 pid = out.strip('\n').split('\n')[-1]
                 msg.ok_msg_blue("Tmux started with PID %s" % pid)
                 cmd = "tail --pid=%s -f /dev/null" % pid
