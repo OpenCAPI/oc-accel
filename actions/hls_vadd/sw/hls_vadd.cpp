@@ -62,6 +62,7 @@ static void usage (const char* prog)
 {
     printf ("Usage: %s [-h] [-v, --verbose] [-V, --version]\n"
             "  -C, --card <cardno>       Check with 'ls /dev/ocxl'\n"
+            "  -s, --size <number>       Number of elements in the array\n"
             "  -I, --irq                 Enable Interrupts\n"
             "\n"
             "\n",
@@ -111,7 +112,7 @@ int main (int argc, char* argv[])
         };
 
         ch = getopt_long (argc, argv,
-                          "C:Ivh",
+                          "C:s:Ivh",
                           long_options, &option_index);
 
         if (ch == -1) {
