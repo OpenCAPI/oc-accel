@@ -17,6 +17,10 @@ config ENABLE_HLS_SUPPORT
     bool
     default n
 
+config HLS_SUPPORT
+    string
+    default "TRUE" if ENABLE_HLS_SUPPORT
+    default "FALSE" if !ENABLE_HLS_SUPPORT
 
 ###############################################################################
 # Definition of the templates:
@@ -528,14 +532,16 @@ choice
 endchoice
 
 
-###############################################################################
-config HLS_CLOCK_PERIOD_CONSTRAINT
-    prompt "Clock period constraint for HLS C++ code"
-    string
-    default "4ns"
-    depends on ENABLE_HLS_SUPPORT
-    help
-      The clock period constrant in "ns" used when hls is compiled to rtl, 
+################################################################################
+#  NOTE: This config has been removed because people can adjust it more directly
+#  in run_hls_script.tcl
+#config HLS_CLOCK_PERIOD_CONSTRAINT
+#    prompt "Clock period constraint for HLS C++ code"
+#    string
+#    default "4ns"
+#    depends on ENABLE_HLS_SUPPORT
+#    help
+#      The clock period constrant in "ns" used when hls is compiled to rtl, 
 
 ###############################################################################
 config ENABLE_ILA

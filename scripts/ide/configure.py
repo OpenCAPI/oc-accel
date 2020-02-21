@@ -35,6 +35,8 @@ class Configuration:
     def __init__(self, options):
         self.ocaccel_env_file = pathjoin(options.ocaccel_root, "ocaccel_env.sh")
         self.ocaccel_cfg_file = pathjoin(options.ocaccel_root, ".ocaccel_config")
+        self.ocaccel_cfg_file_sh = pathjoin(options.ocaccel_root, ".ocaccel_config.sh")
+        self.ocaccel_cfg_file_cflags = pathjoin(options.ocaccel_root, ".ocaccel_config.cflags")
         self.ocaccel_root = options.ocaccel_root
         self.ocse_path = options.ocse_path
         self.action_root = options.action_root
@@ -51,7 +53,7 @@ class Configuration:
 
         if self.action_root is not None:
             sed_file(self.ocaccel_env_file, 'ACTION_ROOT\s*=\s*(.*)', 'ACTION_ROOT=' + self.action_root)
-    
+
     def setup_cfg(self):
         if self.ocse_path is not None:
             ocse_line = 'OCSE_PATH="%s"' % self.ocse_path
@@ -96,7 +98,9 @@ class Configuration:
             self.ocse_path = os.path.expanduser(search_file_group_1(self.ocaccel_cfg_file, 'OCSE_PATH\s*=\s*"(.*)"'))
 
             if self.ocse_path is not None:
-                sed_file(self.ocaccel_cfg_file, "\s*OCSE_PATH\s*=.*", "OCSE_PATH=\"" + os.path.abspath(self.ocse_path) + "\"")
+                sed_file(self.ocaccel_cfg_file,        "\s*OCSE_PATH\s*=.*",          "OCSE_PATH=\""          + os.path.abspath(self.ocse_path) + "\"")
+                sed_file(self.ocaccel_cfg_file_sh,     "\s*export\s*OCSE_PATH\s*=.*",          "export OCSE_PATH="          + os.path.abspath(self.ocse_path) + "")
+                sed_file(self.ocaccel_cfg_file_cflags, "\"\s*-DCONFIG_OCSE_PATH\s*=.*\"", "\"-DCONFIG_OCSE_PATH=" + os.path.abspath(self.ocse_path) + "\"")
         else:
             self.simulator = "nosim"
             self.ocse_path = os.path.abspath("../ocse")
@@ -116,6 +120,23 @@ class Configuration:
             msg.header_msg("\t%s\t%s" % ("CAPI_VER"    , search_file_group_1(self.ocaccel_cfg_file , 'CAPI_VER\s*=\s*"(.*)"')))
             msg.header_msg("\t%s\t%s" % ("OCSE_PATH"   , search_file_group_1(self.ocaccel_cfg_file , 'OCSE_PATH\s*=\s*"(.*)"')))
     
+    def make_config(self):
+        if self.options.predefined_config is not None:
+            run_and_wait(cmd = "make -s oldconfig", work_dir = ".", log = self.log)
+            run_and_wait(cmd = "make -s ocaccel_env", work_dir = ".", log = self.log)
+        else:
+            rc = run_to_stdout(cmd = "make -s menuconfig", work_dir = ".")
+            if rc == 0:
+                rc = run_to_stdout(cmd = "make -s ocaccel_env ocaccel_env_parm=config", work_dir = ".")
+
+            if rc != 0:
+                msg.warn_msg("=====================================================================")
+                msg.warn_msg("==== Failed to bringup the configuration window.                 ====")
+                msg.warn_msg("==== Please check if libncurses5-dev is installed on your system.====")
+                msg.warn_msg("==== Also check if 'https://github.com/guillon/kconfig' is       ====")
+                msg.warn_msg("==== accessible from your system.                                ====")
+                msg.fail_msg("================= Configuration FAILED! =============================");
+
     def configure(self):
         msg.ok_msg_blue("--------> Configuration") 
         os.environ['OCACCEL_ROOT'] = self.ocaccel_root
@@ -129,20 +150,7 @@ class Configuration:
             copyfile(defconf, pathjoin(self.options.ocaccel_root, self.ocaccel_cfg_file))
 
         self.setup_cfg()
-        if self.options.predefined_config is not None:
-            run_and_wait(cmd = "make -s oldconfig", work_dir = ".", log = self.log)
-            run_and_wait(cmd = "make -s ocaccel_env", work_dir = ".", log = self.log)
-        else:
-            rc = run_to_stdout(cmd = "make ocaccel_config", work_dir = ".")
-
-            if rc != 0:
-                msg.warn_msg("=====================================================================")
-                msg.warn_msg("==== Failed to bringup the configuration window.                 ====")
-                msg.warn_msg("==== Please check if libncurses5-dev is installed on your system.====")
-                msg.warn_msg("==== Also check if 'https://github.com/guillon/kconfig' is       ====")
-                msg.warn_msg("==== accessible from your system.                                ====")
-                msg.fail_msg("================= Configuration FAILED! =============================");
-
+        self.make_config()
         self.setup_ocaccel_env()
         msg.ok_msg("OCACCEL Configured")
 

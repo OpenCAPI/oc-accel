@@ -8,6 +8,7 @@ puts "interface_repo is set to $interface_repo"
 
 # Add interfaces
 #------------------------------------------------------------------------------
+# 30 signals
 set port_list_tlx_afu [list \
         afu_tlx_cmd_initial_credit        \
         afu_tlx_cmd_credit                \
@@ -44,6 +45,7 @@ set port_list_tlx_afu [list \
 my_create_bus_interface $interface_repo "tlx_afu"  $port_list_tlx_afu 
 
 #------------------------------------------------------------------------------
+#39 signals
 set port_list_afu_tlx [list \
         tlx_afu_cmd_initial_credit        \
         tlx_afu_cmd_credit                \

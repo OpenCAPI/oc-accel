@@ -132,8 +132,7 @@ config menuconfig xconfig gconfig oldconfig silentoldconfig:
 	@$(RM) $(ocaccel_config_bak) $(ocaccel_config_new)
 
 ocaccel_config:
-	@$(MAKE) -s menuconfig || exit 1
-	@$(MAKE) -s ocaccel_env ocaccel_env_parm=config
+	./ocaccel_workflow.py --no_run_sim --no_make_model
 	@echo "OCACCEL config done"
 
 $(ocaccel_config_sh):

@@ -205,8 +205,8 @@ action_hw: prepare_logs
 		echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
 	fi
 	@if [ "$(HLS_SUPPORT)" == "TRUE" ]; then \
-	        echo "Calling make -C $(ACTION_ROOT)/hw vhdl" >> $(LOGS_DIR)/action_make.log; \
-		$(MAKE) -kC $(ACTION_ROOT)/hw vhdl >> $(LOGS_DIR)/action_make.log; \
+	        echo "Calling make -C $(ACTION_ROOT)/hw " >> $(LOGS_DIR)/action_make.log; \
+		$(MAKE) -kC $(ACTION_ROOT)/hw  >> $(LOGS_DIR)/action_make.log; \
 		if [ $$? -ne 0 ]; then \
 			echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
 		fi; \
@@ -286,6 +286,7 @@ app: software
 	@$(MAKE) -C $(ACTION_ROOT)/sw        >> $(LOGS_DIR)/compile_sw.log 2>&1; \
 	if [ $$? -ne 0 ]; then \
 		echo -e "                        Error: please look into $(LOGS_DIR)/compile_sw.log";  \
+		exit -1; \
 	fi
 	@echo -e "[COMPILE APPLICATION.] done  `date +"%T %a %b %d %Y"`"
 
@@ -344,11 +345,11 @@ $(OCACCEL_MODELS):
 
 ifeq ($(UNIT_SIM_USED),TRUE)
 model: check_simulator 
-	@$(MAKE) -s $(SIMULATOR)
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
 
 else
 model: check_simulator
-	@$(MAKE) -s $(SIMULATOR)
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
 
 endif
 

@@ -54,9 +54,8 @@ int OcaccelJobManager::allocateDescriptors (int num_descriptors)
         return -1;
     }
 
-    int num_blocks_to_be_allocated = (int) ceil((float)num_descriptors / (float)c_descriptors_in_a_block);
-
-    for (int i = 0; i < num_blocks_to_be_allocated; i++) {
+    int descriptors_remained = num_descriptors;
+    while (descriptors_remained > 0) {
         // Always allocate a buffer with a maximum number of descriptors
         size_t allocated_size = c_descriptors_in_a_block * JobDescriptor::c_job_descriptor_size;
         void* allocated_block = alignedAllocate (allocated_size);
@@ -66,17 +65,16 @@ int OcaccelJobManager::allocateDescriptors (int num_descriptors)
             return -1;
         }
 
-        int num_descriptors_in_current_block = c_descriptors_in_a_block;
-
-        if ((num_blocks_to_be_allocated - 1) == i) {
-            // for the last descriptor block, make sure the number of descriptors are correctly set
-            num_descriptors_in_current_block = num_descriptors % c_descriptors_in_a_block;
-        }
+        int num_descriptors_in_current_block = (descriptors_remained > c_descriptors_in_a_block) ? c_descriptors_in_a_block : descriptors_remained;
 
         memset (allocated_block, 0, allocated_size);
         m_descriptor_block_pointers.push_back (std::make_pair (allocated_block, num_descriptors_in_current_block));
+
+        descriptors_remained -= num_descriptors_in_current_block;
     }
 
+    printf ("blocks allocated %z\n", m_descriptor_block_pointers.size());
+    m_number_of_descriptor_blocks = m_descriptor_block_pointers.size();
     return 0;
 }
 
@@ -178,7 +176,6 @@ JobDescriptorPtr OcaccelJobManager::getJobDescriptorPtr (int idx)
 void OcaccelJobManager::setNumberOfDescriptors (int num_descriptors)
 {
     m_number_of_descriptors = num_descriptors;
-    m_number_of_descriptor_blocks = num_descriptors / c_descriptors_in_a_block + 1;
 }
 
 void OcaccelJobManager::setOcaccelCardHandler (ocaccel_card* card)

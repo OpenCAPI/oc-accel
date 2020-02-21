@@ -65,9 +65,9 @@ parser.add_option("-m", "--make_image",
 parser.add_option("-c", "--clean",
                   action="store_true", dest="clean", default=False,
                   help="Clean the environment before running, default: %default")
-parser.add_option("-v", "--verbose",
-                  action="store_false", dest="verbose", default=False,
-                  help="Print more message to the stdout")
+parser.add_option("-q", "--quite",
+                  action="store_true", dest="quite", default=False,
+                  help="Print less message to the stdout")
 parser.add_option("-i", "--interactive",
                   action="store_true", dest="interactive", default=False,
                   help="Don't use the interactive mode during the flow, default: %default")
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
     question_and_answer.ask(qa.ask_make_model_str)
     if not options.no_make_model and options.simulator.lower() != "nosim":
-        make_model(ocaccel_workflow_make_model_log, options.make_timeout)
+        make_model(ocaccel_workflow_make_model_log, options, options.make_timeout)
         # TODO: need to remove the following line if
         # 'make model` stops touching ocaccel_env.sh
         cfg.setup_ocaccel_env()
