@@ -128,10 +128,10 @@ public:
     // OcaccelJobManager& job_Manager_2 = OcaccelJobManager::getManager();
     // <job_Manager_1 is the same as job_Manager_2>
     // <use job_Manager_1/2 anywhere you want>
-    static std::shared_ptr<OcaccelJobManager> getManager()
+    static OcaccelJobManager* getManager()
     {
         static OcaccelJobManager job_Manager;
-        return std::shared_ptr<OcaccelJobManager>(&job_Manager);
+        return &job_Manager;
     }
 
     // Remove copy functions to avoid extra instance
@@ -244,7 +244,5 @@ private:
     // The current status of the manager
     eStatus m_status;
 };
-
-typedef std::shared_ptr<OcaccelJobManager> OcaccelJobManagerPtr;
 
 #endif //__OCACCEL_JOB_MANAGER_H__
