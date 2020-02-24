@@ -299,9 +299,9 @@ choice
 endchoice
 
 ###############################################################################
-#  Infra Template Parameters: Engine Number @ T2
+#  Infra Template Parameters: Engine Number @ T1/T2
 config ENGINE_NUMBER
-    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T2
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T2)
     int "Input the number of engines (1 to 16)"
     range 1 16
     default 1
@@ -313,26 +313,26 @@ config ENGINE_NUMBER
     default 8 if HDL_MULTI_PROCESS
 
 ###############################################################################
-#  Infra Template Parameters: Number of AXI Ports @ T1
-config NUM_AXIMM_PORTS
-    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T1
-    int "Input the number of AXI-MM Ports (1 to 8)"
-    range 1 8
-    default 1
-
-# !!! This doesn't show in the menuwindow
-# Override the number for existing example
-config NUM_AXIMM_PORTS
-    int
-    default 1
+##  Infra Template Parameters: Number of AXI Ports @ T1
+#   This config is depricated. To be deleted soon
+#config NUM_AXIMM_PORTS
+#    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T1
+#    int "Input the number of AXI-MM Ports (1 to 8)"
+#    range 1 8
+#    default 1
+#
+## !!! This doesn't show in the menuwindow
+## Override the number for existing example
+#config NUM_AXIMM_PORTS
+#    int
+#    default 1
 
 
 ###############################################################################
 #  Infra Template Parameters: Data bus Width of AXI Ports @ T1, T4
 config WIDTH_AXIMM_PORTS
     depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T4)
-    int "Input the number of AXI-MM Ports (512 or 1024)"
-    range 512 1024
+    int "Input the bus bitwidth of AXI-MM Ports (32 to 1024, exponent of 2)"
     default 1024
 
 # !!! This doesn't show in the menuwindow

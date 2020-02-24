@@ -2,6 +2,7 @@
 set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_part        $::env(FPGACHIP)
 set fpga_card        $::env(FPGACARD)
+set engine_number    $::env(ENGINE_NUMBER)
 set project "top_project"
 set project_dir      $root_dir/build/$project
 
@@ -15,9 +16,8 @@ set_property  ip_repo_paths  [list $ip_repo_dir $interfaces_dir] [current_projec
 update_ip_catalog
 add_files -norecurse $root_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
 
-
 # Add sub block designs
-# bd_act and bd_infra
+# act_wrap and infra_wrap
 source $root_dir/setup/package_action/bd_action_template_A10.tcl
 source $root_dir/setup/package_infrastructure/bd_infra_template_T1.tcl
 
@@ -27,38 +27,43 @@ create_bd_cell -type ip -vlnv opencapi.org:ocaccel:flash_vpd_wrapper:1.0 flash_v
 create_bd_cell -type module -reference iprog_icap iprog_icap
 
 
-# Connections 
-connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_afu_tlx] [get_bd_intf_pins bd_infra/opencapi30_c1/ocaccel_afu_tlx]
+# General Connections 
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_afu_tlx] [get_bd_intf_pins infra_wrap/opencapi30_c1/ocaccel_afu_tlx]
 connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_vpd] [get_bd_intf_pins flash_vpd_wrapper/ocaccel_cfg_vpd]
 connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_flsh] [get_bd_intf_pins flash_vpd_wrapper/ocaccel_cfg_flsh]
-connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_tlx_afu] [get_bd_intf_pins bd_infra/opencapi30_mmio/ocaccel_tlx_afu]
-connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_infra_c1] [get_bd_intf_pins bd_infra/opencapi30_c1/ocaccel_cfg_infra_c1]
-connect_bd_net [get_bd_pins oc_host_if/cfg_infra_f1_mmio_bar0] [get_bd_pins bd_infra/opencapi30_mmio/cfg_f1_mmio_bar0]
-connect_bd_net [get_bd_pins oc_host_if/cfg_infra_f1_mmio_bar0_mask] [get_bd_pins bd_infra/opencapi30_mmio/cfg_f1_mmio_bar0_mask]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_tlx_afu] [get_bd_intf_pins infra_wrap/opencapi30_mmio/ocaccel_tlx_afu]
+connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_infra_c1] [get_bd_intf_pins infra_wrap/opencapi30_c1/ocaccel_cfg_infra_c1]
+connect_bd_net [get_bd_pins oc_host_if/cfg_infra_f1_mmio_bar0] [get_bd_pins infra_wrap/opencapi30_mmio/cfg_f1_mmio_bar0]
+connect_bd_net [get_bd_pins oc_host_if/cfg_infra_f1_mmio_bar0_mask] [get_bd_pins infra_wrap/opencapi30_mmio/cfg_f1_mmio_bar0_mask]
 connect_bd_net [get_bd_pins oc_host_if/icap_clk] [get_bd_pins flash_vpd_wrapper/icap_clk]
 connect_bd_net [get_bd_pins oc_host_if/icap_clk] [get_bd_pins iprog_icap/clk]
 connect_bd_net [get_bd_pins oc_host_if/iprog_go_or] [get_bd_pins iprog_icap/go]
 
-connect_bd_net [get_bd_pins bd_infra/opencapi30_c1/interrupt_ack] [get_bd_pins bd_act/action_wrapper/interrupt_ack]
-connect_bd_net [get_bd_pins bd_infra/opencapi30_c1/interrupt] [get_bd_pins bd_act/action_wrapper/interrupt]
-connect_bd_net [get_bd_pins bd_infra/opencapi30_c1/interrupt_src] [get_bd_pins bd_act/action_wrapper/interrupt_src]
-connect_bd_net [get_bd_pins bd_infra/opencapi30_c1/interrupt_ctx] [get_bd_pins bd_act/action_wrapper/interrupt_ctx]
+#TODO
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_ack] [get_bd_pins act_wrap/eng_wrap/interrupt_ack]
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt] [get_bd_pins act_wrap/eng_wrap/interrupt]
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_src] [get_bd_pins act_wrap/eng_wrap/interrupt_src]
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_ctx] [get_bd_pins act_wrap/eng_wrap/interrupt_ctx]
 
-connect_bd_intf_net [get_bd_intf_pins bd_infra/bridge_axi_slave/s_axi] [get_bd_intf_pins bd_act/action_wrapper/m_axi_host_mem]
-connect_bd_intf_net [get_bd_intf_pins bd_infra/mmio_axilite_master/m_axi] [get_bd_intf_pins bd_act/action_wrapper/s_axi_ctrl_reg]
-
+# AXI Connections
+for {set x 0} {$x < $engine_number } {incr x} {
+    set xx [format "%02d" $x]
+    connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_aximm_slave$xx]    [get_bd_intf_pins act_wrap/pin_eng${xx}_aximm]
+    connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_axilite_master$xx] [get_bd_intf_pins act_wrap/pin_eng${xx}_axilite]
+}
 #Clock and resets
 
-connect_bd_net [get_bd_pins oc_host_if/clock_tlx] [get_bd_pins bd_infra/opencapi30_mmio/clock_tlx]
+connect_bd_net [get_bd_pins oc_host_if/clock_tlx] [get_bd_pins infra_wrap/pin_clock_tlx]
 connect_bd_net [get_bd_pins oc_host_if/clock_tlx] [get_bd_pins flash_vpd_wrapper/clock_tlx]
 
-connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins bd_act/action_wrapper/clk]
-connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins bd_infra/opencapi30_mmio/clock_afu]
+connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins infra_wrap/pin_clock_afu]
 connect_bd_net [get_bd_pins oc_host_if/clock_afu] [get_bd_pins flash_vpd_wrapper/clock_afu]
 
+connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins infra_wrap/pin_reset_afu_n]
 connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins flash_vpd_wrapper/reset_afu_n]
-connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins bd_infra/opencapi30_mmio/resetn]
-connect_bd_net [get_bd_pins oc_host_if/reset_afu_n] [get_bd_pins bd_act/action_wrapper/resetn]
+
+connect_bd_net [get_bd_pins infra_wrap/pin_clock_action] [get_bd_pins act_wrap/pin_clock_action]
+connect_bd_net [get_bd_pins infra_wrap/pin_reset_action_n] [get_bd_pins act_wrap/pin_reset_action_n]
 
 
 # Create Ports
@@ -77,8 +82,6 @@ connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ7] [get_bd_ports FPG
 create_bd_port -dir I ocde
 connect_bd_net [get_bd_pins /oc_host_if/ocde] [get_bd_ports ocde]
 
-assign_bd_address [get_bd_addr_segs {bd_infra/bridge_axi_slave/s_axi/reg0 }]
-assign_bd_address [get_bd_addr_segs {bd_act/action_wrapper/s_axi_ctrl_reg/reg0 }]
 
 # Save and Make wrapper
 regenerate_bd_layout

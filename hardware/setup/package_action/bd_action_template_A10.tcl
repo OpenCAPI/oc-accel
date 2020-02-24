@@ -1,7 +1,7 @@
 set engine_number $::env(ENGINE_NUMBER)
 set hls_support   $::env(HLS_SUPPORT)
 
-set bd_hier "action_wrapper"
+set bd_hier "act_wrap"
 # Create BD Hier
 create_bd_cell -type hier $bd_hier
 
@@ -47,6 +47,7 @@ for {set x 0} {$x < $engine_number } {incr x} {
     # TODO
 }
 
+#assign_bd_address [get_bd_addr_segs {act_wrap/eng_wrap/s_axi_ctrl_reg/reg0 }]
 
 
 ###############################################################################
