@@ -21,13 +21,14 @@
 set capi_ver            $::env(CAPI_VER)
 set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
+set infra_template      $::env(INFRA_TEMPLATE_SELECTION)
 
 set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
 
 set tcl_dir             $root_dir/setup/package_infrastructure
 source $root_dir/setup/common/common_funcs.tcl
-#source $root_dir/setup/define_build/interfaces.tcl
+#source $root_dir/setup/common/define_interfaces.tcl
 
 
 #set ip_list [ dict create  \
@@ -50,6 +51,27 @@ source $root_dir/setup/common/common_funcs.tcl
 #                         $tcl_file            
 #}
 
+
+############################################################################
+if { $infra_template eq "T3" || "T2" } {
+my_package_custom_ip $root_dir/build/temp_projs     \
+                     $root_dir/build/ip_repo        \
+                     $root_dir/build/interfaces     \
+                     $fpga_part                     \
+                     job_manager                    \
+                     $tcl_dir/add_job_manager.tcl   \
+					 []
+}
+
+if { $infra_template eq "T3" } {
+my_package_custom_ip $root_dir/build/temp_projs     \
+                     $root_dir/build/ip_repo        \
+                     $root_dir/build/interfaces     \
+                     $fpga_part                     \
+                     axilite_adaptor                \
+                     $tcl_dir/add_axilite_adaptor.tcl \
+					 []
+}
 
 
 ##proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
