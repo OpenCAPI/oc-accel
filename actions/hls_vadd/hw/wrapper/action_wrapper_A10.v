@@ -19,7 +19,7 @@ module action_wrapper # (
                 INT_BITS = 64,
                 CTXW = 9,
                 IDW = 1,
-                AXI_DATAW = 1024, 
+                AXI_DATAW = 32, 
                 AXI_ARUSER = 9,
                 AXI_AWUSER = 9,
                 AXI_RUSER = 1,
@@ -54,50 +54,50 @@ module action_wrapper # (
    input                                   s_axi_ctrl_reg_wvalid    ,
     //
     // AXI Host Memory inputterface
-   output [ 63 : 0]                        m_axi_host_mem_araddr    ,
-   output [ 1 : 0]                         m_axi_host_mem_arburst   ,
-   output [ 3 : 0]                         m_axi_host_mem_arcache   ,
-   output [ IDW-1 : 0]                     m_axi_host_mem_arid      ,
-   output [ 7 : 0]                         m_axi_host_mem_arlen     ,
-   output [ 1 : 0]                         m_axi_host_mem_arlock    ,
-   output [ 2 : 0]                         m_axi_host_mem_arprot    ,
-   output [ 3 : 0]                         m_axi_host_mem_arqos     ,
-   input                                   m_axi_host_mem_arready   ,
-   output [ 3 : 0]                         m_axi_host_mem_arregion  ,
-   output [ 2 : 0]                         m_axi_host_mem_arsize    ,
-   output [ AXI_ARUSER-1 : 0]              m_axi_host_mem_aruser    ,
-   output                                  m_axi_host_mem_arvalid   ,
-   output [ 63 : 0]                        m_axi_host_mem_awaddr    ,
-   output [ 1 : 0]                         m_axi_host_mem_awburst   ,
-   output [ 3 : 0]                         m_axi_host_mem_awcache   ,
-   output [ IDW-1 : 0]                     m_axi_host_mem_awid      ,
-   output [ 7 : 0]                         m_axi_host_mem_awlen     ,
-   output [ 1 : 0]                         m_axi_host_mem_awlock    ,
-   output [ 2 : 0]                         m_axi_host_mem_awprot    ,
-   output [ 3 : 0]                         m_axi_host_mem_awqos     ,
-   input                                   m_axi_host_mem_awready   ,
-   output [ 3 : 0]                         m_axi_host_mem_awregion  ,
-   output [ 2 : 0]                         m_axi_host_mem_awsize    ,
-   output [AXI_AWUSER-1 : 0]               m_axi_host_mem_awuser    ,
-   output                                  m_axi_host_mem_awvalid   ,
-   input [ IDW-1 : 0]                      m_axi_host_mem_bid       ,
-   output                                  m_axi_host_mem_bready    ,
-   input [ 1 : 0]                          m_axi_host_mem_bresp     ,
-   input [ AXI_BUSER-1 : 0]                m_axi_host_mem_buser     ,
-   input                                   m_axi_host_mem_bvalid    ,
-   input [ AXI_DATAW-1 : 0]                m_axi_host_mem_rdata     ,
-   input [ IDW-1 : 0]                      m_axi_host_mem_rid       ,
-   input                                   m_axi_host_mem_rlast     ,
-   output                                  m_axi_host_mem_rready    ,
-   input [ 1 : 0]                          m_axi_host_mem_rresp     ,
-   input [ AXI_RUSER-1 : 0]                m_axi_host_mem_ruser     ,
-   input                                   m_axi_host_mem_rvalid    ,
-   output [ AXI_DATAW-1 : 0]               m_axi_host_mem_wdata     ,
-   output                                  m_axi_host_mem_wlast     ,
-   input                                   m_axi_host_mem_wready    ,
-   output [(AXI_DATAW/8)-1 : 0]            m_axi_host_mem_wstrb     ,
-   output [ AXI_WUSER-1 : 0]               m_axi_host_mem_wuser     ,
-   output                                  m_axi_host_mem_wvalid
+   output [ 63 : 0]                        host_mem_axi_00_araddr    ,
+   output [ 1 : 0]                         host_mem_axi_00_arburst   ,
+   output [ 3 : 0]                         host_mem_axi_00_arcache   ,
+   output [ IDW-1 : 0]                     host_mem_axi_00_arid      ,
+   output [ 7 : 0]                         host_mem_axi_00_arlen     ,
+   output [ 1 : 0]                         host_mem_axi_00_arlock    ,
+   output [ 2 : 0]                         host_mem_axi_00_arprot    ,
+   output [ 3 : 0]                         host_mem_axi_00_arqos     ,
+   input                                   host_mem_axi_00_arready   ,
+   output [ 3 : 0]                         host_mem_axi_00_arregion  ,
+   output [ 2 : 0]                         host_mem_axi_00_arsize    ,
+   output [ AXI_ARUSER-1 : 0]              host_mem_axi_00_aruser    ,
+   output                                  host_mem_axi_00_arvalid   ,
+   output [ 63 : 0]                        host_mem_axi_00_awaddr    ,
+   output [ 1 : 0]                         host_mem_axi_00_awburst   ,
+   output [ 3 : 0]                         host_mem_axi_00_awcache   ,
+   output [ IDW-1 : 0]                     host_mem_axi_00_awid      ,
+   output [ 7 : 0]                         host_mem_axi_00_awlen     ,
+   output [ 1 : 0]                         host_mem_axi_00_awlock    ,
+   output [ 2 : 0]                         host_mem_axi_00_awprot    ,
+   output [ 3 : 0]                         host_mem_axi_00_awqos     ,
+   input                                   host_mem_axi_00_awready   ,
+   output [ 3 : 0]                         host_mem_axi_00_awregion  ,
+   output [ 2 : 0]                         host_mem_axi_00_awsize    ,
+   output [AXI_AWUSER-1 : 0]               host_mem_axi_00_awuser    ,
+   output                                  host_mem_axi_00_awvalid   ,
+   input [ IDW-1 : 0]                      host_mem_axi_00_bid       ,
+   output                                  host_mem_axi_00_bready    ,
+   input [ 1 : 0]                          host_mem_axi_00_bresp     ,
+   input [ AXI_BUSER-1 : 0]                host_mem_axi_00_buser     ,
+   input                                   host_mem_axi_00_bvalid    ,
+   input [ AXI_DATAW-1 : 0]                host_mem_axi_00_rdata     ,
+   input [ IDW-1 : 0]                      host_mem_axi_00_rid       ,
+   input                                   host_mem_axi_00_rlast     ,
+   output                                  host_mem_axi_00_rready    ,
+   input [ 1 : 0]                          host_mem_axi_00_rresp     ,
+   input [ AXI_RUSER-1 : 0]                host_mem_axi_00_ruser     ,
+   input                                   host_mem_axi_00_rvalid    ,
+   output [ AXI_DATAW-1 : 0]               host_mem_axi_00_wdata     ,
+   output                                  host_mem_axi_00_wlast     ,
+   input                                   host_mem_axi_00_wready    ,
+   output [(AXI_DATAW/8)-1 : 0]            host_mem_axi_00_wstrb     ,
+   output [ AXI_WUSER-1 : 0]               host_mem_axi_00_wuser     ,
+   output                                  host_mem_axi_00_wvalid
     );
 
 localparam ACTION_TYPE   = 32'h10143009;
@@ -127,136 +127,6 @@ wire [63:0] temp_card_mem0_awaddr;
 reg  [31:0] reg_rdata_hijack; //This will be ORed with the return data of hls_action
 wire [31:0] temp_s_axi_ctrl_reg_rdata;
 
-
-wire [ 63 : 0]                        hls_action_araddr    ;
-wire [ 1 : 0]                         hls_action_arburst   ;
-wire [ 3 : 0]                         hls_action_arcache   ;
-wire [ 0 : 0]                         hls_action_arid      ;
-wire [ 7 : 0]                         hls_action_arlen     ;
-wire [ 1 : 0]                         hls_action_arlock    ;
-wire [ 2 : 0]                         hls_action_arprot    ;
-wire [ 3 : 0]                         hls_action_arqos     ;
-wire                                  hls_action_arready   ;
-wire [ 3 : 0]                         hls_action_arregion  ;
-wire [ 2 : 0]                         hls_action_arsize    ;
-wire [ 0 : 0]                         hls_action_aruser    ;
-wire                                  hls_action_arvalid   ;
-wire [ 63 : 0]                        hls_action_awaddr    ;
-wire [ 1 : 0]                         hls_action_awburst   ;
-wire [ 3 : 0]                         hls_action_awcache   ;
-wire [ 0 : 0]                         hls_action_awid      ;
-wire [ 7 : 0]                         hls_action_awlen     ;
-wire [ 1 : 0]                         hls_action_awlock    ;
-wire [ 2 : 0]                         hls_action_awprot    ;
-wire [ 3 : 0]                         hls_action_awqos     ;
-wire                                  hls_action_awready   ;
-wire [ 3 : 0]                         hls_action_awregion  ;
-wire [ 2 : 0]                         hls_action_awsize    ;
-wire [ 0 : 0]                         hls_action_awuser    ;
-wire                                  hls_action_awvalid   ;
-wire[ 0 : 0]                          hls_action_bid       ;
-wire                                  hls_action_bready    ;
-wire[ 1 : 0]                          hls_action_bresp     ;
-wire[ 0 : 0]                          hls_action_buser     ;
-wire                                  hls_action_bvalid    ;
-wire[ 31 : 0]                         hls_action_rdata     ;
-wire[ 0 : 0]                          hls_action_rid       ;
-wire                                  hls_action_rlast     ;
-wire                                  hls_action_rready    ;
-wire[ 1 : 0]                          hls_action_rresp     ;
-wire[ 0 : 0]                          hls_action_ruser     ;
-wire                                  hls_action_rvalid    ;
-wire [ 31 : 0]                        hls_action_wdata     ;
-wire                                  hls_action_wlast     ;
-wire                                  hls_action_wready    ;
-wire [(32/8)-1 : 0]                   hls_action_wstrb     ;
-wire [ 0 : 0]                         hls_action_wuser     ;
-wire                                  hls_action_wvalid    ;
-
-
-
- axi_dwidth_converter axi_dwidth_converter_act2snap (
-      .s_axi_aclk        ( clk                   ) ,
-      .s_axi_aresetn     ( resetn                ) ,
-      .s_axi_awaddr      ( hls_action_awaddr    ) ,
-      .s_axi_awid        ( hls_action_awid      ) ,
-      .s_axi_awlen       ( hls_action_awlen     ) ,
-      .s_axi_awsize      ( hls_action_awsize    ) ,
-      .s_axi_awburst     ( hls_action_awburst   ) ,
-      .s_axi_awlock      ( hls_action_awlock    ) ,
-      .s_axi_awcache     ( hls_action_awcache   ) ,
-      .s_axi_awprot      ( hls_action_awprot    ) ,
-      .s_axi_awregion    ( hls_action_awregion  ) ,
-      .s_axi_awqos       ( hls_action_awqos     ) ,
-      .s_axi_awvalid     ( hls_action_awvalid   ) ,
-      .s_axi_awready     ( hls_action_awready   ) ,
-      .s_axi_wdata       ( hls_action_wdata     ) ,
-      .s_axi_wstrb       ( hls_action_wstrb     ) ,
-      .s_axi_wlast       ( hls_action_wlast     ) ,
-      .s_axi_wvalid      ( hls_action_wvalid    ) ,
-      .s_axi_wready      ( hls_action_wready    ) ,
-      .s_axi_bresp       ( hls_action_bresp     ) ,
-      .s_axi_bvalid      ( hls_action_bvalid    ) ,
-      .s_axi_bid         ( hls_action_bid       ) ,
-      .s_axi_bready      ( hls_action_bready    ) ,
-      .s_axi_araddr      ( hls_action_araddr    ) ,
-      .s_axi_arid        ( hls_action_arid      ) ,
-      .s_axi_arlen       ( hls_action_arlen     ) ,
-      .s_axi_arsize      ( hls_action_arsize    ) ,
-      .s_axi_arburst     ( hls_action_arburst   ) ,
-      .s_axi_arlock      ( hls_action_arlock    ) ,
-      .s_axi_arcache     ( hls_action_arcache   ) ,
-      .s_axi_arprot      ( hls_action_arprot    ) ,
-      .s_axi_arregion    ( hls_action_arregion  ) ,
-      .s_axi_arqos       ( hls_action_arqos     ) ,
-      .s_axi_arvalid     ( hls_action_arvalid   ) ,
-      .s_axi_arready     ( hls_action_arready   ) ,
-      .s_axi_rdata       ( hls_action_rdata     ) ,
-      .s_axi_rid         ( hls_action_rid       ) ,
-      .s_axi_rresp       ( hls_action_rresp     ) ,
-      .s_axi_rlast       ( hls_action_rlast     ) ,
-      .s_axi_rvalid      ( hls_action_rvalid    ) ,
-      .s_axi_rready      ( hls_action_rready    ) ,
-
-      .m_axi_aclk        ( clk                 ) ,
-      .m_axi_aresetn     ( ~resetn             ) ,
-      .m_axi_awaddr      ( m_axi_host_mem_awaddr   ) ,
-      .m_axi_awlen       ( m_axi_host_mem_awlen    ) ,
-      .m_axi_awsize      ( m_axi_host_mem_awsize   ) ,
-      .m_axi_awburst     ( m_axi_host_mem_awburst  ) ,
-      .m_axi_awlock      ( m_axi_host_mem_awlock   ) ,
-      .m_axi_awcache     ( m_axi_host_mem_awcache  ) ,
-      .m_axi_awprot      ( m_axi_host_mem_awprot   ) ,
-      .m_axi_awregion    ( m_axi_host_mem_awregion ) ,
-      .m_axi_awqos       ( m_axi_host_mem_awqos    ) ,
-      .m_axi_awvalid     ( m_axi_host_mem_awvalid  ) ,
-      .m_axi_awready     ( m_axi_host_mem_awready  ) ,
-      .m_axi_wdata       ( m_axi_host_mem_wdata    ) ,
-      .m_axi_wstrb       ( m_axi_host_mem_wstrb    ) ,
-      .m_axi_wlast       ( m_axi_host_mem_wlast    ) ,
-      .m_axi_wvalid      ( m_axi_host_mem_wvalid   ) ,
-      .m_axi_wready      ( m_axi_host_mem_wready   ) ,
-      .m_axi_bresp       ( m_axi_host_mem_bresp    ) ,
-      .m_axi_bvalid      ( m_axi_host_mem_bvalid   ) ,
-      .m_axi_bready      ( m_axi_host_mem_bready   ) ,
-      .m_axi_araddr      ( m_axi_host_mem_araddr   ) ,
-      .m_axi_arlen       ( m_axi_host_mem_arlen    ) ,
-      .m_axi_arsize      ( m_axi_host_mem_arsize   ) ,
-      .m_axi_arburst     ( m_axi_host_mem_arburst  ) ,
-      .m_axi_arlock      ( m_axi_host_mem_arlock   ) ,
-      .m_axi_arcache     ( m_axi_host_mem_arcache  ) ,
-      .m_axi_arprot      ( m_axi_host_mem_arprot   ) ,
-      .m_axi_arregion    ( m_axi_host_mem_arregion ) ,
-      .m_axi_arqos       ( m_axi_host_mem_arqos    ) ,
-      .m_axi_arvalid     ( m_axi_host_mem_arvalid  ) ,
-      .m_axi_arready     ( m_axi_host_mem_arready  ) ,
-      .m_axi_rdata       ( m_axi_host_mem_rdata    ) ,
-      .m_axi_rresp       ( m_axi_host_mem_rresp    ) ,
-      .m_axi_rlast       ( m_axi_host_mem_rlast    ) ,
-      .m_axi_rvalid      ( m_axi_host_mem_rvalid   ) ,
-      .m_axi_rready      ( m_axi_host_mem_rready   )
-) ; // axi_dwidth_converter
- 
  //vadd hls_action_0 # (.C_S_AXI_CONTROL_ADDR_WIDTH (32) )
  vadd hls_action_0 
     (
@@ -280,51 +150,51 @@ wire                                  hls_action_wvalid    ;
     .s_axi_control_wready        (s_axi_ctrl_reg_wready    ) ,
     .s_axi_control_wstrb         (s_axi_ctrl_reg_wstrb     ) ,
     .s_axi_control_wvalid        (s_axi_ctrl_reg_wvalid    ) ,
-    .m_axi_gmem_araddr        (hls_action_araddr    ) ,
-    .m_axi_gmem_arburst       (hls_action_arburst   ) ,
-    .m_axi_gmem_arcache       (hls_action_arcache   ) ,
-    .m_axi_gmem_arid          (hls_action_arid      ) ,//SR# 10394170
-    .m_axi_gmem_arlen         (hls_action_arlen     ) ,
-    .m_axi_gmem_arlock        (hls_action_arlock    ) ,
-    .m_axi_gmem_arprot        (hls_action_arprot    ) ,
-    .m_axi_gmem_arqos         (hls_action_arqos     ) ,
-    .m_axi_gmem_arready       (hls_action_arready   ) ,
-    .m_axi_gmem_arregion      (hls_action_arregion  ) ,
-    .m_axi_gmem_arsize        (hls_action_arsize    ) ,
-    .m_axi_gmem_aruser        (hls_action_aruser    ) ,
-    .m_axi_gmem_arvalid       (hls_action_arvalid   ) ,
-    .m_axi_gmem_awaddr        (hls_action_awaddr    ) ,
-    .m_axi_gmem_awburst       (hls_action_awburst   ) ,
-    .m_axi_gmem_awcache       (hls_action_awcache   ) ,
-    .m_axi_gmem_awid          (hls_action_awid      ) ,//SR# 10394170
-    .m_axi_gmem_awlen         (hls_action_awlen     ) ,
-    .m_axi_gmem_awlock        (hls_action_awlock    ) ,
-    .m_axi_gmem_awprot        (hls_action_awprot    ) ,
-    .m_axi_gmem_awqos         (hls_action_awqos     ) ,
-    .m_axi_gmem_awready       (hls_action_awready   ) ,
-    .m_axi_gmem_awregion      (hls_action_awregion  ) ,
-    .m_axi_gmem_awsize        (hls_action_awsize    ) ,
-    .m_axi_gmem_awuser        (hls_action_awuser    ) ,
-    .m_axi_gmem_awvalid       (hls_action_awvalid   ) ,
-    .m_axi_gmem_bid           (hls_action_bid [0]   ) ,//SR# 10394170
-    .m_axi_gmem_bready        (hls_action_bready    ) ,
-    .m_axi_gmem_bresp         (hls_action_bresp     ) ,
-    .m_axi_gmem_buser         (hls_action_buser [0] ) ,//SR# 10394170
-    .m_axi_gmem_bvalid        (hls_action_bvalid    ) ,
-    .m_axi_gmem_rdata         (hls_action_rdata     ) ,
-    .m_axi_gmem_rid           (hls_action_rid [0]   ) ,//SR# 10394170
-    .m_axi_gmem_rlast         (hls_action_rlast     ) ,
-    .m_axi_gmem_rready        (hls_action_rready    ) ,
-    .m_axi_gmem_rresp         (hls_action_rresp     ) ,
-    .m_axi_gmem_ruser         (hls_action_ruser [0] ) ,//SR# 10394170
-    .m_axi_gmem_rvalid        (hls_action_rvalid    ) ,
-    .m_axi_gmem_wdata         (hls_action_wdata     ) ,
-    .m_axi_gmem_wid           (hls_action_wid       ) ,
-    .m_axi_gmem_wlast         (hls_action_wlast     ) ,
-    .m_axi_gmem_wready        (hls_action_wready    ) ,
-    .m_axi_gmem_wstrb         (hls_action_wstrb     ) ,
-    .m_axi_gmem_wuser         (hls_action_wuser [0] ) ,//SR# 10394170
-    .m_axi_gmem_wvalid        (hls_action_wvalid    ) ,
+    .m_axi_gmem_araddr        (host_mem_axi_00_araddr    ) ,
+    .m_axi_gmem_arburst       (host_mem_axi_00_arburst   ) ,
+    .m_axi_gmem_arcache       (host_mem_axi_00_arcache   ) ,
+    .m_axi_gmem_arid          (host_mem_axi_00_arid      ) ,//SR# 10394170
+    .m_axi_gmem_arlen         (host_mem_axi_00_arlen     ) ,
+    .m_axi_gmem_arlock        (host_mem_axi_00_arlock    ) ,
+    .m_axi_gmem_arprot        (host_mem_axi_00_arprot    ) ,
+    .m_axi_gmem_arqos         (host_mem_axi_00_arqos     ) ,
+    .m_axi_gmem_arready       (host_mem_axi_00_arready   ) ,
+    .m_axi_gmem_arregion      (host_mem_axi_00_arregion  ) ,
+    .m_axi_gmem_arsize        (host_mem_axi_00_arsize    ) ,
+    .m_axi_gmem_aruser        (host_mem_axi_00_aruser    ) ,
+    .m_axi_gmem_arvalid       (host_mem_axi_00_arvalid   ) ,
+    .m_axi_gmem_awaddr        (host_mem_axi_00_awaddr    ) ,
+    .m_axi_gmem_awburst       (host_mem_axi_00_awburst   ) ,
+    .m_axi_gmem_awcache       (host_mem_axi_00_awcache   ) ,
+    .m_axi_gmem_awid          (host_mem_axi_00_awid      ) ,//SR# 10394170
+    .m_axi_gmem_awlen         (host_mem_axi_00_awlen     ) ,
+    .m_axi_gmem_awlock        (host_mem_axi_00_awlock    ) ,
+    .m_axi_gmem_awprot        (host_mem_axi_00_awprot    ) ,
+    .m_axi_gmem_awqos         (host_mem_axi_00_awqos     ) ,
+    .m_axi_gmem_awready       (host_mem_axi_00_awready   ) ,
+    .m_axi_gmem_awregion      (host_mem_axi_00_awregion  ) ,
+    .m_axi_gmem_awsize        (host_mem_axi_00_awsize    ) ,
+    .m_axi_gmem_awuser        (host_mem_axi_00_awuser    ) ,
+    .m_axi_gmem_awvalid       (host_mem_axi_00_awvalid   ) ,
+    .m_axi_gmem_bid           (host_mem_axi_00_bid [0]   ) ,//SR# 10394170
+    .m_axi_gmem_bready        (host_mem_axi_00_bready    ) ,
+    .m_axi_gmem_bresp         (host_mem_axi_00_bresp     ) ,
+    .m_axi_gmem_buser         (host_mem_axi_00_buser [0] ) ,//SR# 10394170
+    .m_axi_gmem_bvalid        (host_mem_axi_00_bvalid    ) ,
+    .m_axi_gmem_rdata         (host_mem_axi_00_rdata     ) ,
+    .m_axi_gmem_rid           (host_mem_axi_00_rid [0]   ) ,//SR# 10394170
+    .m_axi_gmem_rlast         (host_mem_axi_00_rlast     ) ,
+    .m_axi_gmem_rready        (host_mem_axi_00_rready    ) ,
+    .m_axi_gmem_rresp         (host_mem_axi_00_rresp     ) ,
+    .m_axi_gmem_ruser         (host_mem_axi_00_ruser [0] ) ,//SR# 10394170
+    .m_axi_gmem_rvalid        (host_mem_axi_00_rvalid    ) ,
+    .m_axi_gmem_wdata         (host_mem_axi_00_wdata     ) ,
+    .m_axi_gmem_wid           (host_mem_axi_00_wid       ) ,
+    .m_axi_gmem_wlast         (host_mem_axi_00_wlast     ) ,
+    .m_axi_gmem_wready        (host_mem_axi_00_wready    ) ,
+    .m_axi_gmem_wstrb         (host_mem_axi_00_wstrb     ) ,
+    .m_axi_gmem_wuser         (host_mem_axi_00_wuser [0] ) ,//SR# 10394170
+    .m_axi_gmem_wvalid        (host_mem_axi_00_wvalid    ) ,
     .interrupt                    (interrupt_i          )
   );
 //==========================================
