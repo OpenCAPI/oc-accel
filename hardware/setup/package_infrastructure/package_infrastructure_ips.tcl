@@ -53,7 +53,7 @@ source $root_dir/setup/common/common_funcs.tcl
 
 
 ############################################################################
-if { $infra_template eq "T3" || "T2" } {
+if { $infra_template eq "T3" || $infra_template eq "T2" } {
 my_package_custom_ip $root_dir/build/temp_projs     \
                      $root_dir/build/ip_repo        \
                      $root_dir/build/interfaces     \
