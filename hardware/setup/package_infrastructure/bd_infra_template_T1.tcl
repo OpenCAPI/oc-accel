@@ -5,7 +5,7 @@ create_bd_cell -type hier $bd_hier
 
 ###############################################################################
 # Additiona preparations
-source $root_dir/setup/common/common_funcs.tcl
+source $hw_root_dir/setup/common/common_funcs.tcl
 set imp_version [eval my_get_imp_version]
 set build_date [eval my_get_build_date]
 set date_string [eval my_get_date_string $build_date]
@@ -20,7 +20,7 @@ set_property -dict [list CONFIG.IMP_VERSION $imp_version ] [get_bd_cells $bd_hie
 set_property -dict [list CONFIG.BUILD_DATE $build_date ] [get_bd_cells $bd_hier/mmio_axilite_master]
 set_property -dict [list CONFIG.CARD_TYPE $card_type ] [get_bd_cells $bd_hier/mmio_axilite_master]
 # Set the same image name and register readout
-exec echo $date_string > $root_dir/setup/build_image/bitstream_date.txt
+exec echo $date_string > $hw_root_dir/setup/build_image/bitstream_date.txt
 
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_c1:1.0 $bd_hier/opencapi30_c1
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_mmio:1.0 $bd_hier/opencapi30_mmio

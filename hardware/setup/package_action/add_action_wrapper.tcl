@@ -53,9 +53,8 @@ set obj [get_filesets sources_1]
 
 
 if { $hls_support == "TRUE" } {
-    add_files -scan_for_includes -fileset $obj $action_hw_dir/syn_verilog_link
-    add_files -scan_for_includes -fileset $obj $action_hw_dir/wrapper
-
+    #add_files -scan_for_includes -fileset $obj $action_hw_dir/syn_verilog_link
+    #add_files -scan_for_includes -fileset $obj $action_hw_dir/wrapper
 } else {
     add_files -scan_for_includes -fileset $obj $action_hdl_dir
 }

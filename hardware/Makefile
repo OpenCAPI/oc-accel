@@ -89,7 +89,7 @@ OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/ocaccel_global_v
 ifeq ($(PLATFORM),x86_64)
 
 # TODO: the phony list needs updating
-.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project define_interfaces package_infrastructure package_hostside package_action top_project image ocse software app model sim xsim xcelium clean
+.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project define_interfaces package_infrastructure package_hostside top_project image ocse software app model sim xsim xcelium clean
 
 all: model image
 
@@ -231,18 +231,18 @@ package_infrastructure: $(INFRA_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(INFRA_SCR
 #	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
-package_action: $(ACTION_SCRIPT_SRCS)
-	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
-#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
-	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
+#package_action: $(ACTION_SCRIPT_SRCS)
+#	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
+#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
+##	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
+#	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
 top_project: $(COMMON_VERILOG_SRCS) $(COMMON_VERILOG_SRCS)
 	@echo -e "[CREATE TOP PROJECT..] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).log  -journal $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
-hw_project: ocaccel_preprocess action_hw define_interfaces package_hostside package_infrastructure package_action top_project
+hw_project: ocaccel_preprocess action_hw define_interfaces package_hostside package_infrastructure top_project
 	@echo -e "                       using `vivado -version |grep Vivado`"
 	@echo -e "                       CAPI_VER=$(CAPI_VER)"
 	@echo -e "[HW PROJECT]           done  `date +"%T %a %b %d %Y"`"

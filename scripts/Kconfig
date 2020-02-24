@@ -301,10 +301,17 @@ endchoice
 ###############################################################################
 #  Infra Template Parameters: Engine Number @ T2
 config ENGINE_NUMBER
-    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T2
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T2 || USER_INFRA_T1)
     int "Input the number of engines (1 to 16)"
     range 1 16
     default 1
+
+###############################################################################
+#  The top module name of user kernels for HLS actions
+config KERNEL_NAME
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T2 || USER_INFRA_T1)
+    string "The top module name of your hls kernel"
+    default ""
 
 # !!! This doesn't show in the menuwindow
 # Override the number for existing example
