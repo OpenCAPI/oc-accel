@@ -23,8 +23,7 @@ module engine_helper # (
               parameter  INT_BITS = 64,
               parameter  CTXW = 9,
               parameter  C_S_AXI_CONTROL_DATA_WIDTH = 32,
-              parameter  C_S_AXI_CONTROL_ADDR_WIDTH = 6,
-
+              parameter  C_S_AXI_CONTROL_ADDR_WIDTH = 6
               )
 (
    input                                   clk                      ,
@@ -76,7 +75,7 @@ module engine_helper # (
    input  [1:0]                                 s_axi_control_RRESP   ,
    input                                        s_axi_control_BVALID  ,
    output                                       s_axi_control_BREADY  ,
-   input  [1:0]                                 s_axi_control_BRESP   ,
+   input  [1:0]                                 s_axi_control_BRESP 
 
    //For now, this helper doesn't deal with AXI-MM interface
    //But if there is a need, it can also be added here.

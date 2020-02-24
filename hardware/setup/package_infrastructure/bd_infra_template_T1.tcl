@@ -16,7 +16,7 @@ set card_type [eval my_get_card_type]
 
 ###############################################################################
 # Create pins for AXIlite / AXIMM ports
-for {set x 0} {$x < $num_aximm_ports } {incr x} {
+for {set x 0} {$x < $engine_number } {incr x} {
     set xx [format "%02d" $x]
     create_bd_intf_pin -mode Slave  -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_aximm_slave$xx
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_axilite_master$xx
@@ -84,7 +84,7 @@ if {$action_frequency == 200 && $engine_number == 1 && $width_aximm_ports == 102
                              CONFIG.NUM_CLKS {2}
                              ] [get_bd_cells $bd_hier/smartconnect_axilite]
 
-    for {set x 0} {$x < $num_aximm_ports } {incr x} {
+    for {set x 0} {$x < $engine_number } {incr x} {
         set xx [format "%02d" $x]
         connect_bd_intf_net [get_bd_intf_pins $bd_hier/pin_axilite_master$xx ] [get_bd_intf_pins $bd_hier/smartconnect_axilite/M${xx}_AXI] 
     }
@@ -110,7 +110,7 @@ if {$action_frequency == 200 && $engine_number == 1 && $width_aximm_ports == 102
                              CONFIG.NUM_CLKS {2}
                              ] [get_bd_cells $bd_hier/smartconnect_aximm]
 
-    for {set x 0} {$x < $num_aximm_ports } {incr x} {
+    for {set x 0} {$x < $engine_number } {incr x} {
         set xx [format "%02d" $x]
         connect_bd_intf_net [get_bd_intf_pins $bd_hier/pin_aximm_slave$xx ] [get_bd_intf_pins $bd_hier/smartconnect_aximm/S${xx}_AXI] 
     }
