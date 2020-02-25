@@ -1,6 +1,7 @@
 set kernel_number $::env(KERNEL_NUMBER)
 set kernel_name   $::env(KERNEL_NAME)
 set hls_support   $::env(HLS_SUPPORT)
+set axi_id_width  $::env(AXI_ID_WIDTH)
 
 set bd_hier "act_wrap"
 # Create BD Hier
@@ -34,7 +35,6 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
     # Add kernel instance
     create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}
-    #set_property -dict [list CONFIG.C_M_AXI_HOST_MEM_ID_WIDTH {3}] [get_bd_cells $kernel_hier/${kernel_name}]
 
     # Add kernel helper (a small module to handle interrupt src, etc)
     #create_bd_cell -type module -reference kernel_helper $bd_hier/kernel${xx}_wrap/kernel_helper
@@ -73,6 +73,23 @@ for {set x 0} {$x < $kernel_number } {incr x} {
         set kernel_master_port_name [dict get $m port_prefix]
         set sc_id [format "%02d" $axi_m_idx]
         connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_0/S${sc_id}_AXI] [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_master_port_name]
+
+        # Enable AXI ID and AXI USER ports for each AXI master interface
+        set_property -dict [list \
+                            CONFIG.C_${kernel_master_port_name}_ENABLE_USER_PORTS {true} \
+                           ] \
+                           [get_bd_cells $kernel_hier/${kernel_name}]
+
+        # USER WIDTH -> 9
+        # ID WIDTH -> set by the environment in ::env(AXI_ID_WIDTH)
+        set_property -dict [list \
+                            CONFIG.C_${kernel_master_port_name}_AWUSER_WIDTH {9} \
+                            CONFIG.C_${kernel_master_port_name}_ARUSER_WIDTH {9} \
+                            CONFIG.C_${kernel_master_port_name}_WUSER_WIDTH  {9} \
+                            CONFIG.C_${kernel_master_port_name}_RUSER_WIDTH  {9} \
+                            CONFIG.C_${kernel_master_port_name}_BUSER_WIDTH  {9} \
+                           ] \
+                           [get_bd_cells $kernel_hier/${kernel_name}]
         incr axi_m_idx
     }
 }

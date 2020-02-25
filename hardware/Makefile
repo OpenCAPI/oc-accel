@@ -360,7 +360,7 @@ sim: check_simulator
 	@$(MAKE) -s .model_$(SIMULATOR)
 	@echo -e "[SIMULATION........] start `date +"%T %a %b %d %Y"`"
 	@echo "                        SIMULATOR is set to $(SIMULATOR)"
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_make_model --simulator_start_timeout 60; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_make_model --simulator_start_timeout 600; fi
 	@echo -e "[SIMULATION........] done  `date +"%T %a %b %d %Y"`"
 	@echo " To display traces, execute: ./display_traces"
 
