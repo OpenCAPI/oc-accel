@@ -645,7 +645,7 @@ config ODMA_512_USED
 
 config ENABLE_FLASH
 	bool "Enable FLASH"
-    default n
+    default y
 	help
 	   Enable FLASH in oc-bip.
 
