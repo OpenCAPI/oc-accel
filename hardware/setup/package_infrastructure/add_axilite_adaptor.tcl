@@ -19,39 +19,16 @@
 ############################################################################
 
 set hardware_dir     $::env(OCACCEL_HARDWARE_ROOT)
-set src_dir          $hardware_dir/hdl/infrastructure/opencapi30_c1
-set common_dir       $hardware_dir/hdl/common
+set src_dir          $hardware_dir/hdl/infrastructure/axi_lite_adaptor
 
-set verilog_opencapi30_c1 [list \
- $common_dir/fifo_async.v    \
- $common_dir/fifo_sync.v    \
- $common_dir/ram_simple_dual.v    \
- $common_dir/ram_true_dual.v    \
- $src_dir/command_encode.v \
- $src_dir/context_surveil.v \
- $src_dir/interrupt_tlx.v \
- $src_dir/partial_sequencer.v \
- $src_dir/response_decode.v \
- $src_dir/retry_queue.v \
- $src_dir/tlx_cmd_converter.v \
- $src_dir/tlx_rsp_converter.v \
- $src_dir/opencapi30_c1.v \
-
+set verilog_axilite_adaptor [list \
+ $src_dir/axi_lite_adaptor.v \
 ]
-
-
 
 ############################################################################
 #Add source files
-puts "	                Adding design sources to opencapi30_c1 project"
-# Set 'sources_1' fileset object, create list of all nececessary verilog files
+puts "	                Adding design sources to job_manager project"
 set obj [get_filesets sources_1]
-set files [list {*}$verilog_opencapi30_c1 ]
+set files [list {*}$verilog_axilite_adaptor ]
 add_files -norecurse -fileset $obj $files
-
-
-#set file "ocaccel_global_vars.v"
-#set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-#set_property -name "file_type" -value "Verilog Header" -objects $file_obj
-
 

@@ -18,9 +18,9 @@
 ############################################################################
 ############################################################################
 
-set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
-set src_dir          $root_dir/hdl/infrastructure/bridge_axi_slave
-set common_dir       $root_dir/hdl/common
+set hardware_dir     $::env(OCACCEL_HARDWARE_ROOT)
+set src_dir          $hardware_dir/hdl/infrastructure/bridge_axi_slave
+set common_dir       $hardware_dir/hdl/common
 
 set verilog_bridge_axi_slave [list \
  $common_dir/fifo_sync.v    \

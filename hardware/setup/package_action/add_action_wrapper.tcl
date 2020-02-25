@@ -21,9 +21,9 @@ set capi_ver            $::env(CAPI_VER)
 set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
 
-set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
-set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
-set common_dir          $root_dir/hdl/common
+set hardware_dir        $::env(OCACCEL_HARDWARE_ROOT)
+set fpga_card_dir       $hardware_dir/oc-accel-bsp/$fpga_card
+set common_dir          $hardware_dir/hdl/common
 set hls_support         $::env(HLS_SUPPORT)
 
 set action_hw_dir       $::env(ACTION_ROOT)/hw

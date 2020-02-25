@@ -18,7 +18,7 @@
 ############################################################################
 ############################################################################
 
-set root_dir      $::env(OCACCEL_HARDWARE_ROOT)
+set hardware_dir      $::env(OCACCEL_HARDWARE_ROOT)
 #set logs_dir      $::env(LOGS_DIR)
 #set logfile       $logs_dir/ocaccel_build.log
 set capi_ver      $::env(CAPI_VER)
@@ -28,7 +28,7 @@ set vivadoVer     [version -short]
 
 set timing_lablimit $::env(TIMING_LABLIMIT)
 #Image directory
-set img_dir $root_dir/build/Images
+set img_dir $hardware_dir/build/Images
 set ::env(IMG_DIR) $img_dir
 
 #Remove temp files
@@ -50,13 +50,13 @@ set ::env(WIDTHCOL4) $widthCol4
 ############################################################################
 ## open ocaccel project
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open top project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-open_project $root_dir/build/top_project/top_project.xpr
+open_project $hardware_dir/build/top_project/top_project.xpr
 
 
 ############################################################################
 # Set image_name
 set IMAGE_NAME [expr {$capi_ver == "opencapi30" ? "oc_" : "fw_"}]
-append IMAGE_NAME [exec cat $root_dir/setup/build_image/bitstream_date.txt]
+append IMAGE_NAME [exec cat $hardware_dir/setup/build_image/bitstream_date.txt]
 append IMAGE_NAME [expr {$::env(PHY_SPEED) == "20.0" ? "_20G" : "_25G"}]
 append IMAGE_NAME [format {_%s} $::env(ACTION_NAME)]
 append IMAGE_NAME [format {_%s_%s_%s} $::env(INFRA_TEMPLATE_SELECTION) $::env(ACTION_TEMPLATE_SELECTION) $fpgacard]
@@ -66,7 +66,7 @@ puts "IMAGE_NAME is set to $IMAGE_NAME"
 # Launch Runs
 if { $lsf_run == "TRUE"} {
     # This is a secret switch but hasn't been tested:-)
-    source $root_dir/setup/build_image/create_other_strategy_impls.tcl
+    source $hardware_dir/setup/build_image/create_other_strategy_impls.tcl
     # This script will set TIMING_WNS to env
 
 } else {
