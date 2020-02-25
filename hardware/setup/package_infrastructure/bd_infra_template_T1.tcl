@@ -79,9 +79,12 @@ if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 102
     connect_bd_intf_net [get_bd_intf_pins $bd_hier/mmio_axilite_master/m_axi] [get_bd_intf_pins $bd_hier/pin_axilite_master00]
 } else {
     create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $bd_hier/smartconnect_axilite
-    set_property -dict [list CONFIG.NUM_SI $kernel_number \
-                             CONFIG.HAS_ARESETN {0} \
-                             CONFIG.NUM_CLKS {2}
+#CONFIG.ADVANCED_PROPERTIES {__view__ {functional {S00_Entry {SUPPORTS_WRAP 0}} timing {S00_Entry {MMU_REGSLICE 1} M00_Exit {REGSLICE 1}}}} \
+
+        set_property -dict [list                                            \
+                             CONFIG.NUM_SI $kernel_number                   \
+                             CONFIG.HAS_ARESETN {0}                         \
+                             CONFIG.NUM_CLKS {2}                            \
                              ] [get_bd_cells $bd_hier/smartconnect_axilite]
 
     for {set x 0} {$x < $kernel_number } {incr x} {
@@ -91,7 +94,8 @@ if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 102
     connect_bd_intf_net [get_bd_intf_pins $bd_hier/mmio_axilite_master/m_axi] [get_bd_intf_pins $bd_hier/smartconnect_axilite/S00_AXI]
 
     # Clock
-    connect_bd_net [get_bd_intf_pins $bd_hier/pin_clock_action ] [get_bd_intf_pins $bd_hier/smartconnect_axilite/aclk] 
+    connect_bd_net [ get_bd_pins $bd_hier/pin_clock_afu                ] [ get_bd_pins $bd_hier/smartconnect_axilite/aclk  ]
+    connect_bd_net [ get_bd_pins $bd_hier/clock_reset_gen/clock_action ] [ get_bd_pins $bd_hier/smartconnect_axilite/aclk1 ]
 
     # Address map allocation
 }
@@ -117,7 +121,8 @@ if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 102
     connect_bd_intf_net [get_bd_intf_pins $bd_hier/bridge_axi_slave/s_axi] [get_bd_intf_pins $bd_hier/smartconnect_aximm/M00_AXI]
 
     # Clock
-    connect_bd_net [get_bd_intf_pins $bd_hier/pin_clock_action ] [get_bd_intf_pins $bd_hier/smartconnect_aximm/aclk] 
+    connect_bd_net [ get_bd_pins $bd_hier/pin_clock_afu                ] [ get_bd_pins $bd_hier/smartconnect_aximm/aclk  ]
+    connect_bd_net [ get_bd_pins $bd_hier/clock_reset_gen/clock_action ] [ get_bd_pins $bd_hier/smartconnect_aximm/aclk1 ]
 
 }
 
@@ -163,5 +168,4 @@ connect_bd_net [get_bd_pins $bd_hier/pin_reset_afu_n ] [get_bd_pins $bd_hier/ope
 connect_bd_net [get_bd_pins $bd_hier/pin_reset_afu_n ] [get_bd_pins $bd_hier/opencapi30_mmio/resetn     ]
 
 
-
-#assign_bd_address [get_bd_addr_segs {$bd_hier/bridge_axi_slave/s_axi/reg0 }]
+assign_bd_address [get_bd_addr_segs {$bd_hier/bridge_axi_slave/s_axi/reg0 }]

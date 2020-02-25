@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-// Engine helper will handel some special registers
+// kernel helper will handel some special registers
 
-module engine_helper # (
+module kernel_helper # (
               parameter  ACTION_TYPE      = 32'h10143FFF,
               parameter  RELEASE_LEVEL    = 32'h00000001,
               parameter  SPECIAL_REG_BASE = 32'h00001000,
@@ -29,7 +29,7 @@ module engine_helper # (
    input                                   clk                      ,
    input                                   resetn                   ,
 
-   input                                   interrupt_i              , //From engine_ip
+   input                                   interrupt_i              , //From kernel_ip
    output                                  interrupt_req            ,
    output [63:0]                           interrupt_src            ,
    output [CTXW-1:0]                       interrupt_ctx            ,
@@ -55,7 +55,7 @@ module engine_helper # (
    input                                   s_axilite_bready    ,
    output [ 1 : 0]                         s_axilite_bresp     ,
 
-   // AXI Control Register interface Output, to engine_ip
+   // AXI Control Register interface Output, to kernel_ip
    // Port width adjustable
    // Usually DATA_WIDTH is fixed to 32
    // But ADDR_WIDTH may be less than 32 sometimes.
