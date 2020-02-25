@@ -68,7 +68,7 @@ module action_wrapper #(
 (
  input                       clk ,
  input                       resetn ,
- output                      interrupt ,
+ output                      interrupt_req ,
  output [INT_BITS-1 : 0]     interrupt_src ,
  output [CONTEXT_BITS-1 : 0] interrupt_ctx ,
  input                       interrupt_ack ,
@@ -236,7 +236,7 @@ module action_wrapper #(
         .i_action_version      (32'h00000002)  //Hardware Version
     );
     
-    assign interrupt=1'b0;
+    assign interrupt_req=1'b0;
     assign interrupt_src = 64'b0;
     assign interrupt_ctx = 0;
 endmodule

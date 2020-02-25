@@ -37,7 +37,7 @@ module interrupt_tlx
 
                        //---- AXI interface --------------------------------------
                        output                interrupt_ack    ,
-                       input                 interrupt        ,
+                       input                 interrupt_req    ,
                        input      [063:0]    interrupt_src    ,
                        input      [008:0]    interrupt_ctx    ,
 
@@ -157,7 +157,7 @@ module interrupt_tlx
  always@*
    case(cstate)
      IDLE        :  
-                    if(interrupt)
+                    if(interrupt_req)
                       nstate = NEW_INT;
                     else 
                       nstate = IDLE;
@@ -191,12 +191,12 @@ module interrupt_tlx
                    else
                      nstate = INT_BACKOFF;
      UNEXP_RESP  : 
-                   if(~interrupt)
+                   if(~interrupt_req)
                      nstate = IDLE;
                    else
                      nstate = UNEXP_RESP;
      ACK_INT     : 
-                   if(~interrupt)
+                   if(~interrupt_req)
                      nstate = IDLE;
                    else
                      nstate = ACK_INT;

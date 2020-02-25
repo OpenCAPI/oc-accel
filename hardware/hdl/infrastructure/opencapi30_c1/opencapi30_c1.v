@@ -141,7 +141,7 @@ module opencapi30_c1
 
                    // interrupt
                    output                interrupt_ack          ,
-                   input                 interrupt              ,
+                   input                 interrupt_req          ,
                    input      [063:0]    interrupt_src          ,
                    input      [008:0]    interrupt_ctx
                    );
@@ -680,7 +680,7 @@ response_decode
                        /*input      [003:0] */  .backoff_limit    (cfg_backoff_timer   ),
                        /*input              */  .interrupt_enable (1'b1                ),
                        /*output             */  .interrupt_ack    (interrupt_ack       ),
-                       /*input              */  .interrupt        (interrupt           ),
+                       /*input              */  .interrupt_req    (interrupt_req       ),
                        /*input      [067:0] */  .interrupt_src    (interrupt_src       ),
                        /*input      [008:0] */  .interrupt_ctx    (interrupt_ctx       ),
                        /*output reg         */  .tlx_cmd_valid    (tlx_i_cmd_valid     ),

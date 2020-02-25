@@ -264,10 +264,10 @@ set port_list_cfg_infra_c1 [list \
          
 my_create_bus_interface $interface_repo "cfg_infra_c1" $port_list_cfg_infra_c1
 
-#set port_list_interrupt [list \
-#            interrupt      \
-#            interrupt_src  \
-#            interrupt_ctx  \
-#            interrupt_ack  \
-#          ]
-#my_create_bus_interface $interface_repo "interrupt" $port_list_interrupt
+set port_list_interrupt [list \
+            interrupt_req  \
+            interrupt_src  \
+            interrupt_ctx  \
+            interrupt_ack  \
+          ]
+my_create_bus_interface $interface_repo "oc_interrupt" $port_list_interrupt
