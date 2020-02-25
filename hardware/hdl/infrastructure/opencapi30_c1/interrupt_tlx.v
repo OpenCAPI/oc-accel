@@ -101,7 +101,7 @@ module interrupt_tlx
  always@(posedge clk or negedge resetn)
    if(~resetn)
      interrupt_src_sync <= 0;
-   else if(interrupt)
+   else if(interrupt_req)
      interrupt_src_sync <= interrupt_src;
 
 //---- TLX command ----
