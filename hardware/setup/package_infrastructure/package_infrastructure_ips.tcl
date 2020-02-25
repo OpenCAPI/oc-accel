@@ -48,7 +48,7 @@ source $hardware_dir/setup/common/common_funcs.tcl
 #                         $hardware_dir/build/interfaces \
 #                         $fpga_part           \
 #                         $ip_name             \
-#                         $tcl_file            
+#                         $tcl_file
 #}
 
 
@@ -60,7 +60,7 @@ my_package_custom_ip $hardware_dir/build/temp_projs     \
                      $fpga_part                     \
                      job_manager                    \
                      $tcl_dir/add_job_manager.tcl   \
-					 []
+                     []
 }
 
 if { $infra_template eq "T3" } {
@@ -70,7 +70,7 @@ my_package_custom_ip $hardware_dir/build/temp_projs     \
                      $fpga_part                     \
                      axilite_adaptor                \
                      $tcl_dir/add_axilite_adaptor.tcl \
-					 []
+                     []
 }
 
 

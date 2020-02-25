@@ -9,6 +9,7 @@ create_bd_cell -type hier $bd_hier
 
 ###############################################################################
 # Create Pins of this bd level
+puts "kernel_number is $kernel_number"
 for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_kernel${xx}_aximm

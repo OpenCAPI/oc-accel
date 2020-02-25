@@ -30,6 +30,7 @@ create_bd_cell -type ip -vlnv opencapi.org:ocaccel:flash_vpd_wrapper:1.0 flash_v
 create_bd_cell -type module -reference iprog_icap iprog_icap
 
 
+###############################################################################
 # General Connections 
 connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_afu_tlx] [get_bd_intf_pins infra_wrap/opencapi30_c1/ocaccel_afu_tlx]
 connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_cfg_vpd] [get_bd_intf_pins flash_vpd_wrapper/ocaccel_cfg_vpd]
@@ -48,7 +49,7 @@ connect_bd_net [get_bd_pins oc_host_if/iprog_go_or] [get_bd_pins iprog_icap/go]
 #connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_src] [get_bd_pins act_wrap/kernel_wrap/interrupt_src]
 #connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_ctx] [get_bd_pins act_wrap/kernel_wrap/interrupt_ctx]
 
-# AXI Connections
+# AXI Connections between infra_wrap and act_wrap
 for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_aximm_slave$xx]    [get_bd_intf_pins act_wrap/pin_kernel${xx}_aximm]
@@ -69,6 +70,7 @@ connect_bd_net [get_bd_pins infra_wrap/pin_clock_action] [get_bd_pins act_wrap/p
 connect_bd_net [get_bd_pins infra_wrap/pin_reset_action_n] [get_bd_pins act_wrap/pin_reset_action_n]
 
 
+###############################################################################
 # Create Ports
 create_bd_intf_port -mode Slave -vlnv opencapi.org:ocaccel:oc_phy_rtl:1.0 ocaccel_oc_phy
 connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_oc_phy] [get_bd_intf_ports ocaccel_oc_phy]
@@ -85,7 +87,29 @@ connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ7] [get_bd_ports FPG
 create_bd_port -dir I ocde
 connect_bd_net [get_bd_pins /oc_host_if/ocde] [get_bd_ports ocde]
 
+save_bd_design [current_bd_design]
+###############################################################################
+# Allocate Address
+assign_bd_address
+for {set x 0} {$x < $kernel_number } {incr x} {
+    set xx [format "%02d" $x]
+    include_bd_addr_seg [get_bd_addr_segs -excluded act_wrap/kernel${xx}_wrap/vadd/Data_m_axi_gmem/SEG_bridge_axi_slave_reg0]
+}
+# Give each Kernel 256KB register access space
+# At least it has one kernel
+set_property offset 0x00000000 [get_bd_addr_segs {infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg}]
+set_property range 256K [get_bd_addr_segs {infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg}]
+# For the remaining kernels
+if { $kernel_number > 1 } {
+    for {set x 1} {$x < $kernel_number } {incr x} {
+        set start_addr [ expr $x * 0x00040000 ]
+        set_property offset $start_addr [get_bd_addr_segs infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg$x]
+        set_property range 256K [get_bd_addr_segs infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg$x]
+    }
+}
 
+
+###############################################################################
 # Save and Make wrapper
 regenerate_bd_layout
 validate_bd_design
@@ -93,6 +117,8 @@ save_bd_design [current_bd_design]
 make_wrapper -files [get_files $project_dir/${project}.srcs/sources_1/bd/$bd_name/$bd_name.bd] -top -force
 add_files -norecurse $project_dir/${project}.srcs/sources_1/bd/$bd_name/hdl/${bd_name}_wrapper.v
 
+###############################################################################
+# Add Constraints at last
 # use bypass
 # Is it a good way to organize like this?
 #        $hardware_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \

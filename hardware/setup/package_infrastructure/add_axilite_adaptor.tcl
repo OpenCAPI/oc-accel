@@ -27,7 +27,7 @@ set verilog_axilite_adaptor [list \
 
 ############################################################################
 #Add source files
-puts "	                Adding design sources to job_manager project"
+puts "                Adding design sources to job_manager project"
 set obj [get_filesets sources_1]
 set files [list {*}$verilog_axilite_adaptor ]
 add_files -norecurse -fileset $obj $files

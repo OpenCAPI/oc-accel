@@ -65,7 +65,7 @@ generate_target all [get_files *addr_ram.xci] >> $logfile
 
 ############################################################################
 #Add source files
-puts "	                Adding design sources to job_manager project"
+puts "                Adding design sources to job_manager project"
 set obj [get_filesets sources_1]
 set files [list {*}$verilog_job_manager ]
 add_files -norecurse -fileset $obj $files
