@@ -18,9 +18,9 @@
 ############################################################################
 ############################################################################
 
-set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
-set src_dir          $root_dir/hdl/infrastructure/data_bridge
-set common_dir       $root_dir/hdl/common
+set hardware_dir     $::env(OCACCEL_HARDWARE_ROOT)
+set src_dir          $hardware_dir/hdl/infrastructure/data_bridge
+set common_dir       $hardware_dir/hdl/common
 
 set verilog_data_bridge [list \
  $common_dir/fifo_sync.v    \

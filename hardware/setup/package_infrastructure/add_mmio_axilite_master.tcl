@@ -18,11 +18,11 @@
 ############################################################################
 ############################################################################
 
-set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
+set hardware_dir     $::env(OCACCEL_HARDWARE_ROOT)
 set capi_ver         $::env(CAPI_VER)
 
-set src_dir          $root_dir/hdl/infrastructure/mmio_axilite_master
-set common_dir       $root_dir/hdl/common
+set src_dir          $hardware_dir/hdl/infrastructure/mmio_axilite_master
+set common_dir       $hardware_dir/hdl/common
 
 set verilog_mmio_axilite_master [list \
  $src_dir/axilite_shim.v    \

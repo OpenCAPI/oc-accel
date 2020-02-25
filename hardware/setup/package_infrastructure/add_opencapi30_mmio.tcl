@@ -18,9 +18,9 @@
 ############################################################################
 ############################################################################
 
-set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
-set src_dir          $root_dir/hdl/infrastructure/opencapi30_mmio
-set common_dir       $root_dir/hdl/common
+set hardware_dir     $::env(OCACCEL_HARDWARE_ROOT)
+set src_dir          $hardware_dir/hdl/infrastructure/opencapi30_mmio
+set common_dir       $hardware_dir/hdl/common
 
 set verilog_opencapi30_mmio [list \
  $src_dir/opencapi30_mmio.v \

@@ -1,14 +1,14 @@
 
 set bd_hier "infra_wrap"
 set action_frequency    $::env(ACTION_CLOCK_FREQUENCY)
-set engine_number       $::env(ENGINE_NUMBER)
+set kernel_number       $::env(KERNEL_NUMBER)
 set width_aximm_ports   $::env(WIDTH_AXIMM_PORTS)
 # Create BD Hier
 create_bd_cell -type hier $bd_hier
 
 ###############################################################################
 # Additiona preparations
-source $root_dir/setup/common/common_funcs.tcl
+source $hardware_dir/setup/common/common_funcs.tcl
 set imp_version [eval my_get_imp_version]
 set build_date [eval my_get_build_date]
 set date_string [eval my_get_date_string $build_date]
@@ -16,7 +16,7 @@ set card_type [eval my_get_card_type]
 
 ###############################################################################
 # Create pins for AXIlite / AXIMM ports
-for {set x 0} {$x < $num_aximm_ports } {incr x} {
+for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     create_bd_intf_pin -mode Slave  -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_aximm_slave$xx
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_axilite_master$xx
@@ -34,7 +34,7 @@ create_bd_pin -dir O $bd_hier/pin_reset_action_n
 
 ###############################################################################
 # Add basic IPs
-add_files -norecurse $root_dir/hdl/infrastructure/clock_reset_gen/clock_reset_gen.v
+add_files -norecurse $hardware_dir/hdl/infrastructure/clock_reset_gen/clock_reset_gen.v
 create_bd_cell -type module -reference clock_reset_gen $bd_hier/clock_reset_gen
 
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:bridge_axi_slave:1.0 $bd_hier/bridge_axi_slave
@@ -44,7 +44,7 @@ set_property -dict [list CONFIG.IMP_VERSION $imp_version ] [get_bd_cells $bd_hie
 set_property -dict [list CONFIG.BUILD_DATE $build_date ] [get_bd_cells $bd_hier/mmio_axilite_master]
 set_property -dict [list CONFIG.CARD_TYPE $card_type ] [get_bd_cells $bd_hier/mmio_axilite_master]
 # Set the same image name and register readout
-exec echo $date_string > $root_dir/setup/build_image/bitstream_date.txt
+exec echo $date_string > $hardware_dir/setup/build_image/bitstream_date.txt
 
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_c1:1.0 $bd_hier/opencapi30_c1
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:opencapi30_mmio:1.0 $bd_hier/opencapi30_mmio
@@ -73,18 +73,18 @@ if {$action_frequency != 200} {
 
 ###############################################################################
 # Add SmartConnect for AXI lite Master
-if {$action_frequency == 200 && $engine_number == 1 && $width_aximm_ports == 1024} {
+if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 1024} {
     # The minimum situation, no SmartConnect is needed
     # Bypass
     connect_bd_intf_net [get_bd_intf_pins $bd_hier/mmio_axilite_master/m_axi] [get_bd_intf_pins $bd_hier/pin_axilite_master00]
 } else {
     create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $bd_hier/smartconnect_axilite
-    set_property -dict [list CONFIG.NUM_SI $engine_number \
+    set_property -dict [list CONFIG.NUM_SI $kernel_number \
                              CONFIG.HAS_ARESETN {0} \
                              CONFIG.NUM_CLKS {2}
                              ] [get_bd_cells $bd_hier/smartconnect_axilite]
 
-    for {set x 0} {$x < $num_aximm_ports } {incr x} {
+    for {set x 0} {$x < $kernel_number } {incr x} {
         set xx [format "%02d" $x]
         connect_bd_intf_net [get_bd_intf_pins $bd_hier/pin_axilite_master$xx ] [get_bd_intf_pins $bd_hier/smartconnect_axilite/M${xx}_AXI] 
     }
@@ -99,18 +99,18 @@ if {$action_frequency == 200 && $engine_number == 1 && $width_aximm_ports == 102
 
 ###############################################################################
 # Add SmartConnect for AXI MM Slave
-if {$action_frequency == 200 && $engine_number == 1 && $width_aximm_ports == 1024} {
+if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 1024} {
     # The minimum situation, no SmartConnect is needed
     # Bypass
     connect_bd_intf_net [get_bd_intf_pins $bd_hier/bridge_axi_slave/s_axi] [get_bd_intf_pins $bd_hier/pin_aximm_slave00]
 } else {
     create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $bd_hier/smartconnect_aximm
-    set_property -dict [list CONFIG.NUM_SI $engine_number \
+    set_property -dict [list CONFIG.NUM_SI $kernel_number \
                              CONFIG.HAS_ARESETN {0} \
                              CONFIG.NUM_CLKS {2}
                              ] [get_bd_cells $bd_hier/smartconnect_aximm]
 
-    for {set x 0} {$x < $num_aximm_ports } {incr x} {
+    for {set x 0} {$x < $kernel_number } {incr x} {
         set xx [format "%02d" $x]
         connect_bd_intf_net [get_bd_intf_pins $bd_hier/pin_aximm_slave$xx ] [get_bd_intf_pins $bd_hier/smartconnect_aximm/S${xx}_AXI] 
     }

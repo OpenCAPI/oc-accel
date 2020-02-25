@@ -12,11 +12,11 @@
 # For all of the strageties, use 
 # join [list_property_value strategy [get_runs impl_1] ]
 #
-set root_dir            $::env(SNAP_HARDWARE_ROOT)
+set hardware_dir            $::env(OCACCEL_HARDWARE_ROOT)
 set logs_dir            $::env(LOGS_DIR)
 set fpga_part           $::env(FPGACHIP)
 set timing_lablimit     $::env(TIMING_LABLIMIT)
-set lsf_impl_list       $root_dir/setup/build_image/$::env(LSF_IMPL_LIST)
+set lsf_impl_list       $hardware_dir/setup/build_image/$::env(LSF_IMPL_LIST)
 set widthCol1 $::env(WIDTHCOL1)
 set widthCol2 $::env(WIDTHCOL2)
 set widthCol3 $::env(WIDTHCOL3)
@@ -65,7 +65,7 @@ foreach stg $impl_strategies {
     set_property strategy "$stg" [get_runs impl_${i}_${stg}]
     set_property flow "Vivado Implementation 2018" [get_runs impl_${i}_${stg}]
   }
-  #set_property STEPS.WRITE_BITSTREAM.TCL.POST ${root_dir}/setup/snap_bitstream_post.tcl [get_runs impl_${i}_${stg}]
+  #set_property STEPS.WRITE_BITSTREAM.TCL.POST ${hardware_dir}/setup/snap_bitstream_post.tcl [get_runs impl_${i}_${stg}]
   puts "                        create impl_${i}_${stg} runs done"
   lappend run_list impl_${i}_${stg}
   incr i

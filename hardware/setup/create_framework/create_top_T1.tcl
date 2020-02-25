@@ -1,25 +1,28 @@
+set root_dir           $::env(OCACCEL_ROOT)
+set hardware_dir       $::env(OCACCEL_HARDWARE_ROOT)
+set fpga_part          $::env(FPGACHIP)
+set fpga_card          $::env(FPGACARD)
+set action_name        $::env(ACTION_NAME)
+set kernel_name        $::env(KERNEL_NAME)
+set kernel_number      $::env(KERNEL_NUMBER)
+set project            "top_project"
+set project_dir        $hardware_dir/build/$project
+set kernel_ip_repo_dir $root_dir/actions/$action_name/hw/hls/$::env(ACTION_NAME)_${fpga_part}/$kernel_name/impl/ip
 
-set root_dir         $::env(OCACCEL_HARDWARE_ROOT)
-set fpga_part        $::env(FPGACHIP)
-set fpga_card        $::env(FPGACARD)
-set engine_number    $::env(ENGINE_NUMBER)
-set project "top_project"
-set project_dir      $root_dir/build/$project
-
-set ip_repo_dir     $root_dir/build/ip_repo
-set interfaces_dir  $root_dir/build/interfaces
+set ip_repo_dir     $hardware_dir/build/ip_repo
+set interfaces_dir  $hardware_dir/build/interfaces
 set bd_name         "top"
 
 create_project $project $project_dir -part $fpga_part -force
 create_bd_design $bd_name
-set_property  ip_repo_paths  [list $ip_repo_dir $interfaces_dir] [current_project]
+set_property  ip_repo_paths  [list $kernel_ip_repo_dir $ip_repo_dir $interfaces_dir] [current_project]
 update_ip_catalog
-add_files -norecurse $root_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
+add_files -norecurse $hardware_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
 
 # Add sub block designs
 # act_wrap and infra_wrap
-source $root_dir/setup/package_action/bd_action_template_A10.tcl
-source $root_dir/setup/package_infrastructure/bd_infra_template_T1.tcl
+source $hardware_dir/setup/package_action/bd_action_template_A10.tcl
+source $hardware_dir/setup/package_infrastructure/bd_infra_template_T1.tcl
 
 # Add IPs
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:oc_host_if:1.0 oc_host_if
@@ -40,16 +43,16 @@ connect_bd_net [get_bd_pins oc_host_if/icap_clk] [get_bd_pins iprog_icap/clk]
 connect_bd_net [get_bd_pins oc_host_if/iprog_go_or] [get_bd_pins iprog_icap/go]
 
 #TODO
-#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_ack] [get_bd_pins act_wrap/eng_wrap/interrupt_ack]
-#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt] [get_bd_pins act_wrap/eng_wrap/interrupt]
-#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_src] [get_bd_pins act_wrap/eng_wrap/interrupt_src]
-#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_ctx] [get_bd_pins act_wrap/eng_wrap/interrupt_ctx]
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_ack] [get_bd_pins act_wrap/kernel_wrap/interrupt_ack]
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt] [get_bd_pins act_wrap/kernel_wrap/interrupt]
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_src] [get_bd_pins act_wrap/kernel_wrap/interrupt_src]
+#connect_bd_net [get_bd_pins infra_wrap/opencapi30_c1/interrupt_ctx] [get_bd_pins act_wrap/kernel_wrap/interrupt_ctx]
 
 # AXI Connections
-for {set x 0} {$x < $engine_number } {incr x} {
+for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
-    connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_aximm_slave$xx]    [get_bd_intf_pins act_wrap/pin_eng${xx}_aximm]
-    connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_axilite_master$xx] [get_bd_intf_pins act_wrap/pin_eng${xx}_axilite]
+    connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_aximm_slave$xx]    [get_bd_intf_pins act_wrap/pin_kernel${xx}_aximm]
+    connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_axilite_master$xx] [get_bd_intf_pins act_wrap/pin_kernel${xx}_axilite]
 }
 #Clock and resets
 
@@ -92,16 +95,16 @@ add_files -norecurse $project_dir/${project}.srcs/sources_1/bd/$bd_name/hdl/${bd
 
 # use bypass
 # Is it a good way to organize like this?
-#        $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \
+#        $hardware_dir/oc-accel-bsp/$fpga_card/xdc/qspi_timing.xdc \
 #
 #
 add_files -fileset constrs_1 -norecurse  [list \
-                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/gty_properties.xdc \
-                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/main_pinout.xdc \
-                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/main_placement_bypass.xdc \
-                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/main_timing.xdc \
-                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/bitstream_config.xdc \
-                                         $root_dir/oc-accel-bsp/$fpga_card/xdc/qspi_pinout.xdc \
+                                         $hardware_dir/oc-accel-bsp/$fpga_card/xdc/gty_properties.xdc \
+                                         $hardware_dir/oc-accel-bsp/$fpga_card/xdc/main_pinout.xdc \
+                                         $hardware_dir/oc-accel-bsp/$fpga_card/xdc/main_placement_bypass.xdc \
+                                         $hardware_dir/oc-accel-bsp/$fpga_card/xdc/main_timing.xdc \
+                                         $hardware_dir/oc-accel-bsp/$fpga_card/xdc/bitstream_config.xdc \
+                                         $hardware_dir/oc-accel-bsp/$fpga_card/xdc/qspi_pinout.xdc \
                                          ] 
 
 close_project

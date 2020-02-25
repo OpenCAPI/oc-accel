@@ -21,13 +21,14 @@
 set capi_ver            $::env(CAPI_VER)
 set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
+set infra_template      $::env(INFRA_TEMPLATE_SELECTION)
 
-set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
-set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
+set hardware_dir        $::env(OCACCEL_HARDWARE_ROOT)
+set fpga_card_dir       $hardware_dir/oc-accel-bsp/$fpga_card
 
-set tcl_dir             $root_dir/setup/package_infrastructure
-source $root_dir/setup/common/common_funcs.tcl
-#source $root_dir/setup/define_build/interfaces.tcl
+set tcl_dir             $hardware_dir/setup/package_infrastructure
+source $hardware_dir/setup/common/common_funcs.tcl
+#source $hardware_dir/setup/common/define_interfaces.tcl
 
 
 #set ip_list [ dict create  \
@@ -42,14 +43,35 @@ source $root_dir/setup/common/common_funcs.tcl
 #
 #foreach ip_name [dict keys $ip_list ] {
 #    set tcl_file [dict get $ip_list $ip_name]
-#    my_package_custom_ip $root_dir/build/temp_projs \
-#                         $root_dir/build/ip_repo    \
-#                         $root_dir/build/interfaces \
+#    my_package_custom_ip $hardware_dir/build/temp_projs \
+#                         $hardware_dir/build/ip_repo    \
+#                         $hardware_dir/build/interfaces \
 #                         $fpga_part           \
 #                         $ip_name             \
 #                         $tcl_file            
 #}
 
+
+############################################################################
+if { $infra_template eq "T3" || $infra_template eq "T2" } {
+my_package_custom_ip $hardware_dir/build/temp_projs     \
+                     $hardware_dir/build/ip_repo        \
+                     $hardware_dir/build/interfaces     \
+                     $fpga_part                     \
+                     job_manager                    \
+                     $tcl_dir/add_job_manager.tcl   \
+					 []
+}
+
+if { $infra_template eq "T3" } {
+my_package_custom_ip $hardware_dir/build/temp_projs     \
+                     $hardware_dir/build/ip_repo        \
+                     $hardware_dir/build/interfaces     \
+                     $fpga_part                     \
+                     axilite_adaptor                \
+                     $tcl_dir/add_axilite_adaptor.tcl \
+					 []
+}
 
 
 ##proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_script bus_array} {
@@ -59,9 +81,9 @@ set bus_array [dict create dma_wr "master"        \
                            lcl_wr "slave"         \
                            lcl_rd "slave"         \
              ]
-my_package_custom_ip $root_dir/build/temp_projs   \
-                     $root_dir/build/ip_repo      \
-                     $root_dir/build/interfaces   \
+my_package_custom_ip $hardware_dir/build/temp_projs   \
+                     $hardware_dir/build/ip_repo      \
+                     $hardware_dir/build/interfaces   \
                      $fpga_part                   \
                      data_bridge                  \
                      $tcl_dir/add_data_bridge.tcl \
@@ -71,9 +93,9 @@ set bus_array [dict create                             \
                            lcl_wr "master"             \
                            lcl_rd "master"             \
              ]
-my_package_custom_ip $root_dir/build/temp_projs        \
-                     $root_dir/build/ip_repo           \
-                     $root_dir/build/interfaces        \
+my_package_custom_ip $hardware_dir/build/temp_projs        \
+                     $hardware_dir/build/ip_repo           \
+                     $hardware_dir/build/interfaces        \
                      $fpga_part                        \
                      bridge_axi_slave                  \
                      $tcl_dir/add_bridge_axi_slave.tcl \
@@ -82,9 +104,9 @@ my_package_custom_ip $root_dir/build/temp_projs        \
 #############################################################################
 set bus_array [dict create mmio "slave"                   \
              ]
-my_package_custom_ip $root_dir/build/temp_projs           \
-                     $root_dir/build/ip_repo              \
-                     $root_dir/build/interfaces           \
+my_package_custom_ip $hardware_dir/build/temp_projs           \
+                     $hardware_dir/build/ip_repo              \
+                     $hardware_dir/build/interfaces           \
                      $fpga_part                           \
                      mmio_axilite_master                  \
                      $tcl_dir/add_mmio_axilite_master.tcl \
@@ -94,9 +116,9 @@ my_package_custom_ip $root_dir/build/temp_projs           \
 set bus_array [dict create tlx_afu "slave"            \
                            mmio "master"              \
              ]
-my_package_custom_ip $root_dir/build/temp_projs       \
-                     $root_dir/build/ip_repo          \
-                     $root_dir/build/interfaces       \
+my_package_custom_ip $hardware_dir/build/temp_projs       \
+                     $hardware_dir/build/ip_repo          \
+                     $hardware_dir/build/interfaces       \
                      $fpga_part                       \
                      opencapi30_mmio                  \
                      $tcl_dir/add_opencapi30_mmio.tcl \
@@ -108,9 +130,9 @@ set bus_array [dict create afu_tlx "master"         \
                            dma_rd "slave"           \
                            cfg_infra_c1 "slave"     \
              ]
-my_package_custom_ip $root_dir/build/temp_projs     \
-                     $root_dir/build/ip_repo        \
-                     $root_dir/build/interfaces     \
+my_package_custom_ip $hardware_dir/build/temp_projs     \
+                     $hardware_dir/build/ip_repo        \
+                     $hardware_dir/build/interfaces     \
                      $fpga_part                     \
                      opencapi30_c1                  \
                      $tcl_dir/add_opencapi30_c1.tcl \
@@ -118,9 +140,9 @@ my_package_custom_ip $root_dir/build/temp_projs     \
 
 ############################################################################
 #set bus_array []
-#my_package_custom_ip $root_dir/build/temp_projs       \
-#                     $root_dir/build/ip_repo          \
-#                     $root_dir/build/interfaces       \
+#my_package_custom_ip $hardware_dir/build/temp_projs       \
+#                     $hardware_dir/build/ip_repo          \
+#                     $hardware_dir/build/interfaces       \
 #                     $fpga_part                       \
 #                     clock_reset_gen                  \
 #                     $tcl_dir/add_clock_reset_gen.tcl \
