@@ -68,7 +68,7 @@ while [ -z "$SETUP_DONE" ]; do
   SETUP_INFO=""
   SETUP_EMPTY=""
   echo  "======================================================="
-  echo  "== SNAP ENVIRONMENT SETUP                            =="
+  echo  "== OC-ACCEL ENVIRONMENT SETUP                        =="
   echo  "======================================================="
 
 

@@ -523,12 +523,13 @@ config ACTION_USER_CLOCK
 	  Leave it unchecked if it is 200MHz.
 
 config HLS_CLOCK_PERIOD_CONSTRAINT
-	prompt "The clock period constrant used when hls is compiled to rtl, only used for hls action"
+	prompt "The HLS clock period constraint used when C code (only used for hls action)"
 	string
 	default "4ns"
 	range "1ns" "20ns"
 	help
-	  The clock period constrant in "ns" used when hls is compiled to rtl, 
+	  The HLS clock period constraint in "ns" used when C code is compiled to rtl, 
+	  By constraining differently HLS tool, packing logic may be different and give you better results.
 
 #config ENABLE_PRFLOW
 #	bool "Cloud build (enabling Partial Reconfiguration)"

@@ -25,6 +25,8 @@ set action_root   $::env(ACTION_ROOT)
 set sdram_used    $::env(SDRAM_USED)
 set nvme_used     $::env(NVME_USED)
 set bram_used     $::env(BRAM_USED)
+set hbm_used      $::env(HBM_USED)
+
 # factory_image is not supported in OC-Accel yet. 
 set factory_image FALSE
 #set factory_image [string toupper $::env(FACTORY_IMAGE)]
@@ -62,6 +64,8 @@ if { $bram_used == "TRUE" } {
   set RAM_TYPE BRAM
 } elseif { $sdram_used == "TRUE" } {
   set RAM_TYPE SDRAM
+} elseif { $hbm_used == "TRUE" } {
+  set RAM_TYPE HBM
 } else {
   set RAM_TYPE noSDRAM
 }
