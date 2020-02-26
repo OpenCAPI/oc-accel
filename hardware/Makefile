@@ -206,7 +206,6 @@ package_hostside: $(HOST_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(HOST_SCRIPT_SRCS
 package_infrastructure: $(INFRA_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(INFRA_SCRIPT_SRCS)
 	@echo -e "[PACKAGE INFRA.......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou > $(templog)
-#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
 ###############################################################################
@@ -234,11 +233,6 @@ action_hw: prepare_logs
 	@echo -e "[CONFIG ACTION HW....] done  `date +"%T %a %b %d %Y"`";
 
 ###############################################################################
-#package_action: $(ACTION_SCRIPT_SRCS)
-#	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
-#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
-##	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
-#	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
 
 top_project: $(COMMON_VERILOG_SRCS) $(COMMON_VERILOG_SRCS)
 	@echo -e "[CREATE TOP PROJECT..] start `date +"%T %a %b %d %Y"`";
