@@ -36,21 +36,18 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
     # Add kernel helper (a small module to handle interrupt src, etc)
     create_bd_cell -type module -reference kernel_helper $kernel_hier/kernel_helper
-    set_property -dict [list CONFIG.C_S_AXI_CONTROL_ADDR_WIDTH {18}] [get_bd_cells $kernel_hier/kernel_helper]
     
     if { $hls_support == "TRUE" } {
         # Add kernel instance
         create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}
+        source $hardware_dir/setup/package_action/hls_action_parse.tcl
 
 
-        if { $hls_support == "TRUE" } {
-            source $hardware_dir/setup/package_action/hls_action_parse.tcl
-            create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $kernel_hier/smartconnect_0
-
-            set_property -dict [list CONFIG.NUM_SI ${num_kernel_axi_masters} \
-                                     CONFIG.NUM_MI {1} ] \
-                               [get_bd_cells $kernel_hier/smartconnect_0]
-        }
+        create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $kernel_hier/smartconnect_0
+        set_property -dict [list CONFIG.NUM_SI ${num_kernel_axi_masters} \
+                                 CONFIG.NUM_MI {1} ] \
+                           [get_bd_cells $kernel_hier/smartconnect_0]
+        set_property -dict [list CONFIG.C_S_AXI_CONTROL_ADDR_WIDTH $kernel_axilite_addr_width] [get_bd_cells $kernel_hier/kernel_helper]
     } else { 
         # For hdl design
         # TODO not finished yet
