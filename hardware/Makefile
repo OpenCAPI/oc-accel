@@ -33,11 +33,9 @@ export OCACCEL_CFLAGS
 
 ocaccel_config_cflags = $(OCACCEL_ROOT)/.ocaccel_config.cflags
 ocaccel_config_sh     = $(OCACCEL_ROOT)/.ocaccel_config.sh
-ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 
 -include $(ocaccel_config_cflags)
 -include $(ocaccel_config_sh)
--include $(ocaccel_env_sh)
 
 export ACTION_ROOT=$(OCACCEL_ROOT)/actions/$(ACTION_NAME)
 SIMULATOR ?= nosim
@@ -119,9 +117,6 @@ check_ocaccel_settings:
 		echo "                        Missing ocaccel config setup file \"$(ocaccel_config_sh)\""; \
 		echo "                        Please make sure that the ocaccel configuration is prepared by calling 'make ocaccel_config'"; \
 		exit -1; \
-	fi
-	@if [ ! -e "$(ocaccel_env_sh)" ]; then \
-		echo "                        Additional ocaccel environment setup file \"$(ocaccel_env_sh)\" doesn't exist."; \
 	fi
 	@echo "                        =============================="
 	@echo "                        hardware/Makefile called with:"
@@ -353,11 +348,11 @@ $(OCACCEL_MODELS):
 
 ifeq ($(UNIT_SIM_USED),TRUE)
 model: check_simulator 
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./run.py --no_configure --no_run_sim; fi
 
 else
 model: check_simulator
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./run.py --no_configure --no_run_sim; fi
 
 endif
 
@@ -368,7 +363,7 @@ sim: check_simulator
 	@$(MAKE) -s .model_$(SIMULATOR)
 	@echo -e "[SIMULATION........] start `date +"%T %a %b %d %Y"`"
 	@echo "                        SIMULATOR is set to $(SIMULATOR)"
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_make_model --simulator_start_timeout 600; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./run.py --no_configure --no_make_model --simulator_start_timeout 600; fi
 	@echo -e "[SIMULATION........] done  `date +"%T %a %b %d %Y"`"
 	@echo " To display traces, execute: ./display_traces"
 

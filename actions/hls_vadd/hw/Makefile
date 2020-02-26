@@ -44,11 +44,9 @@ export LOGS_DIR=$(OCACCEL_HARDWARE_ROOT)/logs
 
 ocaccel_config_cflags = $(OCACCEL_ROOT)/.ocaccel_config.cflags
 ocaccel_config_sh     = $(OCACCEL_ROOT)/.ocaccel_config.sh
-ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 
 -include $(ocaccel_config_cflags)
 -include $(ocaccel_config_sh)
--include $(ocaccel_env_sh)
 export ACTION_ROOT = $(OCACCEL_ROOT)/actions/$(ACTION_NAME)
 ##################################################################################
 #### Please adjust bellowing together with run_hls_script.tcl

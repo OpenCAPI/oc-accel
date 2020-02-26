@@ -99,7 +99,6 @@ class SimSession:
         self.ocaccel_root = env['OCACCEL_ROOT']
 
         source(pathjoin(env['OCACCEL_ROOT'], '.ocaccel_config.sh'))
-        source(pathjoin(env['OCACCEL_ROOT'], 'ocaccel_env.sh'))
 
         self.action_root = pathjoin(self.ocaccel_root, 'actions', env['ACTION_NAME'])
 

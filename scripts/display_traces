@@ -19,15 +19,16 @@
 ############################################################################
 ############################################################################
 #
-ocacceldir=$(dirname $(readlink -f "$BASH_SOURCE")) # path containing this script
+DIR="$(cd "$(dirname $0)" && pwd)"
+
+ocacceldir=$DIR/..
 PATH=$ocacceldir:$PATH
 
 ocaccel_config=$ocacceldir/\.ocaccel_config
 
 simulator=`grep SIMULATOR $ocaccel_config|cut -d = -f 2 |tr -d '"'`
-capi20=`grep CAPI20 .ocaccel_config|cut -d = -f 2`
 
-cd hardware/sim
+cd $ocacceldir/hardware/sim
 if [ $simulator == "xsim" ]; then
   if [ -d "xsim" ]; then
     xsim -gui xsim/latest/top_wrapper.wdb -view debug3_action_gmem_ddr4.wcfg

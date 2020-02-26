@@ -29,7 +29,6 @@
 PLATFORM ?= $(shell uname -i)
 export OCACCEL_ROOT=$(abspath ..)
 
--include ../ocaccel_env.sh
 -include ../.ocaccel_config.sh
 
 ifeq ($(PLATFORM),x86_64)
@@ -60,16 +59,10 @@ endif
 
 # Only build if the subdirectory is really existent
 .PHONY: $(subdirs) install
-$(subdirs): ..check_platform
+$(subdirs):
 	@if [ -d $@ ]; then				\
 		$(MAKE) -C $@ C=0 || exit 1;		\
 	fi
-
-# If we find a OCACCEL binary which is not executable, automatically
-# clean up, such that we get a new build.
-..check_platform:
-	@${OCACCEL_ROOT}/check_platform.sh || \
-	(echo "info: Non executable ocaccel_maint! Rebuild required." && $(MAKE) clean)
 
 # Install/uninstall
 install uninstall:
