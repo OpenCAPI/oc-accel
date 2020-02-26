@@ -81,7 +81,7 @@ int main (int argc, char* argv[])
     struct ocaccel_card* card = NULL;
     struct ocaccel_action* action = NULL;
     char device[128];
-    unsigned long timeout_ms = 1000;
+    unsigned long timeout_ms = 10000000;
     unsigned long t0, dt;
     unsigned int status;
 
@@ -243,7 +243,8 @@ int main (int argc, char* argv[])
     while (dt < timeout_ms) {
         ocaccel_action_read32 (card, 0x00, &status);
 
-        if ((status & 0x2) == 1) {
+        //if ((status & 0x2) == 1) {
+        if (status & 0x2) {
             printf ("Done! \n");
             break;
         }

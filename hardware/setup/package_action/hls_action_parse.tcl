@@ -54,6 +54,7 @@ set kernel_axilite_slaves {}
 set kernel_clock_pin_name ""
 set kernel_reset_pin_name ""
 set kernel_axilite_name ""
+set kernel_axilite_addr_width ""
 foreach intf [dict keys $interfaces] {
     set value [dict get $interfaces $intf]
     set type [dict get $value type]
@@ -107,10 +108,13 @@ if {! [dict exists $axilite registers]} {
         puts $fp "    uint32_t $reg_name = $reg_offset;"
     }
 
+    puts $fp "}; /* register_layout */"
+    puts "$register_layout_file is successfully generated."
+
     set prefix [dict get $axilite port_prefix]
     set kernel_axilite_name $prefix
 
-    puts $fp "}; /* register_layout */"
-    puts "$register_layout_file is successfully generated."
+    set addr_width [dict get $axilite addr_bits]
+    set kernel_axilite_addr_width $addr_width
 }
 
