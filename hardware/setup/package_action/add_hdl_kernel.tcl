@@ -25,41 +25,35 @@ set hardware_dir        $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_card_dir       $hardware_dir/oc-accel-bsp/$fpga_card
 set common_dir          $hardware_dir/hdl/common
 set hls_support         $::env(HLS_SUPPORT)
-
 set action_hw_dir       $::env(ACTION_ROOT)/hw
+
+
+############################################################################
+# Here is the suggested directory structure for a user design
+# 
+# 'hdl': Verilog/VHDL source files, allowing sub-directories
+# 'tcl': Tcl files will be sourced
+# 'xdc': Constraint files will be added
+# 'ip': xci files will be added
 
 set action_hdl_dir       $action_hw_dir/hdl
 set action_tcl_dir       $action_hw_dir/tcl
 set action_xdc_dir       $action_hw_dir/xdc
 set action_ip_dir        $action_hw_dir/ip
 
+if { $hls_support == "TRUE" } {
+    puts "This tcl is only used for HDL action. Exit"
+    exit
+}
 ############################################################################
 #Add source files
-puts "                Adding design sources to action_wrapper project"
-# Set 'sources_1' fileset object, create list of all nececessary verilog files
+puts "                Adding design sources to hdl_kernel project"
 set obj [get_filesets sources_1]
 
 
-#set hdl_source [list \
-# $common_dir/fifo_sync.v    \
-# $common_dir/ram_simple_dual.v    \
-# $src_dir/rd_order_mng_array.v    \
-# $src_dir/wr_order_mng_array.v    \
-# $src_dir/data_bridge_channel.v    \
-# $src_dir/data_bridge.v    \
-#]
+add_files -scan_for_includes -fileset $obj $action_hdl_dir
 
-#set files [list {*}$hdl_source ]
-
-
-if { $hls_support == "TRUE" } {
-    #add_files -scan_for_includes -fileset $obj $action_hw_dir/syn_verilog_link
-    #add_files -scan_for_includes -fileset $obj $action_hw_dir/wrapper
-} else {
-    add_files -scan_for_includes -fileset $obj $action_hdl_dir
-}
-
-
+### Assign Header file here
 #set file "ocaccel_global_vars.v"
 #set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 #set_property -name "file_type" -value "Verilog Header" -objects $file_obj
@@ -71,7 +65,7 @@ if { [file exists $action_ip_dir] == 1 } {
   if { $ip_list != ""} {
     foreach ip_xci $ip_list {
         set ip_name [exec basename $ip_xci .xci]
-        puts "                        importing IP $ip_name into action_wrapper"
+        puts "                        importing IP $ip_name into hdl_kernel"
         add_files -norecurse $ip_xci -force
         #export_ip_user_files -of_objects  [get_files "$ip_xci"] -no_script -sync -force
     }

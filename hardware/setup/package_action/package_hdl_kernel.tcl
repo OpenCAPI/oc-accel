@@ -18,6 +18,8 @@
 ############################################################################
 ############################################################################
 
+# This is script is used for HDL User Design. It helps packaging the kernel into an IP
+
 set capi_ver            $::env(CAPI_VER)
 set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
@@ -27,15 +29,14 @@ set fpga_card_dir       $hardware_dir/oc-accel-bsp/$fpga_card
 
 set tcl_dir             $hardware_dir/setup/package_action
 source $hardware_dir/setup/common/common_funcs.tcl
-#source $tcl_dir/define_build/interfaces/g.tcl
 
 set bus_array ""
-my_package_custom_ip $hardware_dir/build/temp_projs \
-                     $hardware_dir/build/ip_repo    \
-                     $hardware_dir/build/interfaces \
-                     $fpga_part           \
-                     action_wrapper           \
-                     $tcl_dir/add_action_wrapper.tcl      \
+my_package_custom_ip $hardware_dir/build/temp_projs      \
+                     $hardware_dir/build/ip_repo         \
+                     $hardware_dir/build/interfaces      \
+                     $fpga_part                          \
+                     hdl_kernel                          \
+                     $tcl_dir/add_hdl_kernel.tcl         \
                      $bus_array
 #ipx::associate_bus_interfaces -busif m_axi_host_mem -clock ap_clk [ipx::current_core]
 #ipx::associate_bus_interfaces -busif s_axi_ctrl_reg -clock ap_clk [ipx::current_core]
