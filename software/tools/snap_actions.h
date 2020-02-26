@@ -31,7 +31,8 @@ static const struct actions_tab snap_actions[] = {
     { "IBM", 0x10142000, "hdl_example in VHDL  (512b)"                           },
     { "IBM", 0x10142002, "hdl_single_engine in Verilog (1024b)"                  },
     { "IBM", 0x10142004, "UVM test for unit verification (no OCSE and software)" },
-    { "IBM", 0x1014200E, "HDL_multi-process example"                             },
+    { "IBM", 0x1014200E, "HDL multi-process example"                             },
+    { "IBM", 0x1014200F, "HDL database example"                                  },
 /* recommended Usage OC HLS examples use 0x10143xxx IDs */
     { "IBM", 0x10143008, "HLS_Helloworld      (512b)"                           },
     { "IBM", 0x1014300B, "HLS_Memcopy_1024     (1024b)"                          },

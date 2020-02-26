@@ -69,7 +69,7 @@ output    [0007:0]                              m_axi_snap_arlen    ,
 output    [0002:0]                              m_axi_snap_arsize   ,
 output    [0001:0]                              m_axi_snap_arburst  ,
 output    [C_M_AXI_HOST_MEM_ARUSER_WIDTH - 1:0] m_axi_snap_aruser   ,
-output    [0002:0]                              m_axi_snap_arcache  ,
+output    [0003:0]                              m_axi_snap_arcache  ,
 output    [0001:0]                              m_axi_snap_arlock   ,
 output    [0002:0]                              m_axi_snap_arprot   ,
 output    [0003:0]                              m_axi_snap_arqos    ,
@@ -84,40 +84,40 @@ input     [0001:0]                              m_axi_snap_rresp    ,
 input                                           m_axi_snap_rlast    ,
 input                                           m_axi_snap_rvalid   ,
 
-
+input                                           kernel_start        ,
+output                                          kernel_done         ,
+input     [1023:0]                              system_register
 //---- AXI Lite bus interfaced with SNAP core ----
   // AXI write address channel
-input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_baseaddr ,
-output                                          s_axi_snap_awready  ,
-input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_awaddr   ,
-input     [0002:0]                              s_axi_snap_awprot   ,
-input                                           s_axi_snap_awvalid  ,
+//input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_baseaddr ,
+//output                                          s_axi_snap_awready  ,
+//input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_awaddr   ,
+//input     [0002:0]                              s_axi_snap_awprot   ,
+//input                                           s_axi_snap_awvalid  ,
   // axi write data channel
-output                                          s_axi_snap_wready   ,
-input     [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_snap_wdata    ,
-input     [(C_S_AXI_CTRL_REG_DATA_WIDTH/8) -1:0]s_axi_snap_wstrb    ,
-input                                           s_axi_snap_wvalid   ,
+//output                                          s_axi_snap_wready   ,
+//input     [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_snap_wdata    ,
+//input     [(C_S_AXI_CTRL_REG_DATA_WIDTH/8) -1:0]s_axi_snap_wstrb    ,
+//input                                           s_axi_snap_wvalid   ,
   // AXI response channel
-output    [0001:0]                              s_axi_snap_bresp    ,
-output                                          s_axi_snap_bvalid   ,
-input                                           s_axi_snap_bready   ,
+//output    [0001:0]                              s_axi_snap_bresp    ,
+//output                                          s_axi_snap_bvalid   ,
+//input                                           s_axi_snap_bready   ,
   // AXI read address channel
-output                                          s_axi_snap_arready  ,
-input                                           s_axi_snap_arvalid  ,
-input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_araddr   ,
-input     [0002:0]                              s_axi_snap_arprot   ,
+//output                                          s_axi_snap_arready  ,
+//input                                           s_axi_snap_arvalid  ,
+//input     [C_S_AXI_CTRL_REG_ADDR_WIDTH - 1:0]   s_axi_snap_araddr   ,
+//input     [0002:0]                              s_axi_snap_arprot   ,
   // AXI read data channel
-output    [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_snap_rdata    ,
-output    [0001:0]                              s_axi_snap_rresp    ,
-input                                           s_axi_snap_rready   ,
-output                                          s_axi_snap_rvalid   ,
+//output    [C_S_AXI_CTRL_REG_DATA_WIDTH - 1:0]   s_axi_snap_rdata    ,
+//output    [0001:0]                              s_axi_snap_rresp    ,
+//input                                           s_axi_snap_rready   ,
+//output                                          s_axi_snap_rvalid   ,
 
 // Other signals
-input      [31:0]                               i_action_type       ,
-input      [31:0]                               i_action_version
+//input      [31:0]                               i_action_type       ,
+//input      [31:0]                               i_action_version
 );
-
- 
 
 wire            engine_start_pulse ;
 wire            wrap_mode          ;
@@ -143,37 +143,68 @@ wire  [4:0]     tt_awid            ;
 wire  [4:0]     tt_rid             ;
 wire  [4:0]     tt_bid             ;
 wire  [31:0]    snap_context       ;
+reg             wr_done            ;
+reg             rd_done            ;
+reg             kernel_start_r     ;
+reg   [1023:0]  system_register_r  ;
+reg             engine_in_work     ;
 
+assign engine_start_pulse = kernel_start_r;
+assign kernel_done = (wr_done || ((wr_number == 0) && engine_in_work)) && // wr_done 
+                     (rd_done || ((rd_number == 0) && engine_in_work));   // rd_done;
+always@(posedge clk) if (kernel_start) system_register_r <= system_register;
+always@(posedge clk) kernel_start_r <= kernel_start;
+always@(posedge clk or negedge rst_n)
+    if(!rst_n)
+        wr_done <= 1'b0;
+    else if(kernel_start)
+        wr_done <= 1'b0;
+    else if(wr_done_pulse)
+        wr_done <= 1'b1;
 
+always@(posedge clk or negedge rst_n)
+    if(!rst_n)
+        rd_done <= 1'b0;
+    else if(kernel_start)
+        rd_done <= 1'b0;
+    else if(rd_done_pulse)
+        rd_done <= 1'b1;
 
+always@(posedge clk or negedge rst_n)
+    if(!rst_n)
+        engine_in_work <= 1'b0;
+    else if(kernel_start)
+        engine_in_work <= 1'b1;
+    else if(kernel_done)
+        engine_in_work <= 1'b0;
 //---- registers hub for AXI Lite interface ----
- axi_lite_slave #(
-           .DATA_WIDTH   (C_S_AXI_CTRL_REG_DATA_WIDTH   ),
-           .ADDR_WIDTH   (C_S_AXI_CTRL_REG_ADDR_WIDTH   )
- ) maxi_lite_slave (
-                      .clk                ( clk                ) ,
-                      .rst_n              ( rst_n              ) ,
-                      .s_axi_baseaddr     (s_axi_snap_baseaddr ),
-                      .s_axi_awready      ( s_axi_snap_awready ) ,
-                      .s_axi_awaddr       ( s_axi_snap_awaddr  ) ,//32b
-                      .s_axi_awprot       ( s_axi_snap_awprot  ) ,//3b
-                      .s_axi_awvalid      ( s_axi_snap_awvalid ) ,
-                      .s_axi_wready       ( s_axi_snap_wready  ) ,
-                      .s_axi_wdata        ( s_axi_snap_wdata   ) ,//32b
-                      .s_axi_wstrb        ( s_axi_snap_wstrb   ) ,//4b
-                      .s_axi_wvalid       ( s_axi_snap_wvalid  ) ,
-                      .s_axi_bresp        ( s_axi_snap_bresp   ) ,//2b
-                      .s_axi_bvalid       ( s_axi_snap_bvalid  ) ,
-                      .s_axi_bready       ( s_axi_snap_bready  ) ,
-                      .s_axi_arready      ( s_axi_snap_arready ) ,
-                      .s_axi_arvalid      ( s_axi_snap_arvalid ) ,
-                      .s_axi_araddr       ( s_axi_snap_araddr  ) ,//32b
-                      .s_axi_arprot       ( s_axi_snap_arprot  ) ,//3b
-                      .s_axi_rdata        ( s_axi_snap_rdata   ) ,//32b
-                      .s_axi_rresp        ( s_axi_snap_rresp   ) ,//2b
-                      .s_axi_rready       ( s_axi_snap_rready  ) ,
-                      .s_axi_rvalid       ( s_axi_snap_rvalid  ) ,
-
+// axi_lite_slave #(
+//           .DATA_WIDTH   (C_S_AXI_CTRL_REG_DATA_WIDTH   ),
+//           .ADDR_WIDTH   (C_S_AXI_CTRL_REG_ADDR_WIDTH   )
+// ) maxi_lite_slave (
+//                      .clk                ( clk                ) ,
+//                      .rst_n              ( rst_n              ) ,
+//                      .s_axi_baseaddr     (s_axi_snap_baseaddr ),
+//                      .s_axi_awready      ( s_axi_snap_awready ) ,
+//                      .s_axi_awaddr       ( s_axi_snap_awaddr  ) ,//32b
+//                      .s_axi_awprot       ( s_axi_snap_awprot  ) ,//3b
+//                      .s_axi_awvalid      ( s_axi_snap_awvalid ) ,
+//                      .s_axi_wready       ( s_axi_snap_wready  ) ,
+//                      .s_axi_wdata        ( s_axi_snap_wdata   ) ,//32b
+//                      .s_axi_wstrb        ( s_axi_snap_wstrb   ) ,//4b
+//                      .s_axi_wvalid       ( s_axi_snap_wvalid  ) ,
+//                      .s_axi_bresp        ( s_axi_snap_bresp   ) ,//2b
+//                      .s_axi_bvalid       ( s_axi_snap_bvalid  ) ,
+//                      .s_axi_bready       ( s_axi_snap_bready  ) ,
+//                      .s_axi_arready      ( s_axi_snap_arready ) ,
+//                      .s_axi_arvalid      ( s_axi_snap_arvalid ) ,
+//                      .s_axi_araddr       ( s_axi_snap_araddr  ) ,//32b
+//                      .s_axi_arprot       ( s_axi_snap_arprot  ) ,//3b
+//                      .s_axi_rdata        ( s_axi_snap_rdata   ) ,//32b
+//                      .s_axi_rresp        ( s_axi_snap_rresp   ) ,//2b
+//                      .s_axi_rready       ( s_axi_snap_rready  ) ,
+//                      .s_axi_rvalid       ( s_axi_snap_rvalid  ) ,
+/*
                       .engine_start_pulse ( engine_start_pulse ) ,
                       .wrap_mode          ( wrap_mode          ) ,
                       .wrap_len           ( wrap_len           ) ,
@@ -213,7 +244,19 @@ wire  [31:0]    snap_context       ;
  assign tt_awvalid = m_axi_snap_awvalid && m_axi_snap_awready;
  assign tt_bvalid = m_axi_snap_bvalid && m_axi_snap_bready;
  assign tt_awid = m_axi_snap_awid;
- assign tt_bid = m_axi_snap_bid;
+ assign tt_bid = m_axi_snap_bid;&*/
+
+ assign snap_context = system_register_r[1023:992];
+ assign wrap_mode = 'd0;
+ assign wrap_len = 'd0;
+ assign target_address = system_register_r[639:576];
+ assign source_address = system_register_r[575:512];
+ assign wr_number = system_register_r[511:480];
+ assign wr_pattern = system_register_r[479:448];
+ assign rd_number = system_register_r[447:416];
+ assign rd_pattern = system_register_r[415:384];
+ assign wr_init_data = system_register_r[127:96];
+ assign rd_init_data = system_register_r[95:64];
 
 //---- writing channel of AXI master interface facing SNAP ----
  axi_master_wr#(
@@ -251,8 +294,8 @@ wire  [31:0]    snap_context       ;
        .m_axi_bresp        (m_axi_snap_bresp   ),
        .m_axi_bvalid       (m_axi_snap_bvalid  ),
        .engine_start_pulse (engine_start_pulse ),
-       .wrap_mode          ( wrap_mode          ) ,
-       .wrap_len           ( wrap_len           ) ,
+       .wrap_mode          (wrap_mode          ),
+       .wrap_len           (wrap_len           ),
        .target_address     (target_address     ),
        .wr_init_data       (wr_init_data       ),
        .wr_pattern         (wr_pattern         ),
@@ -261,8 +304,6 @@ wire  [31:0]    snap_context       ;
        .wr_error           (wr_error           ),
        .i_snap_context     (snap_context       )
       );
-
-
 
 //---- writing channel of AXI master interface facing SNAP ----
  axi_master_rd#(
@@ -276,7 +317,7 @@ wire  [31:0]    snap_context       ;
                 .BUSER_WIDTH  (C_M_AXI_HOST_MEM_BUSER_WIDTH  )
                 ) maxi_master_rd( 
       .clk                (clk                ),
-      .rst_n              (rst_n), 
+      .rst_n              (rst_n              ), 
       .m_axi_arid         (m_axi_snap_arid    ),
       .m_axi_araddr       (m_axi_snap_araddr  ),
       .m_axi_arlen        (m_axi_snap_arlen   ),
@@ -297,8 +338,8 @@ wire  [31:0]    snap_context       ;
       .m_axi_rlast        (m_axi_snap_rlast   ),
       .m_axi_rvalid       (m_axi_snap_rvalid  ),
       .engine_start_pulse (engine_start_pulse ),
-      .wrap_mode          ( wrap_mode          ) ,
-      .wrap_len           ( wrap_len           ) ,
+      .wrap_mode          (wrap_mode          ),
+      .wrap_len           (wrap_len           ),
       .source_address     (source_address     ),
       .rd_init_data       (rd_init_data       ),
       .rd_pattern         (rd_pattern         ),
