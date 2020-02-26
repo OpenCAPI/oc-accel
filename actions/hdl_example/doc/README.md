@@ -32,7 +32,6 @@
 The following block diagrams show an overview of main blocks interconnections.
 
 On the following diagram we have the top view showing:
-- FPGA pins, connected to PCIe and to configuration flash memory (this directly depends on card schematic and is included in the card PSL_DCP file, see [../../../hardware/README.md](../../../hardware/README.md#ocaccel_env))
 - the PSL block (providing PCIe interface and flash controller)
 - the action wrapper block
 ![Top block_diagram](./top_blocks.png "OCACCEL")

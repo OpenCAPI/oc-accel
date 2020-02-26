@@ -15,28 +15,15 @@
 ## limitations under the License.
 ##
 
-if [[ -z ${OCACCEL_ROOT} ]]; then
-    echo "err: OCACCEL_ROOT not set!"
-    exit 1
-fi
+# This script is NOT needed if you follow the "make" process.
+# However, in some cases, you need these variables get set explicitly. 
 
-OCACCEL_MAINT="${OCACCEL_ROOT}/software/tools/ocaccel_maint"
+DIR="$(cd "$(dirname $0)" && pwd)"
 
-# echo -n "Checking ${OCACCEL_MAINT} ... "
-if [ ! -x ${OCACCEL_MAINT} ]; then
-    # echo "Not build yet!"
-    exit 0
-fi
-# echo "OK"
-
-# Software seems to be build, check if it is properly executable
-# echo -n "Trying out ${OCACCEL_MAINT} ... "
-error=0
-${OCACCEL_MAINT} -h &> /dev/null || error=1
-if [ $error -eq 1 ]; then
-    # echo "Not executable!"
-    exit 1
-fi
-# echo "OK"
-
-exit 0
+export OCACCEL_ROOT=${DIR}/..
+[ -f "${OCACCEL_ROOT}/.ocaccel_config.sh" ] && . ${OCACCEL_ROOT}/.ocaccel_config.sh
+export ACTION_ROOT=$OCACCEL_ROOT/actions/$ACTION_NAME
+export OCACCEL_HARDWARE_ROOT=$OCACCEL_ROOT/hardware
+export PATH=$PATH:$OCACCEL_ROOT/software/tools
+[ -n "$ACTION_ROOT" ] &&  export PATH=$PATH:$ACTION_ROOT/sw
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OCACCEL_ROOT/software/lib

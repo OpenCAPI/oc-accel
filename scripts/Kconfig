@@ -141,16 +141,12 @@ choice
         select ENABLE_HLS_SUPPORT
         help
           This option is a placeholder for an action written by the user in HLS.
-          Please remember to set the environment variable "ACTION_ROOT"
-          in ocaccel_env.sh to the directory of the action source code.
 
     config USER_HDL_ACTION
         bool "New HDL Action"
         help
           This option is a placeholder for an action written by the user in a
           hardware description language such as VHDL or Verilog.
-          Please remember to set the environment variable "ACTION_ROOT"
-          in ocaccel_env.sh to the directory of the action source code.
 
     config HDL_EXAMPLE
         bool "HDL Example"
@@ -583,6 +579,10 @@ config UNIT_SIM_USED
     string
     default "TRUE"  if ENABLE_UNIT_VERIF
     default "FALSE" if ! ENABLE_UNIT_VERIF
+
+config TIMING_LABLIMIT
+    string "TIMING_LABLIMIT"
+    default "-200"
 
 ###############################################################################
 #config ENABLE_FLASH

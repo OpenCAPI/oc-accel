@@ -33,7 +33,6 @@ from ocaccel_utils import append_file
 
 class Configuration:
     def __init__(self, options):
-        self.ocaccel_env_file = pathjoin(options.ocaccel_root, "ocaccel_env.sh")
         self.ocaccel_cfg_file = pathjoin(options.ocaccel_root, ".ocaccel_config")
         self.ocaccel_cfg_file_sh = pathjoin(options.ocaccel_root, ".ocaccel_config.sh")
         self.ocaccel_cfg_file_cflags = pathjoin(options.ocaccel_root, ".ocaccel_config.cflags")
@@ -43,16 +42,6 @@ class Configuration:
         self.simulator = options.simulator
         self.options = options
         self.log = None
-
-    def cfg_existence(self):
-        return isfile(self.ocaccel_env_file) and isfile(self.ocaccel_cfg_file)
-
-    def setup_ocaccel_env(self):
-        sed_file(self.ocaccel_env_file, '\${OCACCEL_ROOT}', self.ocaccel_root)
-        sed_file(self.ocaccel_env_file, '\$OCACCEL_ROOT', self.ocaccel_root)
-
-        if self.action_root is not None:
-            sed_file(self.ocaccel_env_file, 'ACTION_ROOT\s*=\s*(.*)', 'ACTION_ROOT=' + self.action_root)
 
     def setup_cfg(self):
         if self.ocse_path is not None:
@@ -88,9 +77,6 @@ class Configuration:
 
             sed_file(self.ocaccel_cfg_file, '\s*SIMULATOR\s*=\s*".*"\s*$', 'SIMULATOR="%s"' % self.simulator.lower())
     
-        if isfile(self.ocaccel_env_file):
-            sed_file(self.ocaccel_env_file, "^.*ocse_path\s*=.*", "", remove_matched_line = True)
-    
     def update_cfg(self):
         if isfile(self.ocaccel_cfg_file):
             source(self.ocaccel_cfg_file)
@@ -109,9 +95,6 @@ class Configuration:
         self.options.ocse_path = os.path.abspath(self.ocse_path)
  
     def print_cfg(self):
-        if isfile(self.ocaccel_env_file):
-            msg.header_msg("\t%s\t%s" % ("ACTION_ROOT", search_file_group_1(self.ocaccel_env_file, 'ACTION_ROOT\s*=\s*(.*)')))
-    
         if isfile(self.ocaccel_cfg_file):
             msg.header_msg("\t%s\t%s" % ("ACTION_NAME" , search_file_group_1(self.ocaccel_cfg_file , 'ACTION_NAME\s*=\s*"(.*)"')))
             msg.header_msg("\t%s\t%s" % ("FPGACARD"    , search_file_group_1(self.ocaccel_cfg_file , 'FPGACARD\s*=\s*"(.*)"')))
@@ -123,11 +106,8 @@ class Configuration:
     def make_config(self):
         if self.options.predefined_config is not None:
             run_and_wait(cmd = "make -s oldconfig", work_dir = ".", log = self.log)
-            run_and_wait(cmd = "make -s ocaccel_env", work_dir = ".", log = self.log)
         else:
             rc = run_to_stdout(cmd = "make -s menuconfig", work_dir = ".")
-            if rc == 0:
-                rc = run_to_stdout(cmd = "make -s ocaccel_env ocaccel_env_parm=config", work_dir = ".")
 
             if rc != 0:
                 msg.warn_msg("=====================================================================")
@@ -151,7 +131,6 @@ class Configuration:
 
         self.setup_cfg()
         self.make_config()
-        self.setup_ocaccel_env()
         msg.ok_msg("OCACCEL Configured")
 
         msg.header_msg("You've got configuration like:")
