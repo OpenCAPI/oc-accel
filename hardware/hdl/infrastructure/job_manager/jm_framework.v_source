@@ -20,12 +20,18 @@ module jm_framework #(
         input                           clk             ,
         input                           resetn          ,
 
-        output      [KERNEL_NUM-1:0]    kernel_start    ,
-        output      [HOST_DWIDTH-1:0]   kernel_data     ,
-        input       [KERNEL_NUM-1:0]    kernel_ready    ,
-        input       [KERNEL_NUM-1:0]    complete_ready  ,
-        output      [KERNEL_NUM-1:0]    complete_accept ,
-        input       [RETURN_WIDTH*KERNEL_NUM-1:0] complete_data,
+        //: my $kn = NUM_KERNELS;
+        //: for (my $i = 0; $i < $kn; $i++) {
+        //:     print qq(
+        //: output                          kernel_start$i    ,
+        //: output      [HOST_DWIDTH-1:0]   kernel_data$i     ,
+        //: input                           kernel_ready$i    ,
+        //: input                           complete_ready$i  ,
+        //: output                          complete_accept$i ,
+        //: input       [RETURN_WIDTH-1:0]  complete_data$i   ,
+        //:     )
+        //: }
+
         //---- AXI Lite bus----
           // AXI write address channel
         output                          s_axi_awready   ,
@@ -115,6 +121,12 @@ module jm_framework #(
     wire    [PASID_WIDTH-1:0]       cmpl_ram_addr_w ;
     wire                            cmpl_ram_hi_w   ;
     wire                            cmpl_ram_lo_w   ;
+    wire    [KERNEL_NUM-1:0]        kernel_start    ;
+    wire    [HOST_DWIDTH-1:0]       kernel_data     ;
+    wire    [KERNEL_NUM-1:0]        kernel_ready    ;
+    wire    [KERNEL_NUM-1:0]        complete_ready  ;
+    wire    [KERNEL_NUM-1:0]        complete_accept ;
+    wire    [RETURN_WIDTH*KERNEL_NUM-1:0] complete_data;
 
 mp_control #(
         .PINFO_WIDTH    ( PINFO_WIDTH   ),
@@ -259,5 +271,17 @@ job_completion #(
         );
 
     assign job_m_axi_awregion = 'd0;
+
+        //: my $kn = NUM_KERNELS;
+        //: for (my $i = 0; $i < $kn; $i++) {
+        //:     print qq(
+        //: assign kernel_start$i = kernel_start[$i];
+        //: assign kernel_data$i = kernel_data;
+        //: assign kernel_ready[$i] = kernel_ready$i;
+        //: assign complete_ready[$i] = complete_ready$i;
+        //: assign complete_accept$i = complete_accept[$i];
+        //: assign complete_data[$i*RETURN_WIDTH+RETURN_WIDTH-1:$i*RETURN_WIDTH] = complete_data$i;
+        //:     )
+        //: }
 
 endmodule

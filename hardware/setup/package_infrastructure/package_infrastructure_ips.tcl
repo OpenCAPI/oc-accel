@@ -63,7 +63,7 @@ my_package_custom_ip $hardware_dir/build/temp_projs     \
                      []
 }
 
-if { $infra_template eq "T3" } {
+if { $infra_template eq "T2" } {
 my_package_custom_ip $hardware_dir/build/temp_projs     \
                      $hardware_dir/build/ip_repo        \
                      $hardware_dir/build/interfaces     \

@@ -28,6 +28,8 @@ set def_file        $src_dir/def.h
 exec echo "#define NUM_KERNELS $kernel_number" > $def_file
 exec $HDL_PP/vcp -i $src_dir/job_scheduler.v_source -o $src_dir/job_scheduler.vcp -imacros $def_file 2>> $logfile
 exec perl -I $HDL_PP/plugins -Meperl $HDL_PP/eperl -o $src_dir/job_scheduler.v $src_dir/job_scheduler.vcp 2>> $logfile
+exec $HDL_PP/vcp -i $src_dir/jm_framework.v_source -o $src_dir/jm_framework.vcp -imacros $def_file 2>> $logfile
+exec perl -I $HDL_PP/plugins -Meperl $HDL_PP/eperl -o $src_dir/jm_framework.v $src_dir/jm_framework.vcp 2>> $logfile
 
 set verilog_job_manager [list \
  $src_dir/jm_framework.v \
