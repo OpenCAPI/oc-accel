@@ -1,2 +1,0 @@
-# Database Acceleration on CAPI
-
