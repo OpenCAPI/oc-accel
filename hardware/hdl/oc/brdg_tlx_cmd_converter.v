@@ -149,6 +149,7 @@ module brdg_tlx_cmd_converter (
  wire        fifo_w_datcnv_e_ovfl; 
  wire        fifo_w_datcnv_o_ovfl; 
  wire        fifo_w_cmdcnv_ovfl; 
+ wire        fifo_w_cmdcnv_empty;
  reg         tlx_in_cmd_req;
  reg         tlx_in_cmd_ack;
  reg         tlx_in_cmd_rec;
@@ -273,7 +274,7 @@ module brdg_tlx_cmd_converter (
                                 .dout          (fifo_w_cmdcnv_dout  ),
                                 .wr_data_count (fifo_w_cmdcnv_wrcnt ), 
                                 .overflow      (fifo_w_cmdcnv_ovfl  ),
-                                .empty         ()
+                                .empty         (fifo_w_cmdcnv_empty )
                                 );
 
 //---- FIFO for higher 64B write data ----
@@ -393,10 +394,10 @@ module brdg_tlx_cmd_converter (
    if(~rst_n) 
      cmd_crankshaft_sub <= 1'b0;
    else 
-     cmd_crankshaft_sub <= cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2;
+     cmd_crankshaft_sub <= fifo_w_cmdcnv_rdrq;
 
- assign fifo_w_cmdcnv_rdrq   =  cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2;
- assign fifo_w_datcnv_e_rdrq =  cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2;
+ assign fifo_w_cmdcnv_rdrq   =  cmd_crankshaft_main && ~cmd_credit_run_out && ~cmd_data_credit_lt_2 && ~fifo_w_cmdcnv_empty;
+ assign fifo_w_datcnv_e_rdrq =  fifo_w_cmdcnv_rdrq;
  assign fifo_w_datcnv_o_rdrq =  cmd_crankshaft_sub;
  assign fifo_r_cmdcnv_rdrq   = ~cmd_crankshaft_main && ~cmd_credit_run_out &&  fifo_a_cmdcnv_empty && ~tlx_interrupt_valid_pre;
  assign fifo_a_cmdcnv_rdrq   = ~cmd_crankshaft_main && ~cmd_credit_run_out && ~fifo_a_cmdcnv_empty && ~tlx_interrupt_valid_pre;

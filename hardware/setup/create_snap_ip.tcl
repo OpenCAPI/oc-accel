@@ -994,8 +994,8 @@ if { $create_ddr4_ad9v3 == "TRUE" } {
   open_example_project -in_process -force -dir $ip_dir     [get_ips ddr4sdram] >> $log_file
 }
 
-#HBM controller(AD9H3)
-if { $create_hbm_ad9h3 == "TRUE" } {
+#HBM controller(AD9H3/AD9H7)
+if { ($create_hbm_ad9h3 == "TRUE") || ($create_hbm_ad9h7 == "TRUE") } {
   puts "                        generating axi_hbm_dwidth_converter ......"
   create_ip -name axi_dwidth_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_hbm_dwidth_converter -dir $ip_dir  >> $log_file
   set_property -dict [list CONFIG.PROTOCOL {AXI4}              \
@@ -1046,6 +1046,25 @@ if { $create_hbm_ad9h3 == "TRUE" } {
   generate_target all                          [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
   export_ip_user_files -of_objects             [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -no_script -force  >> $log_file
   export_simulation -of_objects [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+}
+
+if { $create_hbm_ad9h7 == "TRUE" } {
+  puts "                        generating axi_hbm_register_slice ......"
+  create_ip -name axi_register_slice -vendor xilinx.com -library ip -version 2.1 -module_name axi_hbm_register_slice -dir $ip_dir  >> $log_file
+  set_property -dict [list CONFIG.ADDR_WIDTH {33}              \
+                           CONFIG.DATA_WIDTH {256}             \
+                           CONFIG.ID_WIDTH {6}                 \
+                           CONFIG.REG_AW {7}                   \
+                           CONFIG.REG_AR {7}                   \
+                           CONFIG.REG_W {1}                    \
+                           CONFIG.REG_R {1}                    \
+                           CONFIG.REG_B {7}                    \
+                           ] [get_ips axi_hbm_register_slice]
+  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
+  generate_target {instantiation_template}     [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -no_script -sync -force  >> $log_file
+  export_simulation    -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 }
 
 # User IPs
