@@ -27,47 +27,64 @@ create_bd_pin -dir I $bd_hier/pin_reset_action_n
 # Note: This example inserts idential kernel_wraps. 
 # If different kernels are used, please modify accordingly
 #
-#add_files -norecurse $hardware_dir/hdl/action_wrap/kernel_helper.v
+add_files -norecurse $hardware_dir/hdl/action_wrapper/kernel_helper.v
 
 for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     set kernel_hier $bd_hier/kernel${xx}_wrap
     create_bd_cell -type hier $kernel_hier
 
-    # Add kernel instance
-    create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}
-
     # Add kernel helper (a small module to handle interrupt src, etc)
-    #create_bd_cell -type module -reference kernel_helper $bd_hier/kernel${xx}_wrap/kernel_helper
-
+    create_bd_cell -type module -reference kernel_helper $kernel_hier/kernel_helper
+    set_property -dict [list CONFIG.C_S_AXI_CONTROL_ADDR_WIDTH {18}] [get_bd_cells $kernel_hier/kernel_helper]
+    
     if { $hls_support == "TRUE" } {
-        source $hardware_dir/setup/package_action/hls_action_parse.tcl
-        create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $kernel_hier/smartconnect_0
+        # Add kernel instance
+        create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}
 
-        set_property -dict [list CONFIG.NUM_SI ${num_kernel_axi_masters} \
-                                 CONFIG.NUM_MI {1} ] \
-                           [get_bd_cells $kernel_hier/smartconnect_0]
+
+        if { $hls_support == "TRUE" } {
+            source $hardware_dir/setup/package_action/hls_action_parse.tcl
+            create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $kernel_hier/smartconnect_0
+
+            set_property -dict [list CONFIG.NUM_SI ${num_kernel_axi_masters} \
+                                     CONFIG.NUM_MI {1} ] \
+                               [get_bd_cells $kernel_hier/smartconnect_0]
+        }
+    } else { 
+        # For hdl design
+        # TODO not finished yet
+        create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}
+
     }
+
 
     # Make connections inside kernel${xx}_wrap
     create_bd_pin -dir I $kernel_hier/pin_clock_kernel
     create_bd_pin -dir I $kernel_hier/reset_n
+    create_bd_intf_pin -mode Master -vlnv opencapi.org:ocaccel:oc_interrupt_rtl:1.0 $kernel_hier/pin_kernel${xx}_interrupt
+
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $kernel_hier/axi_m
-    create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $kernel_hier/axilite_s
+    create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $kernel_hier/s_axilite
 
     connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/${kernel_name}/${kernel_clock_pin_name}]
     connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/smartconnect_0/aclk]
+    connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/kernel_helper/clk]
     connect_bd_net [get_bd_pins $bd_hier/pin_clock_action] [get_bd_pins $kernel_hier/pin_clock_kernel]
 
     connect_bd_net [get_bd_pins $kernel_hier/reset_n] [get_bd_pins $kernel_hier/${kernel_name}/${kernel_reset_pin_name}]
     connect_bd_net [get_bd_pins $kernel_hier/reset_n] [get_bd_pins $kernel_hier/smartconnect_0/aresetn]
+    connect_bd_net [get_bd_pins $kernel_hier/reset_n] [get_bd_pins $kernel_hier/kernel_helper/resetn]
     connect_bd_net [get_bd_pins $bd_hier/pin_reset_action_n] [get_bd_pins $kernel_hier/reset_n]
 
-    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_axilite_name] [get_bd_intf_pins $kernel_hier/axilite_s]
-    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/axilite_s] [get_bd_intf_pins $bd_hier/pin_kernel${xx}_axilite]
+    connect_bd_intf_net [get_bd_intf_pins $bd_hier/pin_kernel${xx}_axilite] [get_bd_intf_pins $kernel_hier/s_axilite]
+    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/s_axilite] [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite] 
+    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/s_axi_control] [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_axilite_name] 
 
     connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_0/M00_AXI] [get_bd_intf_pins $kernel_hier/axi_m]
     connect_bd_intf_net [get_bd_intf_pins $kernel_hier/axi_m] [get_bd_intf_pins $bd_hier/pin_kernel${xx}_aximm]
+
+    connect_bd_net [get_bd_pins $kernel_hier/${kernel_name}/interrupt] [get_bd_pins $kernel_hier/kernel_helper/interrupt_i]
 
     set axi_m_idx 0
     foreach m $kernel_axi_masters {
@@ -86,9 +103,9 @@ for {set x 0} {$x < $kernel_number } {incr x} {
         set_property -dict [list \
                             CONFIG.C_${kernel_master_port_name}_AWUSER_WIDTH {9} \
                             CONFIG.C_${kernel_master_port_name}_ARUSER_WIDTH {9} \
-                            CONFIG.C_${kernel_master_port_name}_WUSER_WIDTH  {9} \
-                            CONFIG.C_${kernel_master_port_name}_RUSER_WIDTH  {9} \
-                            CONFIG.C_${kernel_master_port_name}_BUSER_WIDTH  {9} \
+                            CONFIG.C_${kernel_master_port_name}_WUSER_WIDTH  {1} \
+                            CONFIG.C_${kernel_master_port_name}_RUSER_WIDTH  {1} \
+                            CONFIG.C_${kernel_master_port_name}_BUSER_WIDTH  {1} \
                            ] \
                            [get_bd_cells $kernel_hier/${kernel_name}]
         incr axi_m_idx

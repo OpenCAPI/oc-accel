@@ -97,12 +97,15 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 }
 # Give each Kernel 256KB register access space
 # At least it has one kernel
+
 set_property offset 0x00000000 [get_bd_addr_segs {infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg}]
 set_property range 256K [get_bd_addr_segs {infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg}]
 # For the remaining kernels
 if { $kernel_number > 1 } {
     for {set x 1} {$x < $kernel_number } {incr x} {
         set start_addr [ expr $x * 0x00040000 ]
+        set_property range 256K [get_bd_addr_segs {infra_wrap/mmio_axilite_master/m_axi/SEG_kernel_helper_reg0}]
+
         set_property offset $start_addr [get_bd_addr_segs infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg$x]
         set_property range 256K [get_bd_addr_segs infra_wrap/mmio_axilite_master/m_axi/SEG_vadd_Reg$x]
     }

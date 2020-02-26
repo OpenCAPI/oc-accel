@@ -20,6 +20,7 @@ module mmio_axilite_master
             # (
                 parameter IMP_VERSION = 64'h1000_0000_0000_0000,
                 parameter BUILD_DATE = 64'h0000_2000_0101_0800,
+                parameter ACTION_IDENTIFIER = 32'h0000000000,
                 parameter OTHER_CAPABILITY = 56'h0,
                 parameter CARD_TYPE = 8'h31
               )

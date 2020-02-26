@@ -17,13 +17,13 @@
 // kernel helper will handel some special registers
 
 module kernel_helper # (
-              parameter  ACTION_TYPE      = 32'h10143FFF,
+              parameter  KERNEL_TYPE      = 32'h0000ABCD,
               parameter  RELEASE_LEVEL    = 32'h00000001,
-              parameter  SPECIAL_REG_BASE = 32'h00001000,
+              parameter  SPECIAL_REG_BASE = 32'h00010000,
               parameter  INT_BITS = 64,
               parameter  CTXW = 9,
               parameter  C_S_AXI_CONTROL_DATA_WIDTH = 32,
-              parameter  C_S_AXI_CONTROL_ADDR_WIDTH = 6
+              parameter  C_S_AXI_CONTROL_ADDR_WIDTH = 32
               )
 (
    input                                   clk                      ,
@@ -81,6 +81,83 @@ module kernel_helper # (
    //But if there is a need, it can also be added here.
 
     );
+// Use some address @ 128KB base
+// The whole configuration address space for one kernel is 256KB
+localparam ADDR_KERNEL_TYPE                  = 32'h10 + SPECIAL_REG_BASE; //Read Only
+localparam ADDR_RELEASE_LEVEL                = 32'h14 + SPECIAL_REG_BASE; //Read Only
+localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_LO = 32'h18 + SPECIAL_REG_BASE; //Write Only
+localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_HI = 32'h1C + SPECIAL_REG_BASE; //Write Only
+localparam ADDR_CONTEXT                      = 32'h20 + SPECIAL_REG_BASE; //Read-Write
+
+
+
+reg [31:0] reg_context;
+reg [31:0] reg_interrupt_src_hi;
+reg [31:0] reg_interrupt_src_lo;
+reg interrupt_q;
+reg interrupt_wait_ack_q;
+
+
+
+//==========================================
+always @ (posedge clk)
+    if (~resetn)
+        reg_context      <= 32'h0;
+    else if (s_axilite_wvalid && (s_axilite_awaddr = ADDR_CONTEXT ))
+        reg_context      <= s_axilite_wdata;
+
+
+//==========================================
+// Interrupt handshaking logic
+always @ (posedge clk)
+     if (~resetn) begin
+        interrupt_q          <= 1'b0;
+        interrupt_wait_ack_q <= 1'b0;
+     end
+     else begin
+         interrupt_wait_ack_q <= (interrupt_i & ~interrupt_q ) | (interrupt_wait_ack_q & ~interrupt_ack);
+         interrupt_q          <= interrupt_i & (interrupt_q | ~interrupt_wait_ack_q);
+     end
+
+// Interrupt output signals
+  // Generating interrupt pulse
+assign  interrupt_req     = interrupt_i & ~interrupt_q;
+  // use fixed interrupt source id '0x4' for HLS interrupts
+  // (the high order bit of the source id is assigned by SNAP)
+always @ (posedge clk)
+    if (~resetn) begin
+        reg_interrupt_src_hi <= 32'b0;
+        reg_interrupt_src_lo <= 32'b0;
+    end
+    else if (s_axilite_wvalid  && (s_axilite_awaddr == ADDR_ACTION_INTERRUPT_SRC_ADDR_HI))
+        reg_interrupt_src_hi <= s_axilite_wdata;
+    else if (s_axilite_wvalid  && (s_axilite_awaddr == ADDR_ACTION_INTERRUPT_SRC_ADDR_LO))
+        reg_interrupt_src_lo <= s_axilite_wdata;
+
+assign  interrupt_src = {reg_interrupt_src_hi, reg_interrupt_src_lo};
+  // context ID
+assign  interrupt_ctx = reg_context;
+
+
+//==========================================
+//When read KERNEL_TYPE and RELEASE_LEVEL, the return data is handled here. 
+//hls_action will return RVALID (acknowledgement), RDATA=0
+//and RDATA is ORed with this reg_rdata_hijack. 
+reg  [31:0] reg_rdata_hijack; //This will be ORed with the return data of hls_action
+always @ (posedge clk)
+    if (~resetn) begin
+        reg_rdata_hijack <= 32'h0;
+    end
+    else if (s_axilite_arvalid == 1'b1) begin
+        if (s_axilite_araddr == ADDR_KERNEL_TYPE)
+            reg_rdata_hijack <= KERNEL_TYPE;
+        else if (s_axilite_araddr == ADDR_RELEASE_LEVEL)
+            reg_rdata_hijack <= RELEASE_LEVEL;
+        else if (s_axilite_araddr == ADDR_CONTEXT)
+            reg_rdata_hijack <= reg_context;
+        else
+            reg_rdata_hijack <= 32'h0;
+    end
 
 // Bypass most of the connections
 
@@ -104,80 +181,5 @@ assign /*  input */  s_axilite_bresp       = s_axi_control_BRESP ;
 
 
 
-// Use some address far away
-localparam ADDR_ACTION_TYPE                  = 32'h10 + SPECIAL_REG_BASE;
-localparam ADDR_RELEASE_LEVEL                = 32'h14 + SPECIAL_REG_BASE;
-localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_LO = 32'h18 + SPECIAL_REG_BASE;
-localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_HI = 32'h1C + SPECIAL_REG_BASE;
-localparam ADDR_RETURN_CODE                  = 32'h20 + SPECIAL_REG_BASE;
-
-
-
-reg context_q;
-reg [31:0] interrupt_src_hi;
-reg [31:0] interrupt_src_lo;
-reg interrupt_q;
-reg interrupt_wait_ack_q;
-
-
-
-//==========================================
-// Context is not implemented
-always @ (posedge clk)
-    if (~resetn)
-        context_q <= 0;
-//    else if (s_axilite_wvalid && (s_axilite_awaddr = ADDR_CTX_ID_REG )
-//        context_q <= s_axilite_wdata;
-
-
-//==========================================
-// Interrupt handshaking logic
-always @ (posedge clk)
-     if (~resetn) begin
-        interrupt_q          <= 1'b0;
-        interrupt_wait_ack_q <= 1'b0;
-     end
-     else begin
-         interrupt_wait_ack_q <= (interrupt_i & ~interrupt_q ) | (interrupt_wait_ack_q & ~interrupt_ack);
-         interrupt_q          <= interrupt_i & (interrupt_q | ~interrupt_wait_ack_q);
-     end
-
-// Interrupt output signals
-  // Generating interrupt pulse
-assign  interrupt_req     = interrupt_i & ~interrupt_q;
-  // use fixed interrupt source id '0x4' for HLS interrupts
-  // (the high order bit of the source id is assigned by SNAP)
-always @ (posedge clk)
-    if (~resetn) begin
-        interrupt_src_hi <= 32'b0;
-        interrupt_src_lo <= 32'b0;
-    end
-    else if (s_axilite_wvalid  && (s_axilite_awaddr == ADDR_ACTION_INTERRUPT_SRC_ADDR_HI))
-        interrupt_src_hi <= s_axilite_wdata;
-    else if (s_axilite_wvalid  && (s_axilite_awaddr == ADDR_ACTION_INTERRUPT_SRC_ADDR_LO))
-        interrupt_src_lo <= s_axilite_wdata;
-
-assign  interrupt_src = {interrupt_src_hi, interrupt_src_lo};
-  // context ID
-assign  interrupt_ctx = context_q;
-
-
-//==========================================
-//When read ACTION_TYPE and RELEASE_LEVEL, the return data is handled here. 
-//hls_action will return RVALID (acknowledgement), RDATA=0
-//and RDATA is ORed with this reg_rdata_hijack. 
-reg  [31:0] reg_rdata_hijack; //This will be ORed with the return data of hls_action
-always @ (posedge clk)
-    if (~resetn) begin
-        reg_rdata_hijack <= 32'h0;
-    end
-    else if (s_axilite_arvalid == 1'b1) begin
-        if (s_axilite_araddr == ADDR_ACTION_TYPE)
-            reg_rdata_hijack <= ACTION_TYPE;
-        else if (s_axilite_araddr == ADDR_RELEASE_LEVEL)
-            reg_rdata_hijack <= RELEASE_LEVEL;
-        else
-            reg_rdata_hijack <= 32'h0;
-    end
 
 endmodule
