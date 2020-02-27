@@ -27,7 +27,7 @@ create_bd_pin -dir I $bd_hier/pin_reset_action_n
 # Note: This example inserts idential kernel_wraps. 
 # If different kernels are used, please modify accordingly
 #
-add_files -norecurse $hardware_dir/hdl/action_wrapper/kernel_helper.v
+add_files -norecurse $hardware_dir/hdl/action_wrapper/kernel_helper_A10.v
 
 for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
@@ -43,6 +43,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
         source $hardware_dir/setup/package_action/hls_action_parse.tcl
 
 
+        # Add kernel smart connect
         create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 $kernel_hier/smartconnect_0
         set_property -dict [list CONFIG.NUM_SI ${num_kernel_axi_masters} \
                                  CONFIG.NUM_MI {1} ] \
@@ -56,13 +57,16 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     }
 
 
-    # Make connections inside kernel${xx}_wrap
+    ###############################################################################
+    # Create kernel_hier pins
     create_bd_pin -dir I $kernel_hier/pin_clock_kernel
     create_bd_pin -dir I $kernel_hier/reset_n
     create_bd_intf_pin -mode Master -vlnv opencapi.org:ocaccel:oc_interrupt_rtl:1.0 $kernel_hier/pin_kernel${xx}_interrupt
 
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $kernel_hier/axi_m
     create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $kernel_hier/s_axilite
+    
+    # Make connections inside kernel${xx}_wrap
 
     connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/${kernel_name}/${kernel_clock_pin_name}]
     connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/smartconnect_0/aclk]
@@ -75,10 +79,11 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     connect_bd_net [get_bd_pins $bd_hier/pin_reset_action_n] [get_bd_pins $kernel_hier/reset_n]
 
     connect_bd_intf_net [get_bd_intf_pins $bd_hier/pin_kernel${xx}_axilite] [get_bd_intf_pins $kernel_hier/s_axilite]
-    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/s_axilite] [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite] 
-    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/s_axi_control] [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_axilite_name] 
+    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/s_axilite] [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite_i2h] 
+    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite_h2k] [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_axilite_name] 
 
-    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_0/M00_AXI] [get_bd_intf_pins $kernel_hier/axi_m]
+    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_0/M00_AXI] [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_k2h]
+    connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_h2i] [get_bd_intf_pins $kernel_hier/axi_m]
     connect_bd_intf_net [get_bd_intf_pins $kernel_hier/axi_m] [get_bd_intf_pins $bd_hier/pin_kernel${xx}_aximm]
 
     connect_bd_net [get_bd_pins $kernel_hier/${kernel_name}/interrupt] [get_bd_pins $kernel_hier/kernel_helper/interrupt_i]
@@ -89,22 +94,23 @@ for {set x 0} {$x < $kernel_number } {incr x} {
         set sc_id [format "%02d" $axi_m_idx]
         connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_0/S${sc_id}_AXI] [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_master_port_name]
 
-        # Enable AXI ID and AXI USER ports for each AXI master interface
-        set_property -dict [list \
-                            CONFIG.C_${kernel_master_port_name}_ENABLE_USER_PORTS {true} \
-                           ] \
-                           [get_bd_cells $kernel_hier/${kernel_name}]
-
-        # USER WIDTH -> 9
-        # ID WIDTH -> set by the environment in ::env(AXI_ID_WIDTH)
-        set_property -dict [list \
-                            CONFIG.C_${kernel_master_port_name}_AWUSER_WIDTH {9} \
-                            CONFIG.C_${kernel_master_port_name}_ARUSER_WIDTH {9} \
-                            CONFIG.C_${kernel_master_port_name}_WUSER_WIDTH  {1} \
-                            CONFIG.C_${kernel_master_port_name}_RUSER_WIDTH  {1} \
-                            CONFIG.C_${kernel_master_port_name}_BUSER_WIDTH  {1} \
-                           ] \
-                           [get_bd_cells $kernel_hier/${kernel_name}]
+         # Not used any more! USER signals now are handled by kernel_helper
+#        # Enable AXI ID and AXI USER ports for each AXI master interface
+#        set_property -dict [list \
+#                            CONFIG.C_${kernel_master_port_name}_ENABLE_USER_PORTS {true} \
+#                           ] \
+#                           [get_bd_cells $kernel_hier/${kernel_name}]
+#
+#        # USER WIDTH -> 9
+#        # ID WIDTH -> set by the environment in ::env(AXI_ID_WIDTH)
+#        set_property -dict [list \
+#                            CONFIG.C_${kernel_master_port_name}_AWUSER_WIDTH {1} \
+#                            CONFIG.C_${kernel_master_port_name}_ARUSER_WIDTH {1} \
+#                            CONFIG.C_${kernel_master_port_name}_WUSER_WIDTH  {1} \
+#                            CONFIG.C_${kernel_master_port_name}_RUSER_WIDTH  {1} \
+#                            CONFIG.C_${kernel_master_port_name}_BUSER_WIDTH  {1} \
+#                           ] \
+#                           [get_bd_cells $kernel_hier/${kernel_name}]
         incr axi_m_idx
     }
 }
