@@ -36,15 +36,15 @@ VERBOSE=0
 function usage() {
 	echo "Usage: $PROGRAM"
 	echo "    [-v] Prints extra information (to be put as first param)"
-	echo "    [-A] <accelerator> use either ADKU3, N250S, S121B_BPIx16, S121B_SPIx4, AD8K5, RCXVUP, FX609, S241, N250SP, AD9V3, AD9H3, AD9H7, U200 or ALL"
+	echo "    [-A] <accelerator> use either ADKU3, N250S, S121B_BPIx16, S121B_SPIx4, AD8K5, RCXVUP, FX609, S241, N250SP, AD9V3, OC-AD9V3, AD9H3, OC-AD9H3, U200 or ALL"
 	echo "    [-C] <0..3> Print accelerator name for this Card"
 	echo "    [-V] provides version"
 	echo "  prints out a list of CAPI Cards found in this System."
 	echo
 	echo "  Supported CAPI Cards are:"
 	echo "     [N250S ADKU3 S121B_BPIx16 S121B_SPIx4 AD8K5 RCXVUP N250SP S241 FX609 AD9V3 U200]"
-	echo "  Supported OpenCAPI Cards are:"
-	echo "     [AD9V3 AD9H3 AD9H7]"
+	 echo "  Supported OpenCAPI Cards are:"
+	echo "     [OC-AD9V3 OC-AD9H3]"
 	echo "     ------------------- Example -----------------------------------------"
 	echo "     $PROGRAM -A ALL"
 	echo "        Print a list (e.g. 0 1 2 3) of all CAPI cards in this System"
@@ -319,6 +319,10 @@ while getopts ":vA:C:Vh" opt; do
 		if [ $? == 1 ]; then
 			rc=1
 		fi
+		detect_card_name $card  "0x0632" "0x0667" "AD9H3"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
 		detect_card_name $card  "0x0632" "0x0665" "U200"
 		if [ $? == 1 ]; then
 			rc=1
@@ -332,13 +336,9 @@ while getopts ":vA:C:Vh" opt; do
                         rc=1
                 fi
 		detect_oc_card_name $card  "0x062b" "0x0667" "OC-AD9H3"
-                if [ $? == 1 ]; then
-                        rc=1
-                fi
-		detect_oc_card_name $card  "0x062b" "0x0666" "OC-AD9H7"
-                if [ $? == 1 ]; then
-                        rc=1
-                fi
+		 if [ $? == 1 ]; then
+		        rc=1
+		fi
 		exit $rc
 		;;
 	V)
@@ -415,6 +415,16 @@ case ${accel} in
 		detect_snap_cards "0x0632" "0x04dd" "N250SP"
 		RC=$?
 		;;
+	# OC-AD9V3 OpenCAPI 3.0 card from Alphadata
+	"OC-AD9V3")
+		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
+		RC=$?
+		;;
+	# OC-AD9H3 OpenCAPI 3.0 card from Alphadata
+	"OC-AD9H3")
+		detect_snap_cards "0x062b" "0x0607" "OC-AD9H3"
+		RC=$?
+		;;
 	# U200 CAPI 2.0 card from Xilinx
 	"U200")
 		detect_snap_cards "0x0632" "0x0665" "U200"
@@ -425,21 +435,10 @@ case ${accel} in
                 detect_snap_cards "0x0632" "0x060f" "AD9V3"
                 RC=$?
                 ;;
-	# AD9V3 CAPI 3.0 card from Alphadata
-	"OC-AD9V3")
-		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
+	# AD9H3 CAPI 2.0 card from Alphadata
+	"AD9H3")
+		detect_snap_cards "0x0632" "0x0667" "AD9H3"
 		RC=$?
-		;;
-	# AD9H3 CAPI 3.0 card from Alphadata
-	"OC-AD9H3")
-		detect_snap_cards "0x062b" "0x0667" "OC-AD9H3"
-		RC=$?
-		;;
-	# AD9H7 CAPI 3.0 card from Alphadata
-	"OC-AD9H7")
-		detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
-		RC=$?
-		;;
 	"ALL")
 		# detect all cards and add Number of Cards
 		detect_snap_cards "0x0632" "0x0605" "ADKU3"
@@ -475,18 +474,17 @@ case ${accel} in
 		detect_snap_cards "0x0632" "0x060f" "AD9V3"
 		RC=$((RC + $?))
 
+                detect_snap_cards "0x0632" "0x0667" "AD9H3"
+		RC=$((RC + $?))
+
 		detect_snap_cards "0x0632" "0x0665" "U200"
 		RC=$((RC + $?))
 
 		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x062b" "0x0667" "OC-AD9H3"
+		detect_snap_cards "0x062b" "0x067f" "OC-AD9H3"
 		RC=$((RC + $?))
-
-		detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
-		RC=$((RC + $?))
-
 		echo -e "\nTotal $RC cards detected \n"
  		;;
 	*)
