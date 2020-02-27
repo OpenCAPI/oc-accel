@@ -539,6 +539,25 @@ wire brdg_odma_rst_n      ;
         .cfg_actag_base                              ( cfg_actag_base                   ) ,
         .cfg_pasid_base                              ( cfg_pasid_base                   ) ,
         .cfg_pasid_length                            ( cfg_pasid_length                 ) ,
+
+       // STATUS
+        .debug_cnt_clear                             ( debug_cnt_clear                  ) ,
+        .debug_tlx_cnt_cmd                           ( debug_tlx_cnt_cmd                ) ,
+        .debug_tlx_cnt_rsp                           ( debug_tlx_cnt_rsp                ) ,
+        .debug_tlx_cnt_retry                         ( debug_tlx_cnt_retry              ) ,
+        .debug_tlx_cnt_fail                          ( debug_tlx_cnt_fail               ) ,
+        .debug_tlx_cnt_xlt_pd                        ( debug_tlx_cnt_xlt_pd             ) ,
+        .debug_tlx_cnt_xlt_done                      ( debug_tlx_cnt_xlt_done           ) ,
+        .debug_tlx_cnt_xlt_retry                     ( debug_tlx_cnt_xlt_retry          ) ,
+        .debug_axi_cnt_cmd                           ( debug_axi_cnt_cmd                ) , 
+        .debug_axi_cnt_rsp                           ( debug_axi_cnt_rsp                ) , 
+        .debug_buf_cnt                               ( debug_buf_cnt                    ) , 
+        .debug_traffic_idle                          ( debug_traffic_idle               ) ,
+        .debug_tlx_idle_lim                          ( debug_tlx_idle_lim               ) ,
+        .debug_axi_idle_lim                          ( debug_axi_idle_lim               ) ,
+        .fir_fifo_overflow                           ( fir_fifo_overflow                ) ,
+        .fir_tlx_interface                           ( fir_tlx_interface                ) ,
+
       //
       //
       // AFU-TLX command transmit interface
