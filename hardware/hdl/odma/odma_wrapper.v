@@ -321,7 +321,6 @@ wire   [063:0]  tlx_r_cmd_be      ;
 
 wire wbuf_empty, rbuf_empty;
 wire last_context_cleared = wbuf_empty && rbuf_empty;
-wire context_update_ongoing   ;
 
 //===============================================================================================================
 //         WIRES: data_bridge with cmd_enc & rsp_dec
@@ -1109,7 +1108,7 @@ odma
                 /*output [0127:0]       */          .lcl_rd_be          ( lcl_rd_be          ),
                 /*output [0008:0]       */          .lcl_rd_ctx         ( lcl_rd_ctx         ),
                 /*output                */          .lcl_rd_ctx_valid   ( lcl_rd_ctx_valid   ),
-                /*input                 */          .lcl_rd_ready       ( lcl_rd_ready && ~context_update_ongoing       ),
+                /*input                 */          .lcl_rd_ready       ( lcl_rd_ready       ),
                 //-------------- Read Data/Resp Channel-----------//
                 /*input                 */          .lcl_rd_data_valid  ( lcl_rd_data_valid  ),
                 /*input  [1023:0]       */          .lcl_rd_data        ( lcl_rd_data        ),
@@ -1129,7 +1128,7 @@ odma
                 /*output [1023:0]       */          .lcl_wr_data        ( lcl_wr_data        ),
                 /*output [0008:0]       */          .lcl_wr_ctx         ( lcl_wr_ctx         ),
                 /*output                */          .lcl_wr_ctx_valid   ( lcl_wr_ctx_valid   ),
-                /*input                 */          .lcl_wr_ready       ( lcl_wr_ready && ~context_update_ongoing     ),
+                /*input                 */          .lcl_wr_ready       ( lcl_wr_ready       ),
                 //-------------- Write Response Channel ----------//
                 /*input                 */          .lcl_wr_rsp_valid   ( lcl_wr_rsp_valid   ),
                 /*input  [IDW - 1:0]    */          .lcl_wr_rsp_axi_id  ( lcl_wr_rsp_axi_id  ),
