@@ -138,10 +138,10 @@ function test_hard()
 	while [ 1 ]; do
 		wait_flag=0
 		if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
-		     echo "executing : sudo ./oc-flash-script.sh -f -C $card -f $IMAGE"
+		     echo "executing non SPI case : sudo ./oc-flash-script.sh -f -C $card -f $IMAGE"
 		sudo ./oc-flash-script.sh -f -C $card -f $IMAGE
 		else 
-                     echo "executing : sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2"
+                     echo "executing SPI case : sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2"
                      sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2
 	        fi
 		RC=$?
@@ -342,8 +342,15 @@ if [[ $accel != "ALL" ]]; then
 				# -C Option was set.
 				# Make sure i did get the correct values for -A and -C
 				accel_to_use=`./software/tools/oc_find_card -C $CARD`
+                                echo "accel_to_use=$accel_to_use"
+                                echo "accel       =$accel"
+                                echo "CARD        =$CARD"
 				if [ "$accel_to_use" == "$accel" ]; then
-					test_hard $accel $CARD $BINFILE
+	                                if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
+						test_hard $accel $CARD $BINFILE
+					else
+						test_hard $accel $CARD $BINFILE $BINFILE2
+					fi
 					if [ $? -ne 0 ]; then
 						exit 1
 					fi
