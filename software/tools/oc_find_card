@@ -27,8 +27,9 @@
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-# modified jan 16th 2018 to have -v option providing extra information
-version=2.0
+# v2.0 : modified Jan 16th 2018 to have -v option providing extra information
+# v2.1 : modified Feb 26th 2020 adding AD9Hx in CAPI2 and OC modes
+version=2.1
 accel=UNKNOWN
 VERBOSE=0
 
@@ -36,24 +37,26 @@ VERBOSE=0
 function usage() {
 	echo "Usage: $PROGRAM"
 	echo "    [-v] Prints extra information (to be put as first param)"
-	echo "    [-A] <accelerator> use either ADKU3, N250S, S121B_BPIx16, S121B_SPIx4, AD8K5, RCXVUP, FX609, S241, N250SP, AD9V3, OC-AD9V3, AD9H3, OC-AD9H3, U200 or ALL"
+	echo "    [-A] <accelerator> use either ADKU3, N250S, S121B_BPIx16, S121B_SPIx4, AD8K5, RCXVUP, FX609, S241, N250SP, AD9V3, OC-AD9V3, AD9H3, OC-AD9H3, AD9H7, OC-AD9H7, U200 or ALL"
 	echo "    [-C] <0..3> Print accelerator name for this Card"
 	echo "    [-V] provides version"
 	echo "  prints out a list of CAPI Cards found in this System."
 	echo
 	echo "  Supported CAPI Cards are:"
-	echo "     [N250S ADKU3 S121B_BPIx16 S121B_SPIx4 AD8K5 RCXVUP N250SP S241 FX609 AD9V3 U200]"
-	 echo "  Supported OpenCAPI Cards are:"
-	echo "     [OC-AD9V3 OC-AD9H3]"
+	echo "     [N250S ADKU3 S121B_BPIx16 S121B_SPIx4 AD8K5 RCXVUP N250SP S241 FX609 AD9V3 AD9H3 AD9H7 U200]"
+	echo "  Supported OpenCAPI Cards are:"
+	echo "     [OC-AD9V3 OC-AD9H3 OC-AD9H7]"
 	echo "     ------------------- Example -----------------------------------------"
 	echo "     $PROGRAM -A ALL"
 	echo "        Print a list (e.g. 0 1 2 3) of all CAPI cards in this System"
 	echo "     $PROGRAM -A ADKU3"
 	echo "        Prints a list of ADKU3 CAPI Cards found"
+        echo "     $PROGRAM -A OC-AD9V3"
+        echo "        Prints a list of OC-AD9V3 OpenCAPI Cards found"
 	echo "     $PROGRAM -C 0"
-	echo "         Prints the Type of CAPI Card 0"
+	echo "         Prints the Type of CAPI/OpenCAPI Card 0"
 	echo "     $PROGRAM -v -A ALL"
-	echo "         Prints Verbose Informations for all CAPI Cards"
+	echo "         Prints Verbose Informations for all CAPI/OpenCAPI Cards"
 	echo "  Exit code will return how many accelerator's are available."
 }
 
@@ -72,7 +75,7 @@ function wait_no_flash() {
 	done
 	if [ $i -ge 50 ]; then
 		if [ $VERBOSE -eq 1 ] ; then
-		  echo "ERROR: Timeout. Flash is pending ......."
+		  echo "ERROR: Timeout. Flash is being accessed ......."
 		fi
 		exit 0
 	fi
@@ -80,17 +83,17 @@ function wait_no_flash() {
 
 function wait_no_flash_oc() {
         for i in `seq 1 50`; do 
-                if [ ! -d /var/ocxl/capi-flash-script.lock ]; then
+                if [ ! -d /var/ocxl/oc-flash-script.lock ]; then
                         break;                                  
                 fi                                                      
                 sleep 5                                                         
                 if [ $VERBOSE -eq 1 ] ; then                                                      
-                  echo "capi-flash-script is locked in /var/ocxl. Waiting for unlock (250s)"               
+                  echo "oc-flash-script is locked in /var/ocxl. Waiting for unlock (250s)"               
                 fi                                                                                        
         done                                                                                              
         if [ $i -ge 50 ]; then                                                                                            
                 if [ $VERBOSE -eq 1 ] ; then                                                                                                
-                  echo "ERROR: Timeout. Flash is pending ......."                                                                                   
+                  echo "ERROR: Timeout. Flash is being accessed ......."                                                                                   
                 fi                                                                                                                                          
                 exit 0                                                                                                                                      
         fi                                                                                                                                          
@@ -140,7 +143,7 @@ function detect_snap_cards() {
 				echo -e " Next image to be loaded at next reset (load_image_on_perst) is : ${load_image_on_perst}"
                                 echo -e " Hardware Card PCI location is                                  : ${pci::-1}"
                                 echo -e " Virtual  Card PCI location is                                  : ${pci_bis}"
-				echo -e " Card PCI physical slot is                                      : ${slot}"
+				echo -e " Card PCI physical slot is (requires sudo priv)                 : ${slot}"
 			else
 				echo -n "${card} "
 			fi
@@ -257,7 +260,7 @@ function detect_oc_card_name()
 
 # Main Start here
 # Parse any options given on the command line
-
+echo oc_find_card version is $version
 PROGRAM=$0
 while getopts ":vA:C:Vh" opt; do
 	case ${opt} in
@@ -339,6 +342,10 @@ while getopts ":vA:C:Vh" opt; do
 		 if [ $? == 1 ]; then
 		        rc=1
 		fi
+                detect_oc_card_name $card  "0x062b" "0x0666" "OC-AD9H7"
+                 if [ $? == 1 ]; then
+                        rc=1
+                fi
 		exit $rc
 		;;
 	V)
@@ -422,9 +429,14 @@ case ${accel} in
 		;;
 	# OC-AD9H3 OpenCAPI 3.0 card from Alphadata
 	"OC-AD9H3")
-		detect_snap_cards "0x062b" "0x0607" "OC-AD9H3"
+		detect_snap_cards "0x062b" "0x0667" "OC-AD9H3"
 		RC=$?
 		;;
+        # OC-AD9H7 OpenCAPI 3.0 card from Alphadata
+        "OC-AD9H7")
+                detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
+                RC=$?
+                ;;
 	# U200 CAPI 2.0 card from Xilinx
 	"U200")
 		detect_snap_cards "0x0632" "0x0665" "U200"
@@ -439,6 +451,12 @@ case ${accel} in
 	"AD9H3")
 		detect_snap_cards "0x0632" "0x0667" "AD9H3"
 		RC=$?
+		;;
+        # AD9H7 CAPI 2.0 card from Alphadata
+        "AD9H7")
+                detect_snap_cards "0x0632" "0x0666" "AD9H7"
+                RC=$?
+                ;;
 	"ALL")
 		# detect all cards and add Number of Cards
 		detect_snap_cards "0x0632" "0x0605" "ADKU3"
@@ -483,8 +501,12 @@ case ${accel} in
 		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x062b" "0x067f" "OC-AD9H3"
+		detect_snap_cards "0x062b" "0x0667" "OC-AD9H3"
 		RC=$((RC + $?))
+
+                detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
+                RC=$((RC + $?))
+
 		echo -e "\nTotal $RC cards detected \n"
  		;;
 	*)
