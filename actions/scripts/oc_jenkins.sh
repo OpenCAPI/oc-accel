@@ -128,9 +128,9 @@ function test_hard()
 
 	echo "`date` UPDATING Start"
 	echo "         Accel: $accel[$card] Image: $IMAGE"
-	pushd ../capi-utils > /dev/null
+	pushd ../oc-utils > /dev/null
 	if [ $? -ne 0 ]; then
-		echo "Error: Can not start capi-flash-script.sh"
+		echo "Error: Can not start oc-flash-script.sh"
 		exit 1
 	fi
 
@@ -138,7 +138,7 @@ function test_hard()
 	while [ 1 ]; do
 		wait_flag=0
 		if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
-		     echo "executing : sudo ./capi-flash-script.sh -f -C $card -f $IMAGE"
+		     echo "executing : sudo ./oc-flash-script.sh -f -C $card -f $IMAGE"
 		sudo ./oc-flash-script.sh -f -C $card -f $IMAGE
 		else 
                      echo "executing : sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2"
@@ -149,7 +149,7 @@ function test_hard()
 			break
 		fi
 		if [ $RC -eq 99 ]; then
-			# I do get Busy from capi_flash tool if the flash lock is in use
+			# I do get Busy from oc_flash tool if the flash lock is in use
 			# Wait again or exit for Flashing
 			# Flashing takes about 90 to 100 sec
 			try_to_flash=$((try_to_flash+1))
@@ -158,7 +158,7 @@ function test_hard()
 				popd > /dev/null
 				return $RC
 			fi
-			echo "`date`         ($try_to_flash of 20) Wait: Other capi-flash-script.sh in progress"
+			echo "`date`         ($try_to_flash of 20) Wait: Other oc-flash-script.sh in progress"
 			wait_flag=1
 			sleep 10
 		else

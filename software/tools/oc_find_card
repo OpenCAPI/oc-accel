@@ -260,12 +260,12 @@ function detect_oc_card_name()
 
 # Main Start here
 # Parse any options given on the command line
-echo oc_find_card version is $version
 PROGRAM=$0
 while getopts ":vA:C:Vh" opt; do
 	case ${opt} in
 	v)
 		VERBOSE=1
+		echo oc_find_card version is $version
 		;;
 	A)
 		accel=${OPTARG};
