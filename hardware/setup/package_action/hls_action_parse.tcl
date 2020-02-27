@@ -100,14 +100,21 @@ if {! [dict exists $axilite registers]} {
 } else {
     set fp [open $register_layout_file w+]
     puts $fp "// ---- AUTO GENERATED! DO NOT EDIT! ----"
-    puts $fp "struct register_layout {"
+    puts $fp "class ${kernel_name}RegisterLayout : public KernelRegisterLayout {"
+    puts $fp "public:"
+    puts $fp "    ${kernel_name}RegisterLayout() : KernelRegisterLayout() { addUserRegister(); }; "
+    puts $fp "protected: "
+    puts $fp "    virtual void addUserRegister() {"
     set registers [dict get $axilite registers]
     foreach reg $registers {
         set reg_name [dict get $reg name]
         set reg_offset [dict get $reg offset]
-        puts $fp "    uint32_t $reg_name = $reg_offset;"
+        if {$reg_name != "CTRL" && $reg_name != "GIER" && $reg_name != "IP_IER" && $reg_name != "IP_ISR"} {
+            puts $fp "        m_user_params_regs.push_back($reg_offset);"
+        }
     }
 
+    puts $fp "    };"
     puts $fp "}; /* register_layout */"
     puts "$register_layout_file is successfully generated."
 
