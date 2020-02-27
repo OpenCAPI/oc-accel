@@ -96,9 +96,10 @@ assign_bd_address
 for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     include_bd_addr_seg [get_bd_addr_segs -excluded act_wrap/kernel${xx}_wrap/vadd/Data_m_axi_gmem/SEG_bridge_axi_slave_reg0]
+    include_bd_addr_seg [get_bd_addr_segs -excluded act_wrap/kernel${xx}_wrap/vadd/Data_m_axi_gmem/SEG_kernel_helper_reg0]
 }
 
-# Give each Kernel 256KB register access space
+# Give each Kernel 256KB (0x40000) register access space
 # Assign the first one
 set_property range  256K       [get_bd_addr_segs {infra_wrap/mmio_axilite_master/m_axi/SEG_kernel_helper_reg0}]
 set_property offset 0x00000000 [get_bd_addr_segs {infra_wrap/mmio_axilite_master/m_axi/SEG_kernel_helper_reg0}]
@@ -106,7 +107,7 @@ set_property offset 0x00000000 [get_bd_addr_segs {infra_wrap/mmio_axilite_master
 # For the remaining kernels
 if { $kernel_number > 1 } {
     for {set x 1} {$x < $kernel_number } {incr x} {
-        set start_addr [ expr $x * 0x00040000 ]
+        set start_addr [ expr $x * 0x40000 ]
         set_property range  256K         [get_bd_addr_segs infra_wrap/mmio_axilite_master/m_axi/SEG_kernel_helper_reg0$x]
         set_property offset $start_addr  [get_bd_addr_segs infra_wrap/mmio_axilite_master/m_axi/SEG_kernel_helper_reg0$x]
     }

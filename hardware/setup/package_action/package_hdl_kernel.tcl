@@ -19,7 +19,7 @@
 ############################################################################
 
 # This is script is used for HDL User Design. It helps packaging the kernel into an IP
-
+set kernel_name         $::env(KERNEL_NAME)
 set capi_ver            $::env(CAPI_VER)
 set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
@@ -35,7 +35,7 @@ my_package_custom_ip $hardware_dir/build/temp_projs      \
                      $hardware_dir/build/ip_repo         \
                      $hardware_dir/build/interfaces      \
                      $fpga_part                          \
-                     hdl_kernel                          \
+                     $kernel_name                        \
                      $tcl_dir/add_hdl_kernel.tcl         \
                      $bus_array
 #ipx::associate_bus_interfaces -busif m_axi_host_mem -clock ap_clk [ipx::current_core]

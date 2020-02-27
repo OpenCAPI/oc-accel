@@ -68,6 +68,7 @@ if {$action_frequency != 200} {
     connect_bd_net [ get_bd_pins $bd_hier/clk_wiz_action/locked   ] [ get_bd_pins $bd_hier/clock_reset_gen/clk_wiz_locked  ]
 } else {
     set_property -dict [list CONFIG.INCLUDE_CLK_WIZ {0}] [get_bd_cells $bd_hier/clock_reset_gen]
+    set_property CONFIG.CLK_DOMAIN top_oc_host_if_0_clock_afu [get_bd_pins $bd_hier/clock_reset_gen/clock_action]
 }
 
 

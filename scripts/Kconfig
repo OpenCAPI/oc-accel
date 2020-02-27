@@ -302,6 +302,14 @@ config KERNEL_NUMBER
     range 1 16
     default 1
 
+
+# !!! This doesn't show in the menuwindow
+# Override the number for existing example
+config KERNEL_NUMBER
+    int
+    default 8 if HDL_MULTI_PROCESS
+    default 1 if HDL_SINGLE_ENGINE
+
 ###############################################################################
 #  The top module name of user kernels for HLS actions
 config KERNEL_NAME
@@ -310,11 +318,10 @@ config KERNEL_NAME
     default ""
 
 # !!! This doesn't show in the menuwindow
-# Override the number for existing example
-config KERNEL_NUMBER
+# Override the name for existing example
+config KERNEL_NAME
     int
-    default 8 if HDL_MULTI_PROCESS
-
+    default "kernel_single_engine" if HDL_SINGLE_ENGINE
 ###############################################################################
 ##  Infra Template Parameters: Number of AXI Ports @ T1
 #   This config is depricated. To be deleted soon

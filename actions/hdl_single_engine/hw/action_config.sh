@@ -15,11 +15,11 @@
 ## limitations under the License.
 ##
 
-# Some addtional code generation or automation taks can be put here.
-echo "                        action config says ACTION_ROOT is $ACTION_ROOT"
-echo "                        action config says FPGACHIP is $FPGACHIP"
+# Some addtional code generation or automation tasks can be put here.
+echo "Example bash script to configure this action"
+echo "$0 says ACTION_ROOT is $ACTION_ROOT"
+echo "$0 says FPGACHIP is $FPGACHIP"
 
-if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then
-	echo "                        Call create_action_ip.tcl to generate IPs"
-	vivado -mode batch -source $ACTION_ROOT/ip/create_action_ip.tcl -notrace -nojournal -tclargs $ACTION_ROOT $FPGACHIP
-fi
+#if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then
+#    echo "There is no IP here."
+#fi

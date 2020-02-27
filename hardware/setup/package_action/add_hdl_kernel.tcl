@@ -17,6 +17,7 @@
 ##
 ############################################################################
 ############################################################################
+set kernel_name         $::env(KERNEL_NAME)
 set capi_ver            $::env(CAPI_VER)
 set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
@@ -47,7 +48,7 @@ if { $hls_support == "TRUE" } {
 }
 ############################################################################
 #Add source files
-puts "                Adding design sources to hdl_kernel project"
+puts "                Adding design sources to $kernel_name project"
 set obj [get_filesets sources_1]
 
 
@@ -65,7 +66,7 @@ if { [file exists $action_ip_dir] == 1 } {
   if { $ip_list != ""} {
     foreach ip_xci $ip_list {
         set ip_name [exec basename $ip_xci .xci]
-        puts "                        importing IP $ip_name into hdl_kernel"
+        puts "                        importing IP $ip_name into $kernel_name"
         add_files -norecurse $ip_xci -force
         #export_ip_user_files -of_objects  [get_files "$ip_xci"] -no_script -sync -force
     }

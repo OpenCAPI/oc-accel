@@ -19,7 +19,7 @@
 module kernel_helper # (
               parameter  KERNEL_TYPE      = 32'h0000ABCD,
               parameter  RELEASE_LEVEL    = 32'h00000001,
-              parameter  SPECIAL_REG_BASE = 32'h00010000,
+              parameter  SPECIAL_REG_BASE = 32'h00020000,
               parameter  INT_BITS = 64,
               parameter  CTXW = 9,
               // Kernel function module's AXILITE width
@@ -28,7 +28,7 @@ module kernel_helper # (
               // Kernel function module's AXIMM width
               parameter    C_M_AXI_GMEM_ID_WIDTH = 1     ,
               parameter    C_M_AXI_GMEM_ADDR_WIDTH = 64  ,
-              parameter    C_M_AXI_GMEM_DATA_WIDTH = 32  ,
+              parameter    C_M_AXI_GMEM_DATA_WIDTH = 1024,
               parameter    C_M_AXI_GMEM_AWUSER_WIDTH = 1 ,
               parameter    C_M_AXI_GMEM_ARUSER_WIDTH = 1 ,
               parameter    C_M_AXI_GMEM_WUSER_WIDTH = 1  ,

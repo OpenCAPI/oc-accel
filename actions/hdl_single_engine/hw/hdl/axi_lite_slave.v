@@ -73,12 +73,8 @@ module axi_lite_slave #(
                       input      [4:0]                 tt_arid       ,
                       input      [4:0]                 tt_awid       ,
                       input      [4:0]                 tt_rid       ,
-                      input      [4:0]                 tt_bid       ,
+                      input      [4:0]                 tt_bid       
 
-                      //---- ocaccel status ----
-                      input      [31:0]                i_action_type    ,
-                      input      [31:0]                i_action_version ,
-                      output     [31:0]                o_ocaccel_context
                       );
             
 
@@ -88,7 +84,6 @@ module axi_lite_slave #(
 
  wire[31:0] regw_ocaccel_status;
  wire[31:0] regw_ocaccel_int_enable;
- wire[31:0] regw_ocaccel_context;
 
  wire[31:0] regw_control;
  wire[31:0] regw_mode;
@@ -117,7 +112,6 @@ module axi_lite_slave #(
  //                                               //
  /**/   reg [31:0] REG_ocaccel_control          ;  /**/
  /**/   reg [31:0] REG_ocaccel_int_enable       ;  /**/
- /**/   reg [31:0] REG_ocaccel_context          ;  /**/
  /*-----------------------------------------------*/
  /**/   reg [63:0] REG_error_info            ;  /*RO*/
 
@@ -198,7 +192,6 @@ module axi_lite_slave #(
  assign wr_number      = REG_wr_number;
  assign source_address = REG_source_address;
  assign target_address = REG_target_address;
- assign o_ocaccel_context = REG_ocaccel_context;
  assign soft_reset     = REG_soft_reset[0];
  assign wrap_mode      = REG_user_mode[0];
  assign wrap_len       = REG_user_mode[11:8];
@@ -237,7 +230,6 @@ module axi_lite_slave #(
 
  assign regw_ocaccel_status     = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_ocaccel_control)};
  assign regw_ocaccel_int_enable = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_ocaccel_int_enable)};
- assign regw_ocaccel_context    = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_ocaccel_context)};
  assign regw_control         = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_user_control)};
  assign regw_mode            = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_user_mode)};
  assign regw_init_rdata      = {(s_axi_wdata&wr_mask)|(~wr_mask&REG_init_rdata)};
@@ -256,7 +248,6 @@ module axi_lite_slave #(
      begin
        REG_ocaccel_control    <= 32'd0;
        REG_ocaccel_int_enable <= 32'd0;
-       REG_ocaccel_context    <= 32'd0;
        REG_user_control    <= 32'd0;
        REG_user_mode       <= 32'd0;
        REG_init_rdata      <= 32'd0;
@@ -273,7 +264,6 @@ module axi_lite_slave #(
     begin
        REG_ocaccel_control    <= 32'd0;
        REG_ocaccel_int_enable <= 32'd0;
-       REG_ocaccel_context    <= 32'd0;
        REG_user_control    <= 32'd0;
        REG_user_mode       <= 32'd0;
        REG_init_rdata      <= 32'd0;
@@ -290,7 +280,6 @@ module axi_lite_slave #(
      case(write_address)
        ADDR_OCACCEL_CONTROL    : REG_ocaccel_control    <= regw_ocaccel_status;
        ADDR_OCACCEL_INT_ENABLE : REG_ocaccel_int_enable <= regw_ocaccel_int_enable;
-       ADDR_OCACCEL_CONTEXT    : REG_ocaccel_context    <= regw_ocaccel_context;
 
        ADDR_USER_CONTROL    : REG_user_control    <= regw_control;
        ADDR_USER_MODE       : REG_user_mode       <= regw_mode;
@@ -480,9 +469,6 @@ assign REG_ocaccel_control_rd = {REG_ocaccel_control[31:4], 1'b1, ocaccel_idle_q
      case(s_axi_araddr)
        ADDR_OCACCEL_CONTROL        : s_axi_rdata <= REG_ocaccel_control_rd;
        ADDR_OCACCEL_INT_ENABLE     : s_axi_rdata <= REG_ocaccel_int_enable[31 : 0];
-       ADDR_OCACCEL_ACTION_TYPE    : s_axi_rdata <= i_action_type;
-       ADDR_OCACCEL_ACTION_VERSION : s_axi_rdata <= i_action_version;
-       ADDR_OCACCEL_CONTEXT        : s_axi_rdata <= REG_ocaccel_context[31    : 0];
 
        ADDR_USER_STATUS         : s_axi_rdata <= REG_user_status;
        ADDR_USER_CONTROL        : s_axi_rdata <= REG_user_control;

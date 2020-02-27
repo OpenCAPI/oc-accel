@@ -127,8 +127,10 @@ check_ocaccel_settings:
 	@echo "                        INFRA_TEMPLATE  = $(INFRA_TEMPLATE_SELECTION)"
 	@echo "                        ACTION_TEMPLATE = $(ACTION_TEMPLATE_SELECTION)"
 	@echo "                        KERNEL_NUMBER   = $(KERNEL_NUMBER)"
+	@echo "                        KERNEL_NAME     = $(KERNEL_NAME)"
 	@echo "                        ACTION_FREQUENCY= $(ACTION_CLOCK_FREQUENCY)"
 	@echo "                        PHY_SPEED       = $(PHY_SPEED)"
+	@echo "                        HLS_SUPPORT     = $(HLS_SUPPORT)"
 	@echo "                        ILA_DEBUG       = $(ILA_DEBUG)"
 #	@echo "                        FLASH_INTERFACE = $(FLASH_INTERFACE)"
 #	@echo "                        FLASH_SIZE      = $(FLASH_SIZE)"
@@ -210,7 +212,7 @@ package_infrastructure: $(INFRA_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(INFRA_SCR
 
 ###############################################################################
 action_hw: prepare_logs
-	@echo -e "[CONFIG ACTION HW....] start `date +"%T %a %b %d %Y"`";
+	@echo -e "[GENERATE ACTION HW..] start `date +"%T %a %b %d %Y"`";
 	@if [ ! -d "$(ACTION_ROOT)" ]; then \
 		echo "                        Error: Path to ACTION_ROOT is not defined properly"; exit -1; \
 	fi
@@ -225,12 +227,12 @@ action_hw: prepare_logs
 		if [ $$? -ne 0 ]; then \
 			echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
 		fi; \
-    else \
-        echo "Package user written HDL design to an IP" >> $(LOGS_DIR)/action_make.log; \
-      	cd $(BUILD_DIR); \
-        vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_hdl_kernel.tcl -notrace -log $(LOGS_DIR)/package_hdl_kernel.log -journal $(LOGS_DIR)/package_hdl_kernel.jou > $(templog); \
-    fi;
-	@echo -e "[CONFIG ACTION HW....] done  `date +"%T %a %b %d %Y"`";
+        else \
+            echo "Package user written HDL design to an IP" >> $(LOGS_DIR)/action_make.log; \
+            cd $(BUILD_DIR); \
+            vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_hdl_kernel.tcl -notrace -log $(LOGS_DIR)/package_hdl_kernel.log -journal $(LOGS_DIR)/package_hdl_kernel.jou > $(templog); \
+        fi;
+	@echo -e "[GENERATE ACTION HW..] done  `date +"%T %a %b %d %Y"`";
 
 ###############################################################################
 

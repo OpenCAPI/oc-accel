@@ -18,17 +18,11 @@
 module axi_master_wr #(
                        parameter ID_WIDTH      = 2,
                        parameter ADDR_WIDTH    = 64,
-                       parameter DATA_WIDTH    = 512,
-                       parameter AWUSER_WIDTH  = 8,
-                       parameter ARUSER_WIDTH  = 8,
-                       parameter WUSER_WIDTH   = 1,
-                       parameter RUSER_WIDTH   = 1,
-                       parameter BUSER_WIDTH   = 1
+                       parameter DATA_WIDTH    = 512 
                        )
                       (
                        input                              clk               ,
                        input                              resetn             , 
-                       input     [031:0]                  i_ocaccel_context    ,
                                                             
                        //---- AXI bus ----                   
                          // AXI write address channel           
@@ -37,7 +31,7 @@ module axi_master_wr #(
                        output wire [007:0]                m_axi_awlen       ,  
                        output wire [002:0]                m_axi_awsize      ,  
                        output wire [001:0]                m_axi_awburst     ,  
-                       output wire [ARUSER_WIDTH - 1:0]   m_axi_awuser      , 
+                       output wire [000:0]                m_axi_awuser      , 
                        output wire [003:0]                m_axi_awcache     , 
                        output wire [001:0]                m_axi_awlock      ,  
                        output wire [002:0]                m_axi_awprot      , 
@@ -51,11 +45,13 @@ module axi_master_wr #(
                        output wire                        m_axi_wlast       ,  
                        output wire                        m_axi_wvalid      ,  
                        input                              m_axi_wready      ,
+                       output wire [000:0]                m_axi_wuser       , 
                          // AXI write data channel            
                        output wire                        m_axi_bready      , 
                        input       [ID_WIDTH - 1:0]       m_axi_bid         ,
                        input       [001:0]                m_axi_bresp       ,
                        input                              m_axi_bvalid      ,
+                       input       [000:0]                m_axi_buser       , //not used
                                  
                        //---- local control ----
                        input                              engine_start_pulse,
@@ -90,7 +86,8 @@ module axi_master_wr #(
  assign m_axi_awsize   = wr_pattern[2:0]; // 2^6=512
  assign m_axi_awburst  = 2'd1; // INCR mode for memory access
  assign m_axi_awcache  = 4'd3; // Normal Non-cacheable Bufferable
- assign m_axi_awuser   = i_ocaccel_context[ARUSER_WIDTH - 1:0]; 
+ assign m_axi_awuser   = 1'd0; 
+ assign m_axi_wuser    = 1'd0; 
  assign m_axi_awprot   = 3'd0;
  assign m_axi_awqos    = 4'd0;
  assign m_axi_awregion = 4'd0; //?
