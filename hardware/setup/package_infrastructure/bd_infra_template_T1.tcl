@@ -9,10 +9,14 @@ create_bd_cell -type hier $bd_hier
 ###############################################################################
 # Additiona preparations
 source $hardware_dir/setup/common/common_funcs.tcl
-set imp_version [eval my_get_imp_version]
-set build_date [eval my_get_build_date]
-set date_string [eval my_get_date_string $build_date]
-set card_type [eval my_get_card_type]
+set imp_version      [ eval my_get_imp_version             ]
+set build_date       [ eval my_get_build_date              ]
+set date_string      [ eval my_get_date_string $build_date ]
+set card_type        [ eval my_get_card_type               ]
+set action_name_str1 [ eval my_get_action_name_str 1       ]
+set action_name_str2 [ eval my_get_action_name_str 2       ]
+set action_name_str3 [ eval my_get_action_name_str 3       ]
+set action_name_str4 [ eval my_get_action_name_str 4       ]
 
 ###############################################################################
 # Create pins for AXIlite / AXIMM ports
@@ -42,6 +46,11 @@ create_bd_cell -type ip -vlnv opencapi.org:ocaccel:data_bridge:1.0 $bd_hier/data
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:mmio_axilite_master:1.0 $bd_hier/mmio_axilite_master
 set_property -dict [list CONFIG.IMP_VERSION $imp_version ] [get_bd_cells $bd_hier/mmio_axilite_master]
 set_property -dict [list CONFIG.BUILD_DATE $build_date ] [get_bd_cells $bd_hier/mmio_axilite_master]
+set_property -dict [list CONFIG.ACTION_NAME_STR1 $action_name_str1 ] [get_bd_cells $bd_hier/mmio_axilite_master]
+set_property -dict [list CONFIG.ACTION_NAME_STR2 $action_name_str2 ] [get_bd_cells $bd_hier/mmio_axilite_master]
+set_property -dict [list CONFIG.ACTION_NAME_STR3 $action_name_str3 ] [get_bd_cells $bd_hier/mmio_axilite_master]
+set_property -dict [list CONFIG.ACTION_NAME_STR4 $action_name_str4 ] [get_bd_cells $bd_hier/mmio_axilite_master]
+set_property -dict [list CONFIG.KERNEL_NUMBER $kernel_number] [get_bd_cells $bd_hier/mmio_axilite_master]
 set_property -dict [list CONFIG.CARD_TYPE $card_type ] [get_bd_cells $bd_hier/mmio_axilite_master]
 # Set the same image name and register readout
 exec echo $date_string > $hardware_dir/setup/build_image/bitstream_date.txt

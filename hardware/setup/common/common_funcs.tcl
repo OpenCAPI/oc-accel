@@ -96,3 +96,27 @@ proc my_get_card_type {} {
     return $card_type
 }
 
+proc my_get_action_name_str {index} {
+# index: 1 to 4
+# The maximum length is 32 chars
+# If action_name is longer than 32 chars, the remaining part
+# will be ignored.
+    set index 2
+    set action_name $::env(ACTION_NAME)
+    set action_name_long [format %-32s $action_name]
+
+    set start_pos [expr ($index - 1) * 8 ]
+    set end_pos   [expr ($index - 1) * 8 + 7 ]
+
+    set eight_chars [string range $action_name_long $start_pos $end_pos]
+
+    set hex_str ""
+    for {set x 0} {$x < 8 } {incr x} {
+        set ch [string range $eight_chars $x $x]
+        scan $ch "%c" i
+        set h [format %x $i]
+        set hex_str "${hex_str}${h}"
+    }
+
+    return "0x$hex_str"
+}

@@ -19,7 +19,12 @@
 module mmio # (
                 parameter IMP_VERSION = 64'h1000_0000_0000_0000,
                 parameter BUILD_DATE = 64'h0000_2000_0101_0800,
-                parameter OTHER_CAPABILITY = 56'h0,
+                parameter ACTION_NAME_STR1 = 64'h7465_7374_2020_2020, //h'74657374 = "test"
+                parameter ACTION_NAME_STR2 = 64'h2020_2020_2020_2020, //h'20 means 'space'
+                parameter ACTION_NAME_STR3 = 64'h2020_2020_2020_2020,
+                parameter ACTION_NAME_STR4 = 64'h2020_2020_2020_2020,
+                parameter ENGINE_NUMBER       = 8'h1,
+                parameter OTHER_CAPABILITY = 48'h0,
                 parameter CARD_TYPE = 8'h31
               )
         (
@@ -37,7 +42,6 @@ module mmio # (
 
 
              //---- local control output -------------------
-             output reg           soft_reset_brdg_odma       , // soft reset OCACCEL logic
              output reg           soft_reset_action          , // soft reset action logic
 
              //---- MMIO side interface --------------------
@@ -100,6 +104,10 @@ module mmio # (
 //------------ BASEADDR_INFRASTRUCTURE ---------------
  reg [63:00] REG_implementation_version;
  reg [63:00] REG_build_date            ;
+ reg [63:00] REG_action_name_str1      ;
+ reg [63:00] REG_action_name_str2      ;
+ reg [63:00] REG_action_name_str3      ;
+ reg [63:00] REG_action_name_str4      ;
  reg [63:00] REG_command               ;
  reg [63:00] REG_status                ;
  reg [63:00] REG_capability            ;
@@ -173,7 +181,11 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
                 INFRA_OFFSET_STATUS           = 8'h18, //RO
                 INFRA_OFFSET_CAPABILITY       = 8'h30, //RO
 
-                INFRA_OFFSET_FREERUN_TIMER   = 8'h40, //RO
+                INFRA_OFFSET_ACTION_NAME_STR1 = 8'h40, //RO
+                INFRA_OFFSET_ACTION_NAME_STR2 = 8'h48, //RO
+                INFRA_OFFSET_ACTION_NAME_STR3 = 8'h50, //RO
+                INFRA_OFFSET_ACTION_NAME_STR4 = 8'h58, //RO
+
 
 //-----------------------------------------------------------------------------
            BASEADDR_DEBUG  = 13'h01A0,
@@ -274,6 +286,10 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
        // BASEADDR_INFRASTRUCTURE
        REG_implementation_version  <= 64'd0;
        REG_build_date              <= 64'd0;
+       REG_action_name_str1        <= 64'h4040_4040_4040_4040;
+       REG_action_name_str2        <= 64'h4040_4040_4040_4040;
+       REG_action_name_str3        <= 64'h4040_4040_4040_4040;
+       REG_action_name_str4        <= 64'h4040_4040_4040_4040;
        REG_status                  <= 64'd0;
        REG_capability              <= 64'd0;
 
@@ -302,8 +318,13 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
        // BASEADDR_INFRASTRUCTURE
        REG_implementation_version  <= IMP_VERSION;
        REG_build_date              <= BUILD_DATE;
+       REG_action_name_str1        <= ACTION_NAME_STR1;
+       REG_action_name_str2        <= ACTION_NAME_STR2;
+       REG_action_name_str3        <= ACTION_NAME_STR3;
+       REG_action_name_str4        <= ACTION_NAME_STR4;
        REG_status                  <= {60'd0, fatal_error, axi_busy, tlx_busy, bridge_idle};
-       REG_capability [63:8]       <= OTHER_CAPABILITY;
+       REG_capability [63:16]      <= OTHER_CAPABILITY;
+       REG_capability [15:0]       <= ENGINE_NUMBER;
        REG_capability [7:0]        <= CARD_TYPE;
 
 
@@ -392,6 +413,10 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
           case(global_area_offset)
             INFRA_OFFSET_IMP_VERSION         : mmio_dout <= REG_implementation_version;
             INFRA_OFFSET_BUILD_DATE          : mmio_dout <= REG_build_date            ;
+            INFRA_OFFSET_ACTION_NAME_STR1    : mmio_dout <= REG_action_name_str1      ;
+            INFRA_OFFSET_ACTION_NAME_STR2    : mmio_dout <= REG_action_name_str2      ;
+            INFRA_OFFSET_ACTION_NAME_STR3    : mmio_dout <= REG_action_name_str3      ;
+            INFRA_OFFSET_ACTION_NAME_STR4    : mmio_dout <= REG_action_name_str4      ;
             INFRA_OFFSET_STATUS              : mmio_dout <= REG_status                ;
             INFRA_OFFSET_CAPABILITY          : mmio_dout <= REG_capability            ;
             default                          : raddr_decode_error <= 1'b1;
@@ -441,21 +466,7 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
      end
 
 //---- local control signals output ----
- reg [3:0] ocaccel_reset_cnt;
- reg [3:0] action_reset_cnt;
- always@(posedge clk or negedge resetn)   // soft reset lasts 16 cycles
-   if(~resetn)
-     soft_reset_brdg_odma <= 1'b0;
-   else if(&ocaccel_reset_cnt)
-     soft_reset_brdg_odma <= 1'b0;
-   else if(REG_command[0])
-     soft_reset_brdg_odma <= 1'b1;
-
- always@(posedge clk or negedge resetn)
-   if(~resetn)
-     ocaccel_reset_cnt <= 4'd0;
-   else if(soft_reset_brdg_odma)
-     ocaccel_reset_cnt <= ocaccel_reset_cnt + 4'd1;
+ reg [3:0] action_reset_cnt; //soft reset lasts 16 cycles
 
  always@(posedge clk or negedge resetn)
    if(~resetn)
