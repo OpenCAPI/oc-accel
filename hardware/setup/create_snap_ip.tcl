@@ -169,14 +169,14 @@ if { $odma_used == "TRUE" }  {
   export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_1024x8/fifo_sync_1024x8.xci] -no_script -force >> $log_file
   export_simulation -of_objects [get_files $ip_dir/fifo_sync_1024x8/fifo_sync_1024x8.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
   
-  puts "                        generating IP fifo_sync_9x8 for a2h_mm_engine AXI rdata fifos"
-  create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_9x8 -dir $ip_dir >> $log_file
+  puts "                        generating IP fifo_sync_8x8 for a2h_mm_engine AXI rdata fifos"
+  create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_8x8 -dir $ip_dir >> $log_file
   set_property -dict [list                                        \
                       CONFIG.Fifo_Implementation {Common_Clock_Distributed_RAM} \
                       CONFIG.Performance_Options {First_Word_Fall_Through}    \
-                      CONFIG.Input_Data_Width {9}                 \
+                      CONFIG.Input_Data_Width {8}                 \
                       CONFIG.Input_Depth {16}                    \
-                      CONFIG.Output_Data_Width {9}                \
+                      CONFIG.Output_Data_Width {8}                \
                       CONFIG.Output_Depth {16}                   \
                       CONFIG.Programmable_Full_Type {Single_Programmable_Full_Threshold_Constant}       \
                       CONFIG.Valid_Flag {true}                             \
@@ -185,12 +185,12 @@ if { $odma_used == "TRUE" }  {
                       CONFIG.Read_Data_Count_Width {5}           \
                       CONFIG.Full_Threshold_Assert_Value {7}    \
                       CONFIG.Full_Threshold_Negate_Value {6}    \
-                     ] [get_ips fifo_sync_9x8]
-  set_property generate_synth_checkpoint false [get_files $ip_dir/fifo_sync_9x8/fifo_sync_9x8.xci]
-  generate_target {instantiation_template}     [get_files $ip_dir/fifo_sync_9x8/fifo_sync_9x8.xci] >> $log_file
-  generate_target all                          [get_files $ip_dir/fifo_sync_9x8/fifo_sync_9x8.xci] >> $log_file
-  export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_9x8/fifo_sync_9x8.xci] -no_script -force >> $log_file
-  export_simulation -of_objects [get_files $ip_dir/fifo_sync_9x8/fifo_sync_9x8.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+                     ] [get_ips fifo_sync_8x8]
+  set_property generate_synth_checkpoint false [get_files $ip_dir/fifo_sync_8x8/fifo_sync_8x8.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/fifo_sync_8x8/fifo_sync_8x8.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/fifo_sync_8x8/fifo_sync_8x8.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/fifo_sync_8x8/fifo_sync_8x8.xci] -no_script -force >> $log_file
+  export_simulation -of_objects [get_files $ip_dir/fifo_sync_8x8/fifo_sync_8x8.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 
   puts "                        generating IP fifo_sync_512x8 for a2h_mm_engine AXI rdata fifos"
   create_ip -name fifo_generator -vendor xilinx.com -library ip -version 13.* -module_name fifo_sync_512x8 -dir $ip_dir >> $log_file
