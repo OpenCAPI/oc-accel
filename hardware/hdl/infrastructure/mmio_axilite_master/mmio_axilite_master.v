@@ -116,7 +116,6 @@ module mmio_axilite_master
              .debug_info_clear           (debug_info_clear            ),
              .debug_bus_trans_protocol   (debug_bus_trans_protocol   ),
              .debug_bus_data_bridge      (debug_bus_data_bridge      ),
-             .soft_reset_brdg_odma       (soft_reset_brdg_odma       ),
              .soft_reset_action          (soft_reset_action          ),
              .mmio_wr                    (mmio_wr                    ),
              .mmio_rd                    (mmio_rd                    ),
