@@ -23,8 +23,10 @@ module mmio # (
                 parameter ACTION_NAME_STR2 = 64'h2020_2020_2020_2020, //h'20 means 'space'
                 parameter ACTION_NAME_STR3 = 64'h2020_2020_2020_2020,
                 parameter ACTION_NAME_STR4 = 64'h2020_2020_2020_2020,
-                parameter ENGINE_NUMBER       = 8'h1,
-                parameter OTHER_CAPABILITY = 48'h0,
+                parameter ENGINE_NUMBER    = 8'h1,
+                parameter INFRA_TEMPLATE   = 8'h1,  //T1, T2, 
+                parameter ACTION_TEMPLATE  = 8'h10, //A10, place holder for now
+                parameter OTHER_CAPABILITY = 32'h0,
                 parameter CARD_TYPE = 8'h31
               )
         (
@@ -323,8 +325,10 @@ assign fir_trans_protocol = {35'b0, debug_bus_trans_protocol[476:448]} ;
        REG_action_name_str3        <= ACTION_NAME_STR3;
        REG_action_name_str4        <= ACTION_NAME_STR4;
        REG_status                  <= {60'd0, fatal_error, axi_busy, tlx_busy, bridge_idle};
-       REG_capability [63:16]      <= OTHER_CAPABILITY;
-       REG_capability [15:0]       <= ENGINE_NUMBER;
+       REG_capability [63:32]      <= OTHER_CAPABILITY;
+       REG_capability [31:24]      <= ENGINE_NUMBER;
+       REG_capability [23:16]      <= INFRA_TEMPLATE;
+       REG_capability [15:8]       <= ACTION_TEMPLATE;
        REG_capability [7:0]        <= CARD_TYPE;
 
 

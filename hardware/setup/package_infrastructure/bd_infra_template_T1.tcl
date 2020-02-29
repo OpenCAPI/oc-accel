@@ -17,7 +17,7 @@ set action_name_str1 [ eval my_get_action_name_str 1       ]
 set action_name_str2 [ eval my_get_action_name_str 2       ]
 set action_name_str3 [ eval my_get_action_name_str 3       ]
 set action_name_str4 [ eval my_get_action_name_str 4       ]
-
+set infra_template_value 0x1
 ###############################################################################
 # Create pins for AXIlite / AXIMM ports
 for {set x 0} {$x < $kernel_number } {incr x} {
@@ -44,14 +44,15 @@ create_bd_cell -type module -reference clock_reset_gen $bd_hier/clock_reset_gen
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:bridge_axi_slave:1.0 $bd_hier/bridge_axi_slave
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:data_bridge:1.0 $bd_hier/data_bridge
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:mmio_axilite_master:1.0 $bd_hier/mmio_axilite_master
-set_property -dict [list CONFIG.IMP_VERSION $imp_version ] [get_bd_cells $bd_hier/mmio_axilite_master]
-set_property -dict [list CONFIG.BUILD_DATE $build_date ] [get_bd_cells $bd_hier/mmio_axilite_master]
-set_property -dict [list CONFIG.ACTION_NAME_STR1 $action_name_str1 ] [get_bd_cells $bd_hier/mmio_axilite_master]
-set_property -dict [list CONFIG.ACTION_NAME_STR2 $action_name_str2 ] [get_bd_cells $bd_hier/mmio_axilite_master]
-set_property -dict [list CONFIG.ACTION_NAME_STR3 $action_name_str3 ] [get_bd_cells $bd_hier/mmio_axilite_master]
-set_property -dict [list CONFIG.ACTION_NAME_STR4 $action_name_str4 ] [get_bd_cells $bd_hier/mmio_axilite_master]
-set_property -dict [list CONFIG.KERNEL_NUMBER $kernel_number] [get_bd_cells $bd_hier/mmio_axilite_master]
-set_property -dict [list CONFIG.CARD_TYPE $card_type ] [get_bd_cells $bd_hier/mmio_axilite_master]
+set_property -dict [ list CONFIG.IMP_VERSION $imp_version             ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.BUILD_DATE $build_date               ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.ACTION_NAME_STR1 $action_name_str1   ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.ACTION_NAME_STR2 $action_name_str2   ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.ACTION_NAME_STR3 $action_name_str3   ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.ACTION_NAME_STR4 $action_name_str4   ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.KERNEL_NUMBER $kernel_number         ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.INFRA_TEMPLATE $infra_template_value ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
+set_property -dict [ list CONFIG.CARD_TYPE $card_type                 ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
 # Set the same image name and register readout
 exec echo $date_string > $hardware_dir/setup/build_image/bitstream_date.txt
 

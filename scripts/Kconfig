@@ -350,6 +350,7 @@ config WIDTH_AXIMM_PORTS
 config WIDTH_AXIMM_PORTS
     int
     default 512 if HLS_HELLOWORLD
+    default 1024 if HDL_SINGLE_ENGINE
 
 ###############################################################################
 choice

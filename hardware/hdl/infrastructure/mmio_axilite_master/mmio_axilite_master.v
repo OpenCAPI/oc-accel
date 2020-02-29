@@ -25,7 +25,9 @@ module mmio_axilite_master
                 parameter ACTION_NAME_STR3 = 64'h2020_2020_2020_2020,
                 parameter ACTION_NAME_STR4 = 64'h2020_2020_2020_2020,
                 parameter ENGINE_NUMBER       = 8'h1,
-                parameter OTHER_CAPABILITY    = 48'h0,
+                parameter INFRA_TEMPLATE      = 8'h1,  //T1, T2, 
+                parameter ACTION_TEMPLATE     = 8'h10, //A10, place holder for now
+                parameter OTHER_CAPABILITY    = 32'h0,
                 parameter CARD_TYPE = 8'h31
               )
               (
@@ -106,7 +108,9 @@ module mmio_axilite_master
                 .ACTION_NAME_STR2 (ACTION_NAME_STR2),
                 .ACTION_NAME_STR3 (ACTION_NAME_STR3),
                 .ACTION_NAME_STR4 (ACTION_NAME_STR4),
-                .ENGINE_NUMBER       (ENGINE_NUMBER      ),
+                .ENGINE_NUMBER    (ENGINE_NUMBER    ),
+                .INFRA_TEMPLATE   (INFRA_TEMPLATE   ),
+                .ACTION_TEMPLATE  (ACTION_TEMPLATE  ),
                 .OTHER_CAPABILITY (OTHER_CAPABILITY ),
                 .CARD_TYPE (CARD_TYPE )
               )
