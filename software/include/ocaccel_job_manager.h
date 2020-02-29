@@ -23,52 +23,113 @@
 #include <string.h>
 #include "libocaccel.h"
 
-// An helper function provides interface for users to manipulate descriptors
-class JobDescriptor
+// The kernel register layout to tell the manager which registers to read/write.
+// Used in MMIO mode
+class KernelRegisterLayout
+{
+public:
+    KernelRegisterLayout()
+    {
+    }
+
+    uint64_t CTRL()
+    {
+        return m_ctrl_reg;
+    }
+
+    uint64_t GIER()
+    {
+        return m_gier_reg;
+    }
+
+    uint64_t IP_IER()
+    {
+        return m_ip_ier_reg;
+    }
+
+    uint64_t IP_ISR()
+    {
+        return m_ip_isr_reg;
+    }
+
+    uint64_t KERNEL_PARAM (int idx)
+    {
+        if (idx >= (int) m_kernel_params_regs.size()) {
+            printf ("ERROR: invalid kernel parameter index in kernel!\n");
+            return ~0;
+        }
+
+        return m_kernel_params_regs[idx];
+    }
+
+    size_t getNumberOfKernelParams()
+    {
+        return m_kernel_params_regs.size();
+    }
+
+protected:
+    virtual void addKernelParameters() = 0;
+
+    std::vector<uint64_t> m_kernel_params_regs;
+
+private:
+    // Control and interrupt registers have fixed layout in vivado_hls generated IPs,
+    // this can be changed to generated dynamically in the future.
+    const uint64_t m_ctrl_reg   = 0x00;
+    const uint64_t m_gier_reg   = 0x04;
+    const uint64_t m_ip_ier_reg = 0x08;
+    const uint64_t m_ip_isr_reg = 0x0C;
+};
+
+class JobDescriptorBase
 {
 public:
     static const int c_job_descriptor_size = 128;
     friend class OcaccelJobManager;
 
-    JobDescriptor (uint8_t* in_data)
+    JobDescriptorBase (uint8_t* in_data)
         : m_data (in_data),
-          m_user_param_index_in_word (0)
+          m_kernel_param_index_in_word (0)
     {
     }
 
-    uint32_t getUserParameterByWord (int idx)
+    ~JobDescriptorBase()
     {
-        return * ((uint32_t*) (m_data + c_user_parameter_offset + (idx * 4)));
     }
 
-    uint32_t getUserParameterByWord()
+    uint32_t getKernelParameterByWord (int idx)
     {
-        return * ((uint32_t*) (m_data + c_user_parameter_offset + (m_user_param_index_in_word * 4)));
+        return * ((uint32_t*) (m_data + c_kernel_param_offset + (idx * 4)));
     }
 
-    void setUserParameterByWord (int idx, uint32_t in_data)
+    uint32_t getKernelParameterByWord()
     {
-        * ((uint32_t*) (m_data + c_user_parameter_offset + (idx * 4))) = in_data;
+        return * ((uint32_t*) (m_data + c_kernel_param_offset + (m_kernel_param_index_in_word * 4)));
     }
 
-    void setUserParameterByWord (uint32_t in_data)
+    void setKernelParameter (int idx, uint32_t in_data)
     {
-        * ((uint32_t*) (m_data + c_user_parameter_offset + (m_user_param_index_in_word * 4))) = in_data;
-        m_user_param_index_in_word++;
+        * ((uint32_t*) (m_data + c_kernel_param_offset + (idx * 4))) = in_data;
     }
 
-    void setUserParameterByDoubleWord (uint64_t in_data)
+    void setKernelParameter (uint32_t in_data)
     {
-        * ((uint32_t*) (m_data + c_user_parameter_offset + (m_user_param_index_in_word * 4))) = (uint32_t) (in_data & 0xFFFFFFFF);
-        m_user_param_index_in_word++;
-
-        * ((uint32_t*) (m_data + c_user_parameter_offset + (m_user_param_index_in_word * 4))) = (uint32_t) ((in_data >> 32) & 0xFFFFFFFF);
-        m_user_param_index_in_word++;
+        * ((uint32_t*) (m_data + c_kernel_param_offset + (m_kernel_param_index_in_word * 4))) = in_data;
+        m_kernel_param_index_in_word++;
     }
 
-    int getCurrentUserParamIndex()
+    void setKernelParameterByDoubleWord (uint64_t in_data)
     {
-        return m_user_param_index_in_word;
+        * ((uint32_t*) (m_data + c_kernel_param_offset + (m_kernel_param_index_in_word * 4))) = (uint32_t) (in_data & 0xFFFFFFFF);
+        m_kernel_param_index_in_word++;
+
+        * ((uint32_t*) (m_data + c_kernel_param_offset + (m_kernel_param_index_in_word * 4))) = (uint32_t) ((in_data >> 32) & 0xFFFFFFFF);
+        m_kernel_param_index_in_word++;
+    }
+
+    int getCurrentKernelParamIndex()
+    {
+        return m_kernel_param_index_in_word;
     }
 
     bool isValid()
@@ -88,20 +149,15 @@ public:
         printf ("==================\n");
     }
 
-    void setKernelToRun (int idx)
+    int getJobId()
     {
-        * ((uint8_t*) (m_data + c_kernel_to_run_offset)) = idx;
+        return * ((uint32_t*) (m_data + c_job_id_offset));
     }
 
-    int getKernelToRun()
-    {
-        return * ((uint8_t*) (m_data + c_kernel_to_run_offset));
-    }
-
-private:
-    JobDescriptor()
+protected:
+    JobDescriptorBase()
         : m_data (NULL),
-          m_user_param_index_in_word (0)
+          m_kernel_param_index_in_word (0)
     {}
 
     // Size in bytes
@@ -110,8 +166,7 @@ private:
     static const int c_next_adjacent_offset      = 1;
     static const int c_magic_offset              = 2;
     static const int c_job_id_offset             = 4;
-    static const int c_user_parameter_offset     = 8;
-    static const int c_kernel_to_run_offset      = 108;
+    static const int c_kernel_param_offset     = 8;
     static const int c_interrupt_handler_offset  = 112;
     static const int c_next_block_address_offset = 120;
 
@@ -153,69 +208,60 @@ private:
     // The pointer to the descriptor
     uint8_t* m_data;
 
-    // Current word idx for user parameter (in 4 bytes)
-    int m_user_param_index_in_word;
+    // Current word idx for kernel parameter (in 4 bytes)
+    int m_kernel_param_index_in_word;
 };
 
-typedef std::shared_ptr<JobDescriptor> JobDescriptorPtr;
-
-// The kernel register layout to tell the manager which registers to read/write.
-// Used in MMIO mode
-class KernelRegisterLayout
+// An helper function provides interface for users to manipulate descriptors
+template <class K>
+class JobDescriptor : public JobDescriptorBase
 {
 public:
-    KernelRegisterLayout()
+    JobDescriptor (uint8_t* in_data)
+        : JobDescriptorBase (in_data)
     {
+        m_kernel = new K;
     }
 
-    uint64_t CTRL()
+    ~JobDescriptor()
     {
-        return m_ctrl_reg;
+        delete m_kernel;
     }
 
-    uint64_t GIER()
+    template <typename K::PARAM R>
+    void setKernelParameter (uint32_t in_data)
     {
-        return m_gier_reg;
+        * ((uint32_t*) (m_data + c_kernel_param_offset + (static_cast<int> (R) * 4))) = in_data;
     }
 
-    uint64_t IP_IER()
+    K* getKernel()
     {
-        return m_ip_ier_reg;
+        return m_kernel;
     }
 
-    uint64_t IP_ISR()
+    void setKernelID (int idx)
     {
-        return m_ip_isr_reg;
+        * ((uint8_t*) (m_data + c_kernel_id_offset)) = idx;
     }
 
-    uint64_t USER_PARAM (int idx)
+    int getKernelID()
     {
-        if (idx >= (int) m_user_params_regs.size()) {
-            printf ("ERROR: invalid user register index in kernel!\n");
-            return ~0;
-        }
-
-        return m_user_params_regs[idx];
+        return * ((uint8_t*) (m_data + c_kernel_id_offset));
     }
-
-    size_t getNumberOfUserParams()
-    {
-        return m_user_params_regs.size();
-    }
-
-protected:
-    virtual void addUserRegister() = 0;
-
-    std::vector<uint64_t> m_user_params_regs;
 
 private:
-    // Control and interrupt registers have fixed layout in vivado_hls generated IPs,
-    // this can be changed to generated dynamically in the future.
-    const uint64_t m_ctrl_reg   = 0x00;
-    const uint64_t m_gier_reg   = 0x04;
-    const uint64_t m_ip_ier_reg = 0x08;
-    const uint64_t m_ip_isr_reg = 0x0C;
+    static const int c_kernel_id_offset          = 108;
+
+    JobDescriptor()
+        : JobDescriptorBase()
+    {}
+
+    // The struct to hold the kernel register layout information
+    K* m_kernel;
 };
+
+template <typename K>
+using JobDescriptorPtr = std::shared_ptr<JobDescriptor<K> >;
 
 // Job Manager to manage interaction with the Manager in oc-accel hardware when job-manager is enabled.
 // Use Singleton design pattern to ensure this object only has 1 instance across the whole application.
@@ -315,7 +361,35 @@ private:
     bool isAllJobsDone();
 
     // Check if all jobs done in MMIO mode
-    bool isAllJobsDone (KernelRegisterLayout* reg_layout);
+    template <typename K>
+    bool isAllJobsDone (K* reg_layout)
+    {
+        if (eMode::MMIO != m_mode) {
+            printf ("ERROR: invalid mode when quering job status!\n");
+            return true;
+        }
+
+        for (int kernel_idx = 0; kernel_idx < m_number_of_kernels; kernel_idx++) {
+            if (m_active_kernel_mask[kernel_idx]) {
+                uint32_t reg_data;
+                uint64_t reg_addr = reg_layout->CTRL();
+
+                if (actionRead32 (kernel_idx, reg_addr, &reg_data)) {
+                    printf ("ERROR: failed to read the CTRL register for kernel %d\n", kernel_idx);
+                    return true;
+                }
+
+                if (0 == (reg_data & 0x2)) {
+                    return false;
+                }
+
+                // Jobs done on the kernel, mark it as inactive
+                m_active_kernel_mask[kernel_idx] = false;
+            }
+        }
+
+        return true;
+    }
 
     // Setup the ocaccel_card handler
     int setupOcaccelCardHandler (int card_no, uint32_t ACTION_TYPE);
@@ -323,8 +397,52 @@ private:
     // Run in the job scheduler mode
     int runJobScheduler();
 
-    // Run in the mode
-    int runMMIO (KernelRegisterLayout* reg_layout);
+    // Run in the MMIO mode
+    //int runMMIO (KernelRegisterLayout* reg_layout);
+
+    // Configure 1 job descriptor to kernel in MMIO mode
+    template <typename K>
+    int configureJob (JobDescriptorPtr<K> job_ptr)
+    {
+        int kernel_idx = job_ptr->getKernelID();
+        K* reg_layout = job_ptr->getKernel();
+
+        if (m_active_kernel_mask[kernel_idx]) {
+            printf ("ERROR: kernel %d is already active when trying to configure.!\n", kernel_idx);
+            return -1;
+        }
+
+        // Configure the kernel parameters
+        for (int reg_idx = 0; reg_idx < (int) reg_layout->getNumberOfKernelParams(); reg_idx++) {
+            uint64_t kernel_param_addr = reg_layout->KERNEL_PARAM (reg_idx);
+            uint32_t kernel_param_value = job_ptr->getKernelParameterByWord (reg_idx);
+
+            if (actionWrite32 (kernel_idx, kernel_param_addr, kernel_param_value)) {
+                printf ("ERROR: failed to perform action write during MMIO run!\n");
+                return -1;
+            }
+        }
+
+        m_active_kernel_mask[kernel_idx] = true;
+
+        return 0;
+    }
+
+    // Start an kernel in MMIO mode
+    template <typename K>
+    int startKernel (int kernel_idx, K* reg_layout)
+    {
+        uint64_t ctrl_addr = reg_layout->CTRL();
+
+        // start the kernel
+        // TODO: bit 0 is the bit to start, hard coded, need to get it in a more flexible way
+        if (actionWrite32 (kernel_idx, ctrl_addr, 0x1)) {
+            printf ("ERROR: failed to start kernel %d!\n", kernel_idx);
+            return -1;
+        }
+
+        return 0;
+    }
 
     // Write action register per kernel basis
     int actionWrite32 (int kernel_idx, uint64_t addr, uint32_t in_data);
@@ -334,12 +452,25 @@ private:
 
 public:
     // Get the descriptor at the given index
-    JobDescriptorPtr getJobDescriptorPtr (int idx);
+    template <typename K>
+    JobDescriptorPtr<K> getJobDescriptorPtr (int idx)
+    {
+        if (m_number_of_descriptors <= idx) {
+            printf ("ERROR: out of index when gettting job descriptors!\n");
+            printf ("ERROR: idx %d, m_number_of_descriptors %d!\n", idx, m_number_of_descriptors);
+            return std::make_shared<JobDescriptor<K> > ((uint8_t*)NULL);
+        }
+
+        int block_idx = idx / c_descriptors_in_a_block;
+        int desc_idx = idx % c_descriptors_in_a_block;
+        void* descriptor_block_pointer = m_descriptor_block_pointers[block_idx].first;
+        return std::make_shared<JobDescriptor<K> > ((uint8_t*) descriptor_block_pointer + desc_idx * JobDescriptorBase::c_job_descriptor_size);
+    }
 
     // Set the number of job descriptors
-    void setNumberOfDescriptors (int num_descriptors)
+    void setNumberOfJobDescriptors (int num_job_descriptors)
     {
-        m_number_of_descriptors = num_descriptors;
+        m_number_of_descriptors = num_job_descriptors;
     }
 
     // Initialize the manager for a run
@@ -352,7 +483,40 @@ public:
     int run();
 
     // Start process the manager in MMIO mode
-    int run (KernelRegisterLayout* reg_layout);
+    //int run (KernelRegisterLayout* reg_layout);
+
+    // Run in the MMIO mode with 1 job descriptor
+    template <typename K>
+    int run (JobDescriptorPtr<K> job_ptr)
+    {
+        if (eMode::MMIO != m_mode) {
+            printf ("ERROR: incorrect mode when trying to run MMIO!\n");
+            return -1;
+        }
+
+        K* reg_layout = job_ptr->getKernel();
+
+        if (NULL == reg_layout) {
+            printf ("ERROR: incorrect pointer to kernel register layout!\n");
+            return -1;
+        }
+
+        printf ("----> Configuring job[%d] to kernel %d in MMIO mode.\n", job_ptr->getJobId(), job_ptr->getKernelID());
+
+        if (configureJob<K> (job_ptr)) {
+            printf ("ERROR: failed to configure a job descriptor to kernel!\n");
+            return -1;
+        }
+
+        if (startKernel<K> (job_ptr->getKernelID(), reg_layout)) {
+            printf ("ERROR: failed to start kernel!\n");
+            return -1;
+        }
+
+        m_status = eStatus::RUNNING;
+
+        return 0;
+    }
 
     // Clear all descriptors in the manager
     void clear();
@@ -361,7 +525,17 @@ public:
     eStatus status();
 
     // Query the status of the Manager
-    eStatus status (KernelRegisterLayout* reg_layout);
+    template <typename K>
+    eStatus status (K* reg_layout)
+    {
+        if (eStatus::RUNNING == m_status) {
+            if (isAllJobsDone (reg_layout)) {
+                m_status = eStatus::FINISHED;
+            }
+        }
+
+        return m_status;
+    }
 
     // Dump all descriptors
     void dump();

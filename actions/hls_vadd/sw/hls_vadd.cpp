@@ -30,13 +30,26 @@
 
 namespace po = boost::program_options;
 #define ACTION_TYPE               0x10143009
+template class JobDescriptor<vadd>;
+
+uint32_t addr_lo (void* ptr)
+{
+    return (uint32_t) (((uint64_t)ptr) & 0xFFFFFFFF);
+}
+
+
+uint32_t addr_hi (void* ptr)
+{
+    return (uint32_t) ((((uint64_t)ptr) >> 32) & 0xFFFFFFFF);
+}
 
 int main (int argc, const char* argv[])
 {
     po::options_description desc{"Options"};
     desc.add_options()
     ("help,h", "Help information")
-    ("size,s", po::value<int>()->default_value (4096), "Size")
+    ("size,s",    po::value<int>()->default_value (4096), "Size")
+    ("card_no,c", po::value<int>()->default_value (0), "Card number")
     ("irq,I",  "Enable interrupt mode");
 
     po::variables_map options;
@@ -50,8 +63,9 @@ int main (int argc, const char* argv[])
 
     int  job_size = options["size"].as<int>();
     bool irq_mode = (options.count ("irq") > 0);
+    int  card_no  = options["card_no"].as<int>();
     int  num_kernels = 2;
-    int  num_descriptors = 2;
+    int  num_job_descriptors = 2;
 
     std::cout << "Running with job size: " << std::dec << job_size << std::endl;
     std::cout << "IRQ mode: " << irq_mode << std::endl;
@@ -86,55 +100,72 @@ int main (int argc, const char* argv[])
     }
 
     OcaccelJobManager* job_manager_ptr = OcaccelJobManager::getManager();
-    job_manager_ptr->setNumberOfDescriptors (num_descriptors);
+    job_manager_ptr->setNumberOfJobDescriptors (num_job_descriptors);
     job_manager_ptr->setNumberOfKernels (num_kernels); // TODO: should be deduced by library automatically
     job_manager_ptr->setMMIOMode();
 
-    job_manager_ptr->initialize (ACTION_TYPE);
+    // Initialize job manager
+    job_manager_ptr->initialize (card_no, ACTION_TYPE);
 
-    for (int i = 0; i < num_descriptors; i++) {
-        JobDescriptorPtr job_desc = job_manager_ptr->getJobDescriptorPtr (i);
+    // The data struct provides information of kernel's register layout.
+    // This class is auto generated for hls kernels during model build.
+    //vaddRegisterLayout kernel_reg_layout;
 
-        if (!job_desc->isValid()) {
-            std::cerr << "Invalid job descriptor" << std::endl;
-            return -1;
-        }
+    // Get a job descriptor and configure it with kernel parameters
+    JobDescriptorPtr<vadd> job_desc_0 = job_manager_ptr->getJobDescriptorPtr<vadd> (0);
+    job_desc_0->setKernelID (0);
+    job_desc_0->setKernelParameter<vadd::PARAM::size>    (job_size);
+    job_desc_0->setKernelParameter<vadd::PARAM::out_r_1> (addr_lo (result1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::out_r_2> (addr_hi (result1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in1_1>   (addr_lo (in1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in1_2>   (addr_hi (in1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in2_1>   (addr_lo (in2_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in2_2>   (addr_hi (in2_buff));
 
-        job_desc->setUserParameterByDoubleWord ((uint64_t) in1_buff);
-        if (1 == i) {
-            job_desc->setUserParameterByDoubleWord ((uint64_t) in3_buff);
-            job_desc->setUserParameterByDoubleWord ((uint64_t) result2_buff);
-        } else {
-            job_desc->setUserParameterByDoubleWord ((uint64_t) in2_buff);
-            job_desc->setUserParameterByDoubleWord ((uint64_t) result1_buff);
-        }
-
-        job_desc->setUserParameterByWord ((uint64_t) job_size);
-
-        job_desc->setKernelToRun (i);
-    }
-
-    vaddRegisterLayout kernel;
-
-    if (job_manager_ptr->run (&kernel)) {
+    // Run a job on the kernel
+    if (job_manager_ptr->run<vadd> (job_desc_0)) {
         std::cerr << "Error running jobs" << std::endl;
         return -1;
     }
 
-    while (OcaccelJobManager::eStatus::FINISHED != job_manager_ptr->status (&kernel)) {
+    while (OcaccelJobManager::eStatus::FINISHED != job_manager_ptr->status<vadd> (job_desc_0->getKernel())) {
     }
-    std::cout << "Job finished!" << std::endl;
+
+    std::cout << "Job 0 finished!" << std::endl;
+
+    // Get a job descriptor and configure it with kernel parameters
+    JobDescriptorPtr<vadd> job_desc_1 = job_manager_ptr->getJobDescriptorPtr<vadd> (1);
+    job_desc_1->setKernelID (1);
+    job_desc_1->setKernelParameter<vadd::PARAM::size>    (job_size);
+    job_desc_1->setKernelParameter<vadd::PARAM::out_r_1> (addr_lo (result2_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::out_r_2> (addr_hi (result2_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in1_1>   (addr_lo (in1_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in1_2>   (addr_hi (in1_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in2_1>   (addr_lo (in3_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in2_2>   (addr_hi (in3_buff));
+
+    // Run a job on the kernel
+    if (job_manager_ptr->run<vadd> (job_desc_1)) {
+        std::cerr << "Error running jobs" << std::endl;
+        return -1;
+    }
+
+    while (OcaccelJobManager::eStatus::FINISHED != job_manager_ptr->status<vadd> (job_desc_1->getKernel())) {
+    }
+
+    std::cout << "Job 1 finished!" << std::endl;
 
     sleep (2);
     job_manager_ptr->dump();
 
     // Verify
     int exit_code = 0;
+
     for (int i = 0 ; i < job_size; i++) {
         if (result1_buff[i] != verify1_buff[i]) {
             std::cerr << "Mismatch on result1_buff[" << i << "] -- "
-                << "actual " << result1_buff[i]
-                << " -- expected " << verify1_buff[i] << std::endl;
+                      << "actual " << result1_buff[i]
+                      << " -- expected " << verify1_buff[i] << std::endl;
             exit_code = EXIT_FAILURE;
             break;
         }
@@ -143,8 +174,8 @@ int main (int argc, const char* argv[])
     for (int i = 0 ; i < job_size; i++) {
         if (result2_buff[i] != verify2_buff[i]) {
             std::cerr << "Mismatch on result2_buff[" << i << "] -- "
-                << "actual " << result2_buff[i]
-                << " -- expected " << verify2_buff[i] << std::endl;
+                      << "actual " << result2_buff[i]
+                      << " -- expected " << verify2_buff[i] << std::endl;
             exit_code = EXIT_FAILURE;
             break;
         }

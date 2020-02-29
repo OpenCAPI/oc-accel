@@ -99,22 +99,48 @@ if {! [dict exists $axilite registers]} {
     puts "WARNING: no registers defined for AXILite slave interface, no register layout header file will be generated!"
 } else {
     set fp [open $register_layout_file w+]
-    puts $fp "// ---- AUTO GENERATED! DO NOT EDIT! ----"
-    puts $fp "class ${kernel_name}RegisterLayout : public KernelRegisterLayout {"
-    puts $fp "public:"
-    puts $fp "    ${kernel_name}RegisterLayout() : KernelRegisterLayout() { addUserRegister(); }; "
-    puts $fp "protected: "
-    puts $fp "    virtual void addUserRegister() {"
+    puts $fp "
+// ---- AUTO GENERATED! DO NOT EDIT! ----
+class ${kernel_name}: public KernelRegisterLayout
+{
+public:
+    ${kernel_name}() : KernelRegisterLayout()
+    {
+        setKernelParamNumber (PARAM::PARAM_NUM);
+        addKernelParameters(); 
+    }; 
+    enum class PARAM : int {"
+    set registers [dict get $axilite registers]
+    foreach reg $registers {
+        set reg_name [dict get $reg name]
+        if {$reg_name != "CTRL" && $reg_name != "GIER" && $reg_name != "IP_IER" && $reg_name != "IP_ISR"} {
+            puts $fp "        $reg_name,"
+        }
+    }
+    puts $fp "        PARAM_NUM
+    };
+
+protected:
+    void setKernelParamNumber (PARAM num)
+    {
+        m_kernel_params_regs.resize (static_cast<int> (num), 0);
+    }
+    void setKernelParamRegister (PARAM reg, uint64_t offset)
+    {
+        m_kernel_params_regs\[static_cast<int> (reg)\] = offset;
+    }
+
+    virtual void addKernelParameters ()
+    {"
     set registers [dict get $axilite registers]
     foreach reg $registers {
         set reg_name [dict get $reg name]
         set reg_offset [dict get $reg offset]
         if {$reg_name != "CTRL" && $reg_name != "GIER" && $reg_name != "IP_IER" && $reg_name != "IP_ISR"} {
-            puts $fp "        m_user_params_regs.push_back($reg_offset);"
+            puts $fp "        setKernelParamRegister (PARAM::$reg_name, $reg_offset);"
         }
     }
-
-    puts $fp "    };"
+    puts $fp "    }"
     puts $fp "}; /* register_layout */"
     puts "$register_layout_file is successfully generated."
 
