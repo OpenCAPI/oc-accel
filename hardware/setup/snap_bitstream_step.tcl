@@ -69,7 +69,7 @@ if { $bram_used == "TRUE" } {
 } else {
   set RAM_TYPE noSDRAM
 }
-append IMAGE_NAME [format {_%s_%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
+append IMAGE_NAME [format {_%s_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
 
 ##
 ## writing bitstream
