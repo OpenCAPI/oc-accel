@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include "ocaccel_job_manager.h"
-#include "ocaccel_tools.h"
 #include <math.h>
 #include <algorithm>
 
@@ -164,14 +163,10 @@ bool OcaccelJobManager::isAllJobsDone()
     return true;
 }
 
-int OcaccelJobManager::setupOcaccelCardHandler (int card_no, uint32_t ACTION_TYPE)
+int OcaccelJobManager::setupOcaccelCardHandler (int card_no)
 {
     struct ocaccel_card* card = NULL;
-    struct ocaccel_action* action = NULL;
     char device[128];
-
-    // TODO: enable interrupt mode in the near future
-    ocaccel_action_flag_t action_irq = (ocaccel_action_flag_t) 0;
 
     //-------------------------------------------------------------------------
     // Allocate the card that will be used
@@ -193,22 +188,77 @@ int OcaccelJobManager::setupOcaccelCardHandler (int card_no, uint32_t ACTION_TYP
         return -1;
     }
 
-    //-------------------------------------------------------------------------
-    // Attach the action that will be used on the allocated card
-    action = ocaccel_attach_action (card, ACTION_TYPE, action_irq, 600);
-
-    if (action_irq) {
-        ocaccel_action_assign_irq (action, REG_IRQ_HANDLER_BASE);
-    }
-
-    if (action == NULL) {
-        fprintf (stderr, "err: failed to attach action %u: %s\n",
-                 card_no, strerror (errno));
-        return -1;
+    // TODO: interrupt is not enabled yet.
+    if (0) {
+        // TODO: OCACCEL_IRQ_HANDLER_BASE is 0xFFFFFFFF.
+        ocaccel_action_assign_irq (card, OCACCEL_IRQ_HANDLER_BASE);
     }
 
     m_ocaccel_card = card;
-    m_ocaccel_action = action;
+
+    return 0;
+}
+
+int OcaccelJobManager::checkActionName (const char* action_name)
+{
+    if (NULL == m_ocaccel_card) {
+        printf ("ERROR: the card hasn't been allocated yet!\n");
+        return -1;
+    }
+
+    char hardware_action_name[33];
+
+    if (ocaccel_card_ioctl (m_ocaccel_card, GET_ACTION_NAME, hardware_action_name)) {
+        printf ("ERROR: failed to get action name via ocaccel_card_ioctl!\n");
+        return -1;
+    }
+
+    if (strcmp (action_name, hardware_action_name)) {
+        printf ("ERROR: action name mismatch. Hardware: %s, user specified: %s!\n", hardware_action_name, action_name);
+        return -1;
+    }
+
+    printf ("--------> action %s found on the card!\n", hardware_action_name);
+
+    return 0;
+}
+
+int OcaccelJobManager::setupJobManager()
+{
+    if (NULL == m_ocaccel_card) {
+        printf ("ERROR: the card hasn't been allocated yet!\n");
+        return -1;
+    }
+
+    char num_of_kernels = 0;
+
+    if (ocaccel_card_ioctl (m_ocaccel_card, GET_KERNEL_NUMBER, &num_of_kernels)) {
+        printf ("ERROR: failed to get number of kernels via ocaccel_card_ioctl!\n");
+        return -1;
+    }
+
+    printf ("--------> %d kernels found on the card!\n", num_of_kernels);
+    setNumberOfKernels ((int) num_of_kernels);
+
+    char infra_template = 0;
+
+    if (ocaccel_card_ioctl (m_ocaccel_card, GET_INFRA_TEMPLATE, &infra_template)) {
+        printf ("ERROR: failed to get infrastructure template via ocaccel_card_ioctl!\n");
+        return -1;
+    }
+
+    printf ("--------> Infrastructure template %d found on the card!\n", infra_template);
+
+    if (1 == (int) infra_template) {
+        printf ("--------> MMIO mode enabled\n");
+        setMMIOMode();
+    } else if (2 == (int) infra_template) {
+        printf ("--------> Job scheduler mode enabled\n");
+        setJobSchedulerMode();
+    } else {
+        printf ("--------> ERROR: unsupported infrastructure template: %d\n", (int) infra_template);
+        return -1;
+    }
 
     return 0;
 }
@@ -220,7 +270,7 @@ int OcaccelJobManager::actionWrite32 (int kernel_idx, uint64_t addr, uint32_t in
         return -1;
     }
 
-    uint64_t reg_offset = (REG_BASE_PER_KERNEL * kernel_idx) + addr;
+    uint64_t reg_offset = (OCACCEL_BASE_PER_KERNEL * kernel_idx) + addr;
 
     if (ocaccel_action_write32 (m_ocaccel_card, reg_offset, in_data)) {
         printf ("ERROR: failed to write reg %#lX!\n", reg_offset);
@@ -237,7 +287,7 @@ int OcaccelJobManager::actionRead32 (int kernel_idx, uint64_t addr, uint32_t* ou
         return -1;
     }
 
-    uint64_t reg_offset = (REG_BASE_PER_KERNEL * kernel_idx) + addr;
+    uint64_t reg_offset = (OCACCEL_BASE_PER_KERNEL * kernel_idx) + addr;
 
     if (ocaccel_action_read32 (m_ocaccel_card, reg_offset, out_data)) {
         printf ("ERROR: failed to read reg %#lX!\n", reg_offset);
@@ -247,21 +297,31 @@ int OcaccelJobManager::actionRead32 (int kernel_idx, uint64_t addr, uint32_t* ou
     return 0;
 }
 
-int OcaccelJobManager::initialize (uint32_t ACTION_TYPE)
+int OcaccelJobManager::initialize (const char* action_name)
 {
     // By default, use card number 0
-    return initialize (0, ACTION_TYPE);
+    return initialize (0, action_name);
 }
 
-int OcaccelJobManager::initialize (int card_no, uint32_t ACTION_TYPE)
+int OcaccelJobManager::initialize (int card_no, const char* action_name)
 {
     if (0 == m_number_of_descriptors) {
         printf ("ERROR: please set the number of job descriptors to a valid number!\n");
         return -1;
     }
 
-    if (setupOcaccelCardHandler (card_no, ACTION_TYPE)) {
+    if (setupOcaccelCardHandler (card_no)) {
         printf ("ERROR: please set the ocaccel card handler!\n");
+        return -1;
+    }
+
+    if (checkActionName (action_name)) {
+        printf ("ERROR: action name mismatch!\n");
+        return -1;
+    }
+
+    if (setupJobManager()) {
+        printf ("ERROR: failed to setup job manager!\n");
         return -1;
     }
 
@@ -387,23 +447,23 @@ int OcaccelJobManager::runJobScheduler()
     printf ("Completion Buffer Address: %p\n", m_completion_status_buffer);
 
     // Setup the descriptor base address
-    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_INIT_ADDR_LO, descriptor_start_address_lo)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, OCACCEL_JM_INIT_ADDR_LO, descriptor_start_address_lo)) {
         printf ("ERROR: failed to set job descriptor start address!\n");
         return -1;
     }
 
-    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_INIT_ADDR_HI, descriptor_start_address_hi)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, OCACCEL_JM_INIT_ADDR_HI, descriptor_start_address_hi)) {
         printf ("ERROR: failed to set job descriptor start address!\n");
         return -1;
     }
 
     // Setup the completion buffer address
-    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_CMPL_ADDR_LO, completion_buffer_address_lo)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, OCACCEL_JM_CMPL_ADDR_LO, completion_buffer_address_lo)) {
         printf ("ERROR: failed to set completion buffer address!\n");
         return -1;
     }
 
-    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_CMPL_ADDR_HI, completion_buffer_address_hi)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, OCACCEL_JM_CMPL_ADDR_HI, completion_buffer_address_hi)) {
         printf ("ERROR: failed to set completion buffer address!\n");
         return -1;
     }
@@ -413,7 +473,7 @@ int OcaccelJobManager::runJobScheduler()
 
     printf ("Job Manager Control Word: %#x\n", jm_control_word);
 
-    if (ocaccel_action_write32 (m_ocaccel_card, REG_JM_CONTROL, jm_control_word)) {
+    if (ocaccel_action_write32 (m_ocaccel_card, OCACCEL_JM_CONTROL, jm_control_word)) {
         printf ("ERROR: failed to set job manager control register!\n");
         return -1;
     }
@@ -431,10 +491,6 @@ void OcaccelJobManager::clear()
 
     if (NULL != m_completion_status_buffer) {
         free ((void*)m_completion_status_buffer);
-    }
-
-    if (NULL != m_ocaccel_action) {
-        ocaccel_detach_action (m_ocaccel_action);
     }
 
     if (NULL != m_ocaccel_card) {
@@ -461,9 +517,4 @@ void OcaccelJobManager::dump()
     [this] (tDescriptorBlock & i) {
         dumpDescriptorBlock (i);
     });
-
-    printf ("Content of descriptors\n");
-    __hexdump (stdout, m_descriptor_block_pointers[0].first, m_number_of_descriptors * JobDescriptorBase::c_job_descriptor_size);
-    printf ("\nContent of completion buffer\n");
-    __hexdump (stdout, (void*) m_completion_status_buffer, m_number_of_descriptors * c_completion_entry_size);
 }

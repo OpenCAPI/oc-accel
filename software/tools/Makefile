@@ -32,7 +32,7 @@ endif
 ocaccel_peek_objs = force_cpu.o
 ocaccel_poke_objs = force_cpu.o
 
-projs = ocaccel_peek ocaccel_poke simple_reg_access ocaccel_maint
+projs = ocaccel_maint 
 objs = force_cpu.o $(projs:=.o)
 hfiles = force_cpu.h  ocaccel_fw_example.h
 
@@ -40,7 +40,7 @@ all: $(projs)
 
 $(projs): $(objs)
 
-$(objs): ocaccel_actions.h $(libs)
+$(objs): $(libs)
 
 $(libs):
 	$(MAKE) -C $(shell dirname $@)

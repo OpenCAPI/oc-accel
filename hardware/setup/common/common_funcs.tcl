@@ -96,13 +96,11 @@ proc my_get_card_type {} {
     return $card_type
 }
 
-proc my_get_action_name_str {index} {
+proc my_get_action_name_str {index action_name} {
 # index: 1 to 4
 # The maximum length is 32 chars
 # If action_name is longer than 32 chars, the remaining part
 # will be ignored.
-    set index 2
-    set action_name $::env(ACTION_NAME)
     set action_name_long [format %-32s $action_name]
 
     set start_pos [expr ($index - 1) * 8 ]
@@ -112,10 +110,33 @@ proc my_get_action_name_str {index} {
 
     set hex_str ""
     for {set x 0} {$x < 8 } {incr x} {
-        set ch [string range $eight_chars $x $x]
+        set ch [string index $eight_chars $x]
         scan $ch "%c" i
         set h [format %x $i]
-        set hex_str "${hex_str}${h}"
+        set hex_str "${h}${hex_str}"
+    }
+
+    return "0x$hex_str"
+}
+
+proc my_get_kernel_name_str {index kernel_name} {
+# index: 1 to 8
+# The maximum length is 32 chars
+# If kernel_name is longer than 32 chars, the remaining part
+# will be ignored.
+    set kernel_name_long [format %-32s $kernel_name]
+
+    set start_pos [expr ($index - 1) * 4 ]
+    set end_pos   [expr ($index - 1) * 4 + 3 ]
+
+    set four_chars [string range $kernel_name_long $start_pos $end_pos]
+
+    set hex_str ""
+    for {set x 0} {$x < 4 } {incr x} {
+        set ch [string index $four_chars $x]
+        scan $ch "%c" i
+        set h [format %x $i]
+        set hex_str "${h}${hex_str}"
     }
 
     return "0x$hex_str"

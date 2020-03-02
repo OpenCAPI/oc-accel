@@ -14,12 +14,34 @@
  * limitations under the License.
  */
 
-// kernel helper will handel some special registers
+//-----------------------------------------------------------------//
+// kernel helper 
+// Define some special registers and handle AXI *USER wires
+//-----------------------------------------------------------------//
+
+//  Each kernel has allocated 256KB register space （0 to 'h40000-1）
+//  Here REG_RANGE_BIT=17
+//  [REG_RANGE_BIT:0] is the valid address
+
+//  In this area, lower half is for the kernel core
+//                higher half is for the special registers in kernel_helper
+// 
+//  DON'T modify REG_RANGE_BIT unless your kernel core needs larger configuration space (> 128KB)
+//  Because it needs corresponding modifications to software and Address Editor in create_top.tcl
+
 
 module kernel_helper # (
               parameter  KERNEL_TYPE      = 32'h0000ABCD,
               parameter  RELEASE_LEVEL    = 32'h00000001,
-              parameter  SPECIAL_REG_BASE = 32'h00020000,
+              parameter  REG_RANGE_BIT    = 17,
+              parameter  KERNEL_NAME_STR1 = 32'h7473_6574,
+              parameter  KERNEL_NAME_STR2 = 32'h2020_2020,
+              parameter  KERNEL_NAME_STR3 = 32'h2020_2020,
+              parameter  KERNEL_NAME_STR4 = 32'h2020_2020,
+              parameter  KERNEL_NAME_STR5 = 32'h2020_2020,
+              parameter  KERNEL_NAME_STR6 = 32'h2020_2020,
+              parameter  KERNEL_NAME_STR7 = 32'h2020_2020,
+              parameter  KERNEL_NAME_STR8 = 32'h2020_2020,
               parameter  INT_BITS = 64,
               parameter  CTXW = 9,
               // Kernel function module's AXILITE width
@@ -187,15 +209,26 @@ module kernel_helper # (
     input  [0:0]                              m_axi_h2i_buser
 
     );
-// Use some address @ 128KB base
-// The whole configuration address space for one kernel is 256KB
-localparam ADDR_KERNEL_TYPE                  = 32'h10 + SPECIAL_REG_BASE; //Read Only
-localparam ADDR_RELEASE_LEVEL                = 32'h14 + SPECIAL_REG_BASE; //Read Only
-localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_LO = 32'h18 + SPECIAL_REG_BASE; //Write Only
-localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_HI = 32'h1C + SPECIAL_REG_BASE; //Write Only
-localparam ADDR_CONTEXT                      = 32'h20 + SPECIAL_REG_BASE; //Read-Write
+// Special Register Offset
+localparam ADDR_KERNEL_TYPE                  = 'h10; //Read Only
+localparam ADDR_RELEASE_LEVEL                = 'h14; //Read Only
+localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_LO = 'h18; //Write Only
+localparam ADDR_ACTION_INTERRUPT_SRC_ADDR_HI = 'h1C; //Write Only
+localparam ADDR_CONTEXT                      = 'h20; //Read-Write
+localparam ADDR_KERNEL_NAME_STR1             = 'h30; //Read Only
+localparam ADDR_KERNEL_NAME_STR2             = 'h34; //Read Only
+localparam ADDR_KERNEL_NAME_STR3             = 'h38; //Read Only
+localparam ADDR_KERNEL_NAME_STR4             = 'h3C; //Read Only
+localparam ADDR_KERNEL_NAME_STR5             = 'h40; //Read Only
+localparam ADDR_KERNEL_NAME_STR6             = 'h44; //Read Only
+localparam ADDR_KERNEL_NAME_STR7             = 'h48; //Read Only
+localparam ADDR_KERNEL_NAME_STR8             = 'h4C; //Read Only
 
 
+wire access_helper_w;
+assign access_helper_w = (s_axilite_i2h_awaddr[REG_RANGE_BIT] == 1'b1);
+wire access_helper_r;
+assign access_helper_r = (s_axilite_i2h_araddr[REG_RANGE_BIT] == 1'b1);
 
 reg [31:0] reg_context;
 reg [31:0] reg_interrupt_src_hi;
@@ -209,7 +242,7 @@ reg interrupt_wait_ack_q;
 always @ (posedge clk)
     if (~resetn)
         reg_context      <= 32'h0;
-    else if (s_axilite_i2h_wvalid && (s_axilite_i2h_awaddr == ADDR_CONTEXT ))
+    else if (s_axilite_i2h_wvalid && access_helper_w && (s_axilite_i2h_awaddr[REG_RANGE_BIT-1:0] == ADDR_CONTEXT ))
         reg_context      <= s_axilite_i2h_wdata;
 
 
@@ -235,9 +268,9 @@ always @ (posedge clk)
         reg_interrupt_src_hi <= 32'b0;
         reg_interrupt_src_lo <= 32'b0;
     end
-    else if (s_axilite_i2h_wvalid  && (s_axilite_i2h_awaddr == ADDR_ACTION_INTERRUPT_SRC_ADDR_HI))
+    else if (s_axilite_i2h_wvalid  && access_helper_w && (s_axilite_i2h_awaddr[REG_RANGE_BIT-1:0] == ADDR_ACTION_INTERRUPT_SRC_ADDR_HI))
         reg_interrupt_src_hi <= s_axilite_i2h_wdata;
-    else if (s_axilite_i2h_wvalid  && (s_axilite_i2h_awaddr == ADDR_ACTION_INTERRUPT_SRC_ADDR_LO))
+    else if (s_axilite_i2h_wvalid  && access_helper_w && (s_axilite_i2h_awaddr[REG_RANGE_BIT-1:0] == ADDR_ACTION_INTERRUPT_SRC_ADDR_LO))
         reg_interrupt_src_lo <= s_axilite_i2h_wdata;
 
 assign  interrupt_src = {reg_interrupt_src_hi, reg_interrupt_src_lo};
@@ -255,28 +288,52 @@ always @ (posedge clk)
         reg_rdata_hijack <= 32'h0;
     end
     else if (s_axilite_i2h_arvalid == 1'b1) begin
-        if (s_axilite_i2h_araddr == ADDR_KERNEL_TYPE)
+        if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_TYPE))
             reg_rdata_hijack <= KERNEL_TYPE;
-        else if (s_axilite_i2h_araddr == ADDR_RELEASE_LEVEL)
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_RELEASE_LEVEL))
             reg_rdata_hijack <= RELEASE_LEVEL;
-        else if (s_axilite_i2h_araddr == ADDR_CONTEXT)
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_CONTEXT))
             reg_rdata_hijack <= reg_context;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR1))
+            reg_rdata_hijack <= KERNEL_NAME_STR1;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR2))
+            reg_rdata_hijack <= KERNEL_NAME_STR2;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR3))
+            reg_rdata_hijack <= KERNEL_NAME_STR3;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR4))
+            reg_rdata_hijack <= KERNEL_NAME_STR4;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR5))
+            reg_rdata_hijack <= KERNEL_NAME_STR5;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR6))
+            reg_rdata_hijack <= KERNEL_NAME_STR6;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR7))
+            reg_rdata_hijack <= KERNEL_NAME_STR7;
+        else if (access_helper_r && (s_axilite_i2h_araddr[REG_RANGE_BIT-1:0] == ADDR_KERNEL_NAME_STR8))
+            reg_rdata_hijack <= KERNEL_NAME_STR8;
         else
             reg_rdata_hijack <= 32'h0;
     end
 
-// Bypass most of the connections
 
-assign /*  output*/  s_axilite_h2k_AWVALID = s_axilite_i2h_awvalid ;
+//FIXME: helper is not a true axi slave yet. 
+// The address handeling is dangerous. 
+// It assumes the last address in kernel_core space is not used.
+
+// Bypass most of the connections
+assign /*  output*/  s_axilite_h2k_AWVALID = s_axilite_i2h_awvalid;
 assign /*  input */  s_axilite_i2h_awready = s_axilite_h2k_AWREADY ;
-assign /*  output*/  s_axilite_h2k_AWADDR  = s_axilite_i2h_awaddr[C_S_AXI_CONTROL_ADDR_WIDTH - 1:0] ; //Handle the mismatch of addr width
+assign /*  output*/  s_axilite_h2k_AWADDR  = access_helper_w ? 
+                                            {C_S_AXI_CONTROL_ADDR_WIDTH{1'b1}} : 
+                                            s_axilite_i2h_awaddr[C_S_AXI_CONTROL_ADDR_WIDTH - 1:0] ; //Handle the mismatch of addr width
 assign /*  output*/  s_axilite_h2k_WVALID  = s_axilite_i2h_wvalid ;
 assign /*  input */  s_axilite_i2h_wready  = s_axilite_h2k_WREADY ;
 assign /*  output*/  s_axilite_h2k_WDATA   = s_axilite_i2h_wdata ;
 assign /*  output*/  s_axilite_h2k_WSTRB   = s_axilite_i2h_wstrb ;
-assign /*  output*/  s_axilite_h2k_ARVALID = s_axilite_i2h_arvalid ;
+assign /*  output*/  s_axilite_h2k_ARVALID = s_axilite_i2h_arvalid;
 assign /*  input */  s_axilite_i2h_arready = s_axilite_h2k_ARREADY ;
-assign /*  output*/  s_axilite_h2k_ARADDR  = s_axilite_i2h_araddr [C_S_AXI_CONTROL_ADDR_WIDTH - 1:0] ; //Handle the mismatch of addr width
+assign /*  output*/  s_axilite_h2k_ARADDR  = access_helper_r ?
+                                            {C_S_AXI_CONTROL_ADDR_WIDTH{1'b1}} :
+                                            s_axilite_i2h_araddr [C_S_AXI_CONTROL_ADDR_WIDTH - 1:0] ; //Handle the mismatch of addr width
 assign /*  input */  s_axilite_i2h_rvalid  = s_axilite_h2k_RVALID ;
 assign /*  output*/  s_axilite_h2k_RREADY  = s_axilite_i2h_rready ;
 assign /*  input */  s_axilite_i2h_rdata   = s_axilite_h2k_RDATA | reg_rdata_hijack ;

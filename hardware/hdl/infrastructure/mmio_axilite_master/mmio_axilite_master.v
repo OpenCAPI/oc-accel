@@ -20,14 +20,15 @@ module mmio_axilite_master
             # (
                 parameter IMP_VERSION = 64'h1000_0000_0000_0000,
                 parameter BUILD_DATE = 64'h0000_2000_0101_0800,
-                parameter ACTION_NAME_STR1 = 64'h7465_7374_2020_2020, //h'74657374 = "test"
-                parameter ACTION_NAME_STR2 = 64'h2020_2020_2020_2020, //h'20 means 'space'
-                parameter ACTION_NAME_STR3 = 64'h2020_2020_2020_2020,
-                parameter ACTION_NAME_STR4 = 64'h2020_2020_2020_2020,
-                parameter ENGINE_NUMBER       = 8'h1,
-                parameter INFRA_TEMPLATE      = 8'h1,  //T1, T2, 
+                parameter ACTION_NAME_STR1 = 64'h0000_0000_7473_6574, //h'74657374 = "test"
+                parameter ACTION_NAME_STR2 = 64'h0000_0000_0000_0000, //h'20 means 'space'
+                parameter ACTION_NAME_STR3 = 64'h0000_0000_0000_0000,
+                parameter ACTION_NAME_STR4 = 64'h0000_0000_0000_0000,
+                parameter OTHER_CAPABILITY    = 24'h0,
+                parameter CAPI_VER            = 8'h30,
+                parameter KERNEL_NUMBER       = 8'h1,
+                parameter INFRA_TEMPLATE      = 8'h01,  //T1, T2, 
                 parameter ACTION_TEMPLATE     = 8'h10, //A10, place holder for now
-                parameter OTHER_CAPABILITY    = 32'h0,
                 parameter CARD_TYPE = 8'h31
               )
               (
@@ -108,10 +109,11 @@ module mmio_axilite_master
                 .ACTION_NAME_STR2 (ACTION_NAME_STR2),
                 .ACTION_NAME_STR3 (ACTION_NAME_STR3),
                 .ACTION_NAME_STR4 (ACTION_NAME_STR4),
-                .ENGINE_NUMBER    (ENGINE_NUMBER    ),
+                .OTHER_CAPABILITY (OTHER_CAPABILITY ),
+                .CAPI_VER         (CAPI_VER         ),
+                .KERNEL_NUMBER    (KERNEL_NUMBER    ),
                 .INFRA_TEMPLATE   (INFRA_TEMPLATE   ),
                 .ACTION_TEMPLATE  (ACTION_TEMPLATE  ),
-                .OTHER_CAPABILITY (OTHER_CAPABILITY ),
                 .CARD_TYPE (CARD_TYPE )
               )
         mmio_path_and_regs (

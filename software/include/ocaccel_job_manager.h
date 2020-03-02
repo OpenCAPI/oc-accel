@@ -75,10 +75,10 @@ protected:
 private:
     // Control and interrupt registers have fixed layout in vivado_hls generated IPs,
     // this can be changed to generated dynamically in the future.
-    const uint64_t m_ctrl_reg   = 0x00;
-    const uint64_t m_gier_reg   = 0x04;
-    const uint64_t m_ip_ier_reg = 0x08;
-    const uint64_t m_ip_isr_reg = 0x0C;
+    const uint64_t m_ctrl_reg   = OCACCEL_KERNEL_CONTROL;
+    const uint64_t m_gier_reg   = OCACCEL_KERNEL_IRQ_CONTROL;
+    const uint64_t m_ip_ier_reg = OCACCEL_KERNEL_IRQ_APP;
+    const uint64_t m_ip_isr_reg = OCACCEL_KERNEL_IRQ_STATUS;
 };
 
 class JobDescriptorBase
@@ -166,7 +166,7 @@ protected:
     static const int c_next_adjacent_offset      = 1;
     static const int c_magic_offset              = 2;
     static const int c_job_id_offset             = 4;
-    static const int c_kernel_param_offset     = 8;
+    static const int c_kernel_param_offset       = 8;
     static const int c_interrupt_handler_offset  = 112;
     static const int c_next_block_address_offset = 120;
 
@@ -292,13 +292,6 @@ public:
     // Constants
     static const int c_descriptors_in_a_block  = 32;
     static const int c_completion_entry_size   = 128;
-    static const uint64_t REG_JM_CONTROL       = 0x24;
-    static const uint64_t REG_JM_INIT_ADDR_LO  = 0x28;
-    static const uint64_t REG_JM_INIT_ADDR_HI  = 0x2C;
-    static const uint64_t REG_JM_CMPL_ADDR_LO  = 0x30;
-    static const uint64_t REG_JM_CMPL_ADDR_HI  = 0x34;
-    static const uint64_t REG_BASE_PER_KERNEL  = 0x00040000;
-    static const uint64_t REG_IRQ_HANDLER_BASE = 0xFFFFFFFF; // TODO: undefined yet
 
     // Destructor
     ~OcaccelJobManager()
@@ -328,7 +321,6 @@ private:
         m_number_of_descriptors (0),
         m_number_of_kernels (0),
         m_ocaccel_card (NULL),
-        m_ocaccel_action (NULL),
         m_status (eStatus::EMPTY),
         m_mode (eMode::JOB_SCHEDULER)
     {
@@ -379,7 +371,7 @@ private:
                     return true;
                 }
 
-                if (0 == (reg_data & 0x2)) {
+                if (0 == (reg_data & OCACCEL_KERNEL_CONTROL_DONE)) {
                     return false;
                 }
 
@@ -392,7 +384,13 @@ private:
     }
 
     // Setup the ocaccel_card handler
-    int setupOcaccelCardHandler (int card_no, uint32_t ACTION_TYPE);
+    int setupOcaccelCardHandler (int card_no);
+
+    // Check if the action name given by user matched with the hardware
+    int checkActionName (const char* action_name);
+
+    // Setup the number of kernels and work modes with respect to the hardware settings
+    int setupJobManager();
 
     // Run in the job scheduler mode
     int runJobScheduler();
@@ -435,8 +433,7 @@ private:
         uint64_t ctrl_addr = reg_layout->CTRL();
 
         // start the kernel
-        // TODO: bit 0 is the bit to start, hard coded, need to get it in a more flexible way
-        if (actionWrite32 (kernel_idx, ctrl_addr, 0x1)) {
+        if (actionWrite32 (kernel_idx, ctrl_addr, OCACCEL_KERNEL_CONTROL_START)) {
             printf ("ERROR: failed to start kernel %d!\n", kernel_idx);
             return -1;
         }
@@ -449,6 +446,25 @@ private:
 
     // Read action register per kernel basis
     int actionRead32 (int kernel_idx, uint64_t addr, uint32_t* out_data);
+
+    // Set the number of kernels in hardware
+    void setNumberOfKernels (int num)
+    {
+        m_number_of_kernels = num;
+        m_active_kernel_mask.resize (num, false);
+    }
+
+    // Enable job scheduler mode (the job scheduler in the hardware)
+    void setJobSchedulerMode()
+    {
+        m_mode = eMode::JOB_SCHEDULER;
+    }
+
+    // Enable the MMIO mode (jobs are configured via MMIO)
+    void setMMIOMode()
+    {
+        m_mode = eMode::MMIO;
+    }
 
 public:
     // Get the descriptor at the given index
@@ -474,10 +490,10 @@ public:
     }
 
     // Initialize the manager for a run
-    int initialize (uint32_t ACTION_TYPE);
+    int initialize (const char* action_name);
 
     // Initialize the manager for a run
-    int initialize (int card_no, uint32_t ACTION_TYPE);
+    int initialize (int card_no, const char* action_name);
 
     // Start process the manager in JOB_SCHEDULER mode
     int run();
@@ -540,25 +556,6 @@ public:
     // Dump all descriptors
     void dump();
 
-    // Enable job scheduler mode (the job scheduler in the hardware)
-    void setJobSchedulerMode()
-    {
-        m_mode = eMode::JOB_SCHEDULER;
-    }
-
-    // Enable the MMIO mode (jobs are configured via MMIO)
-    void setMMIOMode()
-    {
-        m_mode = eMode::MMIO;
-    }
-
-    // Set the number of kernels in hardware
-    void setNumberOfKernels (int num)
-    {
-        m_number_of_kernels = num;
-        m_active_kernel_mask.resize (num, false);
-    }
-
 private:
     // The array to store all descriptor block pointers
     // First  -> pointer to the descriptor block
@@ -579,7 +576,6 @@ private:
 
     // OCACCEL card handler
     ocaccel_card* m_ocaccel_card;
-    ocaccel_action* m_ocaccel_action;
 
     // The current status of the manager
     eStatus m_status;

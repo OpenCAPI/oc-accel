@@ -1,6 +1,7 @@
 
 set bd_hier "infra_wrap"
 set action_frequency    $::env(ACTION_CLOCK_FREQUENCY)
+set action_name         $::env(ACTION_NAME)
 set kernel_number       $::env(KERNEL_NUMBER)
 set width_aximm_ports   $::env(WIDTH_AXIMM_PORTS)
 # Create BD Hier
@@ -9,14 +10,14 @@ create_bd_cell -type hier $bd_hier
 ###############################################################################
 # Additiona preparations
 source $hardware_dir/setup/common/common_funcs.tcl
-set imp_version      [ eval my_get_imp_version             ]
-set build_date       [ eval my_get_build_date              ]
-set date_string      [ eval my_get_date_string $build_date ]
-set card_type        [ eval my_get_card_type               ]
-set action_name_str1 [ eval my_get_action_name_str 1       ]
-set action_name_str2 [ eval my_get_action_name_str 2       ]
-set action_name_str3 [ eval my_get_action_name_str 3       ]
-set action_name_str4 [ eval my_get_action_name_str 4       ]
+set imp_version      [ eval my_get_imp_version                    ]
+set build_date       [ eval my_get_build_date                     ]
+set date_string      [ eval my_get_date_string $build_date        ]
+set card_type        [ eval my_get_card_type                      ]
+set action_name_str1 [ eval my_get_action_name_str 1 $action_name ]
+set action_name_str2 [ eval my_get_action_name_str 2 $action_name ]
+set action_name_str3 [ eval my_get_action_name_str 3 $action_name ]
+set action_name_str4 [ eval my_get_action_name_str 4 $action_name ]
 set infra_template_value 0x1
 ###############################################################################
 # Create pins for AXIlite / AXIMM ports

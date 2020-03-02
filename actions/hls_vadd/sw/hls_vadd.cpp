@@ -22,9 +22,7 @@
  */
 #include <boost/program_options.hpp>
 #include <iostream>
-#include <ocaccel_tools.h>
 #include <libocaccel.h>
-#include <ocaccel_hls_if.h>
 #include <ocaccel_job_manager.h>
 #include <hls_vadd_register_layout.h>
 
@@ -64,7 +62,6 @@ int main (int argc, const char* argv[])
     int  job_size = options["size"].as<int>();
     bool irq_mode = (options.count ("irq") > 0);
     int  card_no  = options["card_no"].as<int>();
-    int  num_kernels = 2;
     int  num_job_descriptors = 2;
 
     std::cout << "Running with job size: " << std::dec << job_size << std::endl;
@@ -101,11 +98,9 @@ int main (int argc, const char* argv[])
 
     OcaccelJobManager* job_manager_ptr = OcaccelJobManager::getManager();
     job_manager_ptr->setNumberOfJobDescriptors (num_job_descriptors);
-    job_manager_ptr->setNumberOfKernels (num_kernels); // TODO: should be deduced by library automatically
-    job_manager_ptr->setMMIOMode();
 
     // Initialize job manager
-    job_manager_ptr->initialize (card_no, ACTION_TYPE);
+    job_manager_ptr->initialize (card_no, "hls_vadd");
 
     // The data struct provides information of kernel's register layout.
     // This class is auto generated for hls kernels during model build.
@@ -187,12 +182,12 @@ int main (int argc, const char* argv[])
 
     job_manager_ptr->clear();
 
-    __free (in1_buff);
-    __free (in2_buff);
-    __free (in3_buff);
-    __free (result1_buff);
-    __free (result2_buff);
-    __free (verify1_buff);
-    __free (verify2_buff);
+    free (in1_buff);
+    free (in2_buff);
+    free (in3_buff);
+    free (result1_buff);
+    free (result2_buff);
+    free (verify1_buff);
+    free (verify2_buff);
     return exit_code;
 }

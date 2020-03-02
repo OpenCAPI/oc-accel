@@ -3,6 +3,11 @@ set kernel_name   $::env(KERNEL_NAME)
 set hls_support   $::env(HLS_SUPPORT)
 set axi_id_width  $::env(AXI_ID_WIDTH)
 
+source $hardware_dir/setup/common/common_funcs.tcl
+for {set x 1} {$x <= 8} {incr x} {
+    set kernel_name_str(${x}) [ eval my_get_kernel_name_str $x $kernel_name ]
+}
+
 set bd_hier "act_wrap"
 # Create BD Hier
 create_bd_cell -type hier $bd_hier
@@ -36,9 +41,11 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
     # Add kernel helper (a small module to handle interrupt src, etc)
     create_bd_cell -type module -reference kernel_helper $kernel_hier/kernel_helper
-    set special_reg_base [expr 0x20000 + 0x40000 * $x] 
-    set_property -dict [list CONFIG.SPECIAL_REG_BASE $special_reg_base] [get_bd_cells $kernel_hier/kernel_helper]
-    
+    for {set i 1} {$i <= 8} {incr i} {
+        set prop_name [format "KERNEL_NAME_STR%d" $i]
+        set_property CONFIG.${prop_name} $kernel_name_str($i) [get_bd_cells $kernel_hier/kernel_helper]
+    }
+
     if { $hls_support == "TRUE" } {
         # Add kernel instance
         create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}

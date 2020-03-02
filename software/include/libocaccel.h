@@ -34,7 +34,6 @@
  */
 
 #include <stdint.h>
-#include <ocaccel_types.h>
 
 /**
  * During the workshop we discovered that there are two potential
@@ -113,56 +112,6 @@ extern "C" {
  *********************************************************************/
 
 struct ocaccel_card;
-struct ocaccel_action;
-struct ocaccel_queue;
-
-typedef uint32_t ocaccel_action_type_t; /* long action type identifies the action */
-
-/**********************************************************************
- * OCACCEL Job Definition
- *********************************************************************/
-
-/**
- * OCACCEL Job description
- *
- * The input interface struct is passed to the hardware action. The hardware
- * action processes the job an returns results either in memory or using the
- * output interface struct.
- *
- * @retc       execution status. Check this to determine if job execution
- *             was sucessfull
- * @win_addr   input address of interface struct
- * @win_size   input size (use extension ptr if larger than 96 bytes)
- * @wout_addr  output address of output interface struct
- * @wout_addr  output size (maximum 96 bytes)
- */
-typedef struct ocaccel_job {
-    uint32_t retc;                        /* Write to 0x104, Read from 0x184 */
-    uint64_t win_addr;                /* rw writing to MMIO 0x110 */
-    uint32_t win_size;                /* Number of bytes to Write */
-    uint64_t wout_addr;                /* wr read from MMIO 0x190 */
-    uint32_t wout_size;                /* Number of Bytes to Read */
-}* ocaccel_job_t;
-
-/**
- * ocaccel_job_set - helper function to more easily setup the job request.
- *
- * @win_addr   input address of specific job
- * @win_size   input size (use extension ptr if larger than 96 bytes)
- * @wout_addr  output address of specific job
- * @wout_addr  output size (maximum 96 bytes)
- */
-static inline void ocaccel_job_set (struct ocaccel_job* djob,
-                                 void* win_addr, uint32_t win_size,
-                                 void* wout_addr, uint32_t wout_size)
-{
-    djob->retc = 0x0;
-    djob->win_addr  = (unsigned long)win_addr;
-    djob->win_size  = win_size;
-    djob->wout_addr = (unsigned long)wout_addr;
-    djob->wout_size = wout_size;
-}
-
 
 /******************************************************************************
  * OCACCEL Card Access
@@ -171,7 +120,7 @@ static inline void ocaccel_job_set (struct ocaccel_job* djob,
 #define OCACCEL_VENDOR_ID_ANY        0xffff
 #define OCACCEL_DEVICE_ID_ANY        0xffff
 #define OCACCEL_VENDOR_ID_IBM        0x1014
-#define OCACCEL_DEVICE_ID_OCACCEL       0x0632 /* Assigned for OCACCEL framework  */
+#define OCACCEL_DEVICE_ID_OCACCEL    0x0632 /* Assigned for OCACCEL framework  */
 
 /*
  * Opens the device given by the path. Checks if the given vendor and device
@@ -185,7 +134,7 @@ static inline void ocaccel_job_set (struct ocaccel_job* djob,
  * @return      ocaccel_device handle or NULL in case of error.
  */
 struct ocaccel_card* ocaccel_card_alloc_dev (const char* path,
-                                       uint16_t vendor_id, uint16_t device_id);
+        uint16_t vendor_id, uint16_t device_id);
 
 /*
  * Free OCACCEL device
@@ -207,56 +156,9 @@ void ocaccel_card_free (struct ocaccel_card* card);
 
 
 int ocaccel_global_write64 (struct ocaccel_card* card, uint64_t offset,
-                         uint64_t data);
+                            uint64_t data);
 int ocaccel_global_read64 (struct ocaccel_card* card, uint64_t offset,
-                        uint64_t* data);
-
-/*
- * Settings for action attachement and Action completion.
- *
- * @OCACCEL_ACTION_DONE_IRQ  Enables Action Done Interrupt.
- *
- * @OCACCEL_ATTACH_IRQ       Use interrupt to determine if action got attached
- *                        from Job Manager.
- */
-typedef enum ocaccel_action_flag  {
-    OCACCEL_ACTION_DONE_IRQ = 0x01,   /* Enable Action Done Interrupt */
-    OCACCEL_ATTACH_IRQ = 0x10000      /* Enable Attach IRQ from Job Manager */
-} ocaccel_action_flag_t;
-
-/******************************************************************************
- * OCACCEL Action Access
- *****************************************************************************/
-
-/*
- * Attach an action to the card handle. If this is done a job can be
- * send ot the action.
- *
- * @card          ocaccel_card device handle.
- * @action_type   long OCACCEL action type. This is a unique value identifying the
- *                OCACCEL action. See software/tools/ocaccel_actions.h for exising ids.
- * @action_flags  Define special behavior, e.g. if interrupts should be used or
- *                polling for completion of a job.
- * @attach_timeout_sec Timeout for action attachement. Select larger value if
- *                multiple users compete for the action resource.
- * @return        OCACCEL_OK, else error.
- *
- * Only works with slave contexts
- */
-struct ocaccel_action* ocaccel_attach_action (struct ocaccel_card* card,
-                                        ocaccel_action_type_t action_type,
-                                        ocaccel_action_flag_t action_flags,
-                                        int attach_timeout_sec);
-
-/*
- * Detach action from card handle.
- *
- * @action        ocaccel_action handle.
- * @return        OCACCEL_OK, else error.
- *
- * Only works with slave contexts.
- */
-int ocaccel_detach_action (struct ocaccel_action* action);
+                           uint64_t* data);
 
 /*
  * MMIO Access functions for actions
@@ -272,113 +174,16 @@ int ocaccel_detach_action (struct ocaccel_action* action);
  * offset.
  */
 int ocaccel_action_write32 (struct ocaccel_card* card, uint64_t offset,
-                         uint32_t data);
+                            uint32_t data);
 int ocaccel_action_read32 (struct ocaccel_card* card, uint64_t offset,
-                        uint32_t* data);
+                           uint32_t* data);
 
 /*
- * Manual access to job passing and action control functions. Normal
- * usage should be using the execute_job functions. If those are not
- * sufficient, consider using the following low-level functions.
+ * Low level action manipulation APIs.
+ * TODO: need more description on each function.
  */
-int ocaccel_action_start (struct ocaccel_action* action);
-int ocaccel_action_stop (struct ocaccel_action* action);
-int ocaccel_action_is_idle (struct ocaccel_action* action, int* rc);
-int ocaccel_action_completed (struct ocaccel_action* action, int* rc,
-                           int timeout_sec);
-int ocaccel_action_wait_interrupt (struct ocaccel_action* action, int* rc, int timeout);
-int ocaccel_action_assign_irq (struct ocaccel_action* action, uint32_t action_irq_ea_reg_addr);
-
-/**
- * Synchronous way to send a job away.  First step : set registers
- * This function writes through MMIO interface the registers
- * to the action / in the FPGA internal memory
- *
- * @action      handle to streaming framework queue
- * @cjob        streaming framework job
- *   @cjob->win_addr   input address of specific job
- *   @cjob->win_size   input size (use extension ptr if larger than 112 bytes)
- *   @cjob->wout_addr  output address of specific job
- *   @cjob->wout_addr  output size (maximum 112 bytes)
- * @return      OCACCEL_OK in case of success, else error.
- */
-int ocaccel_action_sync_execute_job_set_regs (struct ocaccel_action* action,
-        struct ocaccel_job* cjob);
-
-/**
- * Synchronous way to send a job away.  Last step : check completion
- * This function check the completion of the action, manage the IRQ
- * if needed, and read all action registers through MMIO interface
- *
- * @action      handle to streaming framework queue
- * @cjob        streaming framework job
- * @cjob->win_addr   input address of specific job
- *   @cjob->win_size   input size (use extension ptr if larger than 112 bytes)
- *   @cjob->wout_addr  output address of specific job
- *   @cjob->wout_addr  output size (maximum 112 bytes)
- * timeout_sec  timeout used if polling mode
- * @return      OCACCEL_OK in case of success, else error.
- */
-int ocaccel_action_sync_execute_job_check_completion (struct ocaccel_action* action,
-        struct ocaccel_job* cjob,
-        unsigned int timeout_sec);
-
-/**
- * Synchronous way to send a job away. Blocks until job is done.
- *  * These 3 steps can be called separately from the application
- *   * BUT manage carefully the action timeout
- * 1rst step: write Action registers into the FPGA
- * 2nd  step: start the Action
- *      step: processing - exchange data
- * 3rd  step: check completion and manage IRQ if needed
- *
- * @action      handle to streaming framework queue
- * @cjob        streaming framework job
- * @cjob->win_addr   input address of specific job
- *   @cjob->win_size   input size (use extension ptr if larger than 112 bytes)
- *   @cjob->wout_addr  output address of specific job
- *   @cjob->wout_addr  output size (maximum 112 bytes)
- * timeout_sec  timeout used if polling mode
- * @return      OCACCEL_OK in case of success, else error.
- */
-int ocaccel_action_sync_execute_job (struct ocaccel_action* action,
-                                  struct ocaccel_job* cjob,
-                                  unsigned int timeout_sec);
-
-#if 0 /* FIXME Discuss how this must be done correctly */
-/**
- * Allow the action to use interrupts to signal results back to the
- * application. If an irq happens libocaccel will call the interrupt
- * handler function if it got registered with ocaccel_action_register_irq.
- */
-typedef int (*ocaccel_action_irq_t) (struct ocaccel_action* action, int irq);
-
-int ocaccel_action_register_irq (struct ocaccel_action* action,
-                              ocaccel_action_irq_t* irq_handler,
-                              int irq);
-
-int ocaccel_action_enable_irq (struct ocaccel_action* action, int irq);
-int ocaccel_action_disable_irq (struct ocaccel_action* action, int irq);
-int ocaccel_action_free_irq (struct ocaccel_action* action, int irq);
-
-#endif /* IRQ_SUPPORT */
-
-/**
- * Get a or set ocaccel lib option.
- * @card          Valid OCACCEL card handle
- * @cmd           CMD (see below).
- * @parm          Pointer for GET command or value for SET command
- * @return        0 success
- */
-#define GET_CARD_TYPE       1   /* Returns Card type */
-#define GET_NVME_ENABLED    2   /* Returns 1 if NVME is enabled */
-#define GET_SDRAM_SIZE      3   /* Get Size in MB of Card  sdram */
-#define GET_DMA_ALIGN       4   /* Get DMA alignement */
-#define GET_DMA_MIN_SIZE    5   /* Get DMA Minimum Size  */
-#define GET_CARD_NAME       6   /* Get Name of Card  */
-#define SET_SDRAM_SIZE      103 /* Set SD Ram size in MB */
-
-int ocaccel_card_ioctl (struct ocaccel_card* card, unsigned int cmd, unsigned long parm);
+int ocaccel_action_wait_interrupt (struct ocaccel_card* card, int* rc, int timeout);
+int ocaccel_action_assign_irq (struct ocaccel_card* card, uint32_t action_irq_ea_reg_addr);
 
 /*
  * Get PASID of this action
@@ -387,7 +192,118 @@ int ocaccel_card_ioctl (struct ocaccel_card* card, unsigned int cmd, unsigned lo
  * @return      PASID ID.
  *
  */
-uint32_t ocaccel_action_get_pasid(struct ocaccel_card *card);
+uint32_t ocaccel_action_get_pasid (struct ocaccel_card* card);
+
+/**
+ * Get card basic information.
+ * @card          Valid OCACCEL card handle
+ * @cmd           CMD (see below).
+ * @arg           Pointer for GET command or value for SET command
+ * @return        0 success
+ */
+#define GET_CARD_TYPE       1   /* Returns Card type */
+#define GET_ACTION_TEMPLATE 2   /* Returns Action template */
+#define GET_INFRA_TEMPLATE  3   /* Returns Infrastructure template */
+#define GET_KERNEL_NUMBER   4   /* Returns Number of kernels */
+#define GET_CAPI_VERSION    5   /* Returns CAPI version. */
+#define GET_CARD_NAME       6   /* Get Name of Card  */
+#define GET_ACTION_NAME     7   /* Get Name of Action */
+
+int ocaccel_card_ioctl (struct ocaccel_card* card, unsigned int cmd, char* arg);
+
+/**
+ * Get the kernel name string.
+ * @card          Valid OCACCEL card handle
+ * @kernel_id     Kernel ID
+ * @arg           Pointer for the name string
+ * @return        0 success
+ */
+int ocaccel_get_kernel_name (struct ocaccel_card* card, int kernel_id, char* arg);
+
+/*
+ * Trace helper functions and macros.
+ * TODO: need more description on each function.
+ *
+ */
+int ocaccel_lib_trace_enabled (void);
+int ocaccel_action_trace_enabled (void);
+
+#define ocaccel_lib_trace(fmt, ...) do { \
+        if (ocaccel_lib_trace_enabled()) \
+            fprintf(stdout, "OCACCEL LIB:  " fmt, ## __VA_ARGS__); \
+    } while (0)
+
+#define ocaccel_action_trace(fmt, ...) do { \
+        if (ocaccel_action_trace_enabled()) \
+            fprintf(stdout, "OCACCEL ACT:  " fmt, ## __VA_ARGS__); \
+    } while (0)
+
+/*
+ * Memory allocation helper functions.
+ * TODO: need more description on each function.
+ *
+ */
+void* ocaccel_malloc (size_t size);
+
+/* 
+ * Get Time in msec 
+ * TODO: need more description on each function.
+ */
+unsigned long ocaccel_tget_ms (void);
+
+/* 
+ * Get Time in usec 
+ * TODO: need more description on each function.
+ */
+unsigned long ocaccel_tget_us (void);
+
+/* Action Address map defined by Vivado HLS     */
+/* Search the contents in Xilinx document ug902 */
+#define OCACCEL_KERNEL_CONTROL             0x00              /* Control signals */
+#define OCACCEL_KERNEL_CONTROL_START       0x00000001        /* ap_start (Clear on Handshake) */
+#define OCACCEL_KERNEL_CONTROL_DONE        0x00000002        /* ap_done (Clear on Read) */
+#define OCACCEL_KERNEL_CONTROL_IDLE        0x00000004        /* ap_idle (Read Only) */
+#define OCACCEL_KERNEL_CONTROL_RUN         0x00000008        /* ap_ready (Read Only) */
+
+#define OCACCEL_KERNEL_IRQ_CONTROL         0x04              /* Global Interrupt Enable Register */
+#define OCACCEL_KERNEL_IRQ_CONTROL_ON      0x00000001        /* Global Interrupt Enable (Read/Write) */
+#define OCACCEL_KERNEL_IRQ_CONTROL_OFF     0x00000000        /* Global Interrupt Disable (Read/Write) */
+
+#define OCACCEL_KERNEL_IRQ_APP             0x08              /* IP Interrupt Enable Register (Read/Write) */
+#define OCACCEL_KERNEL_IRQ_APP_DONE        0x00000001        /* Channel 0 (ap_done)*/
+#define OCACCEL_KERNEL_IRQ_APP_READY       0x00000002        /* Channel 1 (ap_ready) FIXME: not implemented yet */
+
+#define OCACCEL_KERNEL_IRQ_STATUS          0x0c              /* IP Interrupt Status Register (Read/TOW) */
+#define OCACCEL_KERNEL_IRQ_STATUS_DONE     0x00000001        /* Channel 0 (ap_done)*/
+#define OCACCEL_KERNEL_IRQ_STATUS_READY    0x00000002        /* Channel 1 (ap_ready) FIXME: not implemented yet*/
+
+#define OCACCEL_KERNEL_TYPE_REG            0x10              /* OCACCEL kernel Type Register */
+#define OCACCEL_KERNEL_RELEASE_REG         0x14              /* OCACCEL kernel Release version Register */
+
+#define OCACCEL_KERNEL_IRQ_SRC_LO          0x18              /* OCACCEL kernel interrupt src (low 32bits) (obj_handler) */
+#define OCACCEL_KERNEL_IRQ_SRC_HI          0x1C              /* OCACCEL kernel interrupt src (high 32bits) (obj_handler) */
+#define OCACCEL_KERNEL_CONTEXT             0x20              /* OCACCEL kernel context register. */
+
+#define OCACCEL_KERNEL_NAME_STR1           0x30              /* OCACCEL kernel name register 1 */
+#define OCACCEL_KERNEL_NAME_STR2           0x34              /* OCACCEL kernel name register 2 */
+#define OCACCEL_KERNEL_NAME_STR3           0x38              /* OCACCEL kernel name register 3 */
+#define OCACCEL_KERNEL_NAME_STR4           0x3C              /* OCACCEL kernel name register 4 */
+#define OCACCEL_KERNEL_NAME_STR5           0x40              /* OCACCEL kernel name register 5 */
+#define OCACCEL_KERNEL_NAME_STR6           0x44              /* OCACCEL kernel name register 6 */
+#define OCACCEL_KERNEL_NAME_STR7           0x48              /* OCACCEL kernel name register 7 */
+#define OCACCEL_KERNEL_NAME_STR8           0x4C              /* OCACCEL kernel name register 8 */
+
+#define OCACCEL_JM_CONTROL                 0x24
+#define OCACCEL_JM_INIT_ADDR_LO            0x28
+#define OCACCEL_JM_INIT_ADDR_HI            0x2C
+#define OCACCEL_JM_CMPL_ADDR_LO            0x30
+#define OCACCEL_JM_CMPL_ADDR_HI            0x34
+#define OCACCEL_BASE_PER_KERNEL            0x00040000
+#define OCACCEL_BASE_KERNEL_HELPER         0x00020000
+#define OCACCEL_IRQ_HANDLER_BASE           0xFFFFFFFF // TODO: undefined yet
+
+#define OCACCEL_MEMBUS_WIDTH          128                /* bytes */
+#define OCACCEL_ROUND_UP(x, width) (((x) + (width) - 1) & ~((width) - 1))
 
 #ifdef __cplusplus
 }
