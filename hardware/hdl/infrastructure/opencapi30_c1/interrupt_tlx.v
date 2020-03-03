@@ -39,7 +39,7 @@ module interrupt_tlx
                        output                interrupt_ack    ,
                        input                 interrupt_req    ,
                        input      [063:0]    interrupt_src    ,
-                       input      [008:0]    interrupt_ctx    ,
+                       input      [CTXW-1:0] interrupt_ctx    ,
 
                        //---- TLX interface --------------------------------------
                        output reg            tlx_cmd_valid    ,

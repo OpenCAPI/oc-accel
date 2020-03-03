@@ -22,9 +22,9 @@ module odma_a2h_mm_engine #(
     parameter AXI_DATA_WIDTH    = 1024,
     parameter AXI_AWUSER_WIDTH  = 9,
     parameter AXI_ARUSER_WIDTH  = 9,
-    parameter AXI_WUSER_WIDTH   = 1,
-    parameter AXI_RUSER_WIDTH   = 1,
-    parameter AXI_BUSER_WIDTH   = 1
+    parameter AXI_WUSER_WIDTH   = 9,
+    parameter AXI_RUSER_WIDTH   = 9,
+    parameter AXI_BUSER_WIDTH   = 9
 )
 (
     input                           clk,
@@ -306,11 +306,10 @@ wire                            rdata_fifo_valid;                   //AXI read d
 wire    [AXI_DATA_WIDTH-1 : 0]  rdata_fifo_dout;                    //AXI read data FIFO out
 wire                            rdata_fifo_full;                    //AXI read data FIFO full
 wire                            rdata_fifo_empty;                   //AXI read data FIFO empty
-wire    [8 : 0]                 rtag_fifo_din;                      //AXI read data tag FIFO in
-wire    [8 : 0]                 rtag_fifo_dout;                     //AXI read data tag FIFO out
+wire    [7 : 0]                 rtag_fifo_din;                      //AXI read data tag FIFO in
+wire    [7 : 0]                 rtag_fifo_dout;                     //AXI read data tag FIFO out
 wire    [AXI_ID_WIDTH-1 : 0 ]   rtag_fifo_axi_rid;                  //AXI read data tag FIFO out AXI rid
 wire    [1 : 0 ]                rtag_fifo_axi_rresp;                //AXI read data tag FIFO out AXI rresp
-wire    [AXI_RUSER_WIDTH-1 : 0 ]rtag_fifo_axi_ruser;                //AXI read data tag FIFO out AXI ruser
 wire                            rtag_fifo_dsc_rlast;                //AXI read data tag FIFO out descriptor last read
 //--- Local write command ---
 wire                            lcl_wr_done;                        //local write done
@@ -920,13 +919,12 @@ end
 
 // AXI read data write into FIFO
 assign rdata_fifo_din   = axi_rdata;
-assign rtag_fifo_din    = {axi_rid, axi_rresp, axi_ruser, dsc_flight_rlast};
+assign rtag_fifo_din    = {axi_rid, axi_rresp, dsc_flight_rlast};
 assign rdata_fifo_wr_en = axi_rvalid & ~rdata_fifo_full;
 assign axi_rready = ~rdata_fifo_full;
 
-assign rtag_fifo_axi_rid   = rtag_fifo_dout[8:4];
-assign rtag_fifo_axi_rresp = rtag_fifo_dout[3:2];
-assign rtag_fifo_axi_ruser = rtag_fifo_dout[1];
+assign rtag_fifo_axi_rid   = rtag_fifo_dout[7:3];
+assign rtag_fifo_axi_rresp = rtag_fifo_dout[2:1];
 assign rtag_fifo_dsc_rlast = rtag_fifo_dout[0];
 
 `ifdef ACTION_DATA_WIDTH_512
@@ -1085,7 +1083,7 @@ fifo_sync_512x8 rdata_fifo (
 //---AXI read data tag FIFO(9b width x 8 depth)
 // 5b id + 2b resp + 1b user + 1b dsc last
 // Xilinx IP: FWFT fifo
-fifo_sync_9x8 rtag_fifo (
+fifo_sync_8x8 rtag_fifo (
   .clk          (clk             ),
   .srst         (~resetn          ),
   .din          (rtag_fifo_din   ),
@@ -1190,7 +1188,7 @@ fifo_sync_1024x8 rdata_fifo (
 //---AXI read data tag FIFO(9b width x 8 depth)
 // 5b id + 2b resp + 1b user + 1b dsc last
 // Xilinx IP: FWFT fifo
-fifo_sync_9x8 rtag_fifo (
+fifo_sync_8x8 rtag_fifo (
   .clk          (clk             ),
   .srst         (~resetn          ),
   .din          (rtag_fifo_din   ),

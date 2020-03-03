@@ -72,6 +72,8 @@ module odma_completion_manager (
         output                          lcl_wr_first    ,
         output                          lcl_wr_last     ,
         output     [1023:0]             lcl_wr_data     ,
+        output                          lcl_wr_ctx_valid,
+        output     [8:0]                lcl_wr_ctx      ,
         input                           lcl_wr_ready    ,
         input                           lcl_wr_rsp_valid,
         input      [4:0]                lcl_wr_rsp_axi_id,
@@ -216,6 +218,8 @@ module odma_completion_manager (
     assign lcl_wr_ea = write_address;
     assign lcl_wr_data = write_data;
     assign lcl_wr_axi_id = {write_channel,3'b101};
+    assign lcl_wr_ctx_valid = 1'b0;
+    assign lcl_wr_ctx = 9'b0;
     assign lcl_wr_rsp_ready = 1'b1;
     assign completion_error = 64'b0;
 
