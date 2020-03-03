@@ -18,17 +18,11 @@
 module axi_master_rd #(
                        parameter ID_WIDTH      = 2,
                        parameter ADDR_WIDTH    = 64,
-                       parameter DATA_WIDTH    = 512,
-                       parameter AWUSER_WIDTH  = 8,
-                       parameter ARUSER_WIDTH  = 8,
-                       parameter WUSER_WIDTH   = 1,
-                       parameter RUSER_WIDTH   = 1,
-                       parameter BUSER_WIDTH   = 1
+                       parameter DATA_WIDTH    = 512
                        )
                       (
                        input                          clk               ,
                        input                          resetn             , 
-                       input     [031:0]              i_ocaccel_context    ,
                                                         
                        //---- AXI bus ----               
                          // AXI read address channel       
@@ -37,7 +31,7 @@ module axi_master_rd #(
                        output wire[007:0]              m_axi_arlen       ,  
                        output wire[002:0]              m_axi_arsize      ,  
                        output wire[001:0]              m_axi_arburst     ,  
-                       output wire[ARUSER_WIDTH - 1:0] m_axi_aruser      , 
+                       output wire[000:0]              m_axi_aruser      , 
                        output wire[003:0]              m_axi_arcache     , 
                        output wire[001:0]              m_axi_arlock      ,  
                        output wire[002:0]              m_axi_arprot      , 
@@ -52,6 +46,7 @@ module axi_master_rd #(
                        input     [001:0]              m_axi_rresp       ,
                        input                          m_axi_rlast       ,
                        input                          m_axi_rvalid      ,
+                       input     [000:0]              m_axi_ruser       , //not used
 
                        //---- local control ----
                        input                          engine_start_pulse,
@@ -84,7 +79,7 @@ module axi_master_rd #(
  assign m_axi_arsize   = rd_pattern[2:0]; // 2^6=512
  assign m_axi_arburst  = 2'd1; // INCR mode for memory access
  assign m_axi_arcache  = 4'd3; // Normal Non-cacheable Bufferable
- assign m_axi_aruser   = i_ocaccel_context[ARUSER_WIDTH - 1:0]; 
+ assign m_axi_aruser   = 1'd0; 
  assign m_axi_arprot   = 3'd0;
  assign m_axi_arqos    = 4'd0;
  assign m_axi_arregion = 4'd0; //?

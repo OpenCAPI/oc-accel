@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 International Business Machines
+ * Copyright 2020 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,10 @@
 #include <getopt.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-
-#include <ocaccel_tools.h>
+#include <string.h>
+#include <errno.h>
 #include <libocaccel.h>
 #include "force_cpu.h"
-
-int verbose_flag = 0;
 
 static const char* version = GIT_VERSION;
 
@@ -38,7 +36,7 @@ static const char* version = GIT_VERSION;
  */
 static void usage (const char* prog)
 {
-    printf ("Usage: %s [-h] [-v,--verbose]\n"
+    printf ("Usage: %s [-h] \n"
             "  -C,--card <cardno> can be (0...3)\n"
             "  -V, --version             print version.\n"
             "  -q, --quiet               quiece output.\n"
@@ -60,7 +58,7 @@ static void usage (const char* prog)
 }
 
 /**
- * Read accelerator specific registers. Must be called as root!
+ * Read OCACCEL specific registers. Must be called as root!
  */
 int main (int argc, char* argv[])
 {
@@ -80,32 +78,29 @@ int main (int argc, char* argv[])
     unsigned long interval = 0;
     char device[128];
     int dump = 1;
+    int verbose_flag = ocaccel_action_trace_enabled();
 
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
             /* options */
-            { "card",         required_argument, NULL, 'C' },
-            { "cpu",         required_argument, NULL, 'X' },
-
-            { "width",         required_argument, NULL, 'w' },
-            { "interval",         required_argument, NULL, 'i' },
-            { "count",         required_argument, NULL, 'c' },
-            { "must-be",         required_argument, NULL, 'e' },
-            { "must-not-be", required_argument, NULL, 'n' },
-            { "and-mask",    required_argument, NULL, 'a' },
-
-            /* misc/support */
-            { "version",         no_argument,            NULL, 'V' },
-            { "quiet",         no_argument,            NULL, 'q' },
-            { "verbose",         no_argument,            NULL, 'v' },
-            { "help",         no_argument,            NULL, 'h' },
-            { "dump",         required_argument, NULL, 'd' },
-            { 0,                 no_argument,            NULL, 0   },
+            { "card"        , required_argument , NULL , 'C' } ,
+            { "cpu"         , required_argument , NULL , 'X' } ,
+            { "width"       , required_argument , NULL , 'w' } ,
+            { "interval"    , required_argument , NULL , 'i' } ,
+            { "count"       , required_argument , NULL , 'c' } ,
+            { "must-be"     , required_argument , NULL , 'e' } ,
+            { "must-not-be" , required_argument , NULL , 'n' } ,
+            { "and-mask"    , required_argument , NULL , 'a' } ,
+            { "version"     , no_argument       , NULL , 'V' } ,
+            { "quiet"       , no_argument       , NULL , 'q' } ,
+            { "help"        , no_argument       , NULL , 'h' } ,
+            { "dump"        , required_argument , NULL , 'd' } ,
+            { 0             , no_argument       , NULL , 0   } ,
         };
 
         ch = getopt_long (argc, argv,
-                          "C:X:w:i:c:e:n:a:d:Vqvh",
+                          "C:X:w:i:c:e:n:a:d:Vqh",
                           long_options, &option_index);
 
         if (ch == -1) {      /* all params processed ? */
@@ -156,10 +151,6 @@ int main (int argc, char* argv[])
             quiet++;
             break;
 
-        case 'v':
-            verbose_flag++;
-            break;
-
         case 'h':
             usage (argv[0]);
             exit (EXIT_SUCCESS);
@@ -200,7 +191,7 @@ int main (int argc, char* argv[])
     }
 
     card = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_ANY,
-                                OCACCEL_DEVICE_ID_ANY);
+                                   OCACCEL_DEVICE_ID_ANY);
 
     if (card == NULL) {
         fprintf (stderr, "err: failed to open card %u: %s\n", card_no,
@@ -248,7 +239,7 @@ dump_more:
             fprintf (stderr, "err: [%08x] %016llx != %016llx\n",
                      offs, (long long)val, (long long)equal_val);
             ocaccel_card_free (card);
-            exit (EX_ERR_DATA);
+            exit (EXIT_FAILURE);
         }
 
         if ((not_equal) &&
@@ -257,7 +248,7 @@ dump_more:
                      offs, (long long)val,
                      (long long)not_equal_val);
             ocaccel_card_free (card);
-            exit (EX_ERR_DATA);
+            exit (EXIT_FAILURE);
         }
 
         if (interval) {

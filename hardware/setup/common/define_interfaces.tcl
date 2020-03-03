@@ -1,9 +1,9 @@
 # Processing arguments --------------------------------------------------------
-# This script has one argument: root_dir
+# This script has one argument: hardware_dir
 
-set root_dir $::env(OCACCEL_HARDWARE_ROOT)
-source $root_dir/setup/common/common_funcs.tcl
-set interface_repo "$root_dir/build/interfaces"
+set hardware_dir $::env(OCACCEL_HARDWARE_ROOT)
+source $hardware_dir/setup/common/common_funcs.tcl
+set interface_repo "$hardware_dir/build/interfaces"
 puts "interface_repo is set to $interface_repo"
 
 # Add interfaces
@@ -264,10 +264,10 @@ set port_list_cfg_infra_c1 [list \
          
 my_create_bus_interface $interface_repo "cfg_infra_c1" $port_list_cfg_infra_c1
 
-#set port_list_interrupt [list \
-#            interrupt      \
-#            interrupt_src  \
-#            interrupt_ctx  \
-#            interrupt_ack  \
-#          ]
-#my_create_bus_interface $interface_repo "interrupt" $port_list_interrupt
+set port_list_interrupt [list \
+            interrupt_req  \
+            interrupt_src  \
+            interrupt_ctx  \
+            interrupt_ack  \
+          ]
+my_create_bus_interface $interface_repo "oc_interrupt" $port_list_interrupt

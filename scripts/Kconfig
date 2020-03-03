@@ -134,31 +134,20 @@ choice
     help
       Action Name:
       Select an existing action example or define a new action.
-    default HDL_EXAMPLE
+    default HLS_VADD
 
     config USER_HLS_ACTION
         bool "New HLS Action"
         select ENABLE_HLS_SUPPORT
         help
           This option is a placeholder for an action written by the user in HLS.
-          Please remember to set the environment variable "ACTION_ROOT"
-          in ocaccel_env.sh to the directory of the action source code.
 
     config USER_HDL_ACTION
         bool "New HDL Action"
         help
           This option is a placeholder for an action written by the user in a
           hardware description language such as VHDL or Verilog.
-          Please remember to set the environment variable "ACTION_ROOT"
-          in ocaccel_env.sh to the directory of the action source code.
 
-    config HDL_EXAMPLE
-        bool "HDL Example"
-        help
-          This is an example written in VHDL (512b data width, do memcopy)
-          Refer to the README in this action directory for more information
-        select EXAMPLE_INFRA_T1
-        select EXAMPLE_ACTION_A11
     
     config HDL_SINGLE_ENGINE
         bool "HDL Single Engine"
@@ -168,43 +157,27 @@ choice
         select EXAMPLE_INFRA_T1
         select EXAMPLE_ACTION_A10
 
-    config HDL_MULTI_PROCESS
-        bool "HDL Multi Process"
-        help
-          This is an example to use Job Manager and verify multi process usage.
-          Refer to the README in this action directory for more information
-        select EXAMPLE_INFRA_T2
-        select EXAMPLE_ACTION_A20
 
-    config HDL_UNIT_SIM
-        bool "HDL Unit Sim (with VIP and BFM)"
+    config HLS_VADD
+        bool "HLS Vector-Add (2 kernels)"
         help
-          This is an random/configurable test for bridge mode, using Bus Function Models
-          Not an ordinary action
+          This is an example written in HLS, from Xilinx Vitis Examples
+          Refer to the README in this action directory for more information
         select EXAMPLE_INFRA_T1
         select EXAMPLE_ACTION_A10
 
-    config HLS_HELLOWORLD
-        bool "HLS HelloWorld"
-        help
-          This is an example written in High Level Synthesis Language (512b data width)
-          It converts the letters in the input file to uppercase, and write to the output file
-          Refer to the README in this action directory for more information
-        select ENABLE_HLS_SUPPORT
-        select EXAMPLE_INFRA_T1
-        select EXAMPLE_ACTION_A10
 
-    config HLS_MEMCOPY_1024
-        bool "HLS Memcopy 1024b"
-        help
-          This is an example written in High Level Synthesis Language (1024b data width)
-          It copies data between Host and FPGA DDR/HBM (4 combinations)
-          Refer to the README in this action directory for more information
-        select ENABLE_HLS_SUPPORT
-        select EXAMPLE_INFRA_T1
-        select EXAMPLE_ACTION_A12 if FPGACARD_AD9V3
-        select EXAMPLE_ACTION_A13 if (FPGACARD_AD9H3 || FPGACARD_AD9H7)
-        # Note: Select the action template according to the card
+#    config HLS_MEMCOPY_1024
+#        bool "HLS Memcopy 1024b"
+#        help
+#          This is an example written in High Level Synthesis Language (1024b data width)
+#          It copies data between Host and FPGA DDR/HBM (4 combinations)
+#          Refer to the README in this action directory for more information
+#        select ENABLE_HLS_SUPPORT
+#        select EXAMPLE_INFRA_T1
+#        select EXAMPLE_ACTION_A12 if FPGACARD_AD9V3
+#        select EXAMPLE_ACTION_A13 if (FPGACARD_AD9H3 || FPGACARD_AD9H7)
+#        # Note: Select the action template according to the card
 endchoice
 
 
@@ -223,12 +196,8 @@ config ACTION_NAME
 # Override the name for exsiting actions
 config ACTION_NAME
     string
-    default "hdl_example"       if HDL_EXAMPLE
     default "hdl_single_engine" if HDL_SINGLE_ENGINE
-    default "hdl_multi_process" if HDL_MULTI_PROCESS
-    default "hls_helloworld"    if HLS_HELLOWORLD
-    default "hls_memcopy_1024"  if HLS_MEMCOPY_1024
-    default "hdl_unit_sim"      if HDL_UNIT_SIM
+    default "hls_vadd"          if HLS_VADD
 
 
 ###############################################################################
@@ -242,7 +211,7 @@ choice
         bool "OpenCAPI3.0"
 
     config CAPI20
-        bool "CAPI2.0"
+        bool "CAPI2.0 -- not supported yet"
 endchoice
 
 ###############################################################################
@@ -299,47 +268,48 @@ choice
 endchoice
 
 ###############################################################################
-#  Infra Template Parameters: Engine Number @ T2
-config ENGINE_NUMBER
-    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T2
-    int "Input the number of engines (1 to 16)"
+#  Infra Template Parameters: Kernel Number @ T1/T2
+config KERNEL_NUMBER
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T2)
+    int "Input the number of kernels (1 to 16)"
     range 1 16
     default 1
 
+
 # !!! This doesn't show in the menuwindow
 # Override the number for existing example
-config ENGINE_NUMBER
+config KERNEL_NUMBER
     int
-    default 8 if HDL_MULTI_PROCESS
+    default 1 if HDL_SINGLE_ENGINE
+    default 2 if HLS_VADD
 
 ###############################################################################
-#  Infra Template Parameters: Number of AXI Ports @ T1
-config NUM_AXIMM_PORTS
-    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && USER_INFRA_T1
-    int "Input the number of AXI-MM Ports (1 to 8)"
-    range 1 8
-    default 1
+#  The top module name of user kernels for HLS actions
+config KERNEL_NAME
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T2)
+    string "The top module name of your hls kernel"
+    default ""
 
 # !!! This doesn't show in the menuwindow
-# Override the number for existing example
-config NUM_AXIMM_PORTS
+# Override the name for existing example
+config KERNEL_NAME
     int
-    default 1
+    default "kernel_single_engine" if HDL_SINGLE_ENGINE
+    default "vadd"                 if HLS_VADD
 
 
 ###############################################################################
 #  Infra Template Parameters: Data bus Width of AXI Ports @ T1, T4
 config WIDTH_AXIMM_PORTS
-    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T4)
-    int "Input the number of AXI-MM Ports (512 or 1024)"
-    range 512 1024
+    depends on (USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T4)
+    int "Input the bus bitwidth of AXI-MM Ports (32 to 1024, exponent of 2)"
     default 1024
 
 # !!! This doesn't show in the menuwindow
 # Override the number for existing example
 config WIDTH_AXIMM_PORTS
     int
-    default 512 if HLS_HELLOWORLD
+    default 1024 if HDL_SINGLE_ENGINE
 
 ###############################################################################
 choice
@@ -576,6 +546,10 @@ config UNIT_SIM_USED
     string
     default "TRUE"  if ENABLE_UNIT_VERIF
     default "FALSE" if ! ENABLE_UNIT_VERIF
+
+config TIMING_LABLIMIT
+    string "TIMING_LABLIMIT"
+    default "-200"
 
 ###############################################################################
 #config ENABLE_FLASH

@@ -36,6 +36,8 @@ $(error Please make sure that $$OCACCEL_ROOT is set up correctly.)
 endif
 endif
 
+LDLIBS += -lboost_program_options
+
 hls_vadd: ${hls_vadd_objs}
 
 projs += hls_vadd

@@ -18,14 +18,14 @@
 ############################################################################
 ############################################################################
 set fpga_card      $::env(FPGACARD)
-set root_dir       $::env(OCACCEL_HARDWARE_ROOT)
+set hardware_dir   $::env(OCACCEL_HARDWARE_ROOT)
 set simulator      $::env(SIMULATOR)
-set fpga_card_dir  $root_dir/oc-accel-bsp/$fpga_card
+set fpga_card_dir  $hardware_dir/oc-accel-bsp/$fpga_card
 
-set host_if_dir  $root_dir/hdl/host_interface_opencapi30
-set dlx_dir      $root_dir/hdl/host_interface_opencapi30/dlx
-set tlx_dir      $root_dir/hdl/host_interface_opencapi30/tlx
-set cfg_dir      $root_dir/hdl/host_interface_opencapi30/config_subsystem
+set host_if_dir  $hardware_dir/hdl/host_interface_opencapi30
+set dlx_dir      $hardware_dir/hdl/host_interface_opencapi30/dlx
+set tlx_dir      $hardware_dir/hdl/host_interface_opencapi30/tlx
+set cfg_dir      $hardware_dir/hdl/host_interface_opencapi30/config_subsystem
 set xdc_dir      $fpga_card_dir/xdc
 
 

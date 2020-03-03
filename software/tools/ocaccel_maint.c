@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-/*
- * OCACCEL Maintenance tool Written by Eberhard S. Amann esa@de.ibm.com.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <ctype.h>
-#include <signal.h>
-#include <stdbool.h>
 #include <unistd.h>
-#include <errno.h>
 #include <getopt.h>
-#include <endian.h>
 #include <sys/stat.h>
 
 #if !defined(OPENCAPI30)
@@ -37,92 +29,40 @@
 
 #include <ocaccel_internal.h>
 #include <libocaccel.h>
-#include <ocaccel_tools.h>
 #include <ocaccel_global_regs.h>
-#include <ocaccel_hls_if.h>
-#include "ocaccel_actions.h"
 
 static const char* version = GIT_VERSION;
-static int verbose = 0;
-static FILE* fd_out;
-
-#define VERBOSE0(fmt, ...) do {                                        \
-        fprintf(fd_out, fmt, ## __VA_ARGS__);                \
-    } while (0)
-
-#define VERBOSE1(fmt, ...) do {                                        \
-        if (verbose > 0)                                \
-            fprintf(fd_out, fmt, ## __VA_ARGS__);        \
-    } while (0)
-
-#define VERBOSE2(fmt, ...) do {                                        \
-        if (verbose > 1)                                \
-            fprintf(fd_out, fmt, ## __VA_ARGS__);        \
-    } while (0)
-
-#define VERBOSE3(fmt, ...) do {                                        \
-        if (verbose > 2)                                \
-            fprintf(fd_out, fmt, ## __VA_ARGS__);        \
-    } while (0)
 
 struct mdev_ctx {
-    int loop;                /* Loop Counter */
-    int card;                /* Card no (0,1,2,3 */
-    void* handle;                /* The ocaccel handle */
-    int dt;                        /* Delay time in sec (1 sec default) */
-    int count;                /* Number of loops to do, (-1) = forever */
-    bool daemon;                /* TRUE if forked */
-    uint64_t wed;                /* This is a dummy only for attach */
-    bool quiet;                /* False or true -q option */
-    pid_t pid;
-    pid_t my_sid;                /* for sid */
-	int mode;		/* See below */
-    uint64_t fir[OCACCEL_M_FIR_NUM];
+    int card_no;     /* card_no no (0,1,2,3 */
+    void* handle; /* The ocaccel handle */
 };
 
-static struct mdev_ctx        master_ctx;
+static struct mdev_ctx        oc_ctx;
 
-#define MODE_SHOW_ACTION  0x0001
-#define MODE_SHOW_NVME    0x0002
-#define MODE_SHOW_CARD    0x0004
-#define MODE_SHOW_SDRAM   0x0008
-#define MODE_SHOW_DMA_ALIGN 0x00010
-#define MODE_SHOW_DMA_MIN   0x00020
-
-/*
- * Open AFU Master Device
- */
 static void* ocaccel_open (struct mdev_ctx* mctx)
 {
     char device[64];
     void* handle = NULL;
 
-    /*
-     * ocapi - /dev/ocxl/<afu_name>.<domain>:<bus>:<device>.<function>.<afu_index>
-     * Initially support only 1 afu per function per bus. Bus maps to major.
-     * E.g. /dev/ocxl/IBM,MEMCPY3.0000:00:00.1.0
-     */
-    if (mctx->card == 0) {
+    if (mctx->card_no == 0) {
         snprintf (device, sizeof (device) - 1, "IBM,oc-accel");
     } else {
-        snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-accel.000%d:00:00.1.0", mctx->card);
+        snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-accel.000%d:00:00.1.0", mctx->card_no);
     }
 
-    VERBOSE3 ("[%s] Enter: %s\n", __func__, device);
     handle = ocaccel_card_alloc_dev (device, 0xffff, 0xffff);
-    VERBOSE3 ("[%s] Exit %p\n", __func__, handle);
 
     if (NULL == handle)
-        VERBOSE0 ("Error: Can not open CAPI-OCACCEL Device: %s\n",
-                  device);
+        printf ("Error: Can not open CAPI-OCACCEL Device: %s\n",
+                device);
 
     return handle;
 }
 
-static void ocaccel_close (struct mdev_ctx* mctx)
+static int ocaccel_close (struct mdev_ctx* mctx)
 {
     int rc = 0;
-    VERBOSE3 ("[%s] Enter\n", __func__);
 
     if (NULL == mctx->handle) {
         rc =  -1;
@@ -131,188 +71,106 @@ static void ocaccel_close (struct mdev_ctx* mctx)
         mctx->handle = NULL;
     }
 
-    VERBOSE3 ("[%s] Exit %d\n", __func__, rc);
-    return;
-}
-
-static uint64_t ocaccel_read64 (void* handle, uint32_t addr)
-{
-    uint64_t reg;
-    int rc;
-
-    rc = ocaccel_global_read64 (handle, (uint64_t)addr, &reg);
-
-    if (0 != rc) {
-        VERBOSE0 ("[%s] Error Reading MMIO %x\n", __func__, addr);
-    }
-
-    return reg;
-}
-
-
-static uint32_t ocaccel_read32 (void* handle, uint32_t addr)
-{
-    uint32_t reg;
-    int rc;
-
-    rc = ocaccel_action_read32 (handle, (uint64_t)addr, &reg);
-
-    if (0 != rc) {
-        VERBOSE3 ("[%s] Error Reading MMIO %x\n", __func__, addr);
-    }
-
-    return reg;
-}
-
-
-static void ocaccel_version (void* handle)
-{
-    uint64_t reg;
-    unsigned long ioctl_data;
-
-    VERBOSE2 ("[%s] Enter\n", __func__);
-
-    /* Read Card Capabilities */
-    ocaccel_card_ioctl (handle, GET_CARD_TYPE, (unsigned long)&ioctl_data);
-    VERBOSE1 ("OCACCEL Card Id: 0x%x ", (int)ioctl_data);
-
-    /* Get Card name */
-    char buffer[16];
-    ocaccel_card_ioctl (handle, GET_CARD_NAME, (unsigned long)&buffer);
-    VERBOSE1 ("Name: %s. ", buffer);
-
-    VERBOSE1 ("NVME ");
-    ocaccel_card_ioctl (handle, GET_NVME_ENABLED, (unsigned long)&ioctl_data);
-
-    if (1 == ioctl_data) {
-        VERBOSE1 ("enabled");
-    } else {
-        VERBOSE1 ("disabled");
-    }
-
-    ocaccel_card_ioctl (handle, GET_SDRAM_SIZE, (unsigned long)&ioctl_data);
-    VERBOSE1 (", %d MB DRAM available. ", (int)ioctl_data);
-
-    ocaccel_card_ioctl (handle, GET_DMA_ALIGN, (unsigned long)&ioctl_data);
-    VERBOSE1 ("(Align: %d ", (int)ioctl_data);
-
-    ocaccel_card_ioctl (handle, GET_DMA_MIN_SIZE, (unsigned long)&ioctl_data);
-    VERBOSE1 ("Min_DMA: %d)\n", (int)ioctl_data);
-
-    reg = ocaccel_read64 (handle, OCACCEL_IVR);
-    VERBOSE1 ("OCACCEL FPGA Release: v%d.%d.%d Distance: %d GIT: 0x%8.8x\n",
-              (int) (reg >> 56),
-              (int) (reg >> 48ll) & 0xff,
-              (int) (reg >> 40ll) & 0xff,
-              (int) (reg >> 32ull) & 0xff,
-              (uint32_t)reg);
-
-    reg = ocaccel_read64 (handle, OCACCEL_BDR);
-    VERBOSE1 ("OCACCEL FPGA Build (Y/M/D): %04x/%02x/%02x Time (H:M): %02x:%02x\n",
-              (int) (reg >> 32ll) & 0xffff,
-              (int) (reg >> 24ll) & 0xff,
-              (int) (reg >> 16) & 0xff,
-              (int) (reg >> 8) & 0xff,
-              (int) (reg) & 0xff);
-
-    VERBOSE2 ("[%s] Exit\n", __func__);
-    return;
-}
-
-static bool decode_action (uint32_t atype)
-{
-    int i;
-    int md_size = sizeof (ocaccel_actions) / sizeof (struct actions_tab);
-
-    for (i = 0; i < md_size; i++) {
-        if (atype == ocaccel_actions[i].dev1) {
-            VERBOSE1 ("%s %s\n", ocaccel_actions[i].vendor,
-                      ocaccel_actions[i].description);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-static void ocaccel_decode (uint32_t atype, uint32_t level)
-{
-
-    VERBOSE1 ("     %d     0x%8.8x     0x%8.8x  ",
-              0, atype, level);
-
-    if (decode_action (atype)) {
-        return;
-    }
-
-    VERBOSE1 ("UNKNOWN Action.....\n");
-    return;
-}
-
-
-static int ocaccel_action_info (void* handle)
-{
-    uint32_t action_type, action_release;
-    int rc;
-
-    VERBOSE2 ("[%s] Enter\n", __func__);
-    VERBOSE1 ("   Short |  Action Type |   Level   | Action Name\n");
-    VERBOSE1 ("   ------+--------------+-----------+------------\n");
-
-    action_type = ocaccel_read32 (handle, ACTION_TYPE_REG);
-    action_release = ocaccel_read32 (handle, ACTION_RELEASE_REG);
-    ocaccel_decode (action_type, action_release);
-    rc = 0;
-
-    VERBOSE2 ("[%s] Exit rc: %d\n", __func__, rc);
     return rc;
 }
 
-/* Leave a space at each end in the print line so that it can use -m1 -m2 ... */
-static void ocaccel_show_cap(void *handle, int mode)
+static int ocaccel_version (void* handle)
 {
-	unsigned long val;
+    uint64_t reg;
+    int rc = 0;
 
-	if (MODE_SHOW_NVME == (MODE_SHOW_NVME & mode)) {
-		ocaccel_card_ioctl(handle, GET_NVME_ENABLED, (unsigned long)&val);
-		if (1 == val)
-			VERBOSE0("NVME ");
-	}
-	if (MODE_SHOW_SDRAM == (MODE_SHOW_SDRAM & mode)) {
-		ocaccel_card_ioctl(handle, GET_SDRAM_SIZE, (unsigned long)&val);
-		if (0 != val)
-			VERBOSE0("%d ", (int)val);
-	}
-	if (MODE_SHOW_CARD == (MODE_SHOW_CARD & mode)) {
-		char buffer[16];
-		ocaccel_card_ioctl(handle, GET_CARD_NAME, (unsigned long)&buffer);
-		VERBOSE0("%s ", buffer);
-	}
-	if (MODE_SHOW_DMA_ALIGN == (MODE_SHOW_DMA_ALIGN & mode)) {
-		ocaccel_card_ioctl(handle, GET_DMA_ALIGN, (unsigned long)&val);
-		VERBOSE0("%d ", (int)val);
-	}
-	if (MODE_SHOW_DMA_MIN == (MODE_SHOW_DMA_MIN & mode)) {
-		ocaccel_card_ioctl(handle, GET_DMA_MIN_SIZE, (unsigned long)&val);
-		VERBOSE0("%d ", (int)val);
-	}
+    ocaccel_action_trace ("[%s] Enter\n", __func__);
+
+    printf ("--------------------------------------------------\n");
+    printf ("|  Card Name |    Build Date     | GIT Release   |\n");
+    printf ("| -----------+-------------------+-------------- |\n");
+
+    /* Get card_no name */
+    char buffer[16];
+    rc |= ocaccel_card_ioctl (handle, GET_CARD_NAME, buffer);
+    printf ("|  %6s    |", buffer);
+
+    rc |= ocaccel_global_read64 (handle, OCACCEL_REG_BUILD_DATE, &reg);
+    printf ("  %04x/%02x/%02x %02x:%02x |",
+            (int) (reg >> 32ll) & 0xffff,
+            (int) (reg >> 24ll) & 0xff,
+            (int) (reg >> 16) & 0xff,
+            (int) (reg >> 8) & 0xff,
+            (int) (reg) & 0xff);
+
+    rc |= ocaccel_global_read64 (handle, OCACCEL_REG_IMP_VERSION, &reg);
+    printf ("  %9lx    |\n", reg);
+
+    printf ("--------------------------------------------------\n");
+
+    ocaccel_action_trace ("[%s] Exit\n", __func__);
+    return rc;
+}
+
+static int ocaccel_capability (void* handle)
+{
+    char ioctl_data;
+    int rc = 0;
+
+    ocaccel_action_trace ("[%s] Enter\n", __func__);
+
+    printf ("--------------------------------------------------\n");
+    printf ("| CAPI Version | Infra Template | Act Template   |\n");
+    printf ("| -------------+----------------+--------------- |\n");
+
+    rc |= ocaccel_card_ioctl (handle, GET_CAPI_VERSION, &ioctl_data);
+    printf ("|     %2x       |", (int) ioctl_data);
+
+    rc |= ocaccel_card_ioctl (handle, GET_INFRA_TEMPLATE, &ioctl_data);
+    printf ("      T%02d       |", (int) ioctl_data);
+
+    rc |= ocaccel_card_ioctl (handle, GET_ACTION_TEMPLATE, &ioctl_data);
+    printf ("      A%02x       |\n", (int) ioctl_data);
+
+    printf ("--------------------------------------------------\n");
+    ocaccel_action_trace ("[%s] Exit\n", __func__);
+    return rc;
+}
+
+static int ocaccel_action_info (void* handle)
+{
+    int rc = 0;
+    char ioctl_data;
+    int kernel_number;
+
+    ocaccel_action_trace ("[%s] Enter\n", __func__);
+
+    char action_name[33];
+    rc |= ocaccel_card_ioctl (handle, GET_ACTION_NAME, action_name);
+    rc |= ocaccel_card_ioctl (handle, GET_KERNEL_NUMBER, &ioctl_data);
+    kernel_number = (int) ioctl_data;
+
+    printf ("--------------------------------------------------\n");
+    printf ("  Action Name   ---> %-28s  \n", action_name);
+
+    char kernel_name[33];
+
+    for (int i = 0; i < kernel_number; i++) {
+        if (ocaccel_get_kernel_name (handle, i, kernel_name)) {
+            strcpy (kernel_name, "ERROR!");
+            rc = -1;
+        }
+
+        printf ("                  |--> Kernel[%02d] : %-13s \n", i, kernel_name);
+    }
+
+    printf (" %2d kernel(s) found.                            \n", kernel_number);
+    printf ("--------------------------------------------------\n");
+    ocaccel_action_trace ("[%s] Exit\n", __func__);
+    return rc;
 }
 
 static void help (char* prog)
 {
-    printf ("Print Information. Usage: %s [-CvhVd] [-f file] [-c count] [-i delay]\n"
-            "\t-C, --card <num>        Card to use (default 0)\n"
+    printf ("Print Information. Usage: %s [-CVh] \n"
+            "\t-C, --card_no <num>        card_no to use (default 0)\n"
             "\t-V, --version        \tPrint Version number\n"
             "\t-h, --help                This help message\n"
-            "\t-q, --quiet                No output at all\n"
-            "\t-v, --verbose        \tverbose mode, up to -vvv\n"
-	        "\t-m, --mode		Mode:\n"
-	        "\t	1 = Show Action number only\n"
-	        "\t	2 = Show NVME if enabled\n"
-	        "\t	3 = Show SDRAM Size in MB\n"
-	        "\t	4 = Show Card\n"
-	        "\t	5 = Show DMA Alignment\n"
-	        "\t	6 = Show DMA Minimum Transfer Size\n"
             "\n"
             "\n", prog);
 }
@@ -324,42 +182,20 @@ int main (int argc, char* argv[])
 {
     int rc = EXIT_SUCCESS;
     int ch;
-    unsigned int i;
-    struct mdev_ctx* mctx = &master_ctx;
-    int mode;
-
-    fd_out = stdout;        /* Default */
+    struct mdev_ctx* mctx = &oc_ctx;
 
     mctx->handle = NULL;        /* No handle */
-    mctx->loop = 0;                /* Start Loop Counter */
-    mctx->quiet = false;        /* Default */
-    mctx->dt = 1;                /* Default, 1 sec delay time */
-    mctx->count = -1;        /* Default, run forever */
-    mctx->card = 0;                /* Default, Card 0 */
-	mctx->mode = 0;		    /* Default, nothing to watch */
-    mctx->daemon = false;        /* Not in Daemon mode */
-
-    for (i = 0; i < OCACCEL_M_FIR_NUM; i++) {
-        mctx->fir[i] = -1;
-    }
-
-    rc = EXIT_SUCCESS;
+    mctx->card_no = 0;          /* Default, card_no 0 */
 
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
-            { "card",        required_argument, NULL, 'C' },
+            { "card_no",        required_argument, NULL, 'C' },
             { "version",        no_argument,           NULL, 'V' },
-            { "quiet",        no_argument,           NULL, 'q' },
             { "help",        no_argument,           NULL, 'h' },
-            { "verbose",        no_argument,           NULL, 'v' },
-            { "count",        required_argument, NULL, 'c' },
-            { "interval",        required_argument, NULL, 'i' },
-            { "daemon",        no_argument,           NULL, 'd' },
-			{ "mode",	required_argument, NULL, 'm' },
             { 0,                0,                   NULL,  0  }
         };
-        ch = getopt_long (argc, argv, "C:c:i:m:Vqhvd",
+        ch = getopt_long (argc, argv, "C:Vh",
                           long_options, &option_index);
 
         if (-1 == ch) {
@@ -367,8 +203,8 @@ int main (int argc, char* argv[])
         }
 
         switch (ch) {
-        case 'C':        /* --card */
-            mctx->card = strtol (optarg, (char**)NULL, 0);
+        case 'C':        /* --card_no */
+            mctx->card_no = strtol (optarg, (char**)NULL, 0);
             break;
 
         case 'V':        /* --version */
@@ -376,51 +212,10 @@ int main (int argc, char* argv[])
             exit (EXIT_SUCCESS);
             break;
 
-        case 'q':        /* --quiet */
-            mctx->quiet = true;
-            break;
-
         case 'h':        /* --help */
             help (argv[0]);
             exit (EXIT_SUCCESS);
             break;
-
-        case 'v':        /* --verbose */
-            verbose++;
-            break;
-
-        case 'c':        /* --count */
-            mctx->count = strtoul (optarg, NULL, 0);
-
-            if (0 == mctx->count) {
-                mctx->count = 1;
-            }
-
-            break;
-
-        case 'i':        /* --interval */
-            mctx->dt = strtoul (optarg, NULL, 0);
-            break;
-
-        case 'd':        /* --daemon */
-            mctx->daemon = true;
-            break;
-
-		case 'm':	/* --mode */
-			mode = strtoul(optarg, NULL, 0);
-			switch (mode) {
-			case 1: mctx->mode |= MODE_SHOW_ACTION; break;
-			case 2: mctx->mode |= MODE_SHOW_NVME; break;
-			case 3: mctx->mode |= MODE_SHOW_SDRAM; break;
-			case 4: mctx->mode |= MODE_SHOW_CARD; break;
-			case 5: mctx->mode |= MODE_SHOW_DMA_ALIGN; break;
-			case 6: mctx->mode |= MODE_SHOW_DMA_MIN; break;
-			default:
-				fprintf(stderr, "Please provide correct "
-					"Mode Option (1..6)\n");
-				exit(EXIT_FAILURE);
-			}
-			break;
 
         default:
             help (argv[0]);
@@ -428,40 +223,32 @@ int main (int argc, char* argv[])
         }
     }
 
-    //
-    //        if ((mctx->card < 0) || (mctx->card > 3)) {
-    //                fprintf(stderr, "Err: %d for option -C is invalid, please provide "
-    //                        "0..%d!\n", mctx->card, 3);
-    //                exit(EXIT_FAILURE);
-    //        }
-    VERBOSE2 ("[%s] Enter\n", __func__);
-
-
-
     mctx->handle = ocaccel_open (mctx);
 
     if (NULL == mctx->handle) {
-        rc = ENODEV;
-        goto __main_exit;
+        printf ("ERROR: unable to open the card!\n");
+        rc = EXIT_FAILURE;
     }
 
-    ocaccel_version (mctx->handle);
+    if (ocaccel_version (mctx->handle)) {
+        printf ("ERROR: failed to get card versions!\n");
+        rc = EXIT_FAILURE;
+    }
 
+    if (ocaccel_capability (mctx->handle)) {
+        printf ("ERROR: failed to get card capability!\n");
+        rc = EXIT_FAILURE;
+    }
 
-    rc = ocaccel_action_info (mctx->handle);
+    if (ocaccel_action_info (mctx->handle)) {
+        printf ("ERROR: failed to get action information!\n");
+        rc = EXIT_FAILURE;
+    }
 
-	/* Show Capabilities for different modes */
-	ocaccel_show_cap(mctx->handle, mctx->mode);
-
-    //if (0 != rc)
-    goto __main_exit;        /* Exit here.... for now */
-
-
-__main_exit:
-    VERBOSE2 ("[%s] Exit rc: %d\n", __func__, rc);
-    ocaccel_close (mctx);
-    fflush (fd_out);
-    fclose (fd_out);
+    if (ocaccel_close (mctx)) {
+        printf ("ERROR: failed to close card!\n");
+        rc = EXIT_FAILURE;
+    }
 
     exit (rc);
 }

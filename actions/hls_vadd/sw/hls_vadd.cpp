@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 International Business Machines
+ * Copyright 2020 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,27 +20,15 @@
  * Demonstration how to get data into the FPGA, process it using a OCACCEL
  * action and move the data out of the FPGA back to host-DRAM.
  */
-
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <getopt.h>
-#include <malloc.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <assert.h>
-
-#include <ocaccel_tools.h>
+#include <boost/program_options.hpp>
+#include <iostream>
 #include <libocaccel.h>
-#include <ocaccel_hls_if.h>
+#include <ocaccel_job_manager.h>
+#include <hls_vadd_register_layout.h>
 
-int verbose_flag = 0;
-
+namespace po = boost::program_options;
 #define ACTION_TYPE               0x10143009
-#define RELEASE_LEVEL             0x00000000
+template class JobDescriptor<vadd>;
 
 uint32_t addr_lo (void* ptr)
 {
@@ -53,212 +41,136 @@ uint32_t addr_hi (void* ptr)
     return (uint32_t) ((((uint64_t)ptr) >> 32) & 0xFFFFFFFF);
 }
 
-/**
- * @brief    prints valid command line options
- *
- * @param prog    current program's name
- */
-static void usage (const char* prog)
+int main (int argc, const char* argv[])
 {
-    printf ("Usage: %s [-h] [-v, --verbose] [-V, --version]\n"
-            "  -C, --card <cardno>       Check with 'ls /dev/ocxl'\n"
-            "  -s, --size <number>       Number of elements in the array\n"
-            "  -I, --irq                 Enable Interrupts\n"
-            "\n"
-            "\n",
-            prog);
-}
+    po::options_description desc{"Options"};
+    desc.add_options()
+    ("help,h", "Help information")
+    ("size,s",    po::value<int>()->default_value (4096), "Size")
+    ("card_no,c", po::value<int>()->default_value (0), "Card number")
+    ("irq,I",  "Enable interrupt mode");
 
+    po::variables_map options;
+    po::store (parse_command_line (argc, argv, desc), options);
+    po::notify (options);
 
-/* main program of the application for the hls_helloworld example        */
-/* This application will always be run on CPU and will call either       */
-/* a software action (CPU executed) or a hardware action (FPGA executed) */
-int main (int argc, char* argv[])
-{
-    // Init of all the default values used
-    int ch = 0;
-    int card_no = 0;
-    struct ocaccel_card* card = NULL;
-    struct ocaccel_action* action = NULL;
-    char device[128];
-    unsigned long timeout_ms = 1000;
-    unsigned long t0, dt;
-    unsigned int status;
-
-    int exit_code = 0;
-
-    //-------------------------------------------------------------------------
-    // Data buffers for VADD
-    unsigned int* in1_buff = NULL, *in2_buff = NULL;
-    unsigned int* result_buff = NULL;
-    unsigned int* verify_buff = NULL;
-    int size = 50;
-
-
-    // Default way it to use polling (not using interrupt).
-    ocaccel_action_flag_t action_irq = (ocaccel_action_flag_t) 0;
-
-    //-------------------------------------------------------------------------
-    // Collect the command line arguments
-    while (1) {
-        int option_index = 0;
-        static struct option long_options[] = {
-            { "card", required_argument, NULL, 'C' },
-            { "irq", no_argument, NULL, 'I' },
-            { "size", no_argument, NULL, 's' },
-            { "verbose", no_argument, NULL, 'v' },
-            { "help", no_argument, NULL, 'h' },
-            { 0, no_argument, NULL, 0   },
-        };
-
-        ch = getopt_long (argc, argv,
-                          "C:s:Ivh",
-                          long_options, &option_index);
-
-        if (ch == -1) {
-            break;
-        }
-
-        switch (ch) {
-        case 'C':
-            card_no = strtol (optarg, (char**)NULL, 0);
-            break;
-
-        case 's':
-            size = strtol (optarg, (char**)NULL, 0);
-            break;
-
-        case 'I':
-            action_irq = OCACCEL_ACTION_DONE_IRQ;
-            break;
-
-        /* service */
-        case 'v':
-            verbose_flag = 1;
-            break;
-
-        case 'h':
-            usage (argv[0]);
-            exit (EXIT_SUCCESS);
-            break;
-
-        default:
-            usage (argv[0]);
-            exit (EXIT_FAILURE);
-        }
+    if (options.count ("help")) {
+        std::cout << desc << '\n';
+        return 0;
     }
 
-    if (optind != argc) {
-        usage (argv[0]);
-        exit (EXIT_FAILURE);
-    }
+    int  job_size = options["size"].as<int>();
+    bool irq_mode = (options.count ("irq") > 0);
+    int  card_no  = options["card_no"].as<int>();
+    int  num_job_descriptors = 2;
 
-    if (argc == 1) {       // to provide help when program is called without argument
-        usage (argv[0]);
-        exit (EXIT_FAILURE);
-    }
+    std::cout << "Running with job size: " << std::dec << job_size << std::endl;
+    std::cout << "IRQ mode: " << irq_mode << std::endl;
 
-    //-------------------------------------------------------------------------
-    // Initialize buffers
+    uint32_t* in1_buff     = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
+    uint32_t* in2_buff     = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
+    uint32_t* in3_buff     = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
+    uint32_t* result1_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
+    uint32_t* result2_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
+    uint32_t* verify1_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
+    uint32_t* verify2_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
 
-    in1_buff     = (unsigned int*) ocaccel_malloc (size * sizeof (unsigned int));
-    in2_buff     = (unsigned int*) ocaccel_malloc (size * sizeof (unsigned int));
-    result_buff = (unsigned int*) ocaccel_malloc (size * sizeof (unsigned int));
-    verify_buff = (unsigned int*) ocaccel_malloc (size * sizeof (unsigned int));
+    std::cout << "============================" << std::endl;
+    std::cout << "in1_buff address     = 0x" << std::hex << (uint64_t) in1_buff << std::endl;
+    std::cout << "in2_buff address     = 0x" << std::hex << (uint64_t) in2_buff << std::endl;
+    std::cout << "in3_buff address     = 0x" << std::hex << (uint64_t) in3_buff << std::endl;
+    std::cout << "result1_buff address = 0x" << std::hex << (uint64_t) result1_buff << std::endl;
+    std::cout << "result2_buff address = 0x" << std::hex << (uint64_t) result2_buff << std::endl;
+    std::cout << "verify1_buff address = 0x" << std::hex << (uint64_t) verify1_buff << std::endl;
+    std::cout << "verify2_buff address = 0x" << std::hex << (uint64_t) verify2_buff << std::endl;
+    std::cout << "job_size             = "   << std::dec << job_size << std::endl;
+    std::cout << "============================" << std::endl;
 
-    printf ("============================\n");
-    printf ("in1_buff address = %p\n", in1_buff);
-    printf ("in2_buff address = %p\n", in2_buff);
-    printf ("result_buff address = %p\n", result_buff);
-    printf ("verify_buff address = %p\n", verify_buff);
-    printf ("size = %d\n", size);
-    printf ("============================\n");
-
-
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < job_size; i++) {
         in1_buff[i] = i;     //Give a simple number for easier debugging.
         in2_buff[i] = i * 2; //Give a simple number for easier debugging.
-        result_buff[i] = 0; //Wait FPGA to calculate
-        verify_buff[i] = in1_buff[i] + in2_buff[i];
+        in3_buff[i] = i * 3; //Give a simple number for easier debugging.
+        result1_buff[i] = 0; //Wait FPGA to calculate
+        result2_buff[i] = 0; //Wait FPGA to calculate
+        verify1_buff[i] = in1_buff[i] + in2_buff[i];
+        verify2_buff[i] = in1_buff[i] + in3_buff[i];
     }
 
-    //-------------------------------------------------------------------------
-    // Allocate the card that will be used
-    if (card_no == 0) {
-        snprintf (device, sizeof (device) - 1, "IBM,oc-accel");
-    } else {
-        snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-accel.000%d:00:00.1.0", card_no);
+    OcaccelJobManager* job_manager_ptr = OcaccelJobManager::getManager();
+    job_manager_ptr->setNumberOfJobDescriptors (num_job_descriptors);
+
+    // Initialize job manager
+    job_manager_ptr->initialize (card_no, "hls_vadd");
+
+    // The data struct provides information of kernel's register layout.
+    // This class is auto generated for hls kernels during model build.
+    //vaddRegisterLayout kernel_reg_layout;
+
+    // Get a job descriptor and configure it with kernel parameters
+    JobDescriptorPtr<vadd> job_desc_0 = job_manager_ptr->getJobDescriptorPtr<vadd> (0);
+    job_desc_0->setKernelID (0);
+    job_desc_0->setKernelParameter<vadd::PARAM::size>    (job_size);
+    job_desc_0->setKernelParameter<vadd::PARAM::out_r_1> (addr_lo (result1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::out_r_2> (addr_hi (result1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in1_1>   (addr_lo (in1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in1_2>   (addr_hi (in1_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in2_1>   (addr_lo (in2_buff));
+    job_desc_0->setKernelParameter<vadd::PARAM::in2_2>   (addr_hi (in2_buff));
+
+    // Run a job on the kernel
+    if (job_manager_ptr->run<vadd> (job_desc_0)) {
+        std::cerr << "Error running jobs" << std::endl;
+        return -1;
     }
 
-    card = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_IBM,
-                                   OCACCEL_DEVICE_ID_OCACCEL);
-
-    if (card == NULL) {
-        fprintf (stderr, "err: failed to open card %u: %s\n",
-                 card_no, strerror (errno));
-        fprintf (stderr, "Default mode is FPGA mode.\n");
-        fprintf (stderr, "Did you want to run CPU mode ? => add OCACCEL_CONFIG=CPU before your command.\n");
-        fprintf (stderr, "Otherwise make sure you ran ocaccel_find_card and ocaccel_maint for your selected card.\n");
-        goto out_error;
+    while (OcaccelJobManager::eStatus::FINISHED != job_manager_ptr->status<vadd> (job_desc_0->getKernel())) {
     }
 
-    //-------------------------------------------------------------------------
-    // Attach the action that will be used on the allocated card
-    action = ocaccel_attach_action (card, ACTION_TYPE, action_irq, 60);
+    std::cout << "Job 0 finished!" << std::endl;
 
-    if (action_irq) {
-        ocaccel_action_assign_irq (action, ACTION_IRQ_SRC_LO);
+    // Get a job descriptor and configure it with kernel parameters
+    JobDescriptorPtr<vadd> job_desc_1 = job_manager_ptr->getJobDescriptorPtr<vadd> (1);
+    job_desc_1->setKernelID (1);
+    job_desc_1->setKernelParameter<vadd::PARAM::size>    (job_size);
+    job_desc_1->setKernelParameter<vadd::PARAM::out_r_1> (addr_lo (result2_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::out_r_2> (addr_hi (result2_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in1_1>   (addr_lo (in1_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in1_2>   (addr_hi (in1_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in2_1>   (addr_lo (in3_buff));
+    job_desc_1->setKernelParameter<vadd::PARAM::in2_2>   (addr_hi (in3_buff));
+
+    // Run a job on the kernel
+    if (job_manager_ptr->run<vadd> (job_desc_1)) {
+        std::cerr << "Error running jobs" << std::endl;
+        return -1;
     }
 
-    if (action == NULL) {
-        fprintf (stderr, "err: failed to attach action %u: %s\n",
-                 card_no, strerror (errno));
-        goto out_error1;
+    while (OcaccelJobManager::eStatus::FINISHED != job_manager_ptr->status<vadd> (job_desc_1->getKernel())) {
     }
 
-    //-------------------------------------------------------------------------
-    // Write Control registers
+    std::cout << "Job 1 finished!" << std::endl;
 
-    ocaccel_action_write32 (card, 0x10, addr_lo (in1_buff));
-    ocaccel_action_write32 (card, 0x14, addr_hi (in1_buff));
+    sleep (2);
+    job_manager_ptr->dump();
 
-    ocaccel_action_write32 (card, 0x1c, addr_lo (in2_buff));
-    ocaccel_action_write32 (card, 0x20, addr_hi (in2_buff));
+    // Verify
+    int exit_code = 0;
 
-    ocaccel_action_write32 (card, 0x28, addr_lo (result_buff));
-    ocaccel_action_write32 (card, 0x2c, addr_hi (result_buff));
-
-    ocaccel_action_write32 (card, 0x34, uint32_t (size));
-
-    //-------------------------------------------------------------------------
-    // Kick off start
-
-    ocaccel_action_write32 (card, 0x00, 0x1);
-
-
-    // Wait for Done bit
-    t0 = tget_ms();
-    dt = 0;
-
-    while (dt < timeout_ms) {
-        ocaccel_action_read32 (card, 0x00, &status);
-
-        if ((status & 0x2) == 1) {
-            printf ("Done! \n");
+    for (int i = 0 ; i < job_size; i++) {
+        if (result1_buff[i] != verify1_buff[i]) {
+            std::cerr << "Mismatch on result1_buff[" << i << "] -- "
+                      << "actual " << result1_buff[i]
+                      << " -- expected " << verify1_buff[i] << std::endl;
+            exit_code = EXIT_FAILURE;
             break;
         }
-
-        dt = (tget_ms() - t0);
     }
 
-
-    //-------------------------------------------------------------------------
-    // Verify
-
-    for (int i = 0 ; i < size; i++) {
-        if (result_buff[i] != verify_buff[i]) {
-            printf ("ERROR: result_buff [%d] is %d, expected to be %d. Exit\n",
-                    i, result_buff[i], verify_buff[i]);
+    for (int i = 0 ; i < job_size; i++) {
+        if (result2_buff[i] != verify2_buff[i]) {
+            std::cerr << "Mismatch on result2_buff[" << i << "] -- "
+                      << "actual " << result2_buff[i]
+                      << " -- expected " << verify2_buff[i] << std::endl;
             exit_code = EXIT_FAILURE;
             break;
         }
@@ -268,21 +180,14 @@ int main (int argc, char* argv[])
         printf ("Data checking OK.\n");
     }
 
-    //-------------------------------------------------------------------------
-    // Detach action + disallocate the card
-    ocaccel_detach_action (action);
-    ocaccel_card_free (card);
+    job_manager_ptr->clear();
 
-    __free (in1_buff);
-    __free (in2_buff);
-    __free (result_buff);
-    __free (verify_buff);
-    exit (exit_code);
-
-out_error2:
-    ocaccel_detach_action (action);
-out_error1:
-    ocaccel_card_free (card);
-out_error:
-    exit (EXIT_FAILURE);
+    free (in1_buff);
+    free (in2_buff);
+    free (in3_buff);
+    free (result1_buff);
+    free (result2_buff);
+    free (verify1_buff);
+    free (verify2_buff);
+    return exit_code;
 }

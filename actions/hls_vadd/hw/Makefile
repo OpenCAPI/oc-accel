@@ -44,16 +44,14 @@ export LOGS_DIR=$(OCACCEL_HARDWARE_ROOT)/logs
 
 ocaccel_config_cflags = $(OCACCEL_ROOT)/.ocaccel_config.cflags
 ocaccel_config_sh     = $(OCACCEL_ROOT)/.ocaccel_config.sh
-ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 
 -include $(ocaccel_config_cflags)
 -include $(ocaccel_config_sh)
--include $(ocaccel_env_sh)
 export ACTION_ROOT = $(OCACCEL_ROOT)/actions/$(ACTION_NAME)
 ##################################################################################
 #### Please adjust bellowing together with run_hls_script.tcl
 hls_build_dir = $(ACTION_ROOT)/hw/hls/$(ACTION_NAME)_$(FPGACHIP)
-solution_name = vadd
+SOLUTION_NAME = $(KERNEL_NAME)
 ##################################################################################
 #### Please adjust bellowing together with run_hls_script.tcl
 
@@ -61,7 +59,7 @@ solution_name = vadd
 all: 
 	@cd $(ACTION_ROOT)/hw/hls ; \
 	vivado_hls -f run_hls_script.tcl 
-	@ln -s $(hls_build_dir)/$(solution_name)/syn/verilog $(ACTION_ROOT)/hw/syn_verilog_link 
+	@ln -s $(hls_build_dir)/$(SOLUTION_NAME)/syn/verilog $(ACTION_ROOT)/hw/syn_verilog_link 
 
 clean:
 	@rm -f $(ACTION_ROOT)/hw/hls/vivado_hls.log

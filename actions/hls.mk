@@ -107,7 +107,6 @@ check: $(syn_dir)
 	  	echo "OK";                                                                    \
 	else \
 		echo "   --------------------------------------------------------------------------- ";    \
-		echo "   By defining HLS_CLOCK_PERIOD_CONSTRAINT in ocaccel_env.sh, automatic critical timing checking is disabled"; \
 		echo "   FYI action was compiled with following HLS clock:"; \
 		grep "Setting up clock" vivado_hls.log ; \
 		echo "   --------------------------------------------------------------------------- ";    \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 International Business Machines
+ * Copyright 2020 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,11 @@
 #include <asm/byteorder.h>
 #include <sys/mman.h>
 #include <getopt.h>
-#include <ocaccel_tools.h>
+#include <string.h>
+#include <errno.h>
 #include <libocaccel.h>
 #include "force_cpu.h"
 
-int verbose_flag = 0;
 static int quiet = 0;
 static const char* version = GIT_VERSION;
 
@@ -37,7 +37,7 @@ static const char* version = GIT_VERSION;
  */
 static void usage (const char* prog)
 {
-    printf ("Usage: %s [-h] [-v,--verbose]\n"
+    printf ("Usage: %s [-h] \n"
             "  -C,--card <cardno> can be (0...3)\n"
             "  -V, --version             print version.\n"
             "  -q, --quiet               quiece output.\n"
@@ -55,7 +55,7 @@ static void usage (const char* prog)
 }
 
 /**
- * @brief Tool to write to zEDC registers. Must be called as root!
+ * Write to OCACCEL specific registers. Must be called as root!
  */
 int main (int argc, char* argv[])
 {
@@ -71,26 +71,22 @@ int main (int argc, char* argv[])
     unsigned long interval = 0;
     int xerrno;
     char device[128];
+    int verbose_flag = ocaccel_action_trace_enabled();
 
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
             /* options */
-            { "card",        required_argument, NULL, 'C' },
-            { "cpu",        required_argument, NULL, 'X' },
-
-            { "width",        required_argument, NULL, 'w' },
-            { "interval",        required_argument, NULL, 'i' },
-            { "count",        required_argument, NULL, 'c' },
-            { "rd-back",        no_argument,       NULL, 'r' },
-
-            /* misc/support */
-            { "version",        no_argument,           NULL, 'V' },
-            { "quiet",        no_argument,           NULL, 'q' },
-            { "verbose",        no_argument,           NULL, 'v' },
-            { "help",        no_argument,           NULL, 'h' },
-
-            { 0,                no_argument,           NULL, 0   },
+            { "card"     , required_argument , NULL , 'C' } ,
+            { "cpu"      , required_argument , NULL , 'X' } ,
+            { "width"    , required_argument , NULL , 'w' } ,
+            { "interval" , required_argument , NULL , 'i' } ,
+            { "count"    , required_argument , NULL , 'c' } ,
+            { "rd-back"  , no_argument       , NULL , 'r' } ,
+            { "version"  , no_argument       , NULL , 'V' } ,
+            { "quiet"    , no_argument       , NULL , 'q' } ,
+            { "help"     , no_argument       , NULL , 'h' } ,
+            { 0          , no_argument       , NULL , 0   } ,
         };
 
         ch = getopt_long (argc, argv, "p:C:X:w:i:c:Vqrvh",
@@ -134,10 +130,6 @@ int main (int argc, char* argv[])
             rd_back++;
             break;
 
-        case 'v':
-            verbose_flag++;
-            break;
-
         case 'h':
             usage (argv[0]);
             exit (EXIT_SUCCESS);
@@ -173,7 +165,7 @@ int main (int argc, char* argv[])
     }
 
     card = ocaccel_card_alloc_dev (device, OCACCEL_VENDOR_ID_ANY,
-                                OCACCEL_DEVICE_ID_ANY);
+                                   OCACCEL_DEVICE_ID_ANY);
 
     if (card == NULL) {
         fprintf (stderr, "err: failed to open card %u: %s\n", card_no,
@@ -189,7 +181,7 @@ int main (int argc, char* argv[])
 
             if (rd_back)
                 rbrc = ocaccel_action_read32 (card, offs,
-                                           (uint32_t*)&rbval);
+                                              (uint32_t*)&rbval);
 
             break;
 

@@ -33,11 +33,9 @@ export OCACCEL_CFLAGS
 
 ocaccel_config_cflags = $(OCACCEL_ROOT)/.ocaccel_config.cflags
 ocaccel_config_sh     = $(OCACCEL_ROOT)/.ocaccel_config.sh
-ocaccel_env_sh        = $(OCACCEL_ROOT)/ocaccel_env.sh
 
 -include $(ocaccel_config_cflags)
 -include $(ocaccel_config_sh)
--include $(ocaccel_env_sh)
 
 export ACTION_ROOT=$(OCACCEL_ROOT)/actions/$(ACTION_NAME)
 SIMULATOR ?= nosim
@@ -48,6 +46,7 @@ SIM_DIR=$(OCACCEL_HARDWARE_ROOT)/sim
 
 BUILD_DIR=$(OCACCEL_HARDWARE_ROOT)/build
 IP_REPO_DIR=$(BUILD_DIR)/ip_repo
+IP_REPO_USER_DIR=$(BUILD_DIR)/ip_user_repo
 INTERFACES_DIR=$(BUILD_DIR)/interfaces
 VIV_PROJ_DIR=$(BUILD_DIR)/viv_project
 
@@ -63,7 +62,7 @@ COMMON_SCRIPT_SRCS  += $(shell find $(SCRIPT_ROOT)/create_framework       -name 
 HOST_SCRIPT_SRCS    := $(shell find $(SCRIPT_ROOT)/package_hostside       -name "*.tcl" -or -name "*.sh")
 INFRA_SCRIPT_SRCS   := $(shell find $(SCRIPT_ROOT)/package_infrastructure -name "*.tcl" -or -name "*.sh")
 SIM_SCRIPT_SRCS     := $(shell find $(SCRIPT_ROOT)/simulation             -name "*.tcl" -or -name "*.sh")
-ACTION_SCRIPT_SRCS  := $(shell find $(SCRIPT_ROOT)/simulation             -name "*.tcl" -or -name "*.sh")
+ACTION_SCRIPT_SRCS  := $(shell find $(SCRIPT_ROOT)/package_action         -name "*.tcl" -or -name "*.sh")
 
 OCACCEL_SIMULATORS += xsim xcelium
 templog=/dev/null
@@ -89,7 +88,7 @@ OCACCEL_PREPROCESS_FILES += $(OCACCEL_HARDWARE_ROOT)/hdl/common/ocaccel_global_v
 ifeq ($(PLATFORM),x86_64)
 
 # TODO: the phony list needs updating
-.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project define_interfaces package_infrastructure package_hostside package_action top_project image ocse software app model sim xsim xcelium clean
+.PHONY: all ocaccel_config check_ocaccel_settings check_simulator prepare_logs hw_project define_interfaces package_infrastructure package_hostside top_project image ocse software app model sim xsim xcelium clean
 
 all: model image
 
@@ -119,21 +118,22 @@ check_ocaccel_settings:
 		echo "                        Please make sure that the ocaccel configuration is prepared by calling 'make ocaccel_config'"; \
 		exit -1; \
 	fi
-	@if [ ! -e "$(ocaccel_env_sh)" ]; then \
-		echo "                        Additional ocaccel environment setup file \"$(ocaccel_env_sh)\" doesn't exist."; \
-	fi
 	@echo "                        =============================="
 	@echo "                        hardware/Makefile called with:"
 	@echo "                        ACTION_ROOT     = $(ACTION_ROOT)"
 	@echo "                        CAPI_VERSION    = $(CAPI_VER)"
 	@echo "                        FPGACARD        = $(FPGACARD)"
 	@echo "                        FPGACHIP        = $(FPGACHIP)"
-	@echo "                        PHY_SPEED       = $(PHY_SPEED)"
 	@echo "                        INFRA_TEMPLATE  = $(INFRA_TEMPLATE_SELECTION)"
 	@echo "                        ACTION_TEMPLATE = $(ACTION_TEMPLATE_SELECTION)"
+	@echo "                        KERNEL_NUMBER   = $(KERNEL_NUMBER)"
+	@echo "                        KERNEL_NAME     = $(KERNEL_NAME)"
+	@echo "                        ACTION_FREQUENCY= $(ACTION_CLOCK_FREQUENCY)"
+	@echo "                        PHY_SPEED       = $(PHY_SPEED)"
+	@echo "                        HLS_SUPPORT     = $(HLS_SUPPORT)"
 	@echo "                        ILA_DEBUG       = $(ILA_DEBUG)"
-	@echo "                        FLASH_INTERFACE = $(FLASH_INTERFACE)"
-	@echo "                        FLASH_SIZE      = $(FLASH_SIZE)"
+#	@echo "                        FLASH_INTERFACE = $(FLASH_INTERFACE)"
+#	@echo "                        FLASH_SIZE      = $(FLASH_SIZE)"
 	@if [ `echo "$(ILA_DEBUG)" | tr a-z A-Z` == "TRUE" ]; then \
 		echo "                        ILA_SETUP_FILE  = $(ILA_SETUP_FILE)"; \
 	fi
@@ -192,26 +192,6 @@ ocaccel_preprocess_execute: $(OCACCEL_PREPROCESS_FILES)
 ocaccel_preprocess: ocaccel_preprocess_start
 	@$(MAKE) -s ocaccel_preprocess_execute
 
-###############################################################################
-
-action_hw: prepare_logs
-	@echo -e "[CONFIG ACTION HW....] start `date +"%T %a %b %d %Y"`";
-	@if [ ! -d "$(ACTION_ROOT)" ]; then \
-		echo "                        Error: Path to ACTION_ROOT is not defined properly"; exit -1; \
-	fi
-	@echo "Calling make -C $(ACTION_ROOT) hw" > $(LOGS_DIR)/action_make.log
-	@$(MAKE) -C $(ACTION_ROOT) hw >> $(LOGS_DIR)/action_make.log;
-	@if [ $$? -ne 0 ]; then \
-		echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
-	fi
-	@if [ "$(HLS_SUPPORT)" == "TRUE" ]; then \
-	        echo "Calling make -C $(ACTION_ROOT)/hw " >> $(LOGS_DIR)/action_make.log; \
-		$(MAKE) -kC $(ACTION_ROOT)/hw  >> $(LOGS_DIR)/action_make.log; \
-		if [ $$? -ne 0 ]; then \
-			echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
-		fi; \
-	fi
-	@echo -e "[CONFIG ACTION HW....] done  `date +"%T %a %b %d %Y"`";
 
 ###############################################################################
 # Build the vivado project
@@ -228,21 +208,40 @@ package_hostside: $(HOST_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(HOST_SCRIPT_SRCS
 package_infrastructure: $(INFRA_VERILOG_SRCS) $(COMMON_VERILOG_SRCS) $(INFRA_SCRIPT_SRCS)
 	@echo -e "[PACKAGE INFRA.......] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/package_infrastructure_ips.tcl -notrace -log $(LOGS_DIR)/package_infrastructure_ips.log -journal $(LOGS_DIR)/package_infrastructure_ips.jou > $(templog)
-#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_infrastructure/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_infra_template_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[PACKAGE INFRA.......] done  `date +"%T %a %b %d %Y"`";
 
-package_action: $(ACTION_SCRIPT_SRCS)
-	@echo -e "[PACKAGE ACTION......] start `date +"%T %a %b %d %Y"`";
-	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_action_wrapper.tcl -notrace -log $(LOGS_DIR)/package_action_wrapper.log -journal $(LOGS_DIR)/package_action_wrapper.jou > $(templog)
-#	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/bd_action_template_$(ACTION_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).log -journal $(LOGS_DIR)/bd_action_template_$(ACTION_TEMPLATE_SELECTION).jou > $(templog)
-	@echo -e "[PACKAGE ACTION......] done  `date +"%T %a %b %d %Y"`";
+###############################################################################
+action_hw: prepare_logs
+	@echo -e "[GENERATE ACTION HW..] start `date +"%T %a %b %d %Y"`";
+	@if [ ! -d "$(ACTION_ROOT)" ]; then \
+		echo "                        Error: Path to ACTION_ROOT is not defined properly"; exit -1; \
+	fi
+#	@echo "Calling make -C $(ACTION_ROOT) hw " > $(LOGS_DIR)/action_make.log
+#	@$(MAKE) -C $(ACTION_ROOT) hw >> $(LOGS_DIR)/action_make.log;
+#	@if [ $$? -ne 0 ]; then \
+#		echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
+#	fi
+	@if [ "$(HLS_SUPPORT)" == "TRUE" ]; then \
+	    echo "Calling make -C $(ACTION_ROOT)/hw " >> $(LOGS_DIR)/action_make.log; \
+		$(MAKE) -kC $(ACTION_ROOT)/hw  >> $(LOGS_DIR)/action_make.log; \
+		if [ $$? -ne 0 ]; then \
+			echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
+		fi; \
+        else \
+            echo "Package user written HDL design to an IP" >> $(LOGS_DIR)/action_make.log; \
+            cd $(BUILD_DIR); \
+            vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_hdl_kernel.tcl -notrace -log $(LOGS_DIR)/package_hdl_kernel.log -journal $(LOGS_DIR)/package_hdl_kernel.jou > $(templog); \
+        fi;
+	@echo -e "[GENERATE ACTION HW..] done  `date +"%T %a %b %d %Y"`";
+
+###############################################################################
 
 top_project: $(COMMON_VERILOG_SRCS) $(COMMON_VERILOG_SRCS)
 	@echo -e "[CREATE TOP PROJECT..] start `date +"%T %a %b %d %Y"`";
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).log  -journal $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
-hw_project: ocaccel_preprocess action_hw define_interfaces package_hostside package_infrastructure package_action top_project
+hw_project: ocaccel_preprocess define_interfaces package_hostside package_infrastructure action_hw top_project
 	@echo -e "                       using `vivado -version |grep Vivado`"
 	@echo -e "                       CAPI_VER=$(CAPI_VER)"
 	@echo -e "[HW PROJECT]           done  `date +"%T %a %b %d %Y"`"
@@ -345,11 +344,11 @@ $(OCACCEL_MODELS):
 
 ifeq ($(UNIT_SIM_USED),TRUE)
 model: check_simulator 
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./run.py --no_configure --no_run_sim; fi
 
 else
 model: check_simulator
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_run_sim; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./run.py --no_configure --no_run_sim; fi
 
 endif
 
@@ -360,7 +359,7 @@ sim: check_simulator
 	@$(MAKE) -s .model_$(SIMULATOR)
 	@echo -e "[SIMULATION........] start `date +"%T %a %b %d %Y"`"
 	@echo "                        SIMULATOR is set to $(SIMULATOR)"
-	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./ocaccel_workflow.py --no_configure --no_make_model --simulator_start_timeout 60; fi
+	@if [ "$(SIMULATOR)" != "nosim" ]; then cd $(OCACCEL_ROOT); ./run.py --no_configure --no_make_model --simulator_start_timeout 600; fi
 	@echo -e "[SIMULATION........] done  `date +"%T %a %b %d %Y"`"
 	@echo " To display traces, execute: ./display_traces"
 

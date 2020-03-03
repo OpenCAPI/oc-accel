@@ -15,11 +15,15 @@
 ## limitations under the License.
 ##
 
-# Some addtional code generation or automation tasks can be put here.
-echo "Example bash script to configure this action"
-echo "$0 says ACTION_ROOT is $ACTION_ROOT"
-echo "$0 says FPGACHIP is $FPGACHIP"
+# This script is NOT needed if you follow the "make" process.
+# However, in some cases, you need these variables get set explicitly. 
 
-#if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then
-#    echo "There is no IP here."
-#fi
+DIR="$(cd "$(dirname $0)" && pwd)"
+
+export OCACCEL_ROOT=${DIR}/..
+[ -f "${OCACCEL_ROOT}/.ocaccel_config.sh" ] && . ${OCACCEL_ROOT}/.ocaccel_config.sh
+export ACTION_ROOT=$OCACCEL_ROOT/actions/$ACTION_NAME
+export OCACCEL_HARDWARE_ROOT=$OCACCEL_ROOT/hardware
+export PATH=$PATH:$OCACCEL_ROOT/software/tools
+[ -n "$ACTION_ROOT" ] &&  export PATH=$PATH:$ACTION_ROOT/sw
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OCACCEL_ROOT/software/lib

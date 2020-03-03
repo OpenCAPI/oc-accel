@@ -27,7 +27,6 @@ ifeq ("$(wildcard $(OCACCEL_ROOT)/actions)","")
 $(error Please make sure that OCACCEL_ROOT=$$OCACCEL_ROOT is set up correctly.)
 endif
 
--include $(OCACCEL_ROOT)/ocaccel_env.sh
 -include $(OCACCEL_ROOT)/.ocaccel_config.sh
 
 # Verbosity level:

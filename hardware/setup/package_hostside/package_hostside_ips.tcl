@@ -22,12 +22,12 @@ set capi_ver            $::env(CAPI_VER)
 set fpga_card           $::env(FPGACARD)
 set fpga_part           $::env(FPGACHIP)
 
-set root_dir            $::env(OCACCEL_HARDWARE_ROOT)
+set hardware_dir        $::env(OCACCEL_HARDWARE_ROOT)
 set simulator           $::env(SIMULATOR)
-set fpga_card_dir       $root_dir/oc-accel-bsp/$fpga_card
+set fpga_card_dir       $hardware_dir/oc-accel-bsp/$fpga_card
 
-set tcl_dir             $root_dir/setup/package_hostside
-source $root_dir/setup/common/common_funcs.tcl
+set tcl_dir             $hardware_dir/setup/package_hostside
+source $hardware_dir/setup/common/common_funcs.tcl
 
 
 #------------------------------------------------------------------------------
@@ -94,9 +94,9 @@ set bus_array [dict create tlx_afu "master" \
                           cfg_infra_c1 "master"  \
                           oc_phy  ""        \
              ]
-package_ip $root_dir/build/temp_projs \
-           $root_dir/build/ip_repo    \
-           $root_dir/build/interfaces \
+package_ip $hardware_dir/build/temp_projs \
+           $hardware_dir/build/ip_repo    \
+           $hardware_dir/build/interfaces \
            $fpga_part           \
            oc_host_if           \
            $tcl_dir/add_opencapi30_host_if.tcl      \
@@ -106,9 +106,9 @@ package_ip $root_dir/build/temp_projs \
 set bus_array [dict create cfg_flsh "slave"   \
                            cfg_vpd "slave"     \
              ]
-package_ip $root_dir/build/temp_projs \
-           $root_dir/build/ip_repo    \
-           $root_dir/build/interfaces \
+package_ip $hardware_dir/build/temp_projs \
+           $hardware_dir/build/ip_repo    \
+           $hardware_dir/build/interfaces \
            $fpga_part           \
            flash_vpd_wrapper    \
            $fpga_card_dir/tcl/add_flash_vpd_wrapper.tcl      \

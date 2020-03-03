@@ -20,7 +20,15 @@ module mmio_axilite_master
             # (
                 parameter IMP_VERSION = 64'h1000_0000_0000_0000,
                 parameter BUILD_DATE = 64'h0000_2000_0101_0800,
-                parameter OTHER_CAPABILITY = 56'h0,
+                parameter ACTION_NAME_STR1 = 64'h0000_0000_7473_6574, //h'74657374 = "test"
+                parameter ACTION_NAME_STR2 = 64'h0000_0000_0000_0000, //h'20 means 'space'
+                parameter ACTION_NAME_STR3 = 64'h0000_0000_0000_0000,
+                parameter ACTION_NAME_STR4 = 64'h0000_0000_0000_0000,
+                parameter OTHER_CAPABILITY    = 24'h0,
+                parameter CAPI_VER            = 8'h30,
+                parameter KERNEL_NUMBER       = 8'h1,
+                parameter INFRA_TEMPLATE      = 8'h01,  //T1, T2, 
+                parameter ACTION_TEMPLATE     = 8'h10, //A10, place holder for now
                 parameter CARD_TYPE = 8'h31
               )
               (
@@ -38,7 +46,6 @@ module mmio_axilite_master
 `endif
 
                      //---- local control output -----------------------------
-                     output                soft_reset_brdg_odma             ,
                      output                soft_reset_action                ,
 
                      //---- MMIO side interface --------------------
@@ -98,7 +105,15 @@ module mmio_axilite_master
  mmio # (
                 .IMP_VERSION (IMP_VERSION ),
                 .BUILD_DATE (BUILD_DATE ),
+                .ACTION_NAME_STR1 (ACTION_NAME_STR1),
+                .ACTION_NAME_STR2 (ACTION_NAME_STR2),
+                .ACTION_NAME_STR3 (ACTION_NAME_STR3),
+                .ACTION_NAME_STR4 (ACTION_NAME_STR4),
                 .OTHER_CAPABILITY (OTHER_CAPABILITY ),
+                .CAPI_VER         (CAPI_VER         ),
+                .KERNEL_NUMBER    (KERNEL_NUMBER    ),
+                .INFRA_TEMPLATE   (INFRA_TEMPLATE   ),
+                .ACTION_TEMPLATE  (ACTION_TEMPLATE  ),
                 .CARD_TYPE (CARD_TYPE )
               )
         mmio_path_and_regs (
@@ -107,7 +122,6 @@ module mmio_axilite_master
              .debug_info_clear           (debug_info_clear            ),
              .debug_bus_trans_protocol   (debug_bus_trans_protocol   ),
              .debug_bus_data_bridge      (debug_bus_data_bridge      ),
-             .soft_reset_brdg_odma       (soft_reset_brdg_odma       ),
              .soft_reset_action          (soft_reset_action          ),
              .mmio_wr                    (mmio_wr                    ),
              .mmio_rd                    (mmio_rd                    ),
@@ -117,14 +131,14 @@ module mmio_axilite_master
              .mmio_dout                  (mmio_dout                  ),
              .mmio_done                  (mmio_done                  ),
              .mmio_failed                (mmio_failed                ),
-             .lcl_mmio_wr                     (lcl_mmio_wr                     ),
-             .lcl_mmio_rd                     (lcl_mmio_rd                     ),
-             .lcl_mmio_addr                   (lcl_mmio_addr                   ),
-             .lcl_mmio_din                    (lcl_mmio_din                    ),
-             .lcl_mmio_ack                    (lcl_mmio_ack                    ),
-             .lcl_mmio_rsp                    (lcl_mmio_rsp                    ),
-             .lcl_mmio_dout                   (lcl_mmio_dout                   ),
-             .lcl_mmio_dv                     (lcl_mmio_dv                     ) 
+             .lcl_mmio_wr                (lcl_mmio_wr                ),
+             .lcl_mmio_rd                (lcl_mmio_rd                ),
+             .lcl_mmio_addr              (lcl_mmio_addr              ),
+             .lcl_mmio_din               (lcl_mmio_din               ),
+             .lcl_mmio_ack               (lcl_mmio_ack               ),
+             .lcl_mmio_rsp               (lcl_mmio_rsp               ),
+             .lcl_mmio_dout              (lcl_mmio_dout              ),
+             .lcl_mmio_dv                (lcl_mmio_dv                ) 
              );
 
 
@@ -151,14 +165,14 @@ module mmio_axilite_master
                                    .m_axi_rresp   (m_axi_rresp  ),
                                    .m_axi_rready  (m_axi_rready ),
                                    .m_axi_rvalid  (m_axi_rvalid ),
-                                   .lcl_mmio_wr        (lcl_mmio_wr       ), // write enable
-                                   .lcl_mmio_rd        (lcl_mmio_rd       ), // read enable
-                                   .lcl_mmio_addr      (lcl_mmio_addr     ), // write/read address
-                                   .lcl_mmio_din       (lcl_mmio_din      ), // write data
-                                   .lcl_mmio_ack       (lcl_mmio_ack      ), // write data acknowledgement
-                                   .lcl_mmio_rsp       (lcl_mmio_rsp      ), // write/read response: 0: good; 1: bad
-                                   .lcl_mmio_dout      (lcl_mmio_dout     ), // read data
-                                   .lcl_mmio_dv        (lcl_mmio_dv       )  // read data valid
+                                   .lcl_mmio_wr   (lcl_mmio_wr  ), // write enable
+                                   .lcl_mmio_rd   (lcl_mmio_rd  ), // read enable
+                                   .lcl_mmio_addr (lcl_mmio_addr), // write/read address
+                                   .lcl_mmio_din  (lcl_mmio_din ), // write data
+                                   .lcl_mmio_ack  (lcl_mmio_ack ), // write data acknowledgement
+                                   .lcl_mmio_rsp  (lcl_mmio_rsp ), // write/read response: 0: good; 1: bad
+                                   .lcl_mmio_dout (lcl_mmio_dout), // read data
+                                   .lcl_mmio_dv   (lcl_mmio_dv  )  // read data valid
                                   );
 
 

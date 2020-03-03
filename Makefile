@@ -29,12 +29,11 @@ ocaccel_config_bak = .ocaccel_config_test.bak
 ocaccel_config_new = .ocaccel_config_test.new
 ocaccel_config_sh = .ocaccel_config.sh
 ocaccel_config_cflags = .ocaccel_config.cflags
-ocaccel_env_sh = ocaccel_env.sh
 
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall ocaccel_env hw_project model sim image ocaccel_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall hw_project model sim image ocaccel_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
 
 help:
 	@echo "Main targets for the OCACCEL Framework make process:";
@@ -100,7 +99,7 @@ $(hardware_subdirs):
 hardware: $(hardware_subdirs)
 
 # Model build and config
-hw_project model sim image sim_tmux: ocaccel_env
+hw_project model sim image sim_tmux:
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
@@ -132,16 +131,12 @@ config menuconfig xconfig gconfig oldconfig silentoldconfig:
 	@$(RM) $(ocaccel_config_bak) $(ocaccel_config_new)
 
 ocaccel_config:
-	./ocaccel_workflow.py --no_run_sim --no_make_model
+	./run.py --no_run_sim --no_make_model
 	@echo "OCACCEL config done"
 
 $(ocaccel_config_sh):
 	@$(MAKE) -s menuconfig || exit 1
 	@echo "OCACCEL config done" &>/dev/null
-
-# Prepare OCACCEL Environment
-ocaccel_env: $(ocaccel_config_sh)
-	@$(OCACCEL_ROOT)/ocaccel_env $(ocaccel_config_sh)
 
 %.defconfig:
 	@if [ ! -f defconfig/$@ ]; then			        \
@@ -150,7 +145,6 @@ ocaccel_env: $(ocaccel_config_sh)
 	fi
 	@cp defconfig/$@ $(ocaccel_config)
 	@$(MAKE) -s oldconfig
-	@$(MAKE) -s ocaccel_env
 
 clean:
 	@for dir in $(clean_subdirs); do           \
@@ -167,9 +161,6 @@ clean_config: clean
 	@$(RM) $(ocaccel_config)
 	@$(RM) $(ocaccel_config_sh)
 	@$(RM) $(ocaccel_config_cflags)
-
-clean_env: clean_config
-	@$(RM) $(ocaccel_env_sh)
 
 gitclean:
 	@echo -e "[GITCLEAN............] cleaning and resetting ocaccel git";
