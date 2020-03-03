@@ -165,6 +165,7 @@ choice
           Refer to the README in this action directory for more information
         select EXAMPLE_INFRA_T1
         select EXAMPLE_ACTION_A10
+        select ENABLE_HLS_SUPPORT
 
 
 #    config HLS_MEMCOPY_1024
@@ -310,6 +311,7 @@ config WIDTH_AXIMM_PORTS
 config WIDTH_AXIMM_PORTS
     int
     default 1024 if HDL_SINGLE_ENGINE
+    default 1024 if HLS_VADD
 
 ###############################################################################
 choice
