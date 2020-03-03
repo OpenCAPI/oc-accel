@@ -31,12 +31,12 @@ def env_check(options):
     msg.ok_msg_blue("--------> Environment Check") 
     
     gcc    = SystemCMD("gcc")
-    gcc    . check(existence_critical=True, minimum_version = "4.4.6")
+    gcc    . check(existence_critical=True, minimum_version = "8")
     
     if not options.no_make_model or not options.no_run_sim or options.make_image:
         vivado = SystemCMD("vivado")
         xterm  = SystemCMD("xterm")
-        vivado . check(existence_critical=True, minimum_version = "2018.2")
+        vivado . check(existence_critical=True, minimum_version = "2019.2")
         xterm  . check(existence_critical=True)
 
     if options.simulator.lower() == "xcelium":
