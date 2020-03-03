@@ -140,7 +140,15 @@ module tlx_cmd_converter (
  wire        fifo_r_cmdcnv_ovfl; 
  wire        fifo_w_datcnv_e_ovfl; 
  wire        fifo_w_datcnv_o_ovfl; 
- wire        fifo_w_cmdcnv_ovfl; 
+ wire        fifo_w_cmdcnv_ovfl;
+ wire        fifo_w_cmdcnv_empty;
+ wire        fifo_w_cmdcnv_full;
+ wire        fifo_r_cmdcnv_empty;
+ wire        fifo_r_cmdcnv_full;
+ wire        fifo_w_datcnv_o_full;
+ wire        fifo_w_datcnv_o_empty;
+ wire        fifo_w_datcnv_e_full;
+ wire        fifo_w_datcnv_e_empty;
  reg         tlx_in_cmd_req;
  reg         tlx_in_cmd_ack;
  reg         tlx_in_cmd_rec;
@@ -250,7 +258,8 @@ module tlx_cmd_converter (
                                 .dout          (fifo_w_cmdcnv_dout  ),
                                 .wr_data_count (fifo_w_cmdcnv_wrcnt ), 
                                 .overflow      (fifo_w_cmdcnv_ovfl  ),
-                                .empty         ()
+                                .full          (fifo_w_cmdcnv_full  ),
+                                .empty         (fifo_w_cmdcnv_empty )
                                 );
 
 //---- FIFO for higher 64B write data ----
@@ -269,7 +278,8 @@ module tlx_cmd_converter (
                                   .valid   (fifo_w_datcnv_o_dv   ),
                                   .dout    (fifo_w_datcnv_o_dout ),
                                   .overflow(fifo_w_datcnv_o_ovfl ),
-                                  .empty   ()
+                                  .full    (fifo_w_datcnv_o_full ),
+                                  .empty   (fifo_w_datcnv_o_empty)
                                   );
 
 //---- FIFO for lower 64B write data ---- 
@@ -288,7 +298,8 @@ module tlx_cmd_converter (
                                   .valid   (fifo_w_datcnv_e_dv   ),
                                   .dout    (fifo_w_datcnv_e_dout ),
                                   .overflow(fifo_w_datcnv_e_ovfl ),
-                                  .empty   ()
+                                  .full    (fifo_w_datcnv_e_full ),
+                                  .empty   (fifo_w_datcnv_e_empty)
                                   );
 
 //---- write channel data output ----
@@ -321,7 +332,8 @@ module tlx_cmd_converter (
                                 .dout          (fifo_r_cmdcnv_dout  ),
                                 .wr_data_count (fifo_r_cmdcnv_wrcnt ), 
                                 .overflow      (fifo_r_cmdcnv_ovfl  ),
-                                .empty         ()
+                                .full          (fifo_r_cmdcnv_full  ),
+                                .empty         (fifo_r_cmdcnv_empty )
                                 );
 
 //---- write channel data output ----
@@ -348,8 +360,8 @@ module tlx_cmd_converter (
    else 
      cmd_crankshaft_sub <= context_surveil_wdata_e_rdrq;
 
- assign fifo_w_cmdcnv_rdrq   =  cmd_crankshaft_main && context_input_cmd_ready && ~tlx_interrupt_valid_pre;
- assign fifo_r_cmdcnv_rdrq   = ~cmd_crankshaft_main && context_input_cmd_ready && ~tlx_interrupt_valid_pre;
+ assign fifo_w_cmdcnv_rdrq   =  cmd_crankshaft_main && context_input_cmd_ready && ~tlx_interrupt_valid_pre && ~fifo_w_cmdcnv_empty;
+ assign fifo_r_cmdcnv_rdrq   = ~cmd_crankshaft_main && context_input_cmd_ready && ~tlx_interrupt_valid_pre && ~fifo_r_cmdcnv_empty;
  assign fifo_w_datcnv_e_rdrq =  context_surveil_wdata_e_rdrq;
  assign fifo_w_datcnv_o_rdrq =  cmd_crankshaft_sub;         
 

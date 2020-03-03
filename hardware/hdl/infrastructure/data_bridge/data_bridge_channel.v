@@ -140,7 +140,6 @@ module data_bridge_channel
  wire            buf_r_data_en; 
  wire[1023:0]    buf_r_data;
  wire[TAGW-1:0]  buf_r_data_addr;
- wire            buf_r_info_en; 
  wire            buf_r_info_en_for_wr; 
  wire[TAGW-1:0]  buf_r_info_addr;
  wire[0200:0]    buf_r_info;              
@@ -503,8 +502,11 @@ module data_bridge_channel
 
  assign buf_r_data_en        = (MODE == DMA_W)? retry_tag_out_valid : rd_valid;
  assign buf_r_data_addr      = (MODE == DMA_W)? retry_tag_out       : rd_tag;
- assign buf_r_info_en        = retry_tag_out_valid || ((MODE == DMA_R) && rd_valid) || buf_r_info_en_for_wr;
+  `ifdef ENABLE_ODMA
+ assign buf_r_info_en_for_wr = (MODE == DMA_W) && (ret_valid);
+ `else
  assign buf_r_info_en_for_wr = (MODE == DMA_W) && ((ret_valid && ret_ready) || (ret_valid_sync && !lcl_resp_ready));
+ `endif
  assign buf_r_info_addr      = retry_tag_out_valid? retry_tag_out : (buf_r_info_en_for_wr ? ret_tag : rd_tag);
  assign buf_r_be             = buf_r_info[127:0] & retry_be;
  assign buf_r_ea             = buf_r_info[191:128];
@@ -598,6 +600,44 @@ module data_bridge_channel
  endgenerate
 
 //---- return data and response back to AXI, which should be one cycle later than reclaim channel ----
+ `ifdef ENABLE_ODMA
+ //NOTE:
+ // In ODMA mode, lcl_resp_valid of wr channel will be a fixed value, this fixed value will only be given to 
+ // wr_order_mng_array to decide whether a ret_valid response can be generated to ST, MM or cmpl channle.
+ // As lcl_resp_valid is a fixed value, once a ret_valid can be generated, it means the related 
+ // ret_valid_sync(lcl_resp_valid) can definately be passed to the downstream modules, we do not need to care
+ // about lcl_resp_valid singal any more.
+ //TODO: if the lcl_resp_valid in ODMA mode is modified to a non-fixed value, this part should be modified accordingly.
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n)
+     ret_valid_sync <= 1'b0;
+   else if(ret_valid)
+     ret_valid_sync <= 1'b1;
+   else
+     ret_valid_sync <= 1'b0;
+
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n)
+     begin
+       ret_axi_id_sync <= {`IDW{1'd0}};
+       ret_resp_sync <= 'd0;
+     end
+   else if(ret_valid)
+     begin
+       ret_axi_id_sync <= ret_axi_id;
+       ret_resp_sync <= ret_resp;
+     end
+
+ assign ret_ready         = lcl_resp_ready;
+ assign lcl_resp_valid    = (MODE == DMA_W)? ret_valid_sync : ret_valid;
+ assign lcl_resp_axi_id   = (MODE == DMA_W)? ret_axi_id_sync : ret_axi_id;
+ assign lcl_resp_code     = (MODE == DMA_W)? ret_resp_sync : ret_resp;
+ assign lcl_resp_ctx      = buf_r_ctx;
+ assign lcl_data_out      = buf_r_data;
+ assign lcl_data_out_last = ret_last;
+ assign lcl_data_ctx      = buf_r_ctx;
+ assign ret_ready_hint    = lcl_resp_ready_hint;
+ `else
  always@(posedge clk or negedge resetn)
    if(~resetn)
      ret_valid_sync <= 1'b0;
@@ -626,8 +666,6 @@ module data_bridge_channel
  assign lcl_data_out      = buf_r_data;
  assign lcl_data_out_last = ret_last;
  assign lcl_data_ctx      = buf_r_ctx;
- `ifdef ENABLE_ODMA
- assign ret_ready_hint    = lcl_resp_ready_hint;
  `endif
 
 
@@ -679,7 +717,7 @@ module data_bridge_channel
      debug_axi_cnt_cmd <= 32'd0;
    else if (debug_cnt_clear)
      debug_axi_cnt_cmd <= 32'd0;
-   else if (lcl_addr_first)
+   else if (lcl_addr_first && lcl_addr_valid && lcl_addr_ready)
      debug_axi_cnt_cmd <= debug_axi_cnt_cmd + 32'd1;
 
  always@(posedge clk or negedge resetn)
@@ -687,7 +725,11 @@ module data_bridge_channel
      debug_axi_cnt_rsp <= 32'd0;
    else if (debug_cnt_clear)
      debug_axi_cnt_rsp <= 32'd0;
+   `ifdef ENABLE_ODMA
+   else if ((MODE)? (lcl_data_out_last && lcl_resp_valid) : (lcl_resp_valid))
+   `else
    else if ((MODE)? (lcl_data_out_last && lcl_resp_ready && lcl_resp_valid) : (lcl_resp_ready && lcl_resp_valid))
+   `endif
      debug_axi_cnt_rsp <= debug_axi_cnt_rsp + 32'd1;
 
 //---- DEBUG register ----

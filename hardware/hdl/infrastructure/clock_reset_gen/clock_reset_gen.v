@@ -33,6 +33,7 @@ module clock_reset_gen # (parameter INCLUDE_CLK_WIZ = 0)
                 );
 
 wire reset_action_d;
+reg [4:0] action_reset_cnt;
 
 
 assign reset_action_d = (INCLUDE_CLK_WIZ == 1) ? 
@@ -43,8 +44,18 @@ assign clock_action = (INCLUDE_CLK_WIZ == 1) ? clk_wiz_clk_out : clock_afu;
 
 
 reg reset_action_q;
-always @ (posedge clock_action)
-    reset_action_q <= reset_action_d;
+always @ (posedge clock_afu or posedge reset_action_d)
+    if(reset_action_d)
+        reset_action_q <= 1'b1;
+    else if(&action_reset_cnt)
+        reset_action_q <= 1'b0;
+
+always @ (posedge clock_afu or posedge reset_action_d)
+    if(reset_action_d)
+        action_reset_cnt <= 0;
+    else if(reset_action_q)
+        action_reset_cnt <= action_reset_cnt + 1'b1;
+
 
 assign reset_action_n = ~reset_action_q;
 
