@@ -18,7 +18,7 @@
 # This script is NOT needed if you follow the "make" process.
 # However, in some cases, you need these variables get set explicitly. 
 
-DIR="$(cd "$(dirname $0)" && pwd)"
+DIR="$(cd "$(dirname $BASH_SOURCE)" && pwd)"
 
 export OCACCEL_ROOT=${DIR}/..
 [ -f "${OCACCEL_ROOT}/.ocaccel_config.sh" ] && . ${OCACCEL_ROOT}/.ocaccel_config.sh

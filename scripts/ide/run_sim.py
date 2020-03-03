@@ -68,7 +68,7 @@ class SimSession:
         # No OCSE if in unit sim mode
         if self.unit_sim == False:
             self.ocse = OCSE(ocse_path, self.simulator.simout, self.sim_timeout)
-        self.testcase = Testcase(testcase_cmd, self.simulator.simout, testcase_args)
+        self.testcase = Testcase(testcase_cmd, self.ocaccel_root, self.simulator.simout, testcase_args)
 
     def run(self):
         msg.ok_msg_blue("--------> Simulation Session")
@@ -395,10 +395,11 @@ class OCSE:
         msg.header_msg(" OCSE listening on socket: %s" % ocse_server_dat)
 
 class Testcase:
-    def __init__(self, cmd = 'ocaccel_example', simout = '.', args = ""):
+    def __init__(self, cmd = 'ocaccel_example', ocaccel_root = '.', simout = '.', args = ""):
         self.cmd = cmd
         self.args = args
         self.simout = simout
+        self.ocaccel_root = ocaccel_root
 
     def print_env(self):
         msg.header_msg("Testcase cmd:\t %s" % self.cmd)
@@ -410,8 +411,11 @@ class Testcase:
         rc = None 
         if self.cmd == "terminal":
             if "TMUX" in os.environ:
+                path_source = pathjoin(self.ocaccel_root, "scripts", "ocaccel_path.sh")
                 cmd = "tmux new-window -c %s" % self.simout
-                pid = run_in_background(cmd = cmd, work_dir = self.simout, log = self.test_log)
+                run_in_background(cmd = cmd, work_dir = self.simout, log = self.test_log)
+                cmd = 'tmux send-keys ". %s" Enter' % path_source
+                run_in_background(cmd = cmd, work_dir = self.simout, log = self.test_log)
                 cmd = "tmux list-panes -F '#{pane_pid}'"
                 out = run_and_get_output(cmd = cmd)
                 pid = out.strip('\n').split('\n')[-1]
