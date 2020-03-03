@@ -32,7 +32,7 @@ endif
 ocaccel_peek_objs = force_cpu.o
 ocaccel_poke_objs = force_cpu.o
 
-projs = ocaccel_maint 
+projs = ocaccel_poke ocaccel_peek ocaccel_maint 
 objs = force_cpu.o $(projs:=.o)
 hfiles = force_cpu.h  ocaccel_fw_example.h
 
