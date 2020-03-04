@@ -176,168 +176,29 @@ static uint64_t mem_check (uint8_t* src, uint8_t* dest, uint64_t len)
 }
 
 static int run_single_engine (struct snap_card* h,
-                              uint32_t timeout,
-                              void* src_base,
-                              void* tgt_base,
-                              uint32_t rnum, uint32_t wnum,
-                              uint32_t init_rdata, uint32_t init_wdata,
-                              uint32_t wrap_pattern,
-                              uint32_t rpattern, uint32_t wpattern,
-                              uint64_t* td,
-                              FILE* log,
-                              int id
+                              void* dsc_base,
+                              void* cmpl_base,
+                              FILE* log
                              )
 {
     int rc         = 0;
-    int ready      = 0;
-    int read_error = 0;
-    int both_done  = 0;
-    uint64_t t_start;
-    uint32_t cnt;
-    uint32_t reg_data;
-    uint32_t tt_rd_cmd[4096];
-    uint32_t tt_rd_rsp[4096];
-    uint32_t tt_wr_cmd[4096];
-    uint32_t tt_wr_rsp[4096];
-    uint32_t tt_arid[4096];
-    uint32_t tt_awid[4096];
-    uint32_t tt_rid[4096];
-    uint32_t tt_bid[4096];
-    //FILE* file_rtt;
-    //FILE* file_wtt;
     uint32_t pasid;
 
     VERBOSE0 (log, " ----- START SNAP_CONTROL ----- \n");
-    //snap_action_start ((void*)h);
-    action_write(log, h, reg (REG_SNAP_CONTROL, id), 0x00000001);
-
     pasid = snap_action_get_pasid (h);
     VERBOSE0 (log, "PASID of this process: %u\n", pasid);
-    action_write (log, h, reg (REG_SNAP_CONTEXT, id), pasid);
 
     VERBOSE0 (log, " ----- CONFIG PARAMETERS ----- \n");
-    action_write (log, h, reg (REG_USER_MODE, id), wrap_pattern);
-    action_write (log, h, reg (REG_SOURCE_ADDRESS_L, id), (uint32_t) (((uint64_t) src_base) & 0xffffffff));
-    action_write (log, h, reg (REG_SOURCE_ADDRESS_H, id), (uint32_t) ((((uint64_t) src_base) >> 32) & 0xffffffff));
-
-    action_write (log, h, reg (REG_TARGET_ADDRESS_L, id), (uint32_t) (((uint64_t) tgt_base) & 0xffffffff));
-    action_write (log, h, reg (REG_TARGET_ADDRESS_H, id), (uint32_t) ((((uint64_t) tgt_base) >> 32) & 0xffffffff));
-
-    action_write (log, h, reg (REG_INIT_RDATA, id), init_rdata);
-    action_write (log, h, reg (REG_INIT_WDATA, id), init_wdata);
-
-    action_write (log, h, reg (REG_RD_PATTERN, id), rpattern);
-    action_write (log, h, reg (REG_WR_PATTERN, id), wpattern);
-
-    action_write (log, h, reg (REG_RD_NUMBER, id), rnum);
-    action_write (log, h, reg (REG_WR_NUMBER, id), wnum);
-
-
-    VERBOSE0 (log, " ----- Check if AFU is ready ----- \n");
-    cnt = 0;
-
-    do {
-        reg_data = action_read (log, h, reg (REG_USER_STATUS, id));
-
-        if ((reg_data & 0x20) > 0) {
-            ready = 1;
-            VERBOSE0 (log, "AFU has finished cleaning TT RAM. Ready to start AXI transactions.\n");
-            break;
-        }
-
-        cnt ++;
-    } while (cnt < 300);
-
-    if (ready == 0) {
-        VERBOSE0 (log, "ERROR: AFU not ready! \n");
-        action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000001);
-        action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000000);
-
-        rc += 0x2;
-        return rc;
-    }
+    VERBOSE0 (log, "Descriptor address = %p\n", dsc_base);
+    action_write (log, h, REG_MP_INIT_ADDR_LO, (uint32_t) (((uint64_t) dsc_base) & 0xffffffff));
+    action_write (log, h, REG_MP_INIT_ADDR_HI, (uint32_t) ((((uint64_t) dsc_base) >> 32) & 0xffffffff));
+    action_write (log, h, REG_MP_CMPL_ADDR_LO, (uint32_t) (((uint64_t) cmpl_base) & 0xffffffff));
+    action_write (log, h, REG_MP_CMPL_ADDR_HI, (uint32_t) ((((uint64_t) cmpl_base) >> 32) & 0xffffffff));
 
     VERBOSE0 (log, " ----- Tell AFU to kick off AXI transactions ----- \n");
-    action_write (log, h, reg (REG_USER_CONTROL, id), 0x00000001);
-    t_start = get_usec();
+    action_write (log, h, REG_MP_CONTROL, 0x00000001);
+    rc = 1;
 
-    cnt = 0;
-
-    do {
-        reg_data = action_read (log, h, reg (REG_USER_STATUS, id));
-
-        if ((reg_data & 0x3) == 0x3) {
-            both_done = 1;
-            VERBOSE0 (log, "AFU has finished all transactions.\n");
-            break;
-        }
-
-        //if ((reg_data & 0x10) > 0 ){
-        //    read_error = 1;
-        //    VERBOSE0 (log, "ERROR: AFU meets a read checking error.\n");
-        //    break;
-        //}
-        cnt ++;
-    } while (cnt < timeout * 1000); //Use timeout to emulate max allowed MMIO read times
-
-    if ((reg_data & 0x10) > 0) {
-        read_error = 1;
-        VERBOSE0 (log, "ERROR: AFU meets a read checking error.\n");
-    }
-
-    *td = get_usec() - t_start;
-
-    if (read_error) {
-        action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000001);
-        action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000000);
-        rc += 0x4;
-        return rc;
-    }
-
-    if (!both_done) {
-        VERBOSE0 (log, "Timeout! Transactions haven't been finished.\n");
-        action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000001);
-        action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000000);
-        rc += 0x8;
-        return rc;
-    }
-
-
-    VERBOSE0 (log, " ----- Dump TT Arrays ----- \n");
-    //file_rtt = fopen ("file_rd_cycle", "w");
-    //file_wtt = fopen ("file_wr_cycle", "w");
-
-    VERBOSE0 (log, "RTT:\n");
-    for (cnt = 0; cnt < ((rnum > 4096) ? 4096 : rnum); cnt++) {
-        tt_arid[cnt]   = action_read (log, h, reg (REG_TT_ARID, id));
-        tt_rd_cmd[cnt] = action_read (log, h, reg (REG_TT_RD_CMD, id));
-        tt_rid[cnt]    = action_read (log, h, reg (REG_TT_RID, id));
-        tt_rd_rsp[cnt] = action_read (log, h, reg (REG_TT_RD_RSP, id));
-        fprintf (log, "%8d, %16d, %8d, %16d\n", tt_arid[cnt], tt_rd_cmd[cnt], tt_rid[cnt], tt_rd_rsp[cnt]);
-    }
-
-    VERBOSE0 (log, "WTT:\n");
-    for (cnt = 0; cnt < ((wnum > 4096) ? 4096 : wnum); cnt++) {
-        tt_awid[cnt]   = action_read (log, h, reg (REG_TT_AWID, id));
-        tt_wr_cmd[cnt] = action_read (log, h, reg (REG_TT_WR_CMD, id));
-        tt_bid[cnt]    = action_read (log, h, reg (REG_TT_BID, id));
-        tt_wr_rsp[cnt] = action_read (log, h, reg (REG_TT_WR_RSP, id));
-        fprintf (log, "%8d, %16d, %8d, %16d\n", tt_awid[cnt], tt_wr_cmd[cnt], tt_bid[cnt], tt_wr_rsp[cnt]);
-    }
-
-
-    VERBOSE0 (log, " ----- Finish dump, release AFU ----- \n");
-    action_write (log, h, reg (REG_USER_CONTROL, id), 0x00000002);
-
-    //VERBOSE0 (log, "SNAP Wait for idle\n");
-    //rc += snap_action_completed ((void*)h, NULL, timeout);
-    //VERBOSE1 ("Card in idle\n");
-
-    action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000001);
-    action_write (log, h, reg (REG_SOFT_RESET, id), 0x00000000);
-
-    //fclose (file_rtt);
-    //fclose (file_wtt)1;
     return rc; //1 means successful
 }
 
@@ -395,6 +256,8 @@ static int memcopy (int argc, char* argv[], int id)
     snap_action_flag_t attach_flags = 0;
     struct snap_action* act = NULL;
     void* src_base = NULL;
+    int * dsc_base;
+    void* cmpl_base = NULL;
     void* tgt_base = NULL;
     void* exp_buff = NULL;
     uint32_t wrap_pattern;
@@ -421,7 +284,7 @@ static int memcopy (int argc, char* argv[], int id)
     //init_wdata = 0xBeeF0000;
     init_rdata = id * 1024;
     init_wdata = id * 1024;
-    rnum = 1;
+    rnum = 0;
     wnum = 1;
     rpattern = 0x00001F07; //ID < 4, Len=1F, Size=7
     wpattern = 0x00001F07; //ID < 4, Len=1F, Size=7
@@ -575,7 +438,7 @@ static int memcopy (int argc, char* argv[], int id)
         wwidth = wwidth * 2;
     }
 
-    VERBOSE0 (log, "Print rwidth is: %d, wwidth is: %d\n", rwidth, wwidth);
+    VERBOSE0 (log, "Print id is %d, rwidth is: %d, wwidth is: %d\n", id, rwidth, wwidth);
 
     rblen = 1 + ((rpattern & 0xFF00) >> 8);
     wblen = 1 + ((wpattern & 0xFF00) >> 8);
@@ -585,33 +448,51 @@ static int memcopy (int argc, char* argv[], int id)
 
     //src_base  = alloc_mem(rwidth, rtotal_bytes);
     //tgt_base = alloc_mem (wwidth, wtotal_bytes);
-    src_base  = alloc_mem (134217728, rtotal_bytes); // src address must be 4KB alignment
-    tgt_base = alloc_mem (134217728, wtotal_bytes); // targer address must be 4KB alignment
-    exp_buff  = alloc_mem (134217728, wtotal_bytes);
+    src_base  = alloc_mem (4096, rtotal_bytes); // src address must be 4KB alignment
+    tgt_base = alloc_mem (4096, wtotal_bytes); // targer address must be 4KB alignment
+    dsc_base = alloc_mem (4096, 4096);
+    cmpl_base = alloc_mem (4096, 4096);
+    exp_buff  = alloc_mem (4096, wtotal_bytes);
 
     VERBOSE0 (log, "Source address is: %p\n", src_base);
     VERBOSE0 (log, "Target address is: %p\n", tgt_base);
+    VERBOSE0 (log, "Completion address is: %p\n", cmpl_base);
 
     mem_init (src_base, init_rdata, rtotal_bytes);
     mem_init (exp_buff, init_wdata, wtotal_bytes);
+    memset (dsc_base, 0, 4096);
+    memset (cmpl_base, 0, 4096);
     memset (tgt_base, 0, wtotal_bytes);
+
+    *dsc_base = 0x12345678;
+    *(dsc_base + 2) = init_rdata;
+    *(dsc_base + 3) = init_wdata;
+    *(dsc_base + 12) = rpattern;
+    *(dsc_base + 13) = rnum;
+    *(dsc_base + 14) = wpattern;
+    *(dsc_base + 15) = wnum;
+    *(dsc_base + 16) = (uint32_t) (((uint64_t) src_base) & 0xffffffff);
+    *(dsc_base + 17) = (uint32_t) ((((uint64_t) src_base) >> 32) & 0xffffffff);
+    *(dsc_base + 18) = (uint32_t) (((uint64_t) tgt_base) & 0xffffffff);
+    *(dsc_base + 19) = (uint32_t) ((((uint64_t) tgt_base) >> 32) & 0xffffffff);
+    *(dsc_base + 31) = 0x0;
 
     //-------------------------------------------------
     // Start Engine and wait done
     //-------------------------------------------------
     VERBOSE0 (log, "Start AFU.\n");
-    rc = run_single_engine (dn, timeout,
-                            src_base,
-                            tgt_base,
-                            rnum, wnum,
-                            init_rdata, init_wdata,
-                            wrap_pattern,
-                            rpattern, wpattern,
-                            &time_used,
-                            log,
-                            id
+    rc = run_single_engine (dn,
+                            dsc_base,cmpl_base,
+                            log
                            );
-
+    uint32_t check1 = 1;
+    uint32_t check2 = 0;
+    while(check1 != check2){
+        sleep(10);
+        check1 = *((uint32_t*)tgt_base+1020);
+        check2 = *((uint32_t*)exp_buff+1020);
+    }
+    sleep(10);
     //-------------------------------------------------
     // Checkings
     //-------------------------------------------------
@@ -632,7 +513,7 @@ static int memcopy (int argc, char* argv[], int id)
 
         if (wnum != 0) {
             if (mem_check (tgt_base, exp_buff, wr_check_bytes)) {
-                VERBOSE0 (log, "WRITE Check FAILED!\n");
+                VERBOSE0 (log, "Process %d WRITE Check FAILED!\n",pid);
                 sprintf (file_name, "proc_%d_%d_target.log", id, pid);
                 file_target = fopen (file_name, "w");
                 sprintf (file_name, "proc_%d_%d_expect.log", id, pid);
@@ -643,7 +524,8 @@ static int memcopy (int argc, char* argv[], int id)
                 fclose (file_expect);
                 rc += 0x4;
             } else {
-                VERBOSE0 (log, "WRITE Check PASSED!\n");
+                VERBOSE0 (log, "Process %d WRITE Check PASSED!\n",pid);
+                rc = 0;
             }
         }
 
@@ -690,7 +572,7 @@ __exit1:
 
 int main (int argc, char* argv[])
 {
-    int num_processes = 4;
+    int num_processes = 32;
     int rc = 0;
     int failing = -1;
     pid_t pid;

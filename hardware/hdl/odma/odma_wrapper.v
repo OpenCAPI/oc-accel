@@ -79,6 +79,24 @@ module odma_wrapper #(
                    input      [0019:0]   cfg_pasid_base                 ,
                    input      [0004:0]   cfg_pasid_length               ,
 
+                   //---- mmio debug and FIR --------------------------------
+                   input                 debug_cnt_clear                ,
+                   output     [0063:0]   debug_tlx_cnt_cmd              ,
+                   output     [0063:0]   debug_tlx_cnt_rsp              ,
+                   output     [0063:0]   debug_tlx_cnt_retry            ,
+                   output     [0063:0]   debug_tlx_cnt_fail             ,
+                   output     [0063:0]   debug_tlx_cnt_xlt_pd           ,
+                   output     [0063:0]   debug_tlx_cnt_xlt_done         ,
+                   output     [0063:0]   debug_tlx_cnt_xlt_retry        ,
+                   output     [0063:0]   debug_axi_cnt_cmd              ,
+                   output     [0063:0]   debug_axi_cnt_rsp              ,
+                   output     [0063:0]   debug_buf_cnt                  ,
+                   output     [0063:0]   debug_traffic_idle             ,
+                   input      [0063:0]   debug_tlx_idle_lim             ,
+                   input      [0063:0]   debug_axi_idle_lim             ,
+                   output     [0063:0]   fir_fifo_overflow              ,
+                   output     [0063:0]   fir_tlx_interface              ,
+
                    //---- TLX -----------------------------------------------
                    output                afu_tlx_cmd_valid              ,
                    output     [0007:0]   afu_tlx_cmd_opcode             ,
@@ -265,7 +283,8 @@ wire [CTXW-1:0] lcl_wr_ctx;
 wire            lcl_wr_rsp_valid; 
 wire [IDW-1:0]  lcl_wr_rsp_axi_id;
 wire            lcl_wr_rsp_code;  
-wire [31:0]     lcl_wr_rsp_ready; 
+wire [31:0]     lcl_wr_rsp_ready;
+wire [CTXW-1:0] lcl_wr_rsp_ctx;    
 
 
 // read address channel
@@ -283,7 +302,8 @@ wire [CTXW-1:0] lcl_rd_ctx;
 // read response & data channel
 wire            lcl_rd_data_valid;
 wire [IDW-1:0]  lcl_rd_data_axi_id;
-wire [1023:0]   lcl_rd_data;      
+wire [1023:0]   lcl_rd_data;     
+wire [CTXW-1:0] lcl_rd_data_ctx;
 wire            lcl_rd_data_last; 
 wire            lcl_rd_rsp_code;  
 wire [31:0]     lcl_rd_rsp_ready;
@@ -301,7 +321,6 @@ wire   [063:0]  tlx_r_cmd_be      ;
 
 wire wbuf_empty, rbuf_empty;
 wire last_context_cleared = wbuf_empty && rbuf_empty;
-wire context_update_ongoing   ;
 
 //===============================================================================================================
 //         WIRES: data_bridge with cmd_enc & rsp_dec
@@ -313,12 +332,13 @@ wire             dma_w_cmd_valid ;
 wire [1023:0]    dma_w_cmd_data  ;
 wire [0127:0]    dma_w_cmd_be    ;
 wire [0063:0]    dma_w_cmd_ea    ;
+wire [CTXW-1:0]  dma_w_cmd_ctx   ;
 wire [TAGW-1:0]  dma_w_cmd_tag   ;
 wire             w_prt_cmd_valid ;
 wire             w_prt_cmd_start ;
 wire             w_prt_cmd_last  ;
 wire             w_prt_cmd_enable;
-//---- response decoder ----;
+//---- response decoder ----
 wire             dma_w_resp_valid;
 wire [1023:0]    dma_w_resp_data ;
 wire [TAGW-1:0]  dma_w_resp_tag  ;
@@ -331,13 +351,14 @@ wire             dma_r_cmd_valid ;
 wire [1023:0]    dma_r_cmd_data  ;
 wire [0127:0]    dma_r_cmd_be    ;
 wire [0063:0]    dma_r_cmd_ea    ;
+wire [CTXW-1:0]  dma_r_cmd_ctx   ;
 wire [TAGW-1:0]  dma_r_cmd_tag   ;
 wire             r_prt_cmd_valid ;
 wire             r_prt_cmd_start ;
 wire             r_prt_cmd_last  ;
 wire             r_prt_cmd_enable;
 
-//---- response decoder ----;
+//---- response decoder ----
 wire             dma_r_resp_valid;
 wire [1023:0]    dma_r_resp_data ;
 wire [TAGW-1:0]  dma_r_resp_tag  ;
@@ -381,6 +402,8 @@ wire  [0002:0] tlx_w_cmd_pl       ;
 wire  [0063:0] tlx_w_cmd_be       ;
 wire  [1023:0] tlx_w_cdata_bus    ;
 wire           tlx_w_cmd_ready    ;
+wire  [0019:0] tlx_w_cmd_pasid    ;
+wire  [0011:0] tlx_w_cmd_actag    ;
 
 wire           tlx_r_cmd_valid    ;
 wire  [0007:0] tlx_r_cmd_opcode   ;
@@ -389,6 +412,8 @@ wire  [0015:0] tlx_r_cmd_afutag   ;
 wire  [0001:0] tlx_r_cmd_dl       ;
 wire  [0002:0] tlx_r_cmd_pl       ;
 wire           tlx_r_cmd_ready    ;
+wire  [0019:0] tlx_r_cmd_pasid    ;
+wire  [0011:0] tlx_r_cmd_actag    ;
 wire  [1023:0] tlx_r_cdata_bus    ;
 
 wire           odma_interrupt     ;
@@ -403,6 +428,100 @@ wire           tlx_i_rsp_valid    ;
 wire  [0015:0] tlx_i_rsp_afutag   ;
 wire  [0007:0] tlx_i_rsp_opcode   ;
 wire  [0003:0] tlx_i_rsp_code     ;
+wire  [0019:0] tlx_i_cmd_pasid  ;
+wire  [0011:0] tlx_i_cmd_actag  ;
+
+//debug and FIR from submodules
+wire  [0031:0] debug_tlx_cnt_cmd_w       ;
+wire  [0001:0] fir_fifo_overflow_cmdencw ;
+wire  [0031:0] debug_tlx_cnt_cmd_r       ;
+wire  [0001:0] fir_fifo_overflow_cmdencr ;
+wire           debug_tlx_cmd_idle        ;
+wire  [0003:0] fir_fifo_overflow_cmdcnv  ;
+wire  [0001:0] fir_tlx_cmd_credit        ;
+wire  [0031:0] debug_tlx_rsp_idle_lim   = debug_tlx_idle_lim[63:32];      
+wire  [0031:0] debug_tlx_cmd_idle_lim   = debug_tlx_idle_lim[31:00];
+wire           debug_tlx_rsp_idle        ;      
+wire  [0005:0] fir_fifo_overflow_rspcnv  ;      
+wire           fir_tlx_rsp_err           ;      
+wire           fir_tlx_response_unsupport;      
+wire  [0031:0] debug_tlx_cnt_rsp_w       ;
+wire  [0031:0] debug_tlx_cnt_retry_w     ;
+wire  [0031:0] debug_tlx_cnt_fail_w      ;
+wire  [0031:0] debug_tlx_cnt_xlt_pd_w    ;
+wire  [0031:0] debug_tlx_cnt_xlt_done_w  ;
+wire  [0031:0] debug_tlx_cnt_xlt_retry_w ;
+wire  [0004:0] fir_fifo_overflow_rspdecw ;
+wire  [0031:0] debug_tlx_cnt_rsp_r       ;
+wire  [0031:0] debug_tlx_cnt_retry_r     ;
+wire  [0031:0] debug_tlx_cnt_fail_r      ;
+wire  [0031:0] debug_tlx_cnt_xlt_pd_r    ;
+wire  [0031:0] debug_tlx_cnt_xlt_done_r  ;
+wire  [0031:0] debug_tlx_cnt_xlt_retry_r ;
+wire  [0004:0] fir_fifo_overflow_rspdecr ;
+wire  [0031:0] debug_axi_cmd_idle_lim_w   = debug_axi_idle_lim[31:00];
+wire  [0031:0] debug_axi_rsp_idle_lim_w   = debug_axi_idle_lim[63:32];
+wire           debug_axi_cmd_idle_w      ;
+wire           debug_axi_rsp_idle_w      ;
+wire  [0031:0] debug_axi_cnt_cmd_w       ;
+wire  [0031:0] debug_axi_cnt_rsp_w       ;
+wire  [0007:0] debug_buf_cnt_w           ;
+wire  [0001:0] fir_fifo_overflow_dbw     ;
+wire  [0031:0] debug_axi_cmd_idle_lim_r   = debug_axi_idle_lim[31:00];
+wire  [0031:0] debug_axi_rsp_idle_lim_r   = debug_axi_idle_lim[63:32];
+wire           debug_axi_cmd_idle_r      ;
+wire           debug_axi_rsp_idle_r      ;
+wire  [0031:0] debug_axi_cnt_cmd_r       ; 
+wire  [0031:0] debug_axi_cnt_rsp_r       ; 
+wire  [0007:0] debug_buf_cnt_r           ; 
+wire  [0001:0] fir_fifo_overflow_dbr     ;
+wire  [0001:0] fir_tlx_command_credit    ;
+
+// debug and FIR for MMIO
+ assign debug_tlx_cnt_cmd       = {debug_tlx_cnt_cmd_r, debug_tlx_cnt_cmd_w};
+ assign debug_tlx_cnt_rsp       = {debug_tlx_cnt_rsp_r, debug_tlx_cnt_rsp_w};
+ assign debug_tlx_cnt_retry     = {debug_tlx_cnt_retry_r, debug_tlx_cnt_retry_w};
+ assign debug_tlx_cnt_fail      = {debug_tlx_cnt_fail_r, debug_tlx_cnt_fail_w};
+ assign debug_tlx_cnt_xlt_pd    = {debug_tlx_cnt_xlt_pd_r, debug_tlx_cnt_xlt_pd_w};
+ assign debug_tlx_cnt_xlt_done  = {debug_tlx_cnt_xlt_done_r, debug_tlx_cnt_xlt_done_w};
+ assign debug_tlx_cnt_xlt_retry = {debug_tlx_cnt_xlt_retry_r, debug_tlx_cnt_xlt_retry_w};
+ assign debug_axi_cnt_cmd       = {debug_axi_cnt_cmd_r, debug_axi_cnt_cmd_w}; 
+ assign debug_axi_cnt_rsp       = {debug_axi_cnt_rsp_r, debug_axi_cnt_rsp_w}; 
+ assign debug_buf_cnt           = {24'd0, debug_buf_cnt_r, 24'd0, debug_buf_cnt_w}; 
+ assign debug_traffic_idle      = {58'd0, debug_tlx_cmd_idle, debug_tlx_rsp_idle, debug_axi_cmd_idle_r, debug_axi_rsp_idle_r, debug_axi_cmd_idle_w, debug_axi_rsp_idle_w};
+ assign fir_fifo_overflow       = {57'd0, fir_fifo_overflow_cmdencw, fir_fifo_overflow_cmdencr, fir_fifo_overflow_cmdcnv, fir_fifo_overflow_rspcnv, fir_fifo_overflow_rspdecw, fir_fifo_overflow_rspdecr, fir_fifo_overflow_dbw, fir_fifo_overflow_dbr};
+ assign fir_tlx_interface       = {60'd0, fir_tlx_response_unsupport, fir_tlx_rsp_err, fir_tlx_command_credit};
+
+reg   [0019:0] cfg_pasid_mask;
+
+//---- convert the enabled pasid length into a mask ----
+ always@*
+   begin
+     case(cfg_pasid_length)
+       5'b10011 : cfg_pasid_mask = 20'h80000;
+       5'b10010 : cfg_pasid_mask = 20'hC0000;
+       5'b10001 : cfg_pasid_mask = 20'hE0000;
+       5'b10000 : cfg_pasid_mask = 20'hF0000;
+       5'b01111 : cfg_pasid_mask = 20'hF8000;
+       5'b01110 : cfg_pasid_mask = 20'hFC000;
+       5'b01101 : cfg_pasid_mask = 20'hFE000;
+       5'b01100 : cfg_pasid_mask = 20'hFF000;
+       5'b01011 : cfg_pasid_mask = 20'hFF800;
+       5'b01010 : cfg_pasid_mask = 20'hFFC00;
+       5'b01001 : cfg_pasid_mask = 20'hFFE00;
+       5'b01000 : cfg_pasid_mask = 20'hFFF00;
+       5'b00111 : cfg_pasid_mask = 20'hFFF80;
+       5'b00110 : cfg_pasid_mask = 20'hFFFC0;
+       5'b00101 : cfg_pasid_mask = 20'hFFFE0;
+       5'b00100 : cfg_pasid_mask = 20'hFFFF0;
+       5'b00011 : cfg_pasid_mask = 20'hFFFF8;
+       5'b00010 : cfg_pasid_mask = 20'hFFFFC;
+       5'b00001 : cfg_pasid_mask = 20'hFFFFE;
+       5'b00000 : cfg_pasid_mask = 20'hFFFFF;
+       default  : cfg_pasid_mask = 20'h00000;
+     endcase
+   end 
+
 
 //===============================================================================================================
 // Clock converters:
@@ -414,16 +533,6 @@ wire  [0003:0] tlx_i_rsp_code     ;
 
 
 brdg_tlx_cmd_converter tlx_cmd_conv (
-                                             `ifdef ILA_DEBUG
-                                             .fir_cmd_credit_breach           (fir_cmd_credit_breach            ),
-                                             .fir_cmd_credit_data_breach      (fir_cmd_credit_data_breach       ),
-                                             .fir_fifo_a_cmdcnv_overflow      (fir_fifo_a_cmdcnv_overflow       ), 
-                                             .fir_fifo_r_cmdcnv_overflow      (fir_fifo_r_cmdcnv_overflow       ), 
-                                             .fir_fifo_w_datcnv_e_overflow    (fir_fifo_w_datcnv_e_overflow     ), 
-                                             .fir_fifo_w_datcnv_o_overflow    (fir_fifo_w_datcnv_o_overflow     ), 
-                                             .fir_fifo_w_cmdcnv_overflow      (fir_fifo_w_cmdcnv_overflow       ),
-                                             `endif
-
                 /*input                 */   .clk_tlx                         ( clk_tlx                         ),
                 /*input                 */   .clk_afu                         ( clk_afu                         ),
                 /*input                 */   .rst_n                           ( rst_n                           ),
@@ -471,6 +580,8 @@ brdg_tlx_cmd_converter tlx_cmd_conv (
                 /*input      [0063:0]   */   .tlx_wr_cmd_be                   ( tlx_w_cmd_be                   ),
                 /*input      [1023:0]   */   .tlx_wr_cdata_bus                ( tlx_w_cdata_bus                ),
                 /*output                */   .tlx_wr_cmd_ready                ( tlx_w_cmd_ready                ),
+                /*input      [0019:0]   */   .tlx_wr_cmd_pasid                ( tlx_w_cmd_pasid                ),
+                /*input      [0011:0]   */   .tlx_wr_cmd_actag                ( tlx_w_cmd_actag                ),
 
                 // read channel
                 /*input                 */   .tlx_rd_cmd_valid                ( tlx_r_cmd_valid                ),
@@ -480,32 +591,28 @@ brdg_tlx_cmd_converter tlx_cmd_conv (
                 /*input      [0001:0]   */   .tlx_rd_cmd_dl                   ( tlx_r_cmd_dl                   ),
                 /*input      [0002:0]   */   .tlx_rd_cmd_pl                   ( tlx_r_cmd_pl                   ),
                 /*output                */   .tlx_rd_cmd_ready                ( tlx_r_cmd_ready                ),
-
-                // assign ACTAG channel
-                /*input                 */   .tlx_ac_cmd_valid                ( tlx_ac_cmd_valid                ),
-                /*input      [0019:0]   */   .tlx_ac_cmd_pasid                ( tlx_ac_cmd_pasid                ),
-                /*input      [0011:0]   */   .tlx_ac_cmd_actag                ( tlx_ac_cmd_actag                ),
-                /*input      [0007:0]   */   .tlx_ac_cmd_opcode               ( tlx_ac_cmd_opcode               ),
+                /*input      [0019:0]   */   .tlx_rd_cmd_pasid                ( tlx_r_cmd_pasid                ),
+                /*input      [0011:0]   */   .tlx_rd_cmd_actag                ( tlx_r_cmd_actag                ),
 
                 // interrupt channel
                 /*input                 */   .tlx_in_cmd_valid                ( tlx_i_cmd_valid                ),
                 /*input      [067:0]    */   .tlx_in_cmd_obj                  ( tlx_i_cmd_obj                  ),
                 /*input      [015:0]    */   .tlx_in_cmd_afutag               ( tlx_i_cmd_afutag               ),     
-                /*input      [007:0]    */   .tlx_in_cmd_opcode               ( tlx_i_cmd_opcode               )
+                /*input      [007:0]    */   .tlx_in_cmd_opcode               ( tlx_i_cmd_opcode               ),
+                /*input      [0019:0]   */   .tlx_in_cmd_pasid                ( tlx_i_cmd_pasid                ),
+                /*input      [0011:0]   */   .tlx_in_cmd_actag                ( tlx_i_cmd_actag                ),
+
+                //---- control and status --------------------------------
+                /*input      [031:0]    */   .debug_tlx_cmd_idle_lim          ( debug_tlx_cmd_idle_lim         ),
+                /*output                */   .debug_tlx_cmd_idle              ( debug_tlx_cmd_idle             ),
+                /*output     [0004:0]   */   .fir_fifo_overflow               ( fir_fifo_overflow_cmdcnv       ),
+                /*output     [0001:0]   */   .fir_tlx_command_credit          ( fir_tlx_command_credit         )
+
+
                 );
 
 
 brdg_tlx_rsp_converter tlx_rsp_conv(
-                                             `ifdef ILA_DEBUG
-                                             .fir_fifo_rd_rspcnv_overflow      (fir_fifo_rd_rspcnv_overflow      ),
-                                             .fir_fifo_wr_rspcnv_overflow      (fir_fifo_wr_rspcnv_overflow      ),
-                                             .fir_fifo_dpdl_o_overflow         (fir_fifo_dpdl_o_overflow         ),
-                                             .fir_fifo_dpdl_e_overflow         (fir_fifo_dpdl_e_overflow         ),
-                                             .fir_fifo_datcnv_o_overflow       (fir_fifo_datcnv_o_overflow       ),
-                                             .fir_fifo_datcnv_e_overflow       (fir_fifo_datcnv_e_overflow       ),
-                                             .fir_tlx_rsp_deficient_or_delayed (fir_tlx_rsp_deficient_or_delayed ),
-                                             `endif
-
                 /*input                 */   .clk_tlx                         ( clk_tlx                         ),
                 /*input                 */   .clk_afu                         ( clk_afu                         ),
                 /*input                 */   .rst_n                           ( rst_n                           ),
@@ -554,7 +661,14 @@ brdg_tlx_rsp_converter tlx_rsp_conv(
                 /*input              */      .tlx_i_rsp_valid                ( tlx_i_rsp_valid                ),
                 /*input      [0015:0]*/      .tlx_i_rsp_afutag               ( tlx_i_rsp_afutag               ),
                 /*input      [0007:0]*/      .tlx_i_rsp_opcode               ( tlx_i_rsp_opcode               ),
-                /*input      [0003:0]*/      .tlx_i_rsp_code                 ( tlx_i_rsp_code                 )
+                /*input      [0003:0]*/      .tlx_i_rsp_code                 ( tlx_i_rsp_code                 ),
+
+                //---- control and status ---------------------
+                /*input      [031:0]   */    .debug_tlx_rsp_idle_lim         ( debug_tlx_rsp_idle_lim         ),
+                /*output               */    .debug_tlx_rsp_idle             ( debug_tlx_rsp_idle             ),
+                /*output     [005:0]   */    .fir_fifo_overflow              ( fir_fifo_overflow_rspcnv       ),
+	        /*output               */    .fir_tlx_rsp_err                ( fir_tlx_rsp_err                )
+
                 );
 
 
@@ -575,13 +689,14 @@ brdg_command_encode
                   .MODE (1'b0) //0: write; 1: read
                   )
                 cmd_enc_w (
-                                             `ifdef ILA_DEBUG
-                                             .fir_fifo_prt_data_overflow   (wr_fir_fifo_prt_data_overflow   ),
-                                             .fir_fifo_prt_info_overflow   (wr_fir_fifo_prt_info_overflow   ),
-                                             `endif
-
                 /*input                 */   .clk                          ( clk_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
+
+                //---- configuration ---------------------------------
+                /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
+                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_pasid_base               ),
+                /*input      [019:0]    */   .cfg_pasid_mask               ( cfg_pasid_mask               ),
+
                 //---- communication with command decoder -----
                 /*output                */   .prt_cmd_valid                ( w_prt_cmd_valid              ),
                 /*output                */   .prt_cmd_last                 ( w_prt_cmd_last               ),
@@ -595,6 +710,8 @@ brdg_command_encode
                 /*input      [0127:0]   */   .dma_cmd_be                   ( dma_w_cmd_be                   ),
                 /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_w_cmd_ea                   ),
                 /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_w_cmd_tag                  ),
+                /*input      [`CTXW-1:0]*/   .dma_cmd_ctx                  ( dma_w_cmd_ctx                  ),
+
 
                 //---- TLX interface ---------------------------------
                   // command
@@ -605,10 +722,18 @@ brdg_command_encode
                 /*output reg [0001:0]   */   .tlx_cmd_dl                   ( tlx_w_cmd_dl                   ),
                 /*output reg [0002:0]   */   .tlx_cmd_pl                   ( tlx_w_cmd_pl                   ),
                 /*output     [0063:0]   */   .tlx_cmd_be                   ( tlx_w_cmd_be                   ),
+                /*output reg [0019:0]   */   .tlx_cmd_pasid                ( tlx_w_cmd_pasid                ),
+                /*output reg [0011:0]   */   .tlx_cmd_actag                ( tlx_w_cmd_actag                ),
                 /*output reg [1023:0]   */   .tlx_cdata_bus                ( tlx_w_cdata_bus                ),
 
                   // credit availability
-                /*input                 */   .tlx_cmd_rdy                  ( tlx_w_cmd_ready                )
+                /*input                 */   .tlx_cmd_rdy                  ( tlx_w_cmd_ready                ),
+
+                //---- control and status ---------------------
+                /*input                 */   .debug_cnt_clear              (debug_cnt_clear                 ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_cmd            (debug_tlx_cnt_cmd_w             ),
+                /*output     [0001:0]   */   .fir_fifo_overflow            (fir_fifo_overflow_cmdencw       )
+
                 );
 
 
@@ -618,13 +743,14 @@ brdg_command_encode
                   .MODE  (1'b1) //0: write; 1: read
                   )
                 cmd_enc_r  (
-                                             `ifdef ILA_DEBUG
-                                             .fir_fifo_prt_data_overflow   (rd_fir_fifo_prt_data_overflow   ),
-                                             .fir_fifo_prt_info_overflow   (rd_fir_fifo_prt_info_overflow   ),
-                                             `endif
 
                 /*input                 */   .clk                          ( clk_afu                      ),
                 /*input                 */   .rst_n                        ( rst_n                        ),
+
+                //---- configuration ---------------------------------
+                /*input      [011:0]    */   .cfg_actag_base               ( cfg_actag_base               ),
+                /*input      [019:0]    */   .cfg_pasid_base               ( cfg_pasid_base               ),
+                /*input      [019:0]    */   .cfg_pasid_mask               ( cfg_pasid_mask               ),
 
                 //---- communication with command decoder -----
                 /*output                */   .prt_cmd_valid                ( r_prt_cmd_valid              ),
@@ -639,6 +765,7 @@ brdg_command_encode
                 /*input      [0127:0]   */   .dma_cmd_be                   ( dma_r_cmd_be                   ),
                 /*input      [0063:0]   */   .dma_cmd_ea                   ( dma_r_cmd_ea                   ),
                 /*input      [0005:0]   */   .dma_cmd_tag                  ( dma_r_cmd_tag                  ),
+                /*input      [`CTXW-1:0]*/   .dma_cmd_ctx                  ( dma_r_cmd_ctx                  ),
 
                 //---- TLX interface ---------------------------------
                   // command
@@ -649,10 +776,18 @@ brdg_command_encode
                 /*output reg [0001:0]   */   .tlx_cmd_dl                   ( tlx_r_cmd_dl                   ),
                 /*output reg [0002:0]   */   .tlx_cmd_pl                   ( tlx_r_cmd_pl                   ),
                 /*output     [0063:0]   */   .tlx_cmd_be                   ( tlx_r_cmd_be                   ),
-                /*output reg [1023:0]   */   .tlx_cdata_bus                ( tlx_r_cdata_bus                ),
+                /*output reg [0019:0]   */   .tlx_cmd_pasid                ( tlx_r_cmd_pasid                ),
+                /*output reg [0011:0]   */   .tlx_cmd_actag                ( tlx_r_cmd_actag                ),
 
+                /*output reg [1023:0]   */   .tlx_cdata_bus                ( tlx_r_cdata_bus                ),
                   // credit availability
-                /*input                 */   .tlx_cmd_rdy                  ( tlx_r_cmd_ready                )
+                /*input                 */   .tlx_cmd_rdy                  ( tlx_r_cmd_ready                ),
+
+                //---- control and status ---------------------
+                /*input                 */   .debug_cnt_clear              (debug_cnt_clear                 ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_cmd            (debug_tlx_cnt_cmd_r             ),
+                /*output     [0001:0]   */   .fir_fifo_overflow            (fir_fifo_overflow_cmdencr       )
+
                 );
 
 //===============================================================================================================
@@ -667,15 +802,6 @@ brdg_response_decode
                  .MODE  (1'b0) //0: write; 1: read
                  )
                 rsp_dec_w (
-                                             `ifdef ILA_DEBUG
-                                             .fir_fifo_rsp_good_overflow (wr_fir_fifo_rsp_good_overflow ),
-                                             .fir_fifo_rsp_bad_overflow  (wr_fir_fifo_rsp_bad_overflow  ),
-                                             .fir_fifo_rspdat_o_overflow (wr_fir_fifo_rspdat_o_overflow ),
-                                             .fir_fifo_rspdat_e_overflow (wr_fir_fifo_rspdat_e_overflow ),
-                                             .retry_count                (wr_retry_count),
-                                             .rsp_idle_count             (wr_rsp_idle_count),
-                                             `endif
-
                 /*input                 */   .clk               ( clk_afu           ),
                 /*input                 */   .rst_n             ( rst_n             ),
 
@@ -706,7 +832,19 @@ brdg_response_decode
                 /*input                 */   .tlx_rdata_o_bdi   ( 0                 ),
                 /*input                 */   .tlx_rdata_e_bdi   ( 0                 ),
                 /*input      [0511:0]   */   .tlx_rdata_o       ( 0                 ),
-                /*input      [0511:0]   */   .tlx_rdata_e       ( 0                 )
+                /*input      [0511:0]   */   .tlx_rdata_e       ( 0                 ),
+
+                //---- control and status ---------------------
+                /*input                 */   .debug_cnt_clear            ( debug_cnt_clear           ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_rsp          ( debug_tlx_cnt_rsp_w       ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_retry        ( debug_tlx_cnt_retry_w     ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_fail         ( debug_tlx_cnt_fail_w      ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_xlt_pd       ( debug_tlx_cnt_xlt_pd_w    ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_xlt_done     ( debug_tlx_cnt_xlt_done_w  ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_xlt_retry    ( debug_tlx_cnt_xlt_retry_w ),
+                /*output     [0004:0]   */   .fir_fifo_overflow          ( fir_fifo_overflow_rspdecw ),
+                /*output                */   .fir_tlx_response_unsupport ( fir_tlx_response_unsupport)
+
                 );
 
 
@@ -715,15 +853,6 @@ brdg_response_decode
                   .MODE  (1'b1) //0: write; 1: read
                   )
                 rsp_dec_r (
-                                             `ifdef ILA_DEBUG
-                                             .fir_fifo_rsp_good_overflow (rd_fir_fifo_rsp_good_overflow ),
-                                             .fir_fifo_rsp_bad_overflow  (rd_fir_fifo_rsp_bad_overflow  ),
-                                             .fir_fifo_rspdat_o_overflow (rd_fir_fifo_rspdat_o_overflow ),
-                                             .fir_fifo_rspdat_e_overflow (rd_fir_fifo_rspdat_e_overflow ),
-                                             .retry_count                (rd_retry_count),
-                                             .rsp_idle_count             (rd_rsp_idle_count),
-                                             `endif
-
                 /*input                */   .clk               ( clk_afu           ),
                 /*input                */   .rst_n             ( rst_n             ),
 
@@ -754,7 +883,18 @@ brdg_response_decode
                 /*input                */   .tlx_rdata_o_bdi   ( tlx_r_rdata_o_bdi ),
                 /*input                */   .tlx_rdata_e_bdi   ( tlx_r_rdata_e_bdi ),
                 /*input      [0511:0]  */   .tlx_rdata_o       ( tlx_r_rdata_o     ),
-                /*input      [0511:0]  */   .tlx_rdata_e       ( tlx_r_rdata_e     )
+                /*input      [0511:0]  */   .tlx_rdata_e       ( tlx_r_rdata_e     ),
+
+                //---- control and status ---------------------
+                /*input                 */   .debug_cnt_clear            ( debug_cnt_clear           ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_rsp          ( debug_tlx_cnt_rsp_r       ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_retry        ( debug_tlx_cnt_retry_r     ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_fail         ( debug_tlx_cnt_fail_r      ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_xlt_pd       ( debug_tlx_cnt_xlt_pd_r    ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_xlt_done     ( debug_tlx_cnt_xlt_done_r  ),
+                /*output     [0031:0]   */   .debug_tlx_cnt_xlt_retry    ( debug_tlx_cnt_xlt_retry_r ),
+                /*output     [0004:0]   */   .fir_fifo_overflow          ( fir_fifo_overflow_rspdecr )
+
                 );
 
 //===============================================================================================================
@@ -769,11 +909,6 @@ brdg_data_bridge
                      .IDW   (IDW)
                      )
                  data_brg_w (
-                                            `ifdef ILA_DEBUG
-                                            .fir_fifo_rcy_tag_overflow (wr_fir_fifo_rcy_tag_overflow),
-                                            .fir_fifo_rty_tag_overflow (wr_fir_fifo_rty_tag_overflow),
-                                            `endif
-
                 /*input                */   .clk                 ( clk_afu             ),
                 /*input                */   .rst_n               ( rst_n               ),
                 /*output               */   .buf_empty           ( wbuf_empty          ),
@@ -784,6 +919,8 @@ brdg_data_bridge
                 /*output reg           */   .lcl_addr_ready      ( lcl_wr_ready        ),
                 /*input                */   .lcl_addr_valid      ( lcl_wr_valid        ),
                 /*input      [0063:0]  */   .lcl_addr_ea         ( lcl_wr_ea           ),
+                /*input                 */  .lcl_addr_ctx_valid  ( lcl_wr_ctx_valid    ),
+                /*input      [`CTXW-1:0]*/  .lcl_addr_ctx        ( lcl_wr_ctx          ),
                 /*input      [IDW-1:0] */   .lcl_addr_axi_id     ( lcl_wr_axi_id       ),
                 /*input                */   .lcl_addr_first      ( lcl_wr_first        ),
                 /*input                */   .lcl_addr_last       ( lcl_wr_last         ),
@@ -792,11 +929,14 @@ brdg_data_bridge
                 /*input      [1023:0]  */   .lcl_data_in         ( lcl_wr_data         ),
                 /*output     [1023:0]  */   .lcl_data_out        (                     ),
                 /*output               */   .lcl_data_out_last   (                     ),
+                /*output     [`CTXW-1:0]*/  .lcl_data_ctx        (                     ),  
+
                     //--- response and data out ---
                 /*input                */   .lcl_resp_ready      ( lcl_wr_rsp_ready    ),
                 /*output               */   .lcl_resp_valid      ( lcl_wr_rsp_valid    ),
                 /*output     [IDW-1:0] */   .lcl_resp_axi_id     ( lcl_wr_rsp_axi_id   ),
                 /*output     [0001:0]  */   .lcl_resp_code       ( lcl_wr_rsp_code     ),
+                /*output     [`CTXW-1:0]*/  .lcl_resp_ctx        ( lcl_wr_rsp_ctx      ),  
 
 
                 //---- command encoder ---------------
@@ -806,6 +946,7 @@ brdg_data_bridge
                 /*output reg [0127:0]  */   .dma_cmd_be          ( dma_w_cmd_be          ),
                 /*output reg [0063:0]  */   .dma_cmd_ea          ( dma_w_cmd_ea          ),
                 /*output reg [0005:0]  */   .dma_cmd_tag         ( dma_w_cmd_tag         ),
+                /*output reg [`CTXW-1:0]*/  .dma_cmd_ctx         ( dma_w_cmd_ctx       ),
 
                 //---- response decoder --------------
                 /*input                */   .dma_resp_valid      ( dma_w_resp_valid      ),
@@ -814,8 +955,17 @@ brdg_data_bridge
                 /*input      [0001:0]  */   .dma_resp_pos        ( dma_w_resp_pos        ),
                 /*input      [0002:0]  */   .dma_resp_code       ( dma_w_resp_code       ),
 
-                //---- context surveil ---------------
-                /*input wire           */   .context_update_ongoing ( context_update_ongoing )
+                //---- control and status ------------
+                /*input                */   .debug_cnt_clear       ( debug_cnt_clear          ),
+                /*input      [0031:0]  */   .debug_axi_cmd_idle_lim( debug_axi_cmd_idle_lim_w ),
+                /*input      [0031:0]  */   .debug_axi_rsp_idle_lim( debug_axi_rsp_idle_lim_w ),
+                /*output               */   .debug_axi_cmd_idle    ( debug_axi_cmd_idle_w     ),
+                /*output               */   .debug_axi_rsp_idle    ( debug_axi_rsp_idle_w     ),
+                /*output     [0031:0]  */   .debug_axi_cnt_cmd     ( debug_axi_cnt_cmd_w      ), 
+                /*output     [0031:0]  */   .debug_axi_cnt_rsp     ( debug_axi_cnt_rsp_w      ), 
+                /*output     [0007:0]  */   .debug_buf_cnt         ( debug_buf_cnt_w          ), 
+                /*output     [0001:0]  */   .fir_fifo_overflow     ( fir_fifo_overflow_dbw    )
+
                 );
 
 brdg_data_bridge
@@ -825,11 +975,6 @@ brdg_data_bridge
                      .IDW   (IDW)
                      )
                 data_brg_r (
-                                            `ifdef ILA_DEBUG
-                                            .fir_fifo_rcy_tag_overflow (rd_fir_fifo_rcy_tag_overflow),
-                                            .fir_fifo_rty_tag_overflow (rd_fir_fifo_rty_tag_overflow),
-                                            `endif
-
                 /*input                */   .clk                 ( clk_afu             ),
                 /*input                */   .rst_n               ( rst_n               ),
                 /*output               */   .buf_empty           ( rbuf_empty          ),
@@ -840,6 +985,8 @@ brdg_data_bridge
                 /*output reg           */   .lcl_addr_ready      ( lcl_rd_ready        ),
                 /*input                */   .lcl_addr_valid      ( lcl_rd_valid        ),
                 /*input      [0063:0]  */   .lcl_addr_ea         ( lcl_rd_ea           ),
+                /*input                 */  .lcl_addr_ctx_valid  ( lcl_rd_ctx_valid    ),
+                /*input      [`CTXW-1:0]*/  .lcl_addr_ctx        ( lcl_rd_ctx          ),  
                 /*input      [IDW-1:0] */   .lcl_addr_axi_id     ( lcl_rd_axi_id       ),
                 /*input                */   .lcl_addr_first      ( lcl_rd_first        ),
                 /*input                */   .lcl_addr_last       ( lcl_rd_last         ),
@@ -848,12 +995,14 @@ brdg_data_bridge
                 /*input      [1023:0]  */   .lcl_data_in         ( 1024'h0             ),
                 /*output     [1023:0]  */   .lcl_data_out        ( lcl_rd_data         ),
                 /*output               */   .lcl_data_out_last   ( lcl_rd_data_last    ),
+                /*output     [`CTXW-1:0]*/  .lcl_data_ctx        ( lcl_rd_data_ctx     ),
                     //--- response and data out ---
                 /*input      [0031:0]  */   .lcl_resp_ready      ( lcl_rd_rsp_ready   ),
                 /*input      [0031:0]  */   .lcl_resp_ready_hint ( lcl_rd_rsp_ready_hint ),
                 /*output               */   .lcl_resp_valid      ( lcl_rd_data_valid   ),
                 /*output     [IDW-1:0] */   .lcl_resp_axi_id     ( lcl_rd_data_axi_id  ),
                 /*output     [0001:0]  */   .lcl_resp_code       ( lcl_rd_rsp_code     ),
+                /*output     [`CTXW-1:0]*/  .lcl_resp_ctx        (                     ),  
 
 
                 //---- command encoder ---------------
@@ -863,6 +1012,7 @@ brdg_data_bridge
                 /*output reg [0127:0]  */   .dma_cmd_be          ( dma_r_cmd_be        ),
                 /*output reg [0063:0]  */   .dma_cmd_ea          ( dma_r_cmd_ea        ),
                 /*output reg [0005:0]  */   .dma_cmd_tag         ( dma_r_cmd_tag       ),
+                /*output reg [`CTXW-1:0]*/  .dma_cmd_ctx         ( dma_r_cmd_ctx       ),
 
                 //---- response decoder --------------
                 /*input                */   .dma_resp_valid      ( dma_r_resp_valid    ),
@@ -871,43 +1021,18 @@ brdg_data_bridge
                 /*input      [0001:0]  */   .dma_resp_pos        ( dma_r_resp_pos      ),
                 /*input      [0002:0]  */   .dma_resp_code       ( dma_r_resp_code     ),
 
-                //---- context surveil ---------------
-                /*input wire           */   .context_update_ongoing ( context_update_ongoing )
+                //---- control and status ------------
+                /*input                */   .debug_cnt_clear       ( debug_cnt_clear          ),
+                /*input      [0031:0]  */   .debug_axi_cmd_idle_lim( debug_axi_cmd_idle_lim_r ),
+                /*input      [0031:0]  */   .debug_axi_rsp_idle_lim( debug_axi_rsp_idle_lim_r ),
+                /*output               */   .debug_axi_cmd_idle    ( debug_axi_cmd_idle_r     ),
+                /*output               */   .debug_axi_rsp_idle    ( debug_axi_rsp_idle_r     ),
+                /*output     [0031:0]  */   .debug_axi_cnt_cmd     ( debug_axi_cnt_cmd_r      ), 
+                /*output     [0031:0]  */   .debug_axi_cnt_rsp     ( debug_axi_cnt_rsp_r      ), 
+                /*output     [0007:0]  */   .debug_buf_cnt         ( debug_buf_cnt_r          ), 
+                /*output     [0001:0]  */   .fir_fifo_overflow     ( fir_fifo_overflow_dbr    )
                 );
 
-//===============================================================================================================
-//
-//     Context surveil
-//
-//===============================================================================================================
-
-brdg_context_surveil ctx_surveil(
-                /*input                 */   .clk                    ( clk_afu                ),
-                /*input            if()     */   .rst_n                  ( rst_n                  ),
-
-                //---- configuration ---------------------------------
-                /*input      [011:0]    */   .cfg_actag_base         ( cfg_actag_base         ),
-                /*input      [019:0]    */   .cfg_pasid_base         ( cfg_pasid_base         ),
-                /*input      [004:0]    */   .cfg_pasid_length       ( cfg_pasid_length       ),
-
-                //---- AXI interface ---------------------------------
-                /*input      [008:0]    */   .lcl_wr_ctx             ( lcl_wr_ctx             ),
-                /*input      [008:0]    */   .lcl_rd_ctx             ( lcl_rd_ctx             ),
-                /*input                 */   .lcl_wr_ctx_valid       ( lcl_wr_ctx_valid       ),
-                /*input                 */   .lcl_rd_ctx_valid       ( lcl_rd_ctx_valid       ),
-                /*input              */      .interrupt              ( odma_interrupt         ),
-                /*input      [008:0] */      .interrupt_ctx          ( odma_interrupt_ctx     ),
-
-                //---- status ----------------------------------------
-                /*input                 */   .last_context_cleared   ( last_context_cleared   ),
-                /*output reg            */   .context_update_ongoing ( context_update_ongoing ),
-
-                //---- TLX interface ---------------------------------
-                /*output                */   .tlx_cmd_valid          ( tlx_ac_cmd_valid        ),
-                /*output     [019:0]    */   .tlx_cmd_pasid          ( tlx_ac_cmd_pasid        ),
-                /*output     [011:0]    */   .tlx_cmd_actag          ( tlx_ac_cmd_actag        ),
-                /*output     [007:0]    */   .tlx_cmd_opcode         ( tlx_ac_cmd_opcode       )
-                );
 
 //===============================================================================================================
 //
@@ -918,15 +1043,22 @@ brdg_context_surveil ctx_surveil(
  brdg_interrupt mbrdg_interrupt ( 
                        /*input              */  .clk              (clk_afu             ),
                        /*input              */  .rst_n            (rst_n               ),
+                       /*input      [011:0] */  .cfg_actag_base   (cfg_actag_base      ),
+                       /*input      [019:0] */  .cfg_pasid_base   (cfg_pasid_base      ),
+                       /*input      [019:0] */  .cfg_pasid_mask   (cfg_pasid_mask      ),
                        /*input      [003:0] */  .backoff_limit    (cfg_backoff_timer   ),
-                       /*input              */  .interrupt_enable (last_context_cleared),
+                       /*input              */  .interrupt_enable (1'b1                ),
                        /*output             */  .interrupt_ack    (odma_interrupt_ack  ),
                        /*input              */  .interrupt        (odma_interrupt      ),
                        /*input      [067:0] */  .interrupt_src    (odma_interrupt_src  ),
+                       /*input      [008:0] */  .interrupt_ctx    (odma_interrupt_ctx  ),
                        /*output reg         */  .tlx_cmd_valid    (tlx_i_cmd_valid     ),
                        /*output reg [067:0] */  .tlx_cmd_obj      (tlx_i_cmd_obj       ),
                        /*output reg [015:0] */  .tlx_cmd_afutag   (tlx_i_cmd_afutag    ),     
                        /*output reg [007:0] */  .tlx_cmd_opcode   (tlx_i_cmd_opcode    ),
+                       /*output reg [019:0] */  .tlx_cmd_pasid    (tlx_i_cmd_pasid     ),
+                       /*output reg [011:0] */  .tlx_cmd_actag    (tlx_i_cmd_actag     ),
+
                        /*input              */  .tlx_rsp_valid    (tlx_i_rsp_valid     ),
                        /*input      [0015:0]*/  .tlx_rsp_afutag   (tlx_i_rsp_afutag    ),
                        /*input      [0007:0]*/  .tlx_rsp_opcode   (tlx_i_rsp_opcode    ),
@@ -976,7 +1108,7 @@ odma
                 /*output [0127:0]       */          .lcl_rd_be          ( lcl_rd_be          ),
                 /*output [0008:0]       */          .lcl_rd_ctx         ( lcl_rd_ctx         ),
                 /*output                */          .lcl_rd_ctx_valid   ( lcl_rd_ctx_valid   ),
-                /*input                 */          .lcl_rd_ready       ( lcl_rd_ready && ~context_update_ongoing       ),
+                /*input                 */          .lcl_rd_ready       ( lcl_rd_ready       ),
                 //-------------- Read Data/Resp Channel-----------//
                 /*input                 */          .lcl_rd_data_valid  ( lcl_rd_data_valid  ),
                 /*input  [1023:0]       */          .lcl_rd_data        ( lcl_rd_data        ),
@@ -996,7 +1128,7 @@ odma
                 /*output [1023:0]       */          .lcl_wr_data        ( lcl_wr_data        ),
                 /*output [0008:0]       */          .lcl_wr_ctx         ( lcl_wr_ctx         ),
                 /*output                */          .lcl_wr_ctx_valid   ( lcl_wr_ctx_valid   ),
-                /*input                 */          .lcl_wr_ready       ( lcl_wr_ready && ~context_update_ongoing     ),
+                /*input                 */          .lcl_wr_ready       ( lcl_wr_ready       ),
                 //-------------- Write Response Channel ----------//
                 /*input                 */          .lcl_wr_rsp_valid   ( lcl_wr_rsp_valid   ),
                 /*input  [IDW - 1:0]    */          .lcl_wr_rsp_axi_id  ( lcl_wr_rsp_axi_id  ),

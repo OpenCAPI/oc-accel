@@ -17,9 +17,9 @@ NUM_OF_ACTIONS=1
 # HLS_ACTION is not set
 # HDL_ACTION is not set
 # HDL_EXAMPLE is not set
-# HDL_SINGLE_ENGINE is not set
+HDL_SINGLE_ENGINE=y
 # HDL_MULTI_PROCESS is not set
-HDL_UNIT_SIM=y
+# HDL_UNIT_SIM is not set
 # HLS_HELLOWORLD is not set
 # HLS_MEMCOPY_1024 is not set
 HALF_WIDTH="FALSE"
@@ -46,7 +46,7 @@ SIM_XCELIUM=y
 # NO_SIM is not set
 SIMULATOR="xcelium"
 DENALI_USED="FALSE"
-OCSE_PATH="../ocse"
+OCSE_PATH="/afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/lheng/p9ndd1/ocse_new/ocse"
 
 #
 # ================= Advanced Options: =================
@@ -65,17 +65,16 @@ Action_clock_200MHz=y
 # Action_clock_400MHz is not set
 USER_CLOCK_FREQ=200
 HLS_CLOCK_PERIOD_CONSTRAINT="4ns"
-# ENABLE_ILA is not set
-ILA_DEBUG="FALSE"
+ENABLE_ILA=y
+ILA_DEBUG="TRUE"
 CLOUD_USER_FLOW="FALSE"
 CLOUD_BUILD_BITFILE="FALSE"
-ENABLE_UNIT_VERIF=y
-UNIT_SIM_USED="TRUE"
+UNIT_SIM_USED="FALSE"
 # ENABLE_ODMA is not set
 ODMA_USED="FALSE"
 # ENABLE_ODMA_ST_MODE is not set
 ODMA_ST_MODE_USED="FALSE"
 # ENABLE_ODMA_512 is not set
 ODMA_512_USED="FALSE"
-ENABLE_FLASH=y
-FLASH_USED="TRUE"
+# ENABLE_FLASH is not set
+FLASH_USED="FALSE"

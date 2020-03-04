@@ -509,6 +509,47 @@ module framework_afu (
   wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_rid       ;
 
   `ifdef ENABLE_HBM
+    `ifdef AD9H7
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]   hbm_slice_awaddr            ;
+  wire [ 7 : 0 ]                            hbm_slice_awlen             ;
+  wire [ 2 : 0 ]                            hbm_slice_awsize            ;
+  wire [ 1 : 0 ]                            hbm_slice_awburst           ;
+  wire                                      hbm_slice_awlock            ;
+  wire [ 3 : 0 ]                            hbm_slice_awcache           ;
+  wire [ 2 : 0 ]                            hbm_slice_awprot            ;
+  wire [ 3 : 0 ]                            hbm_slice_awregion          ;
+  wire [ 3 : 0 ]                            hbm_slice_awqos             ;
+  wire                                      hbm_slice_awvalid           ;
+  wire                                      hbm_slice_awready           ;
+  wire [255: 0 ]                            hbm_slice_wdata             ;
+  wire [31 : 0 ]                            hbm_slice_wstrb             ;
+  wire                                      hbm_slice_wlast             ;
+  wire                                      hbm_slice_wvalid            ;
+  wire                                      hbm_slice_wready            ;
+  wire [ 1 : 0 ]                            hbm_slice_bresp             ;
+  wire                                      hbm_slice_bvalid            ;
+  wire                                      hbm_slice_bready            ;
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]   hbm_slice_araddr            ;
+  wire [ 7 : 0 ]                            hbm_slice_arlen             ;
+  wire [ 2 : 0 ]                            hbm_slice_arsize            ;
+  wire [ 1 : 0 ]                            hbm_slice_arburst           ;
+  wire                                      hbm_slice_arlock            ;
+  wire [ 3 : 0 ]                            hbm_slice_arcache           ;
+  wire [ 2 : 0 ]                            hbm_slice_arprot            ;
+  wire [ 3 : 0 ]                            hbm_slice_arregion          ;
+  wire [ 3 : 0 ]                            hbm_slice_arqos             ;
+  wire                                      hbm_slice_arvalid           ;
+  wire                                      hbm_slice_arready           ;
+  wire [255: 0 ]                            hbm_slice_rdata             ;
+  wire [ 1 : 0 ]                            hbm_slice_rresp             ;
+  wire                                      hbm_slice_rlast             ;
+  wire                                      hbm_slice_rvalid            ;
+  wire                                      hbm_slice_rready            ;
+  wire [ 5 : 0 ]                            hbm_slice_arid              ;
+  wire [ 5 : 0 ]                            hbm_slice_awid              ;
+  wire [ 5 : 0 ]                            hbm_slice_bid               ;
+  wire [ 5 : 0 ]                            hbm_slice_rid               ;
+    `endif
   wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]   hbm_ctrl_awaddr             ;
   wire [ 7 : 0 ]                            hbm_ctrl_awlen              ;
   wire [ 2 : 0 ]                            hbm_ctrl_awsize             ;
@@ -957,12 +998,14 @@ module framework_afu (
       .mm_snap2conv_wready              (mm_snap2conv_wready              ),
       .mm_snap2conv_bid                 (mm_snap2conv_bid                 ),
       .mm_snap2conv_bresp               (mm_snap2conv_bresp               ),
+      .mm_snap2conv_buser               (mm_snap2conv_buser               ),
       .mm_snap2conv_bvalid              (mm_snap2conv_bvalid              ),
       .mm_snap2conv_rid                 (mm_snap2conv_rid                 ),
       .mm_snap2conv_rdata               (mm_snap2conv_rdata               ),
       .mm_snap2conv_rresp               (mm_snap2conv_rresp               ),
       .mm_snap2conv_rlast               (mm_snap2conv_rlast               ),
       .mm_snap2conv_rvalid              (mm_snap2conv_rvalid              ),
+      .mm_snap2conv_ruser               (mm_snap2conv_ruser               ),
       .mm_snap2conv_arready             (mm_snap2conv_arready             ),
 
 
@@ -1278,14 +1321,14 @@ module framework_afu (
       .m_axi_host_mem_bid                 ( mm_conv2act_bid            ) ,
       .m_axi_host_mem_bready              ( mm_act2conv_bready         ) ,
       .m_axi_host_mem_bresp               ( mm_conv2act_bresp          ) ,
-      .m_axi_host_mem_buser               ( 1'b0                       ) ,
+      .m_axi_host_mem_buser               ( mm_conv2act_buser          ) ,
       .m_axi_host_mem_bvalid              ( mm_conv2act_bvalid         ) ,
       .m_axi_host_mem_rdata               ( mm_conv2act_rdata          ) ,
       .m_axi_host_mem_rid                 ( mm_conv2act_rid            ) ,
       .m_axi_host_mem_rlast               ( mm_conv2act_rlast          ) ,
       .m_axi_host_mem_rready              ( mm_act2conv_rready         ) ,
       .m_axi_host_mem_rresp               ( mm_conv2act_rresp          ) ,
-      .m_axi_host_mem_ruser               ( 1'b0                       ) ,
+      .m_axi_host_mem_ruser               ( mm_conv2act_ruser          ) ,
       .m_axi_host_mem_rvalid              ( mm_conv2act_rvalid         ) ,
       .m_axi_host_mem_wdata               ( mm_act2conv_wdata          ) ,
       .m_axi_host_mem_wlast               ( mm_act2conv_wlast          ) ,
@@ -1579,9 +1622,12 @@ module framework_afu (
 
 assign  mm_conv2snap_aruser = mm_act2conv_aruser;
 assign  mm_conv2snap_awuser = mm_act2conv_awuser;
-
-assign  mm_conv2snap_awid = {`IDW{1'b0}};
-assign  mm_conv2snap_arid = {`IDW{1'b0}};
+assign  mm_conv2act_buser = mm_snap2conv_buser;
+assign  mm_conv2act_ruser = mm_snap2conv_ruser;
+assign  mm_conv2snap_awid = mm_act2conv_awid;
+assign  mm_conv2snap_arid = mm_act2conv_arid;
+assign  mm_conv2act_bid = mm_snap2conv_bid;
+assign  mm_conv2act_rid = mm_snap2conv_rid;
 
 `else
   `ifdef ACTION_USER_CLOCK
@@ -1702,6 +1748,8 @@ assign mm_conv2act_rresp                = mm_snap2conv_rresp                ;
 assign mm_conv2act_rlast                = mm_snap2conv_rlast                ;
 assign mm_conv2act_rvalid               = mm_snap2conv_rvalid               ;
 assign mm_conv2act_arready              = mm_snap2conv_arready              ;
+assign mm_conv2act_buser                = mm_snap2conv_buser                ;
+assign mm_conv2act_ruser                = mm_snap2conv_ruser                ;
 
 assign mm_conv2snap_awid                 = mm_act2conv_awid                 ;
 assign mm_conv2snap_awaddr               = mm_act2conv_awaddr               ;
@@ -2031,6 +2079,7 @@ block_RAM block_ram_i1
 `endif
 
 `ifdef ENABLE_HBM
+`ifdef AD9H3
   //
   // Action to HBM controller AXI data width converter
   // HBM controller is 256b AXI3 interface
@@ -2117,6 +2166,178 @@ assign  hbm_ctrl_arid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_mem0_arid;
 assign  hbm_ctrl_arid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
 assign  act_axi_card_mem0_bid = hbm_ctrl_bid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
 assign  act_axi_card_mem0_rid = hbm_ctrl_rid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+
+`elsif AD9H7
+ axi_hbm_dwidth_converter axi_dwidth_converter_act2hbm (
+      .s_axi_aclk        ( clock_act                   ) ,
+      .s_axi_aresetn     ( hbm_ctrl_reset_n            ) ,
+      .s_axi_awaddr      ( act_axi_card_mem0_awaddr    ) ,
+      .s_axi_awlen       ( act_axi_card_mem0_awlen     ) ,
+      .s_axi_awsize      ( act_axi_card_mem0_awsize    ) ,
+      .s_axi_awburst     ( act_axi_card_mem0_awburst   ) ,
+      .s_axi_awlock      ( act_axi_card_mem0_awlock[0] ) ,
+      .s_axi_awcache     ( act_axi_card_mem0_awcache   ) ,
+      .s_axi_awprot      ( act_axi_card_mem0_awprot    ) ,
+      .s_axi_awregion    ( act_axi_card_mem0_awregion  ) ,
+      .s_axi_awqos       ( act_axi_card_mem0_awqos     ) ,
+      .s_axi_awvalid     ( act_axi_card_mem0_awvalid   ) ,
+      .s_axi_awready     ( act_axi_card_mem0_awready   ) ,
+      .s_axi_wdata       ( act_axi_card_mem0_wdata     ) ,
+      .s_axi_wstrb       ( act_axi_card_mem0_wstrb     ) ,
+      .s_axi_wlast       ( act_axi_card_mem0_wlast     ) ,
+      .s_axi_wvalid      ( act_axi_card_mem0_wvalid    ) ,
+      .s_axi_wready      ( act_axi_card_mem0_wready    ) ,
+      .s_axi_bresp       ( act_axi_card_mem0_bresp     ) ,
+      .s_axi_bvalid      ( act_axi_card_mem0_bvalid    ) ,
+      .s_axi_bready      ( act_axi_card_mem0_bready    ) ,
+      .s_axi_araddr      ( act_axi_card_mem0_araddr    ) ,
+      .s_axi_arlen       ( act_axi_card_mem0_arlen     ) ,
+      .s_axi_arsize      ( act_axi_card_mem0_arsize    ) ,
+      .s_axi_arburst     ( act_axi_card_mem0_arburst   ) ,
+      .s_axi_arlock      ( act_axi_card_mem0_arlock[0] ) ,
+      .s_axi_arcache     ( act_axi_card_mem0_arcache   ) ,
+      .s_axi_arprot      ( act_axi_card_mem0_arprot    ) ,
+      .s_axi_arregion    ( act_axi_card_mem0_arregion  ) ,
+      .s_axi_arqos       ( act_axi_card_mem0_arqos     ) ,
+      .s_axi_arvalid     ( act_axi_card_mem0_arvalid   ) ,
+      .s_axi_arready     ( act_axi_card_mem0_arready   ) ,
+      .s_axi_rdata       ( act_axi_card_mem0_rdata     ) ,
+      .s_axi_rresp       ( act_axi_card_mem0_rresp     ) ,
+      .s_axi_rlast       ( act_axi_card_mem0_rlast     ) ,
+      .s_axi_rvalid      ( act_axi_card_mem0_rvalid    ) ,
+      .s_axi_rready      ( act_axi_card_mem0_rready    ) ,
+
+      .m_axi_awaddr      ( hbm_slice_awaddr            ) ,
+      .m_axi_awlen       ( hbm_slice_awlen             ) ,
+      .m_axi_awsize      ( hbm_slice_awsize            ) ,
+      .m_axi_awburst     ( hbm_slice_awburst           ) ,
+      .m_axi_awlock      ( hbm_slice_awlock            ) ,
+      .m_axi_awcache     ( hbm_slice_awcache           ) ,
+      .m_axi_awprot      ( hbm_slice_awprot            ) ,
+      .m_axi_awregion    ( hbm_slice_awregion          ) ,
+      .m_axi_awqos       ( hbm_slice_awqos             ) ,
+      .m_axi_awvalid     ( hbm_slice_awvalid           ) ,
+      .m_axi_awready     ( hbm_slice_awready           ) ,
+      .m_axi_wdata       ( hbm_slice_wdata             ) ,
+      .m_axi_wstrb       ( hbm_slice_wstrb             ) ,
+      .m_axi_wlast       ( hbm_slice_wlast             ) ,
+      .m_axi_wvalid      ( hbm_slice_wvalid            ) ,
+      .m_axi_wready      ( hbm_slice_wready            ) ,
+      .m_axi_bresp       ( hbm_slice_bresp             ) ,
+      .m_axi_bvalid      ( hbm_slice_bvalid            ) ,
+      .m_axi_bready      ( hbm_slice_bready            ) ,
+      .m_axi_araddr      ( hbm_slice_araddr            ) ,
+      .m_axi_arlen       ( hbm_slice_arlen             ) ,
+      .m_axi_arsize      ( hbm_slice_arsize            ) ,
+      .m_axi_arburst     ( hbm_slice_arburst           ) ,
+      .m_axi_arlock      ( hbm_slice_arlock            ) ,
+      .m_axi_arcache     ( hbm_slice_arcache           ) ,
+      .m_axi_arprot      ( hbm_slice_arprot            ) ,
+      .m_axi_arregion    ( hbm_slice_arregion          ) ,
+      .m_axi_arqos       ( hbm_slice_arqos             ) ,
+      .m_axi_arvalid     ( hbm_slice_arvalid           ) ,
+      .m_axi_arready     ( hbm_slice_arready           ) ,
+      .m_axi_rdata       ( hbm_slice_rdata             ) ,
+      .m_axi_rresp       ( hbm_slice_rresp             ) ,
+      .m_axi_rlast       ( hbm_slice_rlast             ) ,
+      .m_axi_rvalid      ( hbm_slice_rvalid            ) ,
+      .m_axi_rready      ( hbm_slice_rready            )
+) ; 
+
+assign  hbm_slice_awid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_mem0_awid;
+assign  hbm_slice_awid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
+assign  hbm_slice_arid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_mem0_arid;
+assign  hbm_slice_arid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
+assign  act_axi_card_mem0_bid = hbm_slice_bid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+assign  act_axi_card_mem0_rid = hbm_slice_rid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+
+  //
+  // AXI Regitser Slice for SLR Crossing
+  //
+ axi_hbm_register_slice axi_hbm_reg_slice (
+      .aclk              ( clock_act                   ) ,
+      .aresetn           ( hbm_ctrl_reset_n            ) ,
+      .s_axi_awaddr      ( hbm_slice_awaddr            ) ,
+      .s_axi_awlen       ( hbm_slice_awlen             ) ,
+      .s_axi_awsize      ( hbm_slice_awsize            ) ,
+      .s_axi_awburst     ( hbm_slice_awburst           ) ,
+      .s_axi_awid        ( hbm_slice_awid              ) ,
+      .s_axi_awlock      ( hbm_slice_awlock            ) ,
+      .s_axi_awcache     ( hbm_slice_awcache           ) ,
+      .s_axi_awprot      ( hbm_slice_awprot            ) ,
+      .s_axi_awregion    ( hbm_slice_awregion          ) ,
+      .s_axi_awqos       ( hbm_slice_awqos             ) ,
+      .s_axi_awvalid     ( hbm_slice_awvalid           ) ,
+      .s_axi_awready     ( hbm_slice_awready           ) ,
+      .s_axi_wdata       ( hbm_slice_wdata             ) ,
+      .s_axi_wstrb       ( hbm_slice_wstrb             ) ,
+      .s_axi_wlast       ( hbm_slice_wlast             ) ,
+      .s_axi_wvalid      ( hbm_slice_wvalid            ) ,
+      .s_axi_wready      ( hbm_slice_wready            ) ,
+      .s_axi_bresp       ( hbm_slice_bresp             ) ,
+      .s_axi_bvalid      ( hbm_slice_bvalid            ) ,
+      .s_axi_bready      ( hbm_slice_bready            ) ,
+      .s_axi_bid         ( hbm_slice_bid               ) ,
+      .s_axi_araddr      ( hbm_slice_araddr            ) ,
+      .s_axi_arlen       ( hbm_slice_arlen             ) ,
+      .s_axi_arsize      ( hbm_slice_arsize            ) ,
+      .s_axi_arburst     ( hbm_slice_arburst           ) ,
+      .s_axi_arid        ( hbm_slice_arid              ) ,
+      .s_axi_arlock      ( hbm_slice_arlock            ) ,
+      .s_axi_arcache     ( hbm_slice_arcache           ) ,
+      .s_axi_arprot      ( hbm_slice_arprot            ) ,
+      .s_axi_arregion    ( hbm_slice_arregion          ) ,
+      .s_axi_arqos       ( hbm_slice_arqos             ) ,
+      .s_axi_arvalid     ( hbm_slice_arvalid           ) ,
+      .s_axi_arready     ( hbm_slice_arready           ) ,
+      .s_axi_rdata       ( hbm_slice_rdata             ) ,
+      .s_axi_rresp       ( hbm_slice_rresp             ) ,
+      .s_axi_rlast       ( hbm_slice_rlast             ) ,
+      .s_axi_rvalid      ( hbm_slice_rvalid            ) ,
+      .s_axi_rready      ( hbm_slice_rready            ) ,
+      .s_axi_rid         ( hbm_slice_rid               ) ,
+
+      .m_axi_awaddr      ( hbm_ctrl_awaddr             ) ,
+      .m_axi_awlen       ( hbm_ctrl_awlen              ) ,
+      .m_axi_awsize      ( hbm_ctrl_awsize             ) ,
+      .m_axi_awburst     ( hbm_ctrl_awburst            ) ,
+      .m_axi_awid        ( hbm_ctrl_awid               ) ,
+      .m_axi_awlock      ( hbm_ctrl_awlock             ) ,
+      .m_axi_awcache     ( hbm_ctrl_awcache            ) ,
+      .m_axi_awprot      ( hbm_ctrl_awprot             ) ,
+      .m_axi_awregion    ( hbm_ctrl_awregion           ) ,
+      .m_axi_awqos       ( hbm_ctrl_awqos              ) ,
+      .m_axi_awvalid     ( hbm_ctrl_awvalid            ) ,
+      .m_axi_awready     ( hbm_ctrl_awready            ) ,
+      .m_axi_wdata       ( hbm_ctrl_wdata              ) ,
+      .m_axi_wstrb       ( hbm_ctrl_wstrb              ) ,
+      .m_axi_wlast       ( hbm_ctrl_wlast              ) ,
+      .m_axi_wvalid      ( hbm_ctrl_wvalid             ) ,
+      .m_axi_wready      ( hbm_ctrl_wready             ) ,
+      .m_axi_bresp       ( hbm_ctrl_bresp              ) ,
+      .m_axi_bvalid      ( hbm_ctrl_bvalid             ) ,
+      .m_axi_bready      ( hbm_ctrl_bready             ) ,
+      .m_axi_bid         ( hbm_ctrl_bid                ) ,
+      .m_axi_araddr      ( hbm_ctrl_araddr             ) ,
+      .m_axi_arlen       ( hbm_ctrl_arlen              ) ,
+      .m_axi_arsize      ( hbm_ctrl_arsize             ) ,
+      .m_axi_arburst     ( hbm_ctrl_arburst            ) ,
+      .m_axi_arid        ( hbm_ctrl_arid               ) ,
+      .m_axi_arlock      ( hbm_ctrl_arlock             ) ,
+      .m_axi_arcache     ( hbm_ctrl_arcache            ) ,
+      .m_axi_arprot      ( hbm_ctrl_arprot             ) ,
+      .m_axi_arregion    ( hbm_ctrl_arregion           ) ,
+      .m_axi_arqos       ( hbm_ctrl_arqos              ) ,
+      .m_axi_arvalid     ( hbm_ctrl_arvalid            ) ,
+      .m_axi_arready     ( hbm_ctrl_arready            ) ,
+      .m_axi_rdata       ( hbm_ctrl_rdata              ) ,
+      .m_axi_rresp       ( hbm_ctrl_rresp              ) ,
+      .m_axi_rlast       ( hbm_ctrl_rlast              ) ,
+      .m_axi_rvalid      ( hbm_ctrl_rvalid             ) ,
+      .m_axi_rready      ( hbm_ctrl_rready             ) ,
+      .m_axi_rid         ( hbm_ctrl_rid                )
+) ;
+`endif
 
 assign hbm_ctrl_reset_n = hbm_ctrl_apb_complete & ~reset_action_q;
 

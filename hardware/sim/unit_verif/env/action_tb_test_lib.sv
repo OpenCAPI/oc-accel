@@ -979,6 +979,36 @@ endclass: bfm_test_rd_wr_100_randsize_randlen_unaligned_id0to3_user0to3
 
 //----------------------------------------------------------------------
 //
+// TEST: bfm_test_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser
+//
+//----------------------------------------------------------------------
+
+class bfm_test_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser extends action_tb_base_test;
+
+    `uvm_component_utils(bfm_test_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser)
+
+    function new(string name= "bfm_test_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser", uvm_component parent);
+        super.new(name, parent);
+    endfunction: new
+
+
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
+        uvm_config_wrapper::set(this, "env.vsqr.main_phase", "default_sequence", bfm_seq_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser::type_id::get());
+    endfunction : build_phase
+    
+
+    task main_phase(uvm_phase phase);
+        super.main_phase(phase);
+        fork
+            timeout(phase, 50000us);
+        join_none
+    endtask: main_phase
+
+endclass: bfm_test_rd_wr_100_randsize_randlen_strobe_unaligned_randid_harduser
+
+//----------------------------------------------------------------------
+//
 // TEST: bfm_test_rd_wr_1000_randsize_randlen_unaligned_randid
 //
 //----------------------------------------------------------------------
