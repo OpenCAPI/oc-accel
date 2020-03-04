@@ -707,6 +707,12 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+    //Some notificiation
+    VERBOSE0("DDR Memory size will not be maintained in snap_core registers\n");
+    VERBOSE0("This test is depricated.\n");
+    VERBOSE0("Return\n");
+    return 0;
+
 	VERBOSE1("Start Memory Test. Timeout: %d sec Device: ",
 		timeout);
 	sprintf(device, "/dev/cxl/afu%d.0s", card_no);

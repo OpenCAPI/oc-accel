@@ -337,28 +337,31 @@ static int memcpy_test (struct snap_card* dnc,
     }
 
     if (action > 2) {
-        /* Make sure to have SDRAM for action 2,3,4,5,6 */
-        snap_card_ioctl (dnc, GET_SDRAM_SIZE, (unsigned long)&ddr_mem_size);
+        //DDR size checking is disabled because in future versions, oc-accel will not
+        //store DDR information in snap_core registers
 
-        if (0 == ddr_mem_size) {
-            VERBOSE0 ("Error: No SDRAM configured on SNAP Card\n");
-            return 1;
-        }
+        /* Make sure to have SDRAM for action 2,3,4,5,6 */
+     //   snap_card_ioctl (dnc, GET_SDRAM_SIZE, (unsigned long)&ddr_mem_size);
+
+     //   if (0 == ddr_mem_size) {
+     //       VERBOSE0 ("Error: No SDRAM configured on SNAP Card\n");
+     //       return 1;
+     //   }
 
         ddr_mem_size = ddr_mem_size * MEGAB;
 
-        if (blocks > (int) (ddr_mem_size / 64 / 2)) {
-            VERBOSE0 ("Error: Number of Blocks: %d exceeds Card Mem Blocks: %lld\n",
-                      blocks, (long long) (ddr_mem_size / 64 / 2));
-            return 1;
-        }
+  //      if (blocks > (int) (ddr_mem_size / 64 / 2)) {
+  //          VERBOSE0 ("Error: Number of Blocks: %d exceeds Card Mem Blocks: %lld\n",
+  //                    blocks, (long long) (ddr_mem_size / 64 / 2));
+  //          return 1;
+  //      }
 
         /* Check Card Ram base and Size */
-        if ((card_ram_base + memsize) > ddr_mem_size) {
-            VERBOSE0 ("Error: Size: 0x%llx exceeds DDR3 Limit: 0x%llx for Offset: 0x%llx\n",
-                      (long long)memsize, (long long)ddr_mem_size, (long long)card_ram_base);
-            return 1;
-        }
+   //     if ((card_ram_base + memsize) > ddr_mem_size) {
+   //         VERBOSE0 ("Error: Size: 0x%llx exceeds DDR3 Limit: 0x%llx for Offset: 0x%llx\n",
+   //                   (long long)memsize, (long long)ddr_mem_size, (long long)card_ram_base);
+   //         return 1;
+   //     }
     }
 
     switch (action) {
@@ -455,11 +458,11 @@ static int memcpy_test (struct snap_card* dnc,
                   src, (long long)memsize, blocks_4k, blocks_64, align);
         dest = src + memsize;   /* Need to check */
 
-        if ((uint64_t) (dest + memsize) > ddr_mem_size) {
-            VERBOSE0 ("Error Size 0x%llx and Offset 0x%llx Exceed Memory\n",
-                      (long long)memsize, (long long)card_ram_base);
-            break;
-        }
+    //    if ((uint64_t) (dest + memsize) > ddr_mem_size) {
+    //        VERBOSE0 ("Error Size 0x%llx and Offset 0x%llx Exceed Memory\n",
+    //                  (long long)memsize, (long long)card_ram_base);
+    //        break;
+    //    }
 
         VERBOSE1 ("  To DDR: %p timeout: %d sec\n", dest, timeout);
         rc = do_action (dnc, attach_flags, action, timeout, dest, src, memsize);
