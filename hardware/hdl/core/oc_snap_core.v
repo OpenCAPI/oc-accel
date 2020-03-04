@@ -175,6 +175,7 @@ input [(`AXI_MM_DW/8)-1:0]               mm_conv2snap_wstrb               ,
 input                                   mm_conv2snap_wlast               ,
 input                                   mm_conv2snap_wvalid              ,
 input                                   mm_conv2snap_bready              ,
+output[`AXI_AWUSER-1:0]                  mm_snap2conv_buser              ,
 input [`IDW-1:0]                         mm_conv2snap_arid                ,
 input [`AXI_MM_AW-1:0]                   mm_conv2snap_araddr              ,
 input [7:0]                             mm_conv2snap_arlen               ,
@@ -188,6 +189,7 @@ input [3:0]                             mm_conv2snap_arqos               ,
 input [3:0]                             mm_conv2snap_arregion            ,
 input                                   mm_conv2snap_arvalid             ,
 input                                   mm_conv2snap_rready              ,
+output[`AXI_AWUSER-1:0]                  mm_snap2conv_ruser              ,
 input                                   int_req                          ,
 input [`INT_BITS-1:0]                    int_src                          ,
 input [`CTXW-1:0]                        int_ctx
@@ -464,6 +466,7 @@ wire brdg_odma_rst_n      ;
         .s_axi_bid                                   ( mm_snap2conv_bid                 ) ,
         .s_axi_bresp                                 ( mm_snap2conv_bresp               ) ,
         .s_axi_bvalid                                ( mm_snap2conv_bvalid              ) ,
+        .s_axi_buser                                 ( mm_snap2conv_buser               ) ,
       //
       // AXI read address channel
         .s_axi_arid                                  ( mm_conv2snap_arid                ) ,
@@ -487,6 +490,7 @@ wire brdg_odma_rst_n      ;
         .s_axi_rresp                                 ( mm_snap2conv_rresp               ) ,
         .s_axi_rlast                                 ( mm_snap2conv_rlast               ) ,
         .s_axi_rvalid                                ( mm_snap2conv_rvalid              ) ,
+        .s_axi_ruser                                 ( mm_snap2conv_ruser               ) ,
       //
       // interrupt channel
         .interrupt_ack                               ( int_req_ack                      ),
@@ -535,6 +539,25 @@ wire brdg_odma_rst_n      ;
         .cfg_actag_base                              ( cfg_actag_base                   ) ,
         .cfg_pasid_base                              ( cfg_pasid_base                   ) ,
         .cfg_pasid_length                            ( cfg_pasid_length                 ) ,
+
+       // STATUS
+        .debug_cnt_clear                             ( debug_cnt_clear                  ) ,
+        .debug_tlx_cnt_cmd                           ( debug_tlx_cnt_cmd                ) ,
+        .debug_tlx_cnt_rsp                           ( debug_tlx_cnt_rsp                ) ,
+        .debug_tlx_cnt_retry                         ( debug_tlx_cnt_retry              ) ,
+        .debug_tlx_cnt_fail                          ( debug_tlx_cnt_fail               ) ,
+        .debug_tlx_cnt_xlt_pd                        ( debug_tlx_cnt_xlt_pd             ) ,
+        .debug_tlx_cnt_xlt_done                      ( debug_tlx_cnt_xlt_done           ) ,
+        .debug_tlx_cnt_xlt_retry                     ( debug_tlx_cnt_xlt_retry          ) ,
+        .debug_axi_cnt_cmd                           ( debug_axi_cnt_cmd                ) , 
+        .debug_axi_cnt_rsp                           ( debug_axi_cnt_rsp                ) , 
+        .debug_buf_cnt                               ( debug_buf_cnt                    ) , 
+        .debug_traffic_idle                          ( debug_traffic_idle               ) ,
+        .debug_tlx_idle_lim                          ( debug_tlx_idle_lim               ) ,
+        .debug_axi_idle_lim                          ( debug_axi_idle_lim               ) ,
+        .fir_fifo_overflow                           ( fir_fifo_overflow                ) ,
+        .fir_tlx_interface                           ( fir_tlx_interface                ) ,
+
       //
       //
       // AFU-TLX command transmit interface

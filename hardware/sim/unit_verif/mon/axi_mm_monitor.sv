@@ -445,7 +445,7 @@ task axi_mm_monitor::collect_transactions();
             txn.byte_size=(data_size << axi_monitor_trans.get_size());
             txn.axi_id=axi_monitor_trans.get_id();
             //TODO: Get usr from axi_monitor_trans
-            //txn.axi_usr=axi_monitor_trans.get_user();
+            txn.axi_usr=axi_monitor_trans.get_aruser();
             c_axi_mm_read_packet.sample();            
             `uvm_info(tID, $sformatf("DBB Monitor Detects a Read:\n%s", txn.sprint()), UVM_MEDIUM);
             axi_mm_tran_port.write(txn);
@@ -464,7 +464,7 @@ task axi_mm_monitor::collect_transactions();
             txn.byte_size=(data_size << axi_monitor_trans.get_size());
             txn.axi_id=axi_monitor_trans.get_id();
             //TODO: Get usr from axi_monitor_trans
-            //txn.axi_usr=axi_monitor_trans.get_user();
+            txn.axi_usr=axi_monitor_trans.get_awuser();
             c_axi_mm_write_packet.sample();            
             `uvm_info(tID, $sformatf("DBB Monitor Detects a Write:\n%s", txn.sprint()), UVM_MEDIUM);
             axi_mm_tran_port.write(txn);
@@ -490,7 +490,7 @@ task axi_mm_monitor::collect_cmd_rd();
         txn_rd.burst_length=axi_rd_trans.len+1;
         txn_rd.byte_size=(32'b1 << axi_rd_trans.size);
         txn_rd.axi_id=axi_rd_trans.id;
-        //txn_rd.axi_usr=axi_rd_trans.get_user();
+        txn_rd.axi_usr=axi_rd_trans.get_user();
         `uvm_info(tID, $sformatf("DBB Monitor Detects a AXI Read Cmd:"), UVM_MEDIUM);
         //`uvm_info(tID, axi_rd_trans.convert2string(), UVM_MEDIUM)
         axi_mm_cmd_rd_port.write(txn_rd);
@@ -512,7 +512,7 @@ task axi_mm_monitor::collect_cmd_wr();
         txn_wr.burst_length=axi_wr_trans.len+1;
         txn_wr.byte_size=(32'b1 << axi_wr_trans.size);
         txn_wr.axi_id=axi_wr_trans.id;
-        //txn_wr.axi_usr=axi_wr_trans.get_user();
+        txn_wr.axi_usr=axi_wr_trans.get_user();
         `uvm_info(tID, $sformatf("DBB Monitor Detects a AXI Write Cmd:"), UVM_MEDIUM);
         //`uvm_info(tID, axi_wr_trans.convert2string(), UVM_MEDIUM)
         axi_mm_cmd_wr_port.write(txn_wr);

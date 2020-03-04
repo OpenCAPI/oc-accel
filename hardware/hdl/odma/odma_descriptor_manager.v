@@ -47,6 +47,8 @@ module odma_descriptor_manager (
         output                          lcl_rd_last     ,
         output                          lcl_rd_first    ,
         output     [127:0]              lcl_rd_be       ,
+        output                          lcl_rd_ctx_valid,
+        output     [8:0]                lcl_rd_ctx      , 
         input                           lcl_rd_ready    ,
         input                           lcl_rd_data_valid,
         input      [4:0]                lcl_rd_data_axi_id,
@@ -172,6 +174,8 @@ module odma_descriptor_manager (
     assign lcl_rd_last = (beat_cnt == total_num[5:2]) & read_start;
     assign lcl_rd_first = (beat_cnt == 'b0) & lcl_rd_valid;
     assign lcl_rd_be = read_byte_enable;
+    assign lcl_rd_ctx = 9'b0;
+    assign lcl_rd_ctx_valid = 0;
     assign lcl_rd_rsp_ready = 1'b1;
     assign manager_error = 64'b0;
     assign manager_start_w = {manager_start3,manager_start2,manager_start1,manager_start0};

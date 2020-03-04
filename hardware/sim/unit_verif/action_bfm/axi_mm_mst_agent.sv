@@ -125,11 +125,11 @@ task axi_mm_mst_agent::main_phase(uvm_phase phase);
     axi_vip_mm_master_mst.wr_driver.seq_item_port.set_max_item_cnt(10000);
     axi_vip_mm_master_mst.rd_driver.seq_item_port.set_max_item_cnt(10000);
     // Set waiting valid timeout value
-    axi_vip_mm_master_mst.wr_driver.set_waiting_valid_timeout_value(5000000);
-    axi_vip_mm_master_mst.rd_driver.set_waiting_valid_timeout_value(5000000);
+    axi_vip_mm_master_mst.wr_driver.set_waiting_valid_timeout_value(10000000);
+    axi_vip_mm_master_mst.rd_driver.set_waiting_valid_timeout_value(10000000);
     //Set AR or R handshakes timeout
-    axi_vip_mm_master_mst.wr_driver.set_forward_progress_timeout_value(500000);
-    axi_vip_mm_master_mst.rd_driver.set_forward_progress_timeout_value(500000);
+    axi_vip_mm_master_mst.wr_driver.set_forward_progress_timeout_value(5000000);
+    axi_vip_mm_master_mst.rd_driver.set_forward_progress_timeout_value(5000000);
     axi_vip_mm_master_mst.start_master(); 
     reset_intrp_signal();
     fork
