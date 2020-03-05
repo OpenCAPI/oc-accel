@@ -64,13 +64,15 @@ my_package_custom_ip $hardware_dir/build/temp_projs     \
 }
 
 if { $infra_template eq "T2" } {
+set bus_array [dict create oc_interrupt "slave"         \
+             ]
 my_package_custom_ip $hardware_dir/build/temp_projs     \
                      $hardware_dir/build/ip_repo        \
                      $hardware_dir/build/interfaces     \
                      $fpga_part                     \
                      axilite_adaptor                \
                      $tcl_dir/add_axilite_adaptor.tcl \
-                     []
+                     $bus_array
 }
 
 
