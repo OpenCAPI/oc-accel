@@ -176,6 +176,7 @@ static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed
     //if ((flags & SNAP_ACTION_DONE_IRQ) != 0) {
     //    snap_action_assign_irq ((void*)h, ACTION_IRQ_SRC_HIGH);
     //}
+    VERBOSE1("flags = %d\n", flags);
 
     /* FIXME Use struct snap_action and not struct snap_card */
     snap_action_start ((void*)h);
@@ -579,7 +580,7 @@ int main (int argc, char* argv[])
     int start_delay = START_DELAY;
     int end_delay = END_DELAY;
     int step_delay = STEP_DELAY;
-    int delay;
+    int delay = 10;
     int card_no = 0;
     int cmd;
     int action = ACTION_CONFIG_COUNT;
@@ -589,7 +590,7 @@ int main (int argc, char* argv[])
     int memcpy_iter = DEFAULT_MEMCPY_ITER;
     int memcpy_align = DEFAULT_MEMCPY_BLOCK;
     uint64_t card_ram_base = DDR_MEM_BASE_ADDR; /* Base of Card DDR or Block Ram */
-    int timeout = ACTION_WAIT_TIME;
+    int timeout = 200;
     snap_action_flag_t attach_flags = 0;
     uint64_t td;
     struct snap_action* act = NULL;
