@@ -36,6 +36,11 @@ int OcaccelJobManager::allocateCompletionBuffer (int num_descriptors)
         return -1;
     }
 
+    if (eMode::JOB_SCHEDULER != m_mode) {
+        ocaccel_lib_trace ("Not running in JOB_SCHEDULER mode, no need to allocate completion buffer.\n");
+        return 0;
+    }
+
     m_completion_status_buffer = alignedAllocate (num_descriptors * c_completion_entry_size);
 
     if (NULL == m_completion_status_buffer) {
@@ -43,6 +48,7 @@ int OcaccelJobManager::allocateCompletionBuffer (int num_descriptors)
         return -1;
     }
 
+    memset ((void*)m_completion_status_buffer, 0, num_descriptors * c_completion_entry_size);
     return 0;
 }
 
@@ -73,14 +79,14 @@ int OcaccelJobManager::allocateDescriptors (int num_descriptors)
         descriptors_remained -= num_descriptors_in_current_block;
     }
 
-    printf ("blocks allocated %zu\n", m_descriptor_block_pointers.size());
+    ocaccel_lib_trace ("blocks allocated %zu\n", m_descriptor_block_pointers.size());
     m_number_of_descriptor_blocks = m_descriptor_block_pointers.size();
     return 0;
 }
 
 int OcaccelJobManager::initializeDescriptors()
 {
-    uint32_t job_descriptor_id = 1;
+    uint32_t job_descriptor_id = 0; // Starting from 0?
 
     for (size_t block_idx = 0; block_idx < m_descriptor_block_pointers.size(); block_idx++) {
         void* descriptor_block_pointer = m_descriptor_block_pointers[block_idx].first;
@@ -134,7 +140,7 @@ void OcaccelJobManager::dumpDescriptorBlock (tDescriptorBlock descriptor_block)
     void* descriptor_block_pointer = descriptor_block.first;
     int num_descriptors_in_current_block = descriptor_block.second;
 
-    printf ("Descripto Block @ %p with %d descriptors\n", descriptor_block_pointer, num_descriptors_in_current_block);
+    ocaccel_lib_trace ("Descripto Block @ %p with %d descriptors\n", descriptor_block_pointer, num_descriptors_in_current_block);
 
     for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
         JobDescriptorBase job_descriptor ((uint8_t*)descriptor_block_pointer + desc_idx * JobDescriptorBase::c_job_descriptor_size);
@@ -155,7 +161,7 @@ bool OcaccelJobManager::isAllJobsDone()
     }
 
     for (int i = 0; i < m_number_of_descriptors; i++) {
-        if (0 == * ((((uint8_t*)m_completion_status_buffer) + i * c_completion_entry_size))) {
+        if (0x00 == * ((((uint8_t*)m_completion_status_buffer) + i * c_completion_entry_size))) {
             return false;
         }
     }
@@ -182,9 +188,7 @@ int OcaccelJobManager::setupOcaccelCardHandler (int card_no)
     if (card == NULL) {
         fprintf (stderr, "err: failed to open card %u: %s\n",
                  card_no, strerror (errno));
-        fprintf (stderr, "Default mode is FPGA mode.\n");
-        fprintf (stderr, "Did you want to run CPU mode ? => add OCACCEL_CONFIG=CPU before your command.\n");
-        fprintf (stderr, "Otherwise make sure you ran ocaccel_find_card and ocaccel_maint for your selected card.\n");
+        fprintf (stderr, "Make sure the card number (usually -C) is provided properly. Otherwise run ocaccel_find_card to check the card availability.\n");
         return -1;
     }
 
@@ -218,7 +222,7 @@ int OcaccelJobManager::checkActionName (const char* action_name)
         return -1;
     }
 
-    printf ("--------> action %s found on the card!\n", hardware_action_name);
+    ocaccel_lib_trace ("--------> action %s found on the card!\n", hardware_action_name);
 
     return 0;
 }
@@ -443,8 +447,8 @@ int OcaccelJobManager::runJobScheduler()
     uint32_t completion_buffer_address_lo = (uint32_t) (((uint64_t) m_completion_status_buffer) & 0xFFFFFFFF);
     uint32_t completion_buffer_address_hi = (uint32_t) ((((uint64_t) m_completion_status_buffer) >> 32) & 0xFFFFFFFF);
 
-    printf ("Descriptor Start Address: %p\n", descriptor_start_address);
-    printf ("Completion Buffer Address: %p\n", m_completion_status_buffer);
+    ocaccel_lib_trace ("Descriptor Start Address: %p\n", descriptor_start_address);
+    ocaccel_lib_trace ("Completion Buffer Address: %p\n", m_completion_status_buffer);
 
     // Setup the descriptor base address
     if (ocaccel_action_write32 (m_ocaccel_card, OCACCEL_JM_INIT_ADDR_LO, descriptor_start_address_lo)) {
@@ -471,7 +475,7 @@ int OcaccelJobManager::runJobScheduler()
     uint32_t jm_control_word = (uint32_t) (num_descriptors_of_first_block - 1) << 8;
     jm_control_word |= 0x1;
 
-    printf ("Job Manager Control Word: %#x\n", jm_control_word);
+    ocaccel_lib_trace ("Job Manager Control Word: %#x\n", jm_control_word);
 
     if (ocaccel_action_write32 (m_ocaccel_card, OCACCEL_JM_CONTROL, jm_control_word)) {
         printf ("ERROR: failed to set job manager control register!\n");
@@ -479,6 +483,31 @@ int OcaccelJobManager::runJobScheduler()
     }
 
     m_status = eStatus::RUNNING;
+    return 0;
+}
+
+int OcaccelJobManager::discoverKernelInstancesInHardware (const std::string kernel_name, std::vector<int>& instances)
+{
+    if (eStatus::INITIALIZED > m_status) {
+        printf ("WARNING: Job manager is not initialized when trying to discover kernel instances."
+                " No kernel instance is found for %s!\n.", kernel_name.c_str());
+        return -1;
+    }
+
+    char hw_kernel_name[33];
+
+    for (int i = 0; i < m_number_of_kernels; i++) {
+        if (ocaccel_get_kernel_name (m_ocaccel_card, i, hw_kernel_name)) {
+            printf ("ERROR: failed to get kernel name from hardware!\n");
+            return -1;
+        }
+
+        if (kernel_name == std::string(hw_kernel_name)) {
+            ocaccel_lib_trace ("Kernel %d discovered as %s\n", i, hw_kernel_name);
+            instances.push_back(i);
+        }
+    }
+
     return 0;
 }
 

@@ -1,17 +1,15 @@
-set kernel_number $::env(KERNEL_NUMBER)
-set kernel_name   $::env(KERNEL_NAME)
-set hls_support   $::env(HLS_SUPPORT)
-set axi_id_width  $::env(AXI_ID_WIDTH)
-
-source $hardware_dir/setup/common/common_funcs.tcl
-for {set x 1} {$x <= 8} {incr x} {
-    set kernel_name_str(${x}) [ eval my_get_kernel_name_str $x $kernel_name ]
-}
+set kernel_number   $::env(KERNEL_NUMBER)
+set kernels         $::env(KERNELS)
+set hls_support     $::env(HLS_SUPPORT)
+set axi_id_width    $::env(AXI_ID_WIDTH)
+set kernel_list     [split $kernels ',']
+set kernel_list_len [llength $kernel_list]
 
 set bd_hier "act_wrap"
 # Create BD Hier
 create_bd_cell -type hier $bd_hier
 
+source $hardware_dir/setup/common/common_funcs.tcl
 ###############################################################################
 # Create Pins of this bd level
 puts "kernel_number is $kernel_number"
@@ -32,15 +30,28 @@ create_bd_pin -dir I $bd_hier/pin_reset_action_n
 # Note: This example inserts idential kernel_wraps. 
 # If different kernels are used, please modify accordingly
 #
-add_files -norecurse $hardware_dir/hdl/action_wrapper/kernel_helper_A10.v
 
 for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     set kernel_hier $bd_hier/kernel${xx}_wrap
     create_bd_cell -type hier $kernel_hier
 
+    # get the kernel name from the kernels list. If the length of kernels list is smaller than kernel_number, the kernel name will be the last item in the list for all extra kernels.
+    if { $x >= $kernel_list_len } {
+        set kernel_top [lindex $kernel_list end]
+    } else {
+        set kernel_top [lindex $kernel_list $x]
+    }
+
+    puts "Creating Kernel No. $x: $kernel_top"
+
     # Add kernel helper (a small module to handle interrupt src, etc)
-    create_bd_cell -type module -reference kernel_helper $kernel_hier/kernel_helper
+    create_bd_cell -type ip -vlnv opencapi.org:ocaccel:kernel_helper:1.0 $kernel_hier/kernel_helper
+
+    for {set j 1} {$j <= 8} {incr j} {
+        set kernel_name_str(${j}) [ eval my_get_kernel_name_str $j $kernel_top ]
+    }
+
     for {set i 1} {$i <= 8} {incr i} {
         set prop_name [format "KERNEL_NAME_STR%d" $i]
         set_property CONFIG.${prop_name} $kernel_name_str($i) [get_bd_cells $kernel_hier/kernel_helper]
@@ -48,8 +59,8 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
     if { $hls_support == "TRUE" } {
         # Add kernel instance
-        create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}
-        source $hardware_dir/setup/package_action/hls_action_parse.tcl
+        create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_top}:1.0 $kernel_hier/${kernel_top}
+        source $hardware_dir/setup/package_action/hls_specific/hls_action_parse.tcl
 
 
         # Add kernel smart connect
@@ -60,7 +71,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
         set_property -dict [list CONFIG.C_S_AXI_CONTROL_ADDR_WIDTH $kernel_axilite_addr_width] [get_bd_cells $kernel_hier/kernel_helper]
     } else { 
         # For hdl design
-        create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_name}:1.0 $kernel_hier/${kernel_name}
+        create_bd_cell -type ip -vlnv opencapi.org:ocaccel:${kernel_top}:1.0 $kernel_hier/${kernel_top}
 
     }
 
@@ -81,11 +92,11 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     # Make connections inside kernel${xx}_wrap
     # Connect clock and reset -----------------
     if { $hls_support == "TRUE" } {
-        connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/${kernel_name}/${kernel_clock_pin_name}]
-         connect_bd_net [get_bd_pins $kernel_hier/reset_n] [get_bd_pins $kernel_hier/${kernel_name}/${kernel_reset_pin_name}]
+        connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/${kernel_top}/${kernel_clock_pin_name}]
+         connect_bd_net [get_bd_pins $kernel_hier/reset_n] [get_bd_pins $kernel_hier/${kernel_top}/${kernel_reset_pin_name}]
     } else {
-        connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/${kernel_name}/clk]
-        connect_bd_net [get_bd_pins $kernel_hier/reset_n] [get_bd_pins $kernel_hier/${kernel_name}/resetn]
+        connect_bd_net [get_bd_pins $kernel_hier/pin_clock_kernel] [get_bd_pins $kernel_hier/${kernel_top}/clk]
+        connect_bd_net [get_bd_pins $kernel_hier/reset_n] [get_bd_pins $kernel_hier/${kernel_top}/resetn]
     }
 
 
@@ -102,10 +113,10 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     connect_bd_intf_net [get_bd_intf_pins $kernel_hier/s_axilite] [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite_i2h] 
     if { $hls_support == "TRUE" } {
         # The name is inferred from hls json
-        connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite_h2k] [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_axilite_name] 
+        connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite_h2k] [get_bd_intf_pins $kernel_hier/${kernel_top}/$kernel_axilite_name] 
     } else {
         # The name is fixed for HDL design
-        connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite_h2k] [get_bd_intf_pins $kernel_hier/${kernel_name}/s_axilite_cfg] 
+        connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/s_axilite_h2k] [get_bd_intf_pins $kernel_hier/${kernel_top}/s_axilite_cfg] 
     }
 
 
@@ -116,20 +127,20 @@ for {set x 0} {$x < $kernel_number } {incr x} {
         foreach m $kernel_axi_masters {
             set kernel_master_port_name [dict get $m port_prefix]
             set sc_id [format "%02d" $axi_m_idx]
-            connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_hls/S${sc_id}_AXI] [get_bd_intf_pins $kernel_hier/${kernel_name}/$kernel_master_port_name]
+            connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_hls/S${sc_id}_AXI] [get_bd_intf_pins $kernel_hier/${kernel_top}/$kernel_master_port_name]
             incr axi_m_idx
         }
         connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_hls/M00_AXI] [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_k2h]
     } else {
         # HDL design doesn't use smartconnect, and the name if fixed as 'm_axi_gmem'
-        connect_bd_intf_net [get_bd_intf_pins $kernel_hier/$kernel_name/m_axi_gmem] [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_k2h]
+        connect_bd_intf_net [get_bd_intf_pins $kernel_hier/$kernel_top/m_axi_gmem] [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_k2h]
     }
 
     connect_bd_intf_net [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_h2i] [get_bd_intf_pins $kernel_hier/axi_m]
     connect_bd_intf_net [get_bd_intf_pins $kernel_hier/axi_m] [get_bd_intf_pins $bd_hier/pin_kernel${xx}_aximm]
 
     # Connect interrupt -----------------
-    connect_bd_net [get_bd_pins $kernel_hier/${kernel_name}/interrupt] [get_bd_pins $kernel_hier/kernel_helper/interrupt_i]
+    connect_bd_net [get_bd_pins $kernel_hier/${kernel_top}/interrupt] [get_bd_pins $kernel_hier/kernel_helper/interrupt_i]
 
 }
 
@@ -138,7 +149,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
 ###############################################################################
 # Place holder: 
-# SmartConnect for perhiperals
+# SmartConnect for Peripherals
 
 
 

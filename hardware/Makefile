@@ -127,7 +127,7 @@ check_ocaccel_settings:
 	@echo "                        INFRA_TEMPLATE  = $(INFRA_TEMPLATE_SELECTION)"
 	@echo "                        ACTION_TEMPLATE = $(ACTION_TEMPLATE_SELECTION)"
 	@echo "                        KERNEL_NUMBER   = $(KERNEL_NUMBER)"
-	@echo "                        KERNEL_NAME     = $(KERNEL_NAME)"
+	@echo "                        KERNELS         = $(KERNELS)"
 	@echo "                        ACTION_FREQUENCY= $(ACTION_CLOCK_FREQUENCY)"
 	@echo "                        PHY_SPEED       = $(PHY_SPEED)"
 	@echo "                        HLS_SUPPORT     = $(HLS_SUPPORT)"
@@ -215,12 +215,8 @@ action_hw: prepare_logs
 	@echo -e "[GENERATE ACTION HW..] start `date +"%T %a %b %d %Y"`";
 	@if [ ! -d "$(ACTION_ROOT)" ]; then \
 		echo "                        Error: Path to ACTION_ROOT is not defined properly"; exit -1; \
-	fi
-#	@echo "Calling make -C $(ACTION_ROOT) hw " > $(LOGS_DIR)/action_make.log
-#	@$(MAKE) -C $(ACTION_ROOT) hw >> $(LOGS_DIR)/action_make.log;
-#	@if [ $$? -ne 0 ]; then \
-#		echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
-#	fi
+	fi;
+	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/helper/package_kernel_helper.tcl -notrace -log $(LOGS_DIR)/package_kernel_helper.log -journal $(LOGS_DIR)/package_kernel_helper.jou > $(templog);
 	@if [ "$(HLS_SUPPORT)" == "TRUE" ]; then \
 	    echo "Calling make -C $(ACTION_ROOT)/hw " >> $(LOGS_DIR)/action_make.log; \
 		$(MAKE) -kC $(ACTION_ROOT)/hw  >> $(LOGS_DIR)/action_make.log; \
@@ -230,7 +226,7 @@ action_hw: prepare_logs
         else \
             echo "Package user written HDL design to an IP" >> $(LOGS_DIR)/action_make.log; \
             cd $(BUILD_DIR); \
-            vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/package_hdl_kernel.tcl -notrace -log $(LOGS_DIR)/package_hdl_kernel.log -journal $(LOGS_DIR)/package_hdl_kernel.jou > $(templog); \
+            vivado -quiet -mode batch -source $(SETUP_DIR)/package_action/hdl_specific/package_hdl_kernel.tcl -notrace -log $(LOGS_DIR)/package_hdl_kernel.log -journal $(LOGS_DIR)/package_hdl_kernel.jou > $(templog); \
         fi;
 	@echo -e "[GENERATE ACTION HW..] done  `date +"%T %a %b %d %Y"`";
 
@@ -268,7 +264,7 @@ image: hw_project
 ocse: prepare_logs
 	@echo -e "[COMPILE OCSE .......] start `date +"%T %a %b %d %Y"`"
 	@echo -e "                       OCSE_PATH=$(OCSE_PATH)"
-	@$(MAKE) -C $(OCSE_PATH) >> $(LOGS_DIR)/compile_pslse.log 2>&1; \
+	@$(MAKE) -C $(OCSE_PATH) >> $(LOGS_DIR)/compile_ocse.log 2>&1; \
 	if [ $$? -ne 0 ]; then echo -e "                        Error: please look into $(LOGS_DIR)/compile_ocse.log"; exit -1; fi
 	@echo -e "[COMPILE OCSE .......] done  `date +"%T %a %b %d %Y"`"
 

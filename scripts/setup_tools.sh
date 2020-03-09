@@ -6,6 +6,7 @@ if [ ! -z $CTEPATH ]; then
     #export CDS_LEVEL=18.03.010
     export CDS_LEVEL=19.03.008
     export CDS_INST_DIR=$CTEPATH/tools/cds/Xcelium/${CDS_LEVEL}
+    export PATH=/opt/rh/devtoolset-8/root/usr/bin/:$PATH
 else
     export XILINX_VIVADO=/tools/Xilinx/Vivado/2019.2
     export CDS_INST_DIR=/tools/cadence/installs/XCELIUM1903.008

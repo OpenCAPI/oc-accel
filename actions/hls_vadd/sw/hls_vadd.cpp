@@ -45,10 +45,10 @@ int main (int argc, const char* argv[])
 {
     po::options_description desc{"Options"};
     desc.add_options()
-    ("help,h", "Help information")
-    ("size,s",    po::value<int>()->default_value (4096), "Size")
-    ("card_no,c", po::value<int>()->default_value (0), "Card number")
-    ("irq,I",  "Enable interrupt mode");
+    ("help,h",         "Help information")
+    ("vadd_size,vs",   po::value<int>()->default_value (4096), "Size of the vector used for vector add")
+    ("card_no,c",      po::value<int>()->default_value (0), "Card number")
+    ("irq,I",          "Enable interrupt mode");
 
     po::variables_map options;
     po::store (parse_command_line (argc, argv, desc), options);
@@ -59,121 +59,77 @@ int main (int argc, const char* argv[])
         return 0;
     }
 
-    int  job_size = options["size"].as<int>();
+    const int  vadd_size = options["vadd_size"].as<int>();
     bool irq_mode = (options.count ("irq") > 0);
     int  card_no  = options["card_no"].as<int>();
-    int  num_job_descriptors = 2;
+    int exit_code = 0;
 
-    std::cout << "Running with job size: " << std::dec << job_size << std::endl;
     std::cout << "IRQ mode: " << irq_mode << std::endl;
 
-    uint32_t* in1_buff     = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
-    uint32_t* in2_buff     = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
-    uint32_t* in3_buff     = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
-    uint32_t* result1_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
-    uint32_t* result2_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
-    uint32_t* verify1_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
-    uint32_t* verify2_buff = (uint32_t*) ocaccel_malloc (job_size * sizeof (uint32_t));
+    uint32_t* vadd_in1     = (uint32_t*) ocaccel_malloc (vadd_size * sizeof (uint32_t));
+    uint32_t* vadd_in2     = (uint32_t*) ocaccel_malloc (vadd_size * sizeof (uint32_t));
+    uint32_t* vadd_out     = (uint32_t*) ocaccel_malloc (vadd_size * sizeof (uint32_t));
+    uint32_t* vadd_verify  = (uint32_t*) ocaccel_malloc (vadd_size * sizeof (uint32_t));
 
     std::cout << "============================" << std::endl;
-    std::cout << "in1_buff address     = 0x" << std::hex << (uint64_t) in1_buff << std::endl;
-    std::cout << "in2_buff address     = 0x" << std::hex << (uint64_t) in2_buff << std::endl;
-    std::cout << "in3_buff address     = 0x" << std::hex << (uint64_t) in3_buff << std::endl;
-    std::cout << "result1_buff address = 0x" << std::hex << (uint64_t) result1_buff << std::endl;
-    std::cout << "result2_buff address = 0x" << std::hex << (uint64_t) result2_buff << std::endl;
-    std::cout << "verify1_buff address = 0x" << std::hex << (uint64_t) verify1_buff << std::endl;
-    std::cout << "verify2_buff address = 0x" << std::hex << (uint64_t) verify2_buff << std::endl;
-    std::cout << "job_size             = "   << std::dec << job_size << std::endl;
+    std::cout << "vadd_in1    address    = 0x"  << std::hex << (uint64_t) vadd_in1 << std::endl;
+    std::cout << "vadd_in2    address    = 0x"  << std::hex << (uint64_t) vadd_in2 << std::endl;
+    std::cout << "vadd_out    address    = 0x"  << std::hex << (uint64_t) vadd_out << std::endl;
+    std::cout << "vadd_verify address    = 0x"  << std::hex << (uint64_t) vadd_verify << std::endl;
+    std::cout << "vadd_size              = "    << std::dec << vadd_size << std::endl;
     std::cout << "============================" << std::endl;
 
-    for (int i = 0; i < job_size; i++) {
-        in1_buff[i] = i;     //Give a simple number for easier debugging.
-        in2_buff[i] = i * 2; //Give a simple number for easier debugging.
-        in3_buff[i] = i * 3; //Give a simple number for easier debugging.
-        result1_buff[i] = 0; //Wait FPGA to calculate
-        result2_buff[i] = 0; //Wait FPGA to calculate
-        verify1_buff[i] = in1_buff[i] + in2_buff[i];
-        verify2_buff[i] = in1_buff[i] + in3_buff[i];
+    // vadd input initialization and verify calculation
+    for (int i = 0; i < vadd_size; i++) {
+        vadd_in1[i] = i;
+        vadd_in2[i] = i * 2;
+        vadd_out[i] = 0;
+        vadd_verify[i] = vadd_in1[i] + vadd_in2[i];
     }
 
     OcaccelJobManager* job_manager_ptr = OcaccelJobManager::getManager();
-    job_manager_ptr->setNumberOfJobDescriptors (num_job_descriptors);
+    job_manager_ptr->setNumberOfJobDescriptors (1);
 
     // Initialize job manager
     job_manager_ptr->initialize (card_no, "hls_vadd");
 
-    // The data struct provides information of kernel's register layout.
-    // This class is auto generated for hls kernels during model build.
-    //vaddRegisterLayout kernel_reg_layout;
-
     // Get a job descriptor and configure it with kernel parameters
-    JobDescriptorPtr<vadd> job_desc_0 = job_manager_ptr->getJobDescriptorPtr<vadd> (0);
-    job_desc_0->setKernelID (0);
-    job_desc_0->setKernelParameter<vadd::PARAM::size>    (job_size);
-    job_desc_0->setKernelParameter<vadd::PARAM::out_r_1> (addr_lo (result1_buff));
-    job_desc_0->setKernelParameter<vadd::PARAM::out_r_2> (addr_hi (result1_buff));
-    job_desc_0->setKernelParameter<vadd::PARAM::in1_1>   (addr_lo (in1_buff));
-    job_desc_0->setKernelParameter<vadd::PARAM::in1_2>   (addr_hi (in1_buff));
-    job_desc_0->setKernelParameter<vadd::PARAM::in2_1>   (addr_lo (in2_buff));
-    job_desc_0->setKernelParameter<vadd::PARAM::in2_2>   (addr_hi (in2_buff));
+    JobDescriptorPtr<vadd> job_desc = job_manager_ptr->getJobDescriptorPtr<vadd> (0);
+    job_desc->setKernelParameter<vadd::PARAM::size> (vadd_size);
+    job_desc->setKernelParameter<vadd::PARAM::out_r_1> (addr_lo (vadd_out));
+    job_desc->setKernelParameter<vadd::PARAM::out_r_2> (addr_hi (vadd_out));
+    job_desc->setKernelParameter<vadd::PARAM::in1_1> (addr_lo (vadd_in1));
+    job_desc->setKernelParameter<vadd::PARAM::in1_2> (addr_hi (vadd_in1));
+    job_desc->setKernelParameter<vadd::PARAM::in2_1> (addr_lo (vadd_in2));
+    job_desc->setKernelParameter<vadd::PARAM::in2_2> (addr_hi (vadd_in2));
 
     // Run a job on the kernel
-    if (job_manager_ptr->run<vadd> (job_desc_0)) {
+    if (job_manager_ptr->run<vadd> (job_desc)) {
         std::cerr << "Error running jobs" << std::endl;
         return -1;
     }
 
-    while (OcaccelJobManager::eStatus::FINISHED != job_manager_ptr->status<vadd> (job_desc_0->getKernel())) {
-    }
-
-    std::cout << "Job 0 finished!" << std::endl;
-
-    // Get a job descriptor and configure it with kernel parameters
-    JobDescriptorPtr<vadd> job_desc_1 = job_manager_ptr->getJobDescriptorPtr<vadd> (1);
-    job_desc_1->setKernelID (1);
-    job_desc_1->setKernelParameter<vadd::PARAM::size>    (job_size);
-    job_desc_1->setKernelParameter<vadd::PARAM::out_r_1> (addr_lo (result2_buff));
-    job_desc_1->setKernelParameter<vadd::PARAM::out_r_2> (addr_hi (result2_buff));
-    job_desc_1->setKernelParameter<vadd::PARAM::in1_1>   (addr_lo (in1_buff));
-    job_desc_1->setKernelParameter<vadd::PARAM::in1_2>   (addr_hi (in1_buff));
-    job_desc_1->setKernelParameter<vadd::PARAM::in2_1>   (addr_lo (in3_buff));
-    job_desc_1->setKernelParameter<vadd::PARAM::in2_2>   (addr_hi (in3_buff));
-
-    // Run a job on the kernel
-    if (job_manager_ptr->run<vadd> (job_desc_1)) {
-        std::cerr << "Error running jobs" << std::endl;
+    if (! (job_manager_ptr->waitAllDone<vadd> (job_desc, 100))) {
+        std::cerr << "Timeout waiting for jobs done" << std::endl;
         return -1;
     }
 
-    while (OcaccelJobManager::eStatus::FINISHED != job_manager_ptr->status<vadd> (job_desc_1->getKernel())) {
-    }
+    std::cout << "Vadd Job finished!" << std::endl;
 
-    std::cout << "Job 1 finished!" << std::endl;
-
-    sleep (2);
-    job_manager_ptr->dump();
-
-    // Verify
-    int exit_code = 0;
-
-    for (int i = 0 ; i < job_size; i++) {
-        if (result1_buff[i] != verify1_buff[i]) {
-            std::cerr << "Mismatch on result1_buff[" << i << "] -- "
-                      << "actual " << result1_buff[i]
-                      << " -- expected " << verify1_buff[i] << std::endl;
+    // Verify the result
+    for (int i = 0 ; i < vadd_size; i++) {
+        if (vadd_out[i] != vadd_verify[i]) {
+            std::cerr << "Mismatch on vadd_out[" << i << "] -- "
+                      << "actual " << vadd_out[i]
+                      << " -- expected " << vadd_verify[i] << std::endl;
             exit_code = EXIT_FAILURE;
             break;
         }
     }
 
-    for (int i = 0 ; i < job_size; i++) {
-        if (result2_buff[i] != verify2_buff[i]) {
-            std::cerr << "Mismatch on result2_buff[" << i << "] -- "
-                      << "actual " << result2_buff[i]
-                      << " -- expected " << verify2_buff[i] << std::endl;
-            exit_code = EXIT_FAILURE;
-            break;
-        }
+    sleep (1);
+    if (ocaccel_action_trace_enabled()) {
+        job_manager_ptr->dump();
     }
 
     if (0 == exit_code) {
@@ -182,12 +138,9 @@ int main (int argc, const char* argv[])
 
     job_manager_ptr->clear();
 
-    free (in1_buff);
-    free (in2_buff);
-    free (in3_buff);
-    free (result1_buff);
-    free (result2_buff);
-    free (verify1_buff);
-    free (verify2_buff);
+    free (vadd_in1);
+    free (vadd_in2);
+    free (vadd_out);
+    free (vadd_verify);
     return exit_code;
 }

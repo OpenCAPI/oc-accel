@@ -13,22 +13,24 @@ else
 fi
 
 OCACCEL_ROOT=`pwd`
-. ./setup_tools.ksh
+. ./scripts/setup_tools.sh
 
 export IES_LIBS=$IESL
 echo "Setting IES_LIBS to ${IES_LIBS}"
 
-./ocaccel_workflow.py -c --simulator xcelium --unit_sim --unit_test bfm_test_rd_wr_10_size7_randlen_randid_rand_resp
+./run.py -C
+./run.py --ocse $OCSE_ROOT --predefined_config OC-AD9V3.hls_vadd_matmul.defconfig -s xcelium -t "hls_vadd_matmul"
 if [ $? -ne 0 ]; then
-    echo "UVM check FAILED for bridge mode!"
+    echo "hls_vadd_matmul failed!"
     exit 1
 fi
 
-./ocaccel_workflow.py -c --simulator xcelium --unit_sim --odma --unit_test odma_test_chnl4_list2to4_block2to4_dsc1to64_mixdrt_less4k
+./run.py -C
+./run.py --ocse $OCSE_ROOT --predefined_config OC-AD9V3.hdl_perf_test.defconfig -s xcelium -t "hdl_perf_test"
 if [ $? -ne 0 ]; then
-    echo "UVM check FAILED for odma mode!"
+    echo "hdl_perf_test failed!"
     exit 1
 fi
 
-echo "UVM check PASSED for both bridge mode and odma mode!"
+echo "All tests PASSED!"
 exit 0

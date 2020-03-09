@@ -151,52 +151,63 @@ if options.unit_sim == True:
     else:
         options.predefined_config = "hdl_unit_sim.bridge.defconfig"
 
-ocaccel_workflow_log            = pathjoin(options.ocaccel_root, 'hardware', 'logs', "./ocaccel_workflow.log")
-ocaccel_workflow_make_model_log = pathjoin(options.ocaccel_root, 'hardware', 'logs', "./ocaccel_workflow.make_model.log")
-ocaccel_workflow_make_image_log = pathjoin(options.ocaccel_root, 'hardware', 'logs', "./ocaccel_workflow.make_image.log")
+logs_path = pathjoin(options.ocaccel_root, 'hardware', 'logs')
+try: 
+    os.makedirs(logs_path)
+except OSError:
+    if not os.path.isdir(logs_path):
+        raise
+
+ocaccel_workflow_log            = pathjoin(logs_path, "ocaccel_workflow.log")
+ocaccel_workflow_make_model_log = pathjoin(logs_path, "ocaccel_workflow.make_model.log")
+ocaccel_workflow_make_image_log = pathjoin(logs_path, "ocaccel_workflow.make_image.log")
 
 cmd = ""
 if len(leftovers) > 0:
     cmd = leftovers[0]
 
-msg.ok_msg_blue('''--------> Running with COMMAND * %s * O(n_n)O~''' % cmd)
-# Embedded combination of options
-if cmd == 'config':
-    options.no_configure = False
-    options.no_make_model = True
-    options.no_run_sim = True
-    options.make_image = False
-elif cmd == 'model':
-    options.no_configure = True
-    options.no_make_model = False
-    options.no_run_sim = True
-    options.make_image = False
-elif cmd == 'sim':
-    options.no_configure = True
-    options.no_make_model = True
-    options.no_run_sim = False
-    options.make_image = False
-elif cmd == 'image':
-    options.no_configure = True
-    options.no_make_model = True
-    options.no_run_sim = True
-    options.make_image = True
-elif cmd == 'clean':
-    options.no_configure = True
-    options.no_make_model = True
-    options.no_run_sim = True
-    options.make_image = False
-    options.clean = True
-    options.config_clean = False
-    options.no_env_check = True
-elif cmd == 'config_clean':
-    options.no_configure = True
-    options.no_make_model = True
-    options.no_run_sim = True
-    options.make_image = False
-    options.clean = True
-    options.config_clean = True
-    options.no_env_check = True
+if cmd != "":
+    msg.ok_msg_blue('''--------> Running with COMMAND * %s * O(n_n)O~''' % cmd)
+    # Embedded combination of options
+    if cmd == 'config':
+        options.no_configure = False
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = False
+    elif cmd == 'model':
+        options.no_configure = True
+        options.no_make_model = False
+        options.no_run_sim = True
+        options.make_image = False
+    elif cmd == 'sim':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = False
+        options.make_image = False
+    elif cmd == 'image':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = True
+    elif cmd == 'clean':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = False
+        options.clean = True
+        options.config_clean = False
+        options.no_env_check = True
+    elif cmd == 'config_clean':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = False
+        options.clean = True
+        options.config_clean = True
+        options.no_env_check = True
+    else:
+        msg.fail_msg ("Invalid command %s" % cmd)
+        exit(1)
 
 if __name__ == '__main__':
     msg.ok_msg_blue("--------> WELCOME to IBM OpenCAPI Acceleration Framework")

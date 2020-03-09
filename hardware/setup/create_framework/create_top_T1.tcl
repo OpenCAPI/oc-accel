@@ -3,20 +3,24 @@ set hardware_dir       $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_part          $::env(FPGACHIP)
 set fpga_card          $::env(FPGACARD)
 set action_name        $::env(ACTION_NAME)
-set kernel_name        $::env(KERNEL_NAME)
+set kernels            $::env(KERNELS)
 set kernel_number      $::env(KERNEL_NUMBER)
 set project            "top_project"
 set project_dir        $hardware_dir/build/$project
-set kernel_ip_repo_dir $root_dir/actions/$action_name/hw/hls/$::env(ACTION_NAME)_${fpga_part}/$kernel_name/impl/ip
+set kernel_ip_root     $root_dir/actions/$action_name/hw/hls/
 
 set ip_repo_dir     $hardware_dir/build/ip_repo
 set interfaces_dir  $hardware_dir/build/interfaces
 set bd_name         "top"
 
+source $hardware_dir/setup/common/common_funcs.tcl
+
 create_project $project $project_dir -part $fpga_part -force
 create_bd_design $bd_name
-set_property  ip_repo_paths  [list $kernel_ip_repo_dir $ip_repo_dir $interfaces_dir] [current_project]
-update_ip_catalog
+
+# Set up the ip_repos for this project
+set_ip_repos $fpga_part $hardware_dir $kernel_ip_root $kernels
+
 add_files -norecurse $hardware_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
 
 # Add sub block designs

@@ -37,6 +37,7 @@ proc my_package_custom_ip {proj_path ip_path if_path fpga_part ip_name addfile_s
    set obj [get_filesets sources_1]
    
    
+   set kernel_top $ip_name
    # Add source files and import
    source $addfile_script
 
@@ -140,4 +141,18 @@ proc my_get_kernel_name_str {index kernel_name} {
     }
 
     return "0x$hex_str"
+}
+
+proc set_ip_repos {fpga_part hardware_dir kernel_ip_root kernels} {
+    set unique_kernels [lsort -unique [split $kernels ',']]
+    set ip_repo_dir     $hardware_dir/build/ip_repo
+    set interfaces_dir  $hardware_dir/build/interfaces
+
+    set ip_repos [list $ip_repo_dir $interfaces_dir]
+    foreach k $unique_kernels {
+        lappend ip_repos $kernel_ip_root/${k}_${fpga_part}/$k/impl/ip
+    }
+
+    set_property ip_repo_paths $ip_repos [current_project]
+    update_ip_catalog
 }

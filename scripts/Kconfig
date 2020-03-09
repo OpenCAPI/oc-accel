@@ -149,8 +149,8 @@ choice
           hardware description language such as VHDL or Verilog.
 
     
-    config HDL_SINGLE_ENGINE
-        bool "HDL Single Engine"
+    config HDL_PERF_TEST
+        bool "HDL Perf (Bandwidth/Latency) Test"
         help
           This is an example written in Verilog (1024b data width, peformance measuring)
           Refer to the README in this action directory for more information
@@ -158,8 +158,17 @@ choice
         select EXAMPLE_ACTION_A10
 
 
+    config HLS_VADD_MATMUL
+        bool "HLS Vector-Add and Matrix Multiplication (4 kernels)"
+        help
+          This is an example written in HLS, from Xilinx Vitis Examples
+          Refer to the README in this action directory for more information
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A10
+        select ENABLE_HLS_SUPPORT
+
     config HLS_VADD
-        bool "HLS Vector-Add (2 kernels)"
+        bool "HLS Vector-Add example (1 kernel)"
         help
           This is an example written in HLS, from Xilinx Vitis Examples
           Refer to the README in this action directory for more information
@@ -197,8 +206,9 @@ config ACTION_NAME
 # Override the name for exsiting actions
 config ACTION_NAME
     string
-    default "hdl_single_engine" if HDL_SINGLE_ENGINE
-    default "hls_vadd"          if HLS_VADD
+    default "hdl_perf_test"   if HDL_PERF_TEST
+    default "hls_vadd_matmul" if HLS_VADD_MATMUL
+    default "hls_vadd"        if HLS_VADD
 
 
 ###############################################################################
@@ -281,23 +291,24 @@ config KERNEL_NUMBER
 # Override the number for existing example
 config KERNEL_NUMBER
     int
-    default 1 if HDL_SINGLE_ENGINE
-    default 2 if HLS_VADD
+    default 1 if HDL_PERF_TEST
+    default 4 if HLS_VADD_MATMUL
+    default 1 if HLS_VADD
 
 ###############################################################################
 #  The top module name of user kernels for HLS actions
-config KERNEL_NAME
+config KERNELS
     depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T2)
-    string "The top module name of your hls kernel"
+    string "The top module names of your hls kernel. Can use comma separated format to specify different kernel top for each kernel."
     default ""
 
 # !!! This doesn't show in the menuwindow
 # Override the name for existing example
-config KERNEL_NAME
+config KERNELS
     int
-    default "kernel_single_engine" if HDL_SINGLE_ENGINE
-    default "vadd"                 if HLS_VADD
-
+    default "kernel_perf_test" if HDL_PERF_TEST
+    default "vadd,matmul,vadd,matmul" if HLS_VADD_MATMUL
+    default "vadd" if HLS_VADD
 
 ###############################################################################
 #  Infra Template Parameters: Data bus Width of AXI Ports @ T1, T4
@@ -310,7 +321,8 @@ config WIDTH_AXIMM_PORTS
 # Override the number for existing example
 config WIDTH_AXIMM_PORTS
     int
-    default 1024 if HDL_SINGLE_ENGINE
+    default 1024 if HDL_PERF_TEST
+    default 1024 if HLS_VADD_MATMUL
     default 1024 if HLS_VADD
 
 ###############################################################################
