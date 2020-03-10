@@ -128,7 +128,7 @@ descriptor_fifo fifo_descriptor (
 );
 
     assign dsc_fifo_in = {23'b0, process_num, m_axi_rdata[991:0]};
-    assign dsc_fifo_push = m_axi_rvalid & (m_axi_rid == 5'b00000) & (m_axi_rresp == 2'b00);
+    assign dsc_fifo_push = m_axi_rvalid & (m_axi_rid == 5'b00000) & (m_axi_rresp == 2'b00) & m_axi_rdata[0] & (m_axi_rdata[31:16] == 16'h20F8);
     assign dsc_fifo_pull = dsc0_pull_i;
     assign dsc0_data_o = dsc_fifo_out;
     assign dsc0_ready_o = !dsc_fifo_empty;
