@@ -22,7 +22,7 @@ add_files -norecurse $hardware_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
 
 # Add sub block designs
 # act_wrap and infra_wrap
-source $hardware_dir/setup/package_action/bd_action_template_A10.tcl
+source $hardware_dir/setup/package_action/bd_action_template_A20.tcl
 source $hardware_dir/setup/package_infrastructure/bd_infra_template_T2.tcl
 
 
@@ -56,6 +56,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_aximm_slave$xx]    [get_bd_intf_pins act_wrap/pin_kernel${xx}_aximm]
     connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_axilite_master$xx] [get_bd_intf_pins act_wrap/pin_kernel${xx}_axilite]
+    connect_bd_net [get_bd_pins infra_wrap/pin_${xx}_kernel_done] [get_bd_pins act_wrap/pin_kernel${xx}_done]
 }
 #Clock and resets
 
