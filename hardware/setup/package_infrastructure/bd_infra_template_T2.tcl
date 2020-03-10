@@ -27,6 +27,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     create_bd_intf_pin -mode Slave  -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_aximm_slave$xx
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_axilite_master$xx
     create_bd_intf_pin -mode Slave  -vlnv opencapi.org:ocaccel:oc_interrupt_rtl:1.0 $bd_hier/pin_${xx}_interrupt
+    create_bd_pin -dir I $bd_hier/pin_${xx}_kernel_done
 }
 
 ###############################################################################
@@ -207,6 +208,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     connect_bd_net [get_bd_pins $bd_hier/pin_reset_action_n ] [get_bd_pins $bd_hier/axilite_adaptor${xx}/resetn  ]
     connect_bd_intf_net [get_bd_intf_pins $bd_hier/axilite_adaptor${xx}/s_axi   ] [get_bd_intf_pins $bd_hier/pin_axilite_master${xx}]     
 #connect_bd_intf_net [get_bd_intf_pins $bd_hier/axilite_adaptor${xx}/adap    ] [get_bd_intf_pins $bd_hier/pin_${xx}_interrupt     ]     
+    connect_bd_net [get_bd_pins $bd_hier/axilite_adaptor${xx}/kernel_done       ] [get_bd_pins $bd_hier/pin_${xx}_kernel_done   ]
     connect_bd_net [get_bd_pins $bd_hier/axilite_adaptor${xx}/kernel_start      ] [get_bd_pins $bd_hier/jm_framework/kernel_start${xx}   ]
     connect_bd_net [get_bd_pins $bd_hier/axilite_adaptor${xx}/kernel_ready      ] [get_bd_pins $bd_hier/jm_framework/kernel_ready${xx}   ]
     connect_bd_net [get_bd_pins $bd_hier/axilite_adaptor${xx}/kernel_data       ] [get_bd_pins $bd_hier/jm_framework/kernel_data${xx}    ]
