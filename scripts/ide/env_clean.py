@@ -18,22 +18,33 @@
 import os
 import sys
 from ocaccel_utils import run_and_wait
+from ocaccel_utils import run_to_stdout
 from ocaccel_utils import msg
 
-def env_clean(log):
+def env_clean(options, log):
     msg.ok_msg_blue("--------> Clean the environment") 
-    rc = run_and_wait(cmd = "make clean", work_dir = ".", log = log)
+
+    if options.quite:
+        rc = run_and_wait(cmd = "make clean", work_dir = ".", log = log)
+    else:
+        rc = run_to_stdout(cmd = "make clean", work_dir = ".")
+
     if rc == 0:
         msg.ok_msg("Environment clean DONE")
     else:
         msg.fail_msg("Error running 'make clean'! Exiting ...")
 
-    rc = run_and_wait(cmd = "make clean_config", work_dir = ".", log = log)
-    if rc == 0:
-        msg.ok_msg("Configuration clean DONE")
-    else:
-        msg.fail_msg("Error running 'make clean_config'! Exiting ...")
+    if options.config_clean:
+        if options.quite:
+            rc = run_and_wait(cmd = "make clean_config", work_dir = ".", log = log)
+        else:
+            rc = run_to_stdout(cmd = "make clean_config", work_dir = ".")
+
+        if rc == 0:
+            msg.ok_msg("Configuration clean DONE")
+        else:
+            msg.fail_msg("Error running 'make clean_config'! Exiting ...")
 
 if __name__ == '__main__':
-    env_clean('./snap_workflow.log')
+    env_clean('./ocaccel_workflow.log')
 

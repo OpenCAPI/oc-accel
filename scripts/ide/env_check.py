@@ -31,12 +31,12 @@ def env_check(options):
     msg.ok_msg_blue("--------> Environment Check") 
     
     gcc    = SystemCMD("gcc")
-    gcc    . check(existence_critical=True, minimum_version = "4.4.6")
+    gcc    . check(existence_critical=True, minimum_version = "8")
     
     if not options.no_make_model or not options.no_run_sim or options.make_image:
         vivado = SystemCMD("vivado")
         xterm  = SystemCMD("xterm")
-        vivado . check(existence_critical=True, minimum_version = "2018.2")
+        vivado . check(existence_critical=True, minimum_version = "2019.2")
         xterm  . check(existence_critical=True)
 
     if options.simulator.lower() == "xcelium":
@@ -55,18 +55,18 @@ def env_check(options):
 
     if options.no_run_sim == False or options.no_make_model == False:
         if options.simulator.lower() != "nosim" and options.unit_sim != True:
-            if isdir(pathjoin(options.ocse_root, "ocse")) and\
-               isdir(pathjoin(options.ocse_root, "afu_driver")) and\
-               isdir(pathjoin(options.ocse_root, "libocxl")):
-                msg.ok_msg_blue("OCSE path %s is valid" % options.ocse_root)
+            if isdir(pathjoin(options.ocse_path, "ocse")) and\
+               isdir(pathjoin(options.ocse_path, "afu_driver")) and\
+               isdir(pathjoin(options.ocse_path, "libocxl")):
+                msg.ok_msg_blue("OCSE path %s is valid" % options.ocse_path)
             else:
-                msg.fail_msg("OCSE path %s is not valid! Exiting ... " % options.ocse_root)
+                msg.fail_msg("OCSE path %s is not valid! Exiting ... " % options.ocse_path)
 
     if isdir(pathjoin(options.ocaccel_root, "actions")) and\
        isdir(pathjoin(options.ocaccel_root, "hardware")) and\
        isdir(pathjoin(options.ocaccel_root, "software")):
-        msg.ok_msg_blue("SNAP ROOT %s is valid" % options.ocaccel_root)
+        msg.ok_msg_blue("OCACCEL ROOT %s is valid" % options.ocaccel_root)
     else:
-        msg.fail_msg("SNAP ROOT %s is not valid! Exiting ... " % options.ocaccel_root)
+        msg.fail_msg("OCACCEL ROOT %s is not valid! Exiting ... " % options.ocaccel_root)
 
     msg.ok_msg("Environment check PASSED")

@@ -14,21 +14,20 @@
 # limitations under the License.
 #
 
-# Check if SNAP_ROOT is set. Having SNAP_ROOT set allows simplifications
+# Check if OCACCEL_ROOT is set. Having OCACCEL_ROOT set allows simplifications
 # in the Makeefiles all over the place. We tried with relative path setups
 # but that is cumbersome if we like to use this from different levels
 # in the directory tree.
 #
 
-ifndef SNAP_ROOT
-$(error Please set SNAP_ROOT to the repository root directory.)
+ifndef OCACCEL_ROOT
+$(error Please set OCACCEL_ROOT to the repository root directory.)
 endif
-ifeq ("$(wildcard $(SNAP_ROOT)/actions)","")
-$(error Please make sure that SNAP_ROOT=$$SNAP_ROOT is set up correctly.)
+ifeq ("$(wildcard $(OCACCEL_ROOT)/actions)","")
+$(error Please make sure that OCACCEL_ROOT=$$OCACCEL_ROOT is set up correctly.)
 endif
 
--include $(SNAP_ROOT)/snap_env.sh
--include $(SNAP_ROOT)/.snap_config.sh
+-include $(OCACCEL_ROOT)/.ocaccel_config.sh
 
 # Verbosity level:
 #   V=0 means completely silent
@@ -98,8 +97,13 @@ ifeq (${HAS_GIT},y)
 	VERSION:=$(GIT_BRANCH)
 endif
 
+CXXFLAGS ?= --std=c++11 -O3 -I. -I../include \
+	    -Wwrite-strings \
+	    -Wextra \
+	    -Wno-unused-function
 CFLAGS ?= -W -Wall  -Wwrite-strings -Wextra -O2 -g \
-	-Wmissing-prototypes # -Wstrict-prototypes -Warray-bounds
+	-Wmissing-prototypes \
+	-Wno-unused-function
 
 CFLAGS += -DGIT_VERSION=\"$(VERSION)\" \
 	-I. -I../include -D_GNU_SOURCE=1
@@ -109,8 +113,9 @@ CFLAGS += -funroll-all-loops
 CFLAGS += -DOPENCAPI30
 
 # General settings: Include and library search path
-CFLAGS += -I$(SNAP_ROOT)/software/include
-LDFLAGS += -L$(SNAP_ROOT)/software/lib
+CFLAGS += -I$(OCACCEL_ROOT)/software/include
+CXXFLAGS += -I$(OCACCEL_ROOT)/software/include
+LDFLAGS += -L$(OCACCEL_ROOT)/software/lib
 
 # Force 32-bit build
 #   This is needed to generate the code for special environments. We have
@@ -124,9 +129,9 @@ PLATFORM ?= $(shell uname -i)
 ifeq ($(PLATFORM),x86_64)
 BUILD_SIMCODE=1
 
-# Environment variable OCSE_ROOT defined by hardware setup scripts. Use default path if OCSE_ROOT is not defined.
-ifndef OCSE_ROOT
-OCSE_ROOT=$(abspath ../../ocse)
+# Environment variable OCSE_PATH defined by hardware setup scripts. Use default path if OCSE_PATH is not defined.
+ifndef OCSE_PATH
+OCSE_PATH=$(abspath ../../ocse)
 endif
 
 FORCE_32BIT ?= 0
@@ -152,11 +157,13 @@ endif
 # the LD_LIBRARY_PATH on program execution.
 #
 ifdef BUILD_SIMCODE
-CFLAGS += -D_SIM_ -I$(OCSE_ROOT)/libocxl -I$(OCSE_ROOT)/common -DOPENCAPI30
-LDFLAGS += -L$(OCSE_ROOT)/libocxl
+CFLAGS += -D_SIM_ -I`realpath $(OCSE_PATH)/libocxl` -I`realpath $(OCSE_PATH)/common` -DOPENCAPI30
+CXXFLAGS += -D_SIM_ -I`realpath $(OCSE_PATH)/libocxl` -I`realpath $(OCSE_PATH)/common` -DOPENCAPI30
+LDFLAGS += -L`realpath $(OCSE_PATH)/libocxl`
 endif
 
 DESTDIR ?= /usr
 LIB_INSTALL_PATH ?= $(DESTDIR)/lib64
 INCLUDE_INSTALL_PATH ?= $(DESTDIR)/include
 MAN_INSTALL_PATH ?= $(DESTDIR)/share/man/man1
+CFLAGS += -I$(OCACCEL_ROOT)/software/include

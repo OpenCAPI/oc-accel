@@ -1,56 +1,117 @@
 ###############################################################################
 #
-# SNAP Configuration Assistant
+# OCACCEL Configuration Assistant
 #   Please select card and appropriate options
 #
 ###############################################################################
+mainmenu "OC-Accel Configuration Menu"
+###############################################################################
+# Basic information 
 
-choice
-	bool "Card Type  "
-	default AD9V3
-	help
-	  Card Type
-	  There are multiple cards the framework supports. Please select
-	  one of them.
+config CAPI_VER
+    string
+    default "opencapi30" if OPENCAPI30
+    default "capi20" if CAPI20
 
-	config AD9V3
-		bool "OpenCAPI3.0: AlphaData 9V3 (VU3P with DDR)"
-		select OPENCAPI30
-		select DISABLE_NVME
-		help
-		  AlphaData 9V3 has ethernet and 16GB DDR4 SDRAM. Uses Xilinx FPGA VU3P.
-	
-	config AD9H3
-		bool "OpenCAPI3.0: AlphaData 9H3 (VU33P with HBM)"
-		select OPENCAPI30
-		select DISABLE_NVME
-		help
-		  AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU33P.
+config ENABLE_HLS_SUPPORT
+    bool
+    default n
 
-	config AD9H7
-		bool "OpenCAPI3.0: AlphaData 9H7 (VU37P with HBM)"
-		select OPENCAPI30
-		select DISABLE_NVME
-		help
-		  AlphaData 9H7 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU37P.
-endchoice
+config HLS_SUPPORT
+    string
+    default "TRUE" if ENABLE_HLS_SUPPORT
+    default "FALSE" if !ENABLE_HLS_SUPPORT
+
+###############################################################################
+# Definition of the templates:
+# For more information, please refere to the documentation page: (TBD)
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+config EXAMPLE_INFRA_T1
+    bool
+    default n
+
+config EXAMPLE_INFRA_T2
+    bool
+    default n
+
+config EXAMPLE_INFRA_T4
+    bool
+    default n
+
+config EXAMPLE_INFRA_T8
+    bool
+    default n
+
+# Summary
+config INFRA_TEMPLATE_SELECTION
+    string
+    default "T1" if EXAMPLE_INFRA_T1 || USER_INFRA_T1
+    default "T2" if EXAMPLE_INFRA_T2 || USER_INFRA_T2
+    default "T4" if EXAMPLE_INFRA_T4 || USER_INFRA_T4
+    default "T8" if EXAMPLE_INFRA_T8 || USER_INFRA_T8
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+config EXAMPLE_ACTION_A10
+    bool
+    default n
+
+config EXAMPLE_ACTION_A11
+    bool
+    default n
+
+config EXAMPLE_ACTION_A12
+    bool
+    default n
+
+config EXAMPLE_ACTION_A20
+    bool
+    default n
+
+config EXAMPLE_ACTION_A40
+    bool
+    default n
+
+config EXAMPLE_ACTION_A80
+    bool
+    default n
+# Summary
+config ACTION_TEMPLATE_SELECTION
+    string
+    default "A10" if EXAMPLE_ACTION_A10 || USER_ACTION_A10
+    default "A11" if EXAMPLE_ACTION_A11 || USER_ACTION_A11
+    default "A12" if EXAMPLE_ACTION_A12 || USER_ACTION_A12
+    default "A20" if EXAMPLE_ACTION_A20 || USER_ACTION_A20
+    default "A40" if EXAMPLE_ACTION_A40 || USER_ACTION_A40
+    default "A80" if EXAMPLE_ACTION_A80 || USER_ACTION_A80
 
 
+
+###############################################################################
+# Defintion for FPGA related
 config FPGACARD
-	string
-	default "AD9V3"  if AD9V3
-	default "AD9H3"  if AD9H3
-	default "AD9H7"  if AD9H7
+    string
+    default "AD9V3"  if FPGACARD_AD9V3
+    default "AD9H3"  if FPGACARD_AD9H3
+    default "AD9H7"  if FPGACARD_AD9H7
+
+config FPGACHIP
+    string
+    default "xcvu3p-ffvc1517-2-e"  if FPGACARD_AD9V3
+    default "xcvu33p-fsvh2104-2-e" if FPGACARD_AD9H3
+    default "xcvu37p-fsvh2892-2-e" if FPGACARD_AD9H7
+
 
 config FLASH_INTERFACE
-	string
-	default "SPIx8"  if  AD9V3 || AD9H3 || AD9H7
+    string
+    default "SPIx8"  if  FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_AD9H7
 
 #FLASH_SIZE: in MB
 config FLASH_SIZE
-	string
-	default 128 if AD9H7
-	default 64 if AD9V3 || AD9H3
+    string
+    default 128 if FPGACARD_AD9H7
+    default 64 if FPGACARD_AD9V3 || FPGACARD_AD9H3
 
 #FLASH_FACTORYADDR: For all cards, factory address is 0x0
 config FLASH_FACTORYADDR
@@ -59,598 +120,460 @@ config FLASH_FACTORYADDR
 
 #FLASH_USERADDR: For SPI, it is byte address.
 config FLASH_USERADDR
-	string
-	default 0x08000000 if AD9V3 || AD9H3 || AD9H7
+    string
+    default 0x08000000 if FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_AD9H7
 
-config OPENCAPI30
-	bool
-	default y
-
-config CAPI_VER
-	string
-	default "opencapi30" if OPENCAPI30
-
-config FPGACHIP
-	string
-	default "xcvu3p-ffvc1517-2-e" if AD9V3
-	default "xcvu33p-fsvh2104-2-e" if AD9H3
-	default "xcvu37p-fsvh2892-2-e" if AD9H7
-
-config NUM_OF_ACTIONS
-	int
-	default 1
-# as long as only one action is supported we do not need to prompt the number of actions
-# prompt should be enabled as soon as multiple action support is implemented
-#        prompt "Number Of Actions"
-	range 1 1
-	help
-	  SNAP currently supports one action.
-
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+#   Menu starts
+#   Select the ACTION_ROOT
 choice
-	bool "Action Type"
-	help
-	  Action Type
-	  Select an Action type example:
-	  - HDL for VHDL or Verilog coded examples
-	  - HLS for C coded examples compiled with HLS
+    bool "Action Name"
+    help
+      Action Name:
+      Select an existing action example or define a new action.
+    default HLS_VADD
 
-	default HDL_EXAMPLE
+    config USER_HLS_ACTION
+        bool "New HLS Action"
+        select ENABLE_HLS_SUPPORT
+        help
+          This option is a placeholder for an action written by the user in HLS.
 
-	config HLS_ACTION
-		bool "HLS Action - manually set ACTION_ROOT in snap_env.sh!"
-		select ENABLE_HLS_SUPPORT
-		help
-		  This option is a placeholder for an action written by the user in HLS.
-		  Please remember to set the environment variable "ACTION_ROOT"
-		  in snap_env.sh to the directory of the action source code.
-		  Also need to select the AXI data width to host is 512b or 1024b.
+    config USER_HDL_ACTION
+        bool "New HDL Action"
+        help
+          This option is a placeholder for an action written by the user in a
+          hardware description language such as VHDL or Verilog.
 
-	config HDL_ACTION
-		bool "HDL Action - manually set ACTION_ROOT in snap_env.sh!"
-		help
-		  This option is a placeholder for an action written by the user in a
-		  hardware description language such as VHDL or Verilog.
-		  Please remember to set the environment variable "ACTION_ROOT"
-		  in snap_env.sh to the directory of the action source code.
-		  Also need to select the AXI data width to host is 512b or 1024b.
+    
+    config HDL_PERF_TEST
+        bool "HDL Perf (Bandwidth/Latency) Test"
+        help
+          This is an example written in Verilog (1024b data width, peformance measuring)
+          Refer to the README in this action directory for more information
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A10
 
-	config HDL_EXAMPLE
-		bool "HDL Example"
-		select ACTION_HALF_WIDTH
-	
-	config HDL_SINGLE_ENGINE
-		bool "HDL Single Engine"
-		help
-		  This is a very simple example written in Verilog for
-		  - Action Register example (axi_lite_slave)
-		  - Read data from server memory and check whether its right data
-		  - Write data to server memory
-		select DISABLE_SDRAM_AND_BRAM
 
-	config HDL_MULTI_PROCESS
-		bool "HDL Multi-Process"
-		help
-		  This is a very simple example written in Verilog for
-		  - Multi-process testing
-		select DISABLE_SDRAM_AND_BRAM
+    config HLS_VADD_MATMUL
+        bool "HLS Vector-Add and Matrix Multiplication (4 kernels)"
+        help
+          This is an example written in HLS, from Xilinx Vitis Examples
+          Refer to the README in this action directory for more information
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A10
+        select ENABLE_HLS_SUPPORT
 
-	config HDL_UNIT_SIM
-		bool "HDL UNIT SIM"
-		help
-		  This is a random/configrable test for bridge mode
-		  - This action include an AXI-master vip 
-		  - Generate random AXI read/write commands
-		  - Data check rely on verification code
-		  - No OCSE and software will be invoked for this action
-                  - Only UVM based testbench
-		select DISABLE_SDRAM_AND_BRAM
+    config HLS_VADD
+        bool "HLS Vector-Add example (1 kernel)"
+        help
+          This is an example written in HLS, from Xilinx Vitis Examples
+          Refer to the README in this action directory for more information
+        select EXAMPLE_INFRA_T1
+        select EXAMPLE_ACTION_A10
+        select ENABLE_HLS_SUPPORT
 
-	config HLS_HELLOWORLD
-		bool "HLS HelloWorld"
-		help
-		  This is the simplest example to start with:
-		  - Reading text from the server memory
-		  - Processing changing case of the text
-		  - Writing back the text to the server memory
-		  This example is written in C and compiled with HLS
-		select ENABLE_HLS_SUPPORT
-		select DISABLE_SDRAM_AND_BRAM
-		select DISABLE_NVME
-		select ACTION_HALF_WIDTH
 
-	config HLS_MEMCOPY_1024
-		bool "HLS Memcopy 1024b"
-		help
-		  This is a basic example to start accessing data:
-		  - Read data from the server memory or from the card DDR
-		  - Write data to the server memory or to the card DDR
-		  - A temporary buffer is used in the FPGA (configurable size)
-		  All combination can be done.
-		  This example is written in C and compiled with HLS
-		select ENABLE_HLS_SUPPORT
-		select FORCE_SDRAM_OR_BRAM
-		select DISABLE_NVME
-
-#	config HLS_SPONGE
-#		bool "HLS Sponge"
-#		help
-#		  This is an example of a C code ported and optimized:
-#		  It is a benchmark to measure the SHA3 key generation performance
-#		  - Data are generated in the algorithm - No data move
-#		  - 3 functions : SPEED, SHA3, SHAKE (and SHA3_SHAKE)
-#		  - only the SPEED test was optimized
-#		  This example is written in C and compiled with HLS
-#		select ENABLE_HLS_SUPPORT
-#		select DISABLE_SDRAM_AND_BRAM
-#		select DISABLE_NVME
-#		select ACTION_HALF_WIDTH
+#    config HLS_MEMCOPY_1024
+#        bool "HLS Memcopy 1024b"
+#        help
+#          This is an example written in High Level Synthesis Language (1024b data width)
+#          It copies data between Host and FPGA DDR/HBM (4 combinations)
+#          Refer to the README in this action directory for more information
+#        select ENABLE_HLS_SUPPORT
+#        select EXAMPLE_INFRA_T1
+#        select EXAMPLE_ACTION_A12 if FPGACARD_AD9V3
+#        select EXAMPLE_ACTION_A13 if (FPGACARD_AD9H3 || FPGACARD_AD9H7)
+#        # Note: Select the action template according to the card
 endchoice
 
-config ACTION_HALF_WIDTH
-	bool
-	default n
-	prompt "Action's AXI interface to host is 512b-wide ('y', checked) or 1024b ('n', unchecked)"
-	depends on OPENCAPI30 && (HDL_ACTION || HLS_ACTION)
-	help
-	  Input 'Y' if your action's AXI interface to host is 512b.
-	  Leave it unchecked if it is 1024b, which is a new choice in OC-Accel.
 
-# HALF_WIDTH is "string": TRUE or FALSE
-# ACTION_HALF_WIDTH is "bool": defined or not
-config HALF_WIDTH
-	string
-	default "TRUE"  if ACTION_HALF_WIDTH
-	default "FALSE" if !ACTION_HALF_WIDTH
+# For user defined new actions, ask for the name
+config ACTION_NAME
+    depends on USER_HLS_ACTION
+    string "Input the new action name"
+    default "hls_my_test"
 
-config ENABLE_HLS_SUPPORT
-	bool
-	default n
+config ACTION_NAME
+    depends on USER_HDL_ACTION
+    string "Input the new action name"
+    default "hdl_my_test"
 
-config HLS_SUPPORT
-	string
-	default "TRUE"  if ENABLE_HLS_SUPPORT
-	default "FALSE" if ! ENABLE_HLS_SUPPORT
-
-config DISABLE_SDRAM_AND_BRAM
-	bool
-	default n
-
-config FORCE_SDRAM_OR_BRAM
-	bool
-	default n
-
-config FORCE_SDRAM
-	bool
-	default y
-	depends on (AD9V3 && FORCE_SDRAM_OR_BRAM && ! ENABLE_BRAM)
-    select ENABLE_DDR
-
-config ENABLE_DDR
-	bool
-	prompt "Enable DDR"
-	depends on (AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	help
-	  This option enables the on-card SDRAM.
-	  SNAP supports FIXME GB DDR4
-	#FIXME
-
-config SDRAM_USED
-	string
-	default "TRUE"  if ENABLE_DDR
-	default "FALSE" if ! ENABLE_DDR
-
-config FORCE_HBM
-	bool
-	default y
-	depends on ((AD9H3 || AD9H7) && FORCE_SDRAM_OR_BRAM && ! ENABLE_BRAM)
-    select ENABLE_HBM
-
-config ENABLE_HBM
-	bool
-	prompt "Enable HBM"
-	depends on ((AD9H3 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	help
-	  This option enables the on-card HBM.
-
-config HBM_USED
-	string
-	default "TRUE"  if ENABLE_HBM
-	default "FALSE" if ! ENABLE_HBM
-
-config ENABLE_BRAM
-	bool
-	prompt "Enable BRAM to replace DDR or HBM for experimental use"
-	depends on ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
-	help
-	  This is a development option. The AXI attached on-card SDRAM will be replaced by 512KB BRAM.
-
-config BRAM_USED
-	string
-	default "TRUE"  if ENABLE_BRAM
-	default "FALSE" if ! ENABLE_BRAM
-
-#FIXME We don't have DDR3 anymore.
-config ENABLE_DDR3
-	bool
-	default y
-	depends on (ENABLE_DDR && ADKU3)
-
-config DDR3_USED
-	string
-	default "TRUE"  if ENABLE_DDR3
-	default "FALSE" if ! ENABLE_DDR3
-
-config ENABLE_DDR4
-	bool
-	default y
-	depends on (ENABLE_DDR && (N250S || S121B || N250SP || AD8K5 || RCXVUP || FX609 || S241 || AD9V3))
-
-config DDR4_USED
-	string
-	default "TRUE"  if ENABLE_DDR4
-	default "FALSE" if ! ENABLE_DDR4
-
-config ENABLE_DDRI
-	bool
-	default y
-	depends on (ENABLE_DDR || ENABLE_BRAM)
-
-config DDRI_USED
-	string
-	default "TRUE"  if ENABLE_DDRI
-	default "FALSE" if ! ENABLE_DDRI
+# !!! This doesn't show in the menuwindow
+# Override the name for exsiting actions
+config ACTION_NAME
+    string
+    default "hdl_perf_test"   if HDL_PERF_TEST
+    default "hls_vadd_matmul" if HLS_VADD_MATMUL
+    default "hls_vadd"        if HLS_VADD
 
 
-config DISABLE_NVME
-	bool
-	default n
-
-config FORCE_NVME
-	bool
-	default n
-	select ENABLE_NVME
-
-config ENABLE_NVME
-	bool "Enable NVMe"
-	depends on ! DISABLE_NVME
-	select FORCE_SDRAM_OR_BRAM
-	help
-	  This option controls the instantiation of an NVMe host controller
-	  together with the AXI interfaces for MMIO control and action access.
-
-config NVME_USED
-	string
-	default "TRUE"  if ENABLE_NVME
-	default "FALSE" if ! ENABLE_NVME
-
-config USER_CLOCK
-	string
-	default "TRUE"  if ACTION_USER_CLOCK
-	default "FALSE" if ! ACTION_USER_CLOCK
-
-
-config ACTION_USER_CLOCK
-	bool
-	default n
-
-
+###############################################################################
 choice
-	bool "Simulator"
-	default SIM_XSIM
-	help
-	  Supported simulators are Xilinx' xsim and Cadence's irun.
-	  If NVMe support is enabled it is only possible to use irun
-	  or to set the simulator to "nosim" to disable model build
-	  and simulation.
+    bool "CAPI Version"
+    default OPENCAPI30
+    help
+      Select CAPI Version
 
-	config SIM_XSIM
-		bool "xsim"
-		help
-		  Default Xilinx simulator
+    config OPENCAPI30
+        bool "OpenCAPI3.0"
 
-	config SIM_IRUN
-		bool "irun"
-		help
-		  Cadence irun simulator (requires a specific license)
-		  depends on ! ENABLE_PRFLOW
-
-	config SIM_XCELIUM
-		bool "xcelium"
-		help
-		  Cadence xcelium simulator (requires a specific license)
-		  depends on ! ENABLE_PRFLOW
-
-	config SIM_MODELSIM
-		bool "modelsim"
-		help
-		  Mentor Modelsim AE/SE/DE simulator (requires a specific license)
-		  depends on ! (ENABLE_PRFLOW || ENABLE_NVME)
-
-	config SIM_QUESTA
-		bool "questa"
-		help
-		  Mentor Questa simulator (requires a specific license)
-		  depends on ! (ENABLE_PRFLOW || ENABLE_NVME)
-
-	config NO_SIM
-		bool "nosim"
-
+    config CAPI20
+        bool "CAPI2.0 -- not supported yet"
 endchoice
 
-config NUM_OF_MULTI_PROCESS_ENGINES
-        depends on HDL_MULTI_PROCESS
-	prompt "Number of multi-process engines"
-	int
-	default 8
-	range 1 16
-	help
-	  Number of engines in multi-process example.
+###############################################################################
+choice
+    bool "Target Platform"
+    default FPGACARD_AD9V3
+    help
+      Select the hardware platform that OC-Accel supports.
+    config FPGACARD_AD9V3
+        bool "Alphadata 9V3 (VU3P)"
+        help
+          Refer to Product webpage for more information about the card capacity.
+    
+    config FPGACARD_AD9H3 
+        bool "AlphaData 9H3 (VU33P)"
+        help
+          Refer to Product webpage for more information about the card capacity.
+          AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU33P.
+
+    config FPGACARD_AD9H7
+        bool "AlphaData 9H7 (VU37P)"
+        help
+          Refer to Product webpage for more information about the card capacity.
+endchoice
+
+###############################################################################
+choice
+    bool "Infrastructure Template"
+    depends on USER_HDL_ACTION || USER_HLS_ACTION
+    default USER_INFRA_T1
+    help
+        Select the Infrastructure Template
+    config USER_INFRA_T1
+        bool "T1 (bridge minimum)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+    
+    config USER_INFRA_T2
+        bool "T2 (job manager reg_config)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+  
+    config USER_INFRA_T4
+        bool "T4 (odma -- not valid)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+  
+    config USER_INFRA_T8
+        depends on OPENCAPI30
+        bool "T8 (M1 -- not valid)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+  
+endchoice
+
+###############################################################################
+#  Infra Template Parameters: Kernel Number @ T1/T2
+config KERNEL_NUMBER
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T2)
+    int "Input the number of kernels (1 to 16)"
+    range 1 16
+    default 1
+
+
+# !!! This doesn't show in the menuwindow
+# Override the number for existing example
+config KERNEL_NUMBER
+    int
+    default 1 if HDL_PERF_TEST
+    default 4 if HLS_VADD_MATMUL
+    default 1 if HLS_VADD
+
+###############################################################################
+#  The top module name of user kernels for HLS actions
+config KERNELS
+    depends on (USER_HLS_ACTION || USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T2)
+    string "The top module names of your hls kernel. Can use comma separated format to specify different kernel top for each kernel."
+    default ""
+
+# !!! This doesn't show in the menuwindow
+# Override the name for existing example
+config KERNELS
+    int
+    default "kernel_perf_test" if HDL_PERF_TEST
+    default "vadd,matmul,vadd,matmul" if HLS_VADD_MATMUL
+    default "vadd" if HLS_VADD
+
+###############################################################################
+#  Infra Template Parameters: Data bus Width of AXI Ports @ T1, T4
+config WIDTH_AXIMM_PORTS
+    depends on (USER_HDL_ACTION) && (USER_INFRA_T1 || USER_INFRA_T4)
+    int "Input the bus bitwidth of AXI-MM Ports (32 to 1024, exponent of 2)"
+    default 1024
+
+# !!! This doesn't show in the menuwindow
+# Override the number for existing example
+config WIDTH_AXIMM_PORTS
+    int
+    default 1024 if HDL_PERF_TEST
+    default 1024 if HLS_VADD_MATMUL
+    default 1024 if HLS_VADD
+
+###############################################################################
+choice
+    bool "Action Template"
+    depends on USER_HDL_ACTION || USER_HLS_ACTION
+    default USER_ACTION_A10
+    help
+        Select the Action Template
+    config USER_ACTION_A10
+        depends on USER_INFRA_T1
+        bool "A10 (Connects T1, no peripherals)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+    
+    config USER_ACTION_A11
+        depends on USER_INFRA_T1
+        depends on FPGACARD_AD9V3
+        bool "A11 (Connects T1, one channel DDR4)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+    
+    config USER_ACTION_A12
+        depends on USER_INFRA_T1
+        depends on FPGACARD_AD9H3 || FPGACARD_AD9H7
+        bool "A12 (Connects T1, one channel HBM)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+
+    config USER_ACTION_A20
+        depends on USER_INFRA_T2
+        bool "A20 (Connects T2, no peripherals)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+        
+    config USER_ACTION_A40
+        depends on USER_INFRA_T4
+        bool "A40 (Connects T4, no peripherals)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+    config USER_ACTION_A81
+        depends on USER_INFRA_T8
+        depends on FPGACARD_AD9V3
+        bool "A81 (Connects T8, one channel DDR4)"
+        help
+          Refer to OC-Accel documentation for detailed information.
+endchoice
+
+###############################################################################
+config OCSE_PATH
+    string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
+    default "../ocse"
+
+###############################################################################
+choice
+    bool "Simulator"
+    default SIM_XSIM
+    help
+      Supported simulators are Xilinx' xsim and Cadence's irun.
+      If NVMe support is enabled it is only possible to use irun
+      or to set the simulator to "nosim" to disable model build
+      and simulation.
+
+    config SIM_XSIM
+        bool "xsim"
+        help
+          Default Xilinx simulator
+
+
+    config SIM_XCELIUM
+        bool "xcelium"
+        help
+          Cadence xcelium simulator (requires a specific license)
+
+
+    config NO_SIM
+        bool "nosim"
+
+endchoice
 
 config SIMULATOR
-	string
-	default "xsim"     if SIM_XSIM
-	default "irun"     if SIM_IRUN
-	default "xcelium"  if SIM_XCELIUM
-	default "modelsim" if SIM_MODELSIM
-	default "questa"   if SIM_QUESTA
-	default "nosim"    if NO_SIM
+    string
+    default "xsim"     if SIM_XSIM
+    default "xcelium"  if SIM_XCELIUM
+    default "nosim"    if NO_SIM
 
-config ENABLE_DENALI
-	bool "Use Denali for NVMe simulation"
-	depends on (ENABLE_NVME && (SIM_IRUN || SIM_XCELIUM))
-	help
-	  In order to use the Denali NVMe behavioral the corresponding Cadence licenses are required.
+# Don't add them when not available
+#    default "modelsim" if SIM_MODELSIM
+#    default "questa"   if SIM_QUESTA
+#    default "irun"     if SIM_IRUN
 
-config DENALI_USED
-	string
-	default "TRUE"  if ENABLE_DENALI
-	default "FALSE" if ! ENABLE_DENALI
 
-config OCSE_PATH
-	string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
-	default "../ocse"
-
+###############################################################################
 comment "================= Advanced Options: ================="
 
+###############################################################################
 choice
-	bool "PHY Speed"
-	default SPEED_25G 
-	help
-	  PHY Speed of Transceive IP
+    bool "PHY Speed"
+    default SPEED_25G 
+    help
+      PHY Speed of Transceive IP
           There are two choices of phy speed the framework supports. Please select
           one of them.
 
-	config SPEED_25G
-		bool "25G: Transceive IP at 25.78125 Gbps"
-		help
-		  Generate Transceive IP with 25.78125 Gbps. Uses Xilinx IP.
-	
-	config SPEED_20G
-		bool "20G: Transceive IP at 20.0 Gbps"
-		help
-		  Generate Transceive IP with 20.0 Gbps. Uses Xilinx IP.
+    config SPEED_25G
+        bool "25G: Transceive IP at 25.78125 Gbps"
+        help
+          Generate Transceive IP with 25.78125 Gbps. Uses Xilinx IP.
+    
+    config SPEED_20G
+        bool "20G: Transceive IP at 20.0 Gbps"
+        help
+          Generate Transceive IP with 20.0 Gbps. Uses Xilinx IP.
 endchoice
 
 config PHY_SPEED 
-	string
-	default "25.78125" if SPEED_25G
-	default "20.0" if SPEED_20G
+    string
+    default "25.78125" if SPEED_25G
+    default "20.0" if SPEED_20G
 
+###############################################################################
 config AXI_ID_WIDTH
-	        prompt "axi id width on oc-accel&action interface, range 1-5"
-		int
-		default 1
-		range 1 5
-		help
-		  ID width on AXI interface
-                  There are five choices of axi id width (1,2,3,4,5) the framework supports. 
-	          Please select one of them.
+            prompt "ID width on Action AXI interface, range 1-5"
+        int
+        default 1
+        range 1 5
+        help
+          ID width on AXI interface, for example, AWID, ARID, etc
+
+###############################################################################
+# Note: When ACTION_CLOCK_200MHZ is selected, no need to insert clock converter
+config ACTION_CLOCK_FREQUENCY 
+    int
+    default 50   if ACTION_CLOCK_50MHZ
+    default 100  if ACTION_CLOCK_100MHZ
+    default 150  if ACTION_CLOCK_150MHZ
+    default 200  if ACTION_CLOCK_200MHZ
+    default 250  if ACTION_CLOCK_250MHZ
+    default 300  if ACTION_CLOCK_300MHZ
+    default 350  if ACTION_CLOCK_350MHZ
+    default 400  if ACTION_CLOCK_400MHZ
+ 
 
 choice
-	bool "Clock Frequency for Action  "
-	default Action_clock_200MHz
-	help
-	  Clock frequency for action
-	  There are multiple frequencys the framework supports. Please select
-	  one of them.
+    bool "Action Clock"
+    default ACTION_CLOCK_200MHZ
+    help
+      Clock frequency for action
+      There are multiple frequencys the framework supports. Please select
+      one of them.
 
-	config Action_clock_50MHz
-		bool "Action work on 50MHz  (50.355MHz to be accurate) clock"
-		select ACTION_USER_CLOCK
-		help
-		  Action use 50MHz clock. A different clock with oc-accel bridge. 
+    config ACTION_CLOCK_50MHZ
+        bool "Action works on 50.355MHz"
+        help
+          Action use 50MHz clock. A different clock with oc-accel bridge. 
 
-	config Action_clock_100MHz
-		bool "Action work on 100MHz (100.710MHz to be accurate) clock"
-		select ACTION_USER_CLOCK
-		help
-		  Action use 100MHz clock. A different clock with oc-accel bridge. 
+    config ACTION_CLOCK_100MHZ
+        bool "Action works on 100.710MHz"
+        help
+          Action use 100MHz clock. A different clock with oc-accel bridge. 
 
-	config Action_clock_150MHz
-		bool "Action work on 150MHz (151.065MHz to be accurate) clock"
-		select ACTION_USER_CLOCK
-		help
-		  Action use 150MHz clock. A different clock with oc-accel bridge. 
+    config ACTION_CLOCK_150MHZ
+        bool "Action works on 151.065MHz"
+        help
+          Action use 150MHz clock. A different clock with oc-accel bridge. 
 
-	config Action_clock_200MHz
-		bool "Action work on 200MHz (201.420MHz to be accurate) clock"
-		help
-		  Action use 200MHz clock. Same clock with oc-accel bridge. 
+    config ACTION_CLOCK_200MHZ
+        bool "Action works on 201.420MHz"
+        help
+          Action use 200MHz clock. Same clock with oc-accel bridge. 
 
-	config Action_clock_250MHz
-		bool "Action work on 250MHz (251.775MHz to be accurate) clock"
-		select ACTION_USER_CLOCK
-		help
-		  Action use 250MHz clock. A different clock with oc-accel bridge. 
+    config ACTION_CLOCK_250MHZ
+        bool "Action works on 251.775MHz"
+        help
+          Action use 250MHz clock. A different clock with oc-accel bridge. 
 
-	config Action_clock_300MHz
-		bool "Action work on 300MHz (302.130MHz to be accurate) clock"
-		select ACTION_USER_CLOCK
-		help
-		  Action use 300MHz clock. A different clock with oc-accel bridge. 
+    config ACTION_CLOCK_300MHZ
+        bool "Action works on 302.130MHz"
+        help
+          Action use 300MHz clock. A different clock with oc-accel bridge. 
 
-	config Action_clock_350MHz
-		bool "Action work on 350MHz (352.485MHz to be accurate) clock"
-		select ACTION_USER_CLOCK
-		help
-		  Action use 350MHz clock. A different clock with oc-accel bridge. 
+    config ACTION_CLOCK_350MHZ
+        bool "Action works on 352.485MHz"
+        help
+          Action use 350MHz clock. A different clock with oc-accel bridge. 
 
-	config Action_clock_400MHz
-		bool "Action work on 400MHz (402.840MHz to be accurate) clock"
-		select ACTION_USER_CLOCK
-		help
-		  Action use 400MHz clock. A different clock with oc-accel bridge. 
+    config ACTION_CLOCK_400MHZ
+        bool "Action works on 402.840MHz"
+        help
+          Action use 400MHz clock. A different clock with oc-accel bridge. 
 endchoice
 
-config USER_CLOCK_FREQ
-	int
-	default 50   if Action_clock_50MHz
-	default 100  if Action_clock_100MHz
-	default 150  if Action_clock_150MHz
-	default 200  if Action_clock_200MHz
-	default 250  if Action_clock_250MHz
-	default 300  if Action_clock_300MHz
-	default 350  if Action_clock_350MHz
-	default 400  if Action_clock_400MHz
 
-config ACTION_USER_CLOCK
-	bool
-	default y
-        prompt "Action's clock frequency is 200MHz ('n', unchecked) or other clock frequency ('y', checked)"
-	depends on OPENCAPI30 && (HDL_ACTION || HLS_ACTION)
-	help
-	  Input 'Y' if your action's clock frequency is not 200MHz.
-	  Leave it unchecked if it is 200MHz.
+################################################################################
+#  NOTE: This config has been removed because people can adjust it more directly
+#  in run_hls_script.tcl
+#config HLS_CLOCK_PERIOD_CONSTRAINT
+#    prompt "Clock period constraint for HLS C++ code"
+#    string
+#    default "4ns"
+#    depends on ENABLE_HLS_SUPPORT
+#    help
+#      The clock period constrant in "ns" used when hls is compiled to rtl, 
 
-config HLS_CLOCK_PERIOD_CONSTRAINT
-	prompt "The clock period constrant used when hls is compiled to rtl, only used for hls action"
-	string
-	default "4ns"
-	range "1ns" "20ns"
-	help
-	  The clock period constrant in "ns" used when hls is compiled to rtl, 
-
-#config ENABLE_PRFLOW
-#	bool "Cloud build (enabling Partial Reconfiguration)"
-#	help
-#	  Used for Cloud environment using specific PSL images
-#
-#config USE_PRFLOW
-#	string
-#	default "TRUE" if ENABLE_PRFLOW
-#	default "FALSE" if ! ENABLE_PRFLOW
-
+###############################################################################
 config ENABLE_ILA
-	bool "Enable ILA Debug"
-	depends on ! ENABLE_PRFLOW
-	help
-	  Used for debugging the design by inserting probes into the FPGA
-	  Enable the usage of Vivado's integrated logic analyzer. There are
-	  two ways: 
-	  (1) Use xdc file. Please make sure that $ILA_SETUP_FILE in snap_env.sh
-	  points to the .xdc file (See example in hardware/setup/ila_example.xdc).
-	  (2) Create an ILA ip core and instantiate it in your design. Put the "create_ip"
-	  commands in your tcl file, and include the ila core in your Verilog design
-	  (enclosed with `define ILA_DEBUG .... `endif)
-	  For both ways, a 'probe.ltx' file will be generated in hardware/build/Images. 
-	  This file is needed for ILA debugging with JTAG and Vivado Lab HW manager tool.
+    bool "Enable ILA Debug"
+    help
+      Used for debugging the design by inserting probes into the FPGA
+      Enable the usage of Vivado's integrated logic analyzer. There are
+      two ways: 
+      (1) Use xdc file. Please make sure that $ILA_SETUP_FILE in snap_env.sh
+      points to the .xdc file (See example in hardware/setup/ila_example.xdc).
+      (2) Create an ILA ip core and instantiate it in your design. Put the "create_ip"
+      commands in your tcl file, and include the ila core in your Verilog design
+      (enclosed with `define ILA_DEBUG .... `endif)
+      For both ways, a 'probe.ltx' file will be generated in hardware/build/Images. 
+      This file is needed for ILA debugging with JTAG and Vivado Lab HW manager tool.
 
 config ILA_DEBUG
-	string
-	default "TRUE"  if ENABLE_ILA
-	default "FALSE" if ! ENABLE_ILA
-
-#config ENABLE_FACTORY
-#	bool "Also create a factory image"
-#	help
-#	  Used to generate a specific image to be located into the factory area
-#	  Default image is in the user area.
-#	  This specific factory area is used to recover from a bad user image
-#	depends on ! ENABLE_PRFLOW
-#
-#config FACTORY_IMAGE
-#	string
-#	default "TRUE"  if ENABLE_FACTORY
-#	default "FALSE" if ! ENABLE_FACTORY
-
-#FIXME Cloud flow will be revised
-config ENABLE_CLOUD_USER_FLOW
-	bool "Cloud user flow"
-	default y
-	depends on ENABLE_PRFLOW
-
-config CLOUD_USER_FLOW
-	string
-	default "TRUE" if ENABLE_CLOUD_USER_FLOW
-	default "FALSE" if ! ENABLE_CLOUD_USER_FLOW
-
-config ENABLE_CLOUD_BUILD_BITFILE
-	bool "Build bitstream file"
-	help
-	  Enables the generation of the image for the FPGA
-	default y
-	depends on ENABLE_PRFLOW
-
-config CLOUD_BUILD_BITFILE
-	string
-	default "TRUE" if ENABLE_CLOUD_BUILD_BITFILE
-	default "FALSE" if ! ENABLE_CLOUD_BUILD_BITFILE
-
+    string
+    default "TRUE"  if ENABLE_ILA
+    default "FALSE" if ! ENABLE_ILA
+###############################################################################
 
 config ENABLE_UNIT_VERIF
-	bool "Enable UVM based unit verification environment."
-	depends on SIM_XCELIUM
-	depends on HDL_UNIT_SIM
+    bool "Enable UVM based unit verification environment."
+    depends on SIM_XCELIUM
+    depends on HDL_UNIT_SIM
     default n
-	help
-	   OCSE and software excluded, only UVM based testbench and OC-ACCEL AXI-TLX bridge.
+    help
+       OCSE and software excluded, only UVM based testbench and OC-ACCEL AXI-TLX bridge.
 
 config UNIT_SIM_USED
-	string
-	default "TRUE"  if ENABLE_UNIT_VERIF
-	default "FALSE" if ! ENABLE_UNIT_VERIF
+    string
+    default "TRUE"  if ENABLE_UNIT_VERIF
+    default "FALSE" if ! ENABLE_UNIT_VERIF
 
-config ENABLE_ODMA
-	bool "Enable ODMA (not available)"
-    default n
-	help
-	   Enable ODMA instead of TLX-AXI bridge.
+config TIMING_LABLIMIT
+    string "TIMING_LABLIMIT"
+    default "-200"
 
-config ODMA_USED
-	string
-	default "TRUE"  if ENABLE_ODMA
-	default "FALSE" if ! ENABLE_ODMA
-
-config ENABLE_ODMA_ST_MODE
-	bool "Enable ODMA AXI4-Stream data transfer mode."
-    default n
-	help
-	   Enable ODMA Stream mode.
-
-config ODMA_ST_MODE_USED
-	string
-	default "TRUE"  if ENABLE_ODMA_ST_MODE
-	default "FALSE" if ! ENABLE_ODMA_ST_MODE
-
-config ENABLE_ODMA_512
-	bool "Enable ODMA data transfer with 512b data width."
-    default n
-	help
-	   Enable ODMA data width with 512bits.
-
-config ODMA_512_USED
-	string
-	default "TRUE"  if ENABLE_ODMA_512
-	default "FALSE" if ! ENABLE_ODMA_512
-
-config ENABLE_FLASH
-	bool "Enable FLASH"
-    default n
-	help
-	   Enable FLASH in oc-bip.
-
-config FLASH_USED
-	string
-	default "TRUE"  if ENABLE_FLASH
-	default "FALSE" if ! ENABLE_FLASH
-
+###############################################################################
+#config ENABLE_FLASH
+#    bool "Enable FLASH"
+#    default n
+#    help
+#       Enable FLASH in oc-bip.
+#
+#config FLASH_USED
+#    string
+#    default "TRUE"  if ENABLE_FLASH
+#    default "FALSE" if ! ENABLE_FLASH
+#

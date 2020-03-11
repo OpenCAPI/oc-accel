@@ -17,36 +17,35 @@
 SHELL=/bin/bash
 PLATFORM ?= $(shell uname -i)
 
-export SNAP_ROOT=$(abspath .)
+export OCACCEL_ROOT=$(abspath .)
 
-config_subdirs += $(SNAP_ROOT)/scripts
-software_subdirs += $(SNAP_ROOT)/software
-hardware_subdirs += $(SNAP_ROOT)/hardware
-action_subdirs += $(SNAP_ROOT)/actions
+config_subdirs += $(OCACCEL_ROOT)/scripts
+software_subdirs += $(OCACCEL_ROOT)/software
+hardware_subdirs += $(OCACCEL_ROOT)/hardware
+action_subdirs += $(OCACCEL_ROOT)/actions
 
-snap_config = .snap_config
-snap_config_bak = .snap_config_test.bak
-snap_config_new = .snap_config_test.new
-snap_config_sh = .snap_config.sh
-snap_config_cflags = .snap_config.cflags
-snap_env_sh = snap_env.sh
+ocaccel_config = .ocaccel_config
+ocaccel_config_bak = .ocaccel_config_test.bak
+ocaccel_config_new = .ocaccel_config_test.new
+ocaccel_config_sh = .ocaccel_config.sh
+ocaccel_config_cflags = .ocaccel_config.cflags
 
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall hw_project model sim image ocaccel_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
 
 help:
-	@echo "Main targets for the SNAP Framework make process:";
+	@echo "Main targets for the OCACCEL Framework make process:";
 	@echo "=================================================";
-	@echo "* snap_config    Configure SNAP framework";
-	@echo "* model          Build simulation model for simulator specified via target snap_config";
+	@echo "* ocaccel_config    Configure OCACCEL framework";
+	@echo "* model          Build simulation model for simulator specified via target ocaccel_config";
 	@echo "* sim            Start a simulation";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
-	@echo "* hw_project     Create Vivado project with oc-bip";
+	@echo "* hw_project     Create Vivado project with oc-accel-bsp";
 	@echo "* image          Build a complete FPGA bitstream after hw_project (takes more than one hour)";
 	@echo "* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')";
-	@echo "* software       Build software libraries and tools for SNAP";
+	@echo "* software       Build software libraries and tools for OCACCEL";
 	@echo "* apps           Build the applications for all actions";
 	@echo "* clean          Remove all files generated in make process";
 	@echo "* clean_config   As target 'clean' plus reset of the configuration";
@@ -92,7 +91,7 @@ test install uninstall:
 	done
 
 ifeq ($(PLATFORM),x86_64)
-$(hardware_subdirs): $(snap_env_sh)
+$(hardware_subdirs):
 	@if [ -d $@ ]; then              \
 	    $(MAKE) -s -C $@ || exit 1;  \
 	fi
@@ -100,18 +99,10 @@ $(hardware_subdirs): $(snap_env_sh)
 hardware: $(hardware_subdirs)
 
 # Model build and config
-hw_project model sim image cloud_enable cloud_base cloud_action sim_tmux: $(snap_env_sh)
+hw_project model sim image sim_tmux:
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
-	    fi                                             \
-	done
-
-cloud_merge:
-	@ignore_action_root=ignore_action_root $(MAKE) $(snap_env_sh)
-	@for dir in $(hardware_subdirs); do                \
-	    if [ -d $$dir ]; then                          \
-	        ignore_action_root=ignore_action_root $(MAKE) -s -C $$dir $@ || exit 1;          \
 	    fi                                             \
 	done
 
@@ -119,47 +110,41 @@ else #noteq ($(PLATFORM),x86_64)
 .PHONY: wrong_platform
 
 wrong_platform:
-	@echo; echo "\nSNAP hardware builds and simulation are possible on x86 platform only\n"; echo;
+	@echo; echo "\nOCACCEL hardware builds and simulation are possible on x86 platform only\n"; echo;
 
-$(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action cloud_merge: wrong_platform
+$(hardware_subdirs) hardware hw_project model sim sim_tmux image: wrong_platform
 endif
 
-# SNAP Config
+# OCACCEL Config
 config menuconfig xconfig gconfig oldconfig silentoldconfig:
-	@echo "$@: Setting up SNAP configuration" &>/dev/null
-	@touch $(snap_config) && sed '/^#/ d' <$(snap_config) >$(snap_config_bak)
+	@echo "$@: Setting up OCACCEL configuration"
+	@touch $(ocaccel_config) && sed '/^#/ d' <$(ocaccel_config) >$(ocaccel_config_bak)
 	@for dir in $(config_subdirs); do          \
 	    if [ -d $$dir ]; then                  \
 	        $(MAKE) -s -C $$dir $@ || exit 1;  \
 	    fi                                     \
 	done
-	@sed '/^#/ d' <$(snap_config) >$(snap_config_new)
-	@if [ -n "`diff -q $(snap_config_bak) $(snap_config_new)`" ]; then \
+	@sed '/^#/ d' <$(ocaccel_config) >$(ocaccel_config_new)
+	@if [ -n "`diff -q $(ocaccel_config_bak) $(ocaccel_config_new)`" ]; then \
 	    $(MAKE) -C hardware clean;                                     \
 	fi
-	@$(RM) $(snap_config_bak) $(snap_config_new)
+	@$(RM) $(ocaccel_config_bak) $(ocaccel_config_new)
 
-snap_config:
+ocaccel_config:
+	./run.py --no_run_sim --no_make_model
+	@echo "OCACCEL config done"
+
+$(ocaccel_config_sh):
 	@$(MAKE) -s menuconfig || exit 1
-	@$(MAKE) -s snap_env snap_env_parm=config
-	@echo "SNAP config done" &>/dev/null
-
-$(snap_config_sh):
-	@$(MAKE) -s menuconfig || exit 1
-	@echo "SNAP config done" &>/dev/null
-
-# Prepare SNAP Environment
-$(snap_env_sh) snap_env: $(snap_config_sh)
-	@$(SNAP_ROOT)/snap_env $(snap_env_parm) $(ignore_action_root) $(snap_config_sh)
+	@echo "OCACCEL config done" &>/dev/null
 
 %.defconfig:
 	@if [ ! -f defconfig/$@ ]; then			        \
 		echo "ERROR: Configuration $@ not existing!";	\
 		exit 2 ; 					\
 	fi
-	@cp defconfig/$@ $(snap_config)
+	@cp defconfig/$@ $(ocaccel_config)
 	@$(MAKE) -s oldconfig
-	@$(MAKE) -s snap_env
 
 clean:
 	@for dir in $(clean_subdirs); do           \
@@ -171,16 +156,13 @@ clean:
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
 
 clean_config: clean
-	@$(RM) snap_workflow*.log
+	@$(RM) ocaccel_workflow*.log
 	@$(RM) null
-	@$(RM) $(snap_config)
-	@$(RM) $(snap_config_sh)
-	@$(RM) $(snap_config_cflags)
-
-clean_env: clean_config
-	@$(RM) $(snap_env_sh)
+	@$(RM) $(ocaccel_config)
+	@$(RM) $(ocaccel_config_sh)
+	@$(RM) $(ocaccel_config_cflags)
 
 gitclean:
-	@echo -e "[GITCLEAN............] cleaning and resetting snap git";
+	@echo -e "[GITCLEAN............] cleaning and resetting ocaccel git";
 	git clean -f -d -x
 	git reset --hard

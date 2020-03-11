@@ -14,31 +14,28 @@
 # limitations under the License.
 #
 
-include $(SNAP_ROOT)/software/config.mk
+include $(OCACCEL_ROOT)/software/config.mk
 
-# Environment variable OCSE_ROOT defined by hardware setup scripts. Use default path if OCSE_ROOT is not defined.
-ifndef OCSE_ROOT
-OCSE_ROOT=$(abspath ../../ocse)
+# Environment variable OCSE_PATH defined by hardware setup scripts. Use default path if OCSE_PATH is not defined.
+ifndef OCSE_PATH
+OCSE_PATH=$(abspath ../../ocse)
 endif
 
 CFLAGS += -std=c99
 
-LDLIBS += -losnap -locxl -lpthread
+LDLIBS += -locaccel -locxl -lpthread
 
-LDFLAGS += -Wl,-rpath,$(SNAP_ROOT)/software/lib
-LIBS += $(SNAP_ROOT)/software/lib/libosnap.so
+LDFLAGS += -Wl,-rpath,$(OCACCEL_ROOT)/software/lib
+LIBS += $(OCACCEL_ROOT)/software/lib/libocaccel.so
 
 ifdef BUILD_SIMCODE
 CFLAGS += -D_SIM_
-LDFLAGS += -L$(OCSE_ROOT)/libocxl -Wl,-rpath,$(OCSE_ROOT)/libocxl
-LIBS += $(OCSE_ROOT)/libocxl/libocxl.so
+LDFLAGS += -L$(OCSE_PATH)/libocxl -Wl,-rpath,$(OCSE_PATH)/libocxl
+LIBS += $(OCSE_PATH)/libocxl/libocxl.so
 endif
 
 # This rule should be the 1st one to find (default)
 all: all_build
-
-# Include sub-Makefile if there are any
-# -include *.mk
 
 # This rule needs to be behind all the definitions above
 all_build: $(projs)
@@ -47,26 +44,23 @@ $(projs): $(LIBS) $(libs)
 
 $(libs): $(LIBS)
 
-$(SNAP_ROOT)/software/lib/libosnap.so:
+$(OCACCEL_ROOT)/software/lib/libocaccel.so:
 	$(MAKE) -C `dirname $@`
-
-
-# Resolve dependencies to required libraries
-#$(projs) $(libs): $(OCSE_ROOT)/libcxl/libcxl.so $(SNAP_ROOT)/software/lib/libosnap.so
-#
-#$(OCSE_ROOT)/libcxl/libcxl.so $(SNAP_ROOT)/software/lib/libosnap.so:
-#	$(MAKE) -C `dirname $@`
 
 ### Deactivate existing implicit rule
 %: %.c
+%: %.cpp
 %: %.sh
 
 ### Generic rule to build a tool
 %: %.o
-	$(CC) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
+	$(CXX) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
 
 %.o: %.c
 	$(CC) -c $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $(CFLAGS) $< -o $@
+
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $($(@:.o=)_CPPFLAGS) $< -o $@
 
 install: all
 	@mkdir -p $(DESTDIR)/bin

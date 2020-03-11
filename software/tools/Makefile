@@ -14,39 +14,36 @@
 # limitations under the License.
 #
 
-SNAP_ROOT ?= $(abspath ../..)
+OCACCEL_ROOT ?= $(abspath ../..)
 
 include ../config.mk
 
 
-LDLIBS += -losnap -locxl -lpthread
-LDFLAGS += -Wl,-rpath,$(SNAP_ROOT)/software/lib
-libs += $(SNAP_ROOT)/software/lib/libosnap.so
+LDLIBS += -locaccel -locxl -lpthread
+LDFLAGS += -Wl,-rpath,$(OCACCEL_ROOT)/software/lib
+libs += $(OCACCEL_ROOT)/software/lib/libocaccel.so
 
 ifdef BUILD_SIMCODE
 CFLAGS += -D_SIM_
-LDFLAGS += -L$(OCSE_ROOT)/libocxl -Wl,-rpath,$(OCSE_ROOT)/libocxl
-LIBS += $(OCSE_ROOT)/libocxl/libocxl.so
+LDFLAGS += -L$(OCSE_PATH)/libocxl -Wl,-rpath,$(OCSE_PATH)/libocxl
+LIBS += $(OCSE_PATH)/libocxl/libocxl.so
 endif
 
-snap_peek_objs = force_cpu.o
-snap_poke_objs = force_cpu.o
+ocaccel_peek_objs = force_cpu.o
+ocaccel_poke_objs = force_cpu.o
 
-projs = snap_peek snap_poke simple_reg_access oc_maint
+projs = ocaccel_poke ocaccel_peek ocaccel_maint 
 objs = force_cpu.o $(projs:=.o)
-hfiles = force_cpu.h  snap_fw_example.h
+hfiles = force_cpu.h  ocaccel_fw_example.h
 
 all: $(projs)
 
 $(projs): $(objs)
 
-$(objs): snap_actions.h $(libs)
+$(objs): $(libs)
 
 $(libs):
 	$(MAKE) -C $(shell dirname $@)
-
-snap_actions.h: $(SNAP_ROOT)/actions
-	$(CFG_SNAP_ACTIONS_H) < $< > $@
 
 ### Deactivate existing implicit rule
 %: %.c
@@ -54,10 +51,10 @@ snap_actions.h: $(SNAP_ROOT)/actions
 
 ### Generic rule to build a tool
 %: %.o
-	$(CC) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
+	$(CXX) $(LDFLAGS) $($(@)_LDFLAGS) $@.o $($(@)_objs) $($(@)_libs) $(LDLIBS) -o $@
 
 %.o: %.c $(hfiles)
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 install: all
 	@mkdir -p $(DESTDIR)/bin

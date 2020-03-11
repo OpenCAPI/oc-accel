@@ -1,7 +1,7 @@
-# SNAP Framework Bug Reporting
+# OCACCEL Framework Bug Reporting
 
 For bugs, questions or requests for enhancements, please use Github issues: 
-https://github.com/open-power/snap/issues
+https://github.com/opencapi/oc-accel/issues
 
 All issues should have one of the labels
 * `bug`
@@ -16,12 +16,12 @@ After fixing the issue, assign the `verify` label to indicate that the fix is re
 In some cases the issue may be rejected because it is `invalid`, a `duplicate` of another issue, or it was decided `wont fix`, and closed.
 
 
-# SNAP Framework Bug Reporting Template
+# OCACCEL Framework Bug Reporting Template
 
 Please make sure to include sufficient information in the bug to understand and recreate it. 
 * Detailed instructions how to recreate the issue
 * Where applicable, also include 
-  * The SNAP design or bitstream version
+  * The OCACCEL design or bitstream version
   * Git SHA ID
   * Name of the release and/or branch
   * Configuration used during make config, e.g. DDR3_USED=TRUE

@@ -19,6 +19,8 @@ import os
 import sys
 import qa
 import random
+from os.path import join as pathjoin
+from os.path import isfile as isfile
 from env_clean import env_clean
 from env_check import env_check
 from configure import Configuration
@@ -31,19 +33,33 @@ from ocaccel_utils import msg
 usage = '''%prog <options>
 The wrapper to guide through the whole OC-ACCEL workflow.
 
-Example:
+Example with commands:
+* Run configuration
+`%prog config`
+* Build the model
+`%prog model`
+* Run simulation
+`%prog sim`
+* Build bitstream 
+`%prog image`
+* Clean the directory
+`%prog clean`
+* Clean the configuration
+`%prog config_clean`
+
+Example with fine command line controls:
 * Run the full flow from configuration to simulation:
-`./ocaccel_workflow.py --ocse_root <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
+`%prog --ocse_path <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
 * Skip the simulation model build:
-`./ocaccel_workflow.py --no_make_model -o <path to ocse root> -s xcelium -t "ocaccel_example -a 6 -vv"`
+`%prog --no_make_model -o <path to ocse root> -s xcelium -t "ocaccel_example -a 6 -vv"`
 * Run testcase in an pop-up xterm:
-`./ocaccel_workflow.py --no_make_model -o <path to ocse root> -s xcelium -t terminal`
+`%prog --no_make_model -o <path to ocse root> -s xcelium -t terminal`
 * Clean the environment before running:
-`./ocaccel_workflow.py -c --no_make_model -o <path to ocse root> -s xcelium -t terminal`
+`%prog -c --no_make_model -o <path to ocse root> -s xcelium -t terminal`
 * Run in interactive mode:
-`./ocaccel_workflow.py -i --ocse_root <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
+`%prog -i --ocse_path <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
 * Run in unit sim model:
-`./ocaccel_workflow.py --unit_sim --simulator xcelium`
+`%prog --unit_sim --simulator xcelium`
 '''
 
 parser = OptionParser(usage=usage)
@@ -64,14 +80,17 @@ parser.add_option("-m", "--make_image",
                   help="Generate the FPGA image, default: %default")
 parser.add_option("-c", "--clean",
                   action="store_true", dest="clean", default=False,
-                  help="Clean the environment before running, default: %default")
-parser.add_option("-v", "--verbose",
-                  action="store_false", dest="verbose", default=False,
-                  help="Print more message to the stdout")
+                  help="Clean the directory before running, default: %default")
+parser.add_option("-C", "--config_clean",
+                  action="store_true", dest="config_clean", default=False,
+                  help="Clean the configuration before running, default: %default")
+parser.add_option("-q", "--quite",
+                  action="store_true", dest="quite", default=False,
+                  help="Print less message to the stdout")
 parser.add_option("-i", "--interactive",
                   action="store_true", dest="interactive", default=False,
                   help="Don't use the interactive mode during the flow, default: %default")
-parser.add_option("-o", "--ocse_root", dest="ocse_root", default=None,
+parser.add_option("-o", "--ocse_path", dest="ocse_path", default=None,
                   help="Path to OCSE root. No default value.", metavar="DIRECTORY")
 parser.add_option("-r", "--ocaccel_root", dest="ocaccel_root", default=os.path.abspath("."),
                   help="Path to ocaccel root, default: %default", metavar="DIRECTORY")
@@ -105,13 +124,10 @@ parser.add_option("--uvm_ver", dest="uvm_ver", default="UVM_LOW",
 parser.add_option("--no_wave",
                   action="store_true", dest="no_wave", default=False,
                   help="Don't dump waveform for simulation. default: %default")
-(options, args) = parser.parse_args()
+(options, leftovers) = parser.parse_args()
 
-ocaccel_workflow_log = "./ocaccel_workflow.log"
-ocaccel_workflow_make_model_log = "./ocaccel_workflow.make_model.log"
-ocaccel_workflow_make_image_log = "./ocaccel_workflow.make_image.log"
-if options.ocse_root is not None:
-    options.ocse_root = os.path.abspath(options.ocse_root)
+if options.ocse_path is not None:
+    options.ocse_path = os.path.abspath(options.ocse_path)
 options.ocaccel_root = os.path.abspath(options.ocaccel_root)
 if options.action_root is not None:
     options.action_root = os.path.abspath(options.action_root)
@@ -135,19 +151,82 @@ if options.unit_sim == True:
     else:
         options.predefined_config = "hdl_unit_sim.bridge.defconfig"
 
+logs_path = pathjoin(options.ocaccel_root, 'hardware', 'logs')
+try: 
+    os.makedirs(logs_path)
+except OSError:
+    if not os.path.isdir(logs_path):
+        raise
+
+ocaccel_workflow_log            = pathjoin(logs_path, "ocaccel_workflow.log")
+ocaccel_workflow_make_model_log = pathjoin(logs_path, "ocaccel_workflow.make_model.log")
+ocaccel_workflow_make_image_log = pathjoin(logs_path, "ocaccel_workflow.make_image.log")
+
+cmd = ""
+if len(leftovers) > 0:
+    cmd = leftovers[0]
+
+if cmd != "":
+    msg.ok_msg_blue('''--------> Running with COMMAND * %s * O(n_n)O~''' % cmd)
+    # Embedded combination of options
+    if cmd == 'config':
+        options.no_configure = False
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = False
+    elif cmd == 'model':
+        options.no_configure = True
+        options.no_make_model = False
+        options.no_run_sim = True
+        options.make_image = False
+    elif cmd == 'sim':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = False
+        options.make_image = False
+    elif cmd == 'image':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = True
+    elif cmd == 'clean':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = False
+        options.clean = True
+        options.config_clean = False
+        options.no_env_check = True
+    elif cmd == 'config_clean':
+        options.no_configure = True
+        options.no_make_model = True
+        options.no_run_sim = True
+        options.make_image = False
+        options.clean = True
+        options.config_clean = True
+        options.no_env_check = True
+    else:
+        msg.fail_msg ("Invalid command %s" % cmd)
+        exit(1)
+
 if __name__ == '__main__':
     msg.ok_msg_blue("--------> WELCOME to IBM OpenCAPI Acceleration Framework")
     question_and_answer = qa.QuestionAndAnswer(options)
 
     question_and_answer.ask(qa.ask_clean_str)
-    if options.clean:
-        env_clean(ocaccel_workflow_log)
+    if options.clean or options.config_clean:
+        env_clean(options, ocaccel_workflow_log)
+        exit(0)
 
     cfg = Configuration(options)
     cfg.log = ocaccel_workflow_log
     question_and_answer.cfg = cfg
     question_and_answer.ask(qa.ask_configure_str)
     if not options.no_configure:
+        cfg.configure()
+
+    if not isfile(pathjoin(options.ocaccel_root, '.ocaccel_config')):
+        msg.warn_msg("No configuration files (.ocaccel_config) found, need to do configure first!")
         cfg.configure()
 
     # In unit sim mode, all configurations are handled automatically, no need to update the cfg
@@ -159,10 +238,7 @@ if __name__ == '__main__':
 
     question_and_answer.ask(qa.ask_make_model_str)
     if not options.no_make_model and options.simulator.lower() != "nosim":
-        make_model(ocaccel_workflow_make_model_log, options.make_timeout)
-        # TODO: need to remove the following line if
-        # 'make model` stops touching ocaccel_env.sh
-        cfg.setup_ocaccel_env()
+        make_model(ocaccel_workflow_make_model_log, options, options.make_timeout)
 
     question_and_answer.ask(qa.ask_run_sim_str)
     if not options.no_run_sim and options.simulator.lower() != "nosim":
@@ -182,7 +258,7 @@ if __name__ == '__main__':
         sim = SimSession(simulator_name = options.simulator,\
                          testcase_cmd = testcase_cmd,\
                          testcase_args = testcase_args,\
-                         ocse_root = options.ocse_root,\
+                         ocse_path = options.ocse_path,\
                          ocaccel_root = options.ocaccel_root,\
                          sim_timeout = options.sim_timeout,\
                          unit_sim = options.unit_sim,\

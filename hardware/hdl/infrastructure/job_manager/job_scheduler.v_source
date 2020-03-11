@@ -1,0 +1,88 @@
+`timescale 1ns/1ps
+
+module job_scheduler #(
+    parameter HOST_DWIDTH = 1024,
+    parameter RETURN_WIDTH = 41,
+    parameter PASID_WIDTH = 9,
+    parameter KERNEL_NUM = NUM_KERNELS
+)(
+        input             clk                   ,
+        input             resetn                ,
+        //---- manager ----
+        output                          dsc0_pull_o     ,
+        input                           dsc0_ready_i    ,
+        input       [HOST_DWIDTH-1:0]   dsc0_data_i     ,
+        //---- completion ----
+        input                           complete_ready_i,
+        output  reg                     complete_push_o ,
+        output      [RETURN_WIDTH-1:0]  return_data_o   ,
+                    //---- kernel ----
+        output  reg [KERNEL_NUM-1:0]    kernel_start    ,
+        output  reg [HOST_DWIDTH-1:0]   kernel_data     ,
+        input       [KERNEL_NUM-1:0]    kernel_ready    ,
+        input       [KERNEL_NUM-1:0]    complete_ready  ,
+        output      [KERNEL_NUM-1:0]    complete_accept ,
+        input       [RETURN_WIDTH*KERNEL_NUM-1:0] complete_data
+    );
+
+
+//---- declarations ----
+ reg    [RETURN_WIDTH-1:0]  completion_info;
+ reg    [5:0]               completion_kernel;
+ reg    [KERNEL_NUM-1:0]    kernel_run;
+
+always@(posedge clk) if(dsc0_pull_o) kernel_data <= {dsc0_data_i[1023:48],dsc0_data_i[1007:992],dsc0_data_i[31:0]};
+assign dsc0_pull_o = |kernel_ready & dsc0_ready_i & !kernel_start;
+assign return_data_o = completion_info;
+
+genvar j;
+generate
+  for (j = 0; j < KERNEL_NUM; j = j + 1) begin:kernel_logic_gen
+    assign complete_accept[j] = complete_ready[j] & complete_ready_i & (completion_kernel == j);
+end
+endgenerate
+
+always@(posedge clk or negedge resetn)
+    if(!resetn)
+        completion_kernel <= 6'b0;
+    else if(completion_kernel == KERNEL_NUM - 1)
+        completion_kernel <= 6'b0;
+    else if(!(&complete_ready))
+        completion_kernel <= completion_kernel + 1'b1;
+
+always@(*)
+    case(completion_kernel)
+        //: my $kn = NUM_KERNELS;
+        //: for (my $i = 0; $i < $kn; $i++) {
+        //:     print qq(
+        //:     $i: complete_push_o = complete_accept[$i];
+        //:     )
+        //: }
+        default: complete_push_o = 1'b0;
+    endcase
+
+always@(*)
+    case(completion_kernel)
+        //: my $kn = NUM_KERNELS;
+        //: for (my $i = 0; $i < $kn; $i++) {
+        //:     print qq(
+        //:     $i: completion_info = complete_data[($i+1)*RETURN_WIDTH-1:$i*RETURN_WIDTH];
+        //:     )
+        //: }
+        default: completion_info = 'd0;
+    endcase
+
+always@(posedge clk or negedge resetn)
+    if(!resetn)
+        kernel_start <= 'd0;
+    //: my $kn = NUM_KERNELS;
+    //: for (my $i = 0; $i < $kn; $i++) {
+    //:     print qq(
+    //:     else if(dsc0_pull_o & (kernel_ready[$i]))
+    //:         kernel_start <= 1 << $i;
+    //:     )
+    //: }
+    else
+        kernel_start <= 'd0;
+
+endmodule

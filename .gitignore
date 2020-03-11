@@ -1,7 +1,8 @@
-.snap*
-snap_env.sh
+.ocaccel*
+ocaccel_env.sh
 software/*/*.o
 software/*/*.d
 software/*/*.so
+scripts/*/*.pyc
 *.jou
 *.log

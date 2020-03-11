@@ -44,7 +44,7 @@ function usage() {
   echo "    [-p <part_number>]   FPGA part number."
   echo "    [-c <clock_period>]  HLS clock period."
   echo "    [-f <files>]         files to be used."
-  echo "    [-s <snap_root>]     snap root directory."
+  echo "    [-s <ocaccel_root>]     ocaccel root directory."
   echo "    [-x <cflags>]        extra HLS CFLAGS."
   echo "    [-V] Print program version (${version})"
   echo "    [-h] Print this help message."
@@ -76,7 +76,7 @@ while getopts ":n:d:w:p:c:f:s:x:Vh" opt; do
       files=$OPTARG
       ;;
       s)
-      snap_root=$OPTARG
+      ocaccel_root=$OPTARG
       ;;
       x)
       cflags=$OPTARG
@@ -111,8 +111,8 @@ set_top ${wrapper}
 
 # Can that be a list?
 foreach file [ list ${files} ] {
-  add_files \${file} -cflags "$cflags -I$snap_root/actions/include -I$snap_root/software/include -I../../../software/examples -I../include"
-  add_files -tb \${file} -cflags "$cflags -DNO_SYNTH -I$snap_root/actions/include -I$snap_root/software/include -I../../../software/examples -I../include"
+  add_files \${file} -cflags "$cflags -I$ocaccel_root/actions/include -I$ocaccel_root/software/include -I../../../software/examples -I../include"
+  add_files -tb \${file} -cflags "$cflags -DNO_SYNTH -I$ocaccel_root/actions/include -I$ocaccel_root/software/include -I../../../software/examples -I../include"
 }
 
 open_solution "${name}"
@@ -123,6 +123,6 @@ config_interface -m_axi_addr64=true
 #config_rtl -reset all -reset_level low
 
 csynth_design
-#export_design -format ip_catalog -rtl vhdl
+export_design
 exit
 EOF

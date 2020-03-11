@@ -37,6 +37,7 @@ from ocaccel_utils import mkdirs
 from ocaccel_utils import run_in_background
 from ocaccel_utils import run_and_wait
 from ocaccel_utils import run_and_poll
+from ocaccel_utils import run_and_get_output
 from ocaccel_utils import grep_file
 from ocaccel_utils import search_file_group_1
 from ocaccel_utils import progress_bar
@@ -44,13 +45,13 @@ from ocaccel_utils import kill_pid
 from ocaccel_utils import msg 
 
 class SimSession:
-    def __init__(self, simulator_name = 'xsim', testcase_cmd = 'snap_example', testcase_args = "",\
-                 ocse_root = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
+    def __init__(self, simulator_name = 'xsim', testcase_cmd = 'ocaccel_example', testcase_args = "",\
+                 ocse_path = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
                  sim_timeout = 600, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
         # prepare the environment
         self.simulator_name = simulator_name
         self.testcase_cmd = testcase_cmd
-        self.ocse_root = ocse_root
+        self.ocse_path = ocse_path
         self.ocaccel_root = ocaccel_root
         self.sim_timeout = sim_timeout
         self.unit_sim = unit_sim
@@ -66,8 +67,8 @@ class SimSession:
         self.simulator = Simulator(simulator_name, self.ocaccel_root, self.sim_timeout, self.unit_sim, self.sv_seed, self.unit_test, self.uvm_ver, self.wave)
         # No OCSE if in unit sim mode
         if self.unit_sim == False:
-            self.ocse = OCSE(ocse_root, self.simulator.simout, self.sim_timeout)
-        self.testcase = Testcase(testcase_cmd, self.simulator.simout, testcase_args)
+            self.ocse = OCSE(ocse_path, self.simulator.simout, self.sim_timeout)
+        self.testcase = Testcase(testcase_cmd, self.ocaccel_root, self.simulator.simout, testcase_args)
 
     def run(self):
         msg.ok_msg_blue("--------> Simulation Session")
@@ -84,31 +85,30 @@ class SimSession:
 
     def check_root_path(self):
         if not isdir(self.ocaccel_root):
-            msg.warn_msg("SNAP_ROOT path: %s is not valid!" % self.ocaccel_root)
-            msg.fail_msg("SNAP_ROOT is not valid! Exiting ...")
+            msg.warn_msg("OCACCEL_ROOT path: %s is not valid!" % self.ocaccel_root)
+            msg.fail_msg("OCACCEL_ROOT is not valid! Exiting ...")
 
         if not isdir(self.action_root):
             msg.warn_msg("ACTION_ROOT path: %s is not valid!" % self.action_root)
             msg.fail_msg("ACTION_ROOT is not valid! Exiting ...")
 
     def setup_env(self):
-        if 'SNAP_ROOT' not in env:
-            env['SNAP_ROOT'] = self.ocaccel_root
+        if 'OCACCEL_ROOT' not in env:
+            env['OCACCEL_ROOT'] = self.ocaccel_root
 
-        self.ocaccel_root = env['SNAP_ROOT']
+        self.ocaccel_root = env['OCACCEL_ROOT']
 
-        source(pathjoin(env['SNAP_ROOT'], '.snap_config.sh'))
-        source(pathjoin(env['SNAP_ROOT'], 'snap_env.sh'))
+        source(pathjoin(env['OCACCEL_ROOT'], '.ocaccel_config.sh'))
 
-        self.action_root = env['ACTION_ROOT']
+        self.action_root = pathjoin(self.ocaccel_root, 'actions', env['ACTION_NAME'])
 
         env['PATH'] = ":".join((env['PATH'],\
-                pathjoin(env['SNAP_ROOT'], 'software', 'tools'),\
-                pathjoin(env['ACTION_ROOT'], 'sw')))
+                pathjoin(env['OCACCEL_ROOT'], 'software', 'tools'),\
+                pathjoin(self.action_root, 'sw')))
 
         if self.unit_sim == False:
-            if not isdir(self.ocse_root):
-                print self.ocse_root + " not exist!"
+            if not isdir(self.ocse_path):
+                print self.ocse_path + " not exist!"
                 exit("OCSE ROOT is not valid! Exiting ...")
 
     def setup_ld_libraries(self):
@@ -118,11 +118,11 @@ class SimSession:
         if self.unit_sim == False:
             env['LD_LIBRARY_PATH'] = \
                     ":".join((env['LD_LIBRARY_PATH'],\
-                              pathjoin(self.ocse_root, 'afu_driver', 'src'),\
-                              pathjoin(self.ocse_root, 'libocxl'),\
+                              pathjoin(self.ocse_path, 'afu_driver', 'src'),\
+                              pathjoin(self.ocse_path, 'libocxl'),\
                               pathjoin(self.ocaccel_root, 'software', 'lib')))
     def print_env(self):
-        msg.header_msg("SNAP ROOT\t %s" % self.ocaccel_root)
+        msg.header_msg("OCACCEL ROOT\t %s" % self.ocaccel_root)
         msg.header_msg("ACTION ROOT\t %s" % self.action_root)
         self.simulator.print_env()
         if self.unit_sim == False:
@@ -249,9 +249,9 @@ class Simulator:
             sim_args += " -input ncrun.tcl -r"
             unit_args = "".join(("+UVM_TESTNAME=", self.unit_test, " -seed ", self.sv_seed, " +UVM_VERBOSITY=", self.uvm_ver, " -coverage a -covfile ", self.ocaccel_root, "/hardware/setup/cov.ccf", " -covoverwrite -covtest ", self.unit_test))
             if self.unit_sim == False:
-                sim_top  = "work.top"
+                sim_top  = "work.top_wrapper"
             else:
-                sim_top  = "work.unit_top"
+                sim_top  = "work.unit_top_wrapper"
             self.sim_log  = pathjoin(self.simout, "sim.log")
 
             if self.unit_sim == False:
@@ -299,7 +299,7 @@ class Simulator:
             if self.wave:
                 sim_args += "-t xsaet.tcl" 
             sim_args += " -t xsrun.tcl"
-            sim_top  = "top"
+            sim_top  = "top_wrapper"
             self.sim_log  = pathjoin(self.simout, "sim.log")
 
             self.simulator_pid =\
@@ -335,22 +335,22 @@ class Simulator:
         msg.header_msg(" Simulator running successfully on socket: %s" % host_shim)
 
 class OCSE:
-    def __init__(self, ocse_root = os.path.abspath('../ocse'), simout = '.', timeout = 300):
-        self.ocse_root = ocse_root
+    def __init__(self, ocse_path = os.path.abspath('../ocse'), simout = '.', timeout = 300):
+        self.ocse_path = ocse_path
         self.simout = simout
         self.timeout = timeout
         self.ocse_pid = None
         self.setup()
 
     def print_env(self):
-        msg.header_msg("OCSE_ROOT\t %s" % self.ocse_root)
+        msg.header_msg("OCSE_PATH\t %s" % self.ocse_path)
 
     def run(self):
         self.run_ocse()
         self.get_ocse_server_dat()
         
     def prepare_ocse_parms(self):
-        copyfile(pathjoin(self.ocse_root, "ocse", "ocse.parms"),\
+        copyfile(pathjoin(self.ocse_path, "ocse", "ocse.parms"),\
                  pathjoin(self.simout))
 
     def setup(self):
@@ -365,7 +365,7 @@ class OCSE:
 
     def run_ocse(self):
         self.ocse_log = pathjoin(self.simout, "ocse.log")
-        ocse_cmd = pathjoin(self.ocse_root, "ocse", "ocse")
+        ocse_cmd = pathjoin(self.ocse_path, "ocse", "ocse")
 
         self.ocse_pid =\
                 run_in_background(cmd = ocse_cmd, work_dir = self.simout, log = self.ocse_log)
@@ -395,10 +395,11 @@ class OCSE:
         msg.header_msg(" OCSE listening on socket: %s" % ocse_server_dat)
 
 class Testcase:
-    def __init__(self, cmd = 'snap_example', simout = '.', args = ""):
+    def __init__(self, cmd = 'ocaccel_example', ocaccel_root = '.', simout = '.', args = ""):
         self.cmd = cmd
         self.args = args
         self.simout = simout
+        self.ocaccel_root = ocaccel_root
 
     def print_env(self):
         msg.header_msg("Testcase cmd:\t %s" % self.cmd)
@@ -409,8 +410,22 @@ class Testcase:
         self.test_log = pathjoin(self.simout, self.cmd + ".log")
         rc = None 
         if self.cmd == "terminal":
-            cmd = "xterm -title \"testcase window, look at log in \"" + self.test_log
-            rc = run_and_wait(cmd = cmd, work_dir = self.simout, log = self.test_log)
+            if "TMUX" in os.environ:
+                path_source = pathjoin(self.ocaccel_root, "scripts", "ocaccel_path.sh")
+                cmd = "tmux new-window -c %s" % self.simout
+                run_in_background(cmd = cmd, work_dir = self.simout, log = self.test_log)
+                cmd = 'tmux send-keys ". %s" Enter' % path_source
+                run_in_background(cmd = cmd, work_dir = self.simout, log = self.test_log)
+                cmd = "tmux list-panes -F '#{pane_pid}'"
+                out = run_and_get_output(cmd = cmd)
+                pid = out.strip('\n').split('\n')[-1]
+                msg.ok_msg_blue("Tmux started with PID %s" % pid)
+                cmd = "tail --pid=%s -f /dev/null" % pid
+                rc = run_and_wait(cmd = cmd, work_dir = self.simout, log = self.test_log)
+            else:
+                cmd = "xterm -title \"testcase window, look at log in \"" + self.test_log
+                rc = run_and_wait(cmd = cmd, work_dir = self.simout, log = self.test_log)
+
         else:
             cmd = " ".join((self.cmd, self.args))
             rc = run_and_poll(cmd = cmd, work_dir = self.simout, log = self.test_log)
@@ -442,7 +457,7 @@ if __name__ == '__main__':
                       dest="simulator", default='xsim',
                       help="The simulator for this simulation, default %default")
     parser.add_option("-t", "--testcase",
-                      dest="testcase", default='snap_example',
+                      dest="testcase", default='ocaccel_example',
                       help="The testcase for this simulation, default %default")
     parser.add_option("-r", "--testcase_args",
                       dest="testcase_args", default=' ',

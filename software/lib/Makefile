@@ -14,12 +14,12 @@
 # limitations under the License.
 #
 
-ifndef SNAP_ROOT
+ifndef OCACCEL_ROOT
 ifneq ("$(wildcard ../../actions)","")
-SNAP_ROOT=$(abspath ../../)
+OCACCEL_ROOT=$(abspath ../../)
 else
-$(info You probably have defined a wrong $$SNAP_ROOT.)
-$(error Please make sure that $$SNAP_ROOT is set up correctly.)
+$(info You probably have defined a wrong $$OCACCEL_ROOT.)
+$(error Please make sure that $$OCACCEL_ROOT is set up correctly.)
 endif
 endif
 
@@ -29,6 +29,7 @@ libversion = $(VERSION)
 CAPI_VER = opencapi30
 
 CFLAGS += -fPIC -fno-strict-aliasing
+CXXFLAGS += -fPIC -D_GNU_SOURCE 
 
 ifeq ($(CAPI_VER),opencapi30)
 LDLIBS += -locxl -lpthread
@@ -38,28 +39,30 @@ endif
 
 ifdef BUILD_SIMCODE
 CFLAGS += -D_SIM_
-LDFLAGS += -L$(OCSE_ROOT)/libocxl -Wl,-rpath,$(OCSE_ROOT)/libocxl
-LIBS += $(OCSE_ROOT)/libocxl/libocxl.so
+LDFLAGS += -L$(OCSE_PATH)/libocxl -Wl,-rpath,$(OCSE_PATH)/libocxl
+LIBS += $(OCSE_PATH)/libocxl/libocxl.so
 endif
 
-libnameA = libosnap
+libnameA = libocaccel
 projA = $(libnameA).a \
 	$(libnameA).so \
 	$(libnameA).so.$(MAJOR_VERSION) \
 	$(libnameA).so.$(libversion)
 
-srcA = osnap.c
+srcA = ocaccel.c
+srcCPP = ocaccel_job_manager.cpp
 
 objsA = $(srcA:.c=.o)
+objsA += $(srcCPP:.cpp=.o)
 
 projs += $(projA)
 
 all: $(projs)
 
 ifdef BUILD_SIMCODE
-$(projs): $(OCSE_ROOT)/libocxl/libocxl.so
+$(projs): $(OCSE_PATH)/libocxl/libocxl.so
 
-$(OCSE_ROOT)/libocxl/libocxl.so:
+$(OCSE_PATH)/libocxl/libocxl.so:
 	$(MAKE) -C `dirname $@`
 endif
 
@@ -87,8 +90,11 @@ install: all
 
 # general things
 %.o: %.c
-	$(CC) -c $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $(CFLAGS) $< -o $@
-	$(CC) -MM $(CPPFLAGS) $($(@:.o=)_CPPFLAGS) $(CFLAGS) $< > $*.d
+	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -MM $(CFLAGS) $< > $*.d
+
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $($(@:.o=)_CPPFLAGS) $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
 clean distclean:
 	$(RM) *.o *.d $(projs) *.so *.so.* *~
