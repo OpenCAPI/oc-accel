@@ -4,6 +4,8 @@ pipeline {
     stage('Run') {
       steps {
         sh '''whoami
+        date
+        pwd
 '''
       }
     }
