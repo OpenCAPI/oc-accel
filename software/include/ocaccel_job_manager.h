@@ -215,6 +215,8 @@ public:
         }
 
         m_scheduled_kernel_id = kernel_index;
+
+        return m_scheduled_kernel_id;
     }
 
 private:
