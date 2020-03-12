@@ -12,9 +12,6 @@ else
     IESL=$2
 fi
 
-OCACCEL_ROOT=`pwd`
-. ./scripts/setup_tools.sh
-
 export IES_LIBS=$IESL
 echo "Setting IES_LIBS to ${IES_LIBS}"
 
