@@ -64,66 +64,45 @@ export PATH=$PATH:${OCACCEL_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 ocaccel_maint -C ${ocaccel_card} || exit 1;
 
-#### Run CMD ##########################################################
+#### Run Cmd ##########################################################
 
-function test_perf_test {
-    echo "---------------- Testing burst num $1 size $2 length $3 id num $4: --------------"
-    local num=$1
-    local size=$2
-    local length=$3
-    local idn=$4
+function test_perf_latency {
+    echo "--------------------------------------------------------------------------------------"
+    echo "> Testing rnum $1 wnum $2 size $3 length $4 axi_id_range (0 to $5): "
+    local rnum=$1
+    local wnum=$2
+    local size=$3
+    local length=$4
+    local idn=$5
 
     local pattern=$(($(($idn<<16))+$(($length<<8))+$size))
 
-    echo -n "Read and Write Duplex ... "
-    cmd="hdl_perf_test -C${ocaccel_card} -c 1 -w 0 -n ${num} -N ${num} -p ${pattern} -P ${pattern} -t 100000 >>  hdl_perf_test_general.log 2>&1"
+    cmd="hdl_perf_test -C${ocaccel_card} -c 1 -w 0 -n ${rnum} -N ${wnum} -p ${pattern} -P ${pattern} -t 100000 >>  hdl_perf_test_latency.log 2>&1"
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failed, please check hdl_perf_test_general.log"
+        echo "failed, please check hdl_perf_test_latency.log"
         exit 1
     fi
     echo "ok"
+    if [ $rnum -ne 0 ]; then 
+        echo "Calculate read cycle counts"
+        ./process_latency.awk file_rd_cycle
+    fi	
+    if [ $wnum -ne 0 ]; then	
+        echo "Calculate write cycle counts"
+        ./process_latency.awk file_wr_cycle
+    fi	
 
 }
 
-rm -f hdl_perf_test_general.log
-touch hdl_perf_test_general.log
+rm -f hdl_perf_test_latency.log
+touch hdl_perf_test_latency.log
 
 ############## Test small burst length  ##############
-test_perf_test 10 7 0 0
-test_perf_test 10 7 1 0
-
-############## Test axi_size(2-7) and axi_id_num(0-15) ##############
-id=0
-while [ $id -lt 16 ]
-do
-    if [ $short -ne 1 ]; then
-        echo "Run long test, preferred to run on card"
-        test_perf_test 10000 2 255 ${id}
-        test_perf_test 10000 3 255 ${id}
-        test_perf_test 10000 4 255 ${id}
-        test_perf_test 10000 5 127 ${id}
-        test_perf_test 10000 6 63  ${id}
-        test_perf_test 10000 7 31  ${id}
-    else
-        echo "Run short test, preferred to run for simulation"
-        test_perf_test 5 2 255 ${id}
-        test_perf_test 5 3 255 ${id}
-        test_perf_test 5 4 255 ${id}
-        test_perf_test 5 5 127 ${id}
-        test_perf_test 5 6 63  ${id}
-        test_perf_test 5 7 31  ${id}
-    fi
-    id=$(($id + 1))
-done
-
-##Print build date and version
-#echo
-#echo -n "Git Version: "
-##ocaccel_peek -C ${ocaccel_card} 0x0 || exit 1;
-#echo -n "Build Date:  "
-##ocaccel_peek -C ${ocaccel_card} 0x8 || exit 1;
+test_perf_latency 100000 0 7 0 0
+test_perf_latency 0 100000 7 0 0
+test_perf_latency 100000 100000 7 0 0
 
 echo "ok"
 

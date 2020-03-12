@@ -14,29 +14,29 @@ BEGIN {
   if ($0 ~ "Read bandwidth min") {
          a1_iter++
          a1_size[a1_iter]=$7
-         a1_min[a1_iter]=$13
-         a1_max[a1_iter]=$15
-         a1_variance[a1_iter]=$17
+         a1_min[a1_iter]=$10
+         a1_max[a1_iter]=$12
+         a1_variance[a1_iter]=$14
  }
   if ($0 ~ "Write bandwidth min") {
          a2_iter++
          a2_size[a1_iter]=$7
-         a2_min[a1_iter]=$13
-         a2_max[a1_iter]=$15
-         a2_variance[a1_iter]=$17
+         a2_min[a1_iter]=$10
+         a2_max[a1_iter]=$12
+         a2_variance[a1_iter]=$14
  }
   if ($0 ~ "Duplex bandwidth min") {
          a3_iter++
          a3_size[a1_iter]=$7
-         a3_min[a1_iter]=$13
-         a3_max[a1_iter]=$15
-         a3_variance[a1_iter]=$17
+         a3_min[a1_iter]=$10
+         a3_max[a1_iter]=$12
+         a3_variance[a1_iter]=$14
  }
 }
 END {
   i=1 
   printf "+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n"
-  printf "|            OC-Accel hdl_single_engine Throughput (MBytes/s)                                                                                                                  |\n"
+  printf "|                OC-Accel hdl_perf_test Throughput (MBytes/s)                                                                                                                  |\n"
   printf "+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n"
   printf "|%11s %17s %17s %17s %17s %17s %17s %17s %17s %17s |\n","Total Bytes", "Read Min", "Read Max", "Read Variance", "Write Min", "Write Max", "Write Variance", "Duplex Min", "Duplex Max", "Duplex Variance" 
   printf "+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n"

@@ -215,7 +215,6 @@ public:
         }
 
         m_scheduled_kernel_id = kernel_index;
-
         return m_scheduled_kernel_id;
     }
 
@@ -589,7 +588,7 @@ public:
             if ((counter / 10000) >= timeout_seconds) {
                 return false;
             }
-            usleep (100);
+         //   usleep (100);
             counter++;
             if ((counter % 100) == 99) {
                 printf ("--------> Heart beat waiting on job done - [%08ld] microseconds elapsed!\n", (counter + 1) * 100);
