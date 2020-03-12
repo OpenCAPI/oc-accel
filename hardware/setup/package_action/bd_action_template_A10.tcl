@@ -17,6 +17,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_kernel${xx}_aximm
     create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_kernel${xx}_axilite
+    create_bd_pin -dir O $bd_hier/pin_kernel${xx}_done
 }
 
 create_bd_pin -dir I $bd_hier/pin_clock_action
@@ -141,6 +142,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
     # Connect interrupt -----------------
     connect_bd_net [get_bd_pins $kernel_hier/${kernel_top}/interrupt] [get_bd_pins $kernel_hier/kernel_helper/interrupt_i]
+    connect_bd_net [get_bd_pins $kernel_hier/${kernel_top}/interrupt] [get_bd_pins $bd_hier/pin_kernel${xx}_done]
 
 }
 
