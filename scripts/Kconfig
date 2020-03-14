@@ -305,7 +305,7 @@ config KERNELS
 # !!! This doesn't show in the menuwindow
 # Override the name for existing example
 config KERNELS
-    int
+    string
     default "kernel_perf_test" if HDL_PERF_TEST
     default "vadd,matmul,vadd,matmul" if HLS_VADD_MATMUL
     default "vadd" if HLS_VADD
@@ -445,12 +445,16 @@ config PHY_SPEED
 
 ###############################################################################
 config AXI_ID_WIDTH
-            prompt "ID width on Action AXI interface, range 1-5"
-        int
-        default 1
-        range 1 5
-        help
-          ID width on AXI interface, for example, AWID, ARID, etc
+    depends on (USER_HDL_ACTION)
+    int "ID width on Action AXI interface, range 1-5"
+    default 1
+    range 1 5
+    help
+      ID width on AXI interface, for example, AWID, ARID, etc
+
+config AXI_ID_WIDTH
+    int
+    default 5 if HDL_PERF_TEST
 
 ###############################################################################
 # Note: When ACTION_CLOCK_200MHZ is selected, no need to insert clock converter

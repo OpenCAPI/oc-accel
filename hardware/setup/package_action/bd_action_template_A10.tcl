@@ -47,6 +47,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
     # Add kernel helper (a small module to handle interrupt src, etc)
     create_bd_cell -type ip -vlnv opencapi.org:ocaccel:kernel_helper:1.0 $kernel_hier/kernel_helper
+    set_property -dict [ list CONFIG.C_M_AXI_GMEM_ID_WIDTH $axi_id_width ] [ get_bd_cells $kernel_hier/kernel_helper ]
 
     for {set j 1} {$j <= 8} {incr j} {
         set kernel_name_str(${j}) [ eval my_get_kernel_name_str $j $kernel_top ]
