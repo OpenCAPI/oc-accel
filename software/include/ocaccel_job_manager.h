@@ -81,6 +81,11 @@ public:
         return (NULL != m_data);
     }
 
+    bool isEnabled()
+    {
+        return (0x1 == ((* ((uint8_t*) (m_data + c_header_offset))) & 0x1));
+    }
+
     void dump()
     {
         printf ("==================\n");
@@ -113,6 +118,16 @@ protected:
     static const int c_kernel_param_offset       = 8;
     static const int c_interrupt_handler_offset  = 112;
     static const int c_next_block_address_offset = 120;
+
+    void enable()
+    {
+        * ((uint32_t*) (m_data + c_header_offset)) |= 0x1;
+    }
+
+    void disable()
+    {
+        * ((uint32_t*) (m_data + c_header_offset)) &= ~0x1;
+    }
 
     void setHeader (uint32_t in_data)
     {
@@ -166,7 +181,7 @@ public:
     {
         m_kernel = K::get();
         m_scheduled_kernel_id = m_kernel->schedule();
-        m_kernel_parameter_valid.resize(m_kernel->getNumberOfKernelParams(), false);
+        m_kernel_parameter_valid.resize (m_kernel->getNumberOfKernelParams(), false);
     }
 
     ~JobDescriptor()
@@ -324,6 +339,18 @@ private:
     // Initialize a job descriptor
     int initializeDescriptors();
 
+    // Enable all job descriptors
+    void enableDescriptors();
+
+    // Enable a job descriptor block
+    void enableDescriptorBlock (tDescriptorBlock descriptor_block);
+
+    // Disable all job descriptors
+    void disableDescriptors();
+
+    // Disable a job descriptor block
+    void disableDescriptorBlock (tDescriptorBlock descriptor_block);
+
     // Release the space of descriptor block
     void freeDescriptorBlock (tDescriptorBlock descriptor_block);
 
@@ -333,15 +360,18 @@ private:
     // Check the completion queue to determine if all jobs are done, for JOB_SCHEDULER mode
     bool isAllJobsDone();
 
-    // Check if all jobs done in MMIO mode
+    // Check if 1 job is done in job scheduler mode
+    bool isJobDone();
+
+    // Check if the job is done in MMIO mode
     template <typename K>
-    bool isAllJobsDone (K* reg_layout)
+    bool isJobDone (K* reg_layout)
     {
-        if (eMode::MMIO != m_mode) {
-            printf ("ERROR: invalid mode when quering job status!\n");
-            return true;
+        if (eMode::JOB_SCHEDULER == m_mode) {
+            return isJobDone();
         }
 
+        // MMIO mode
         for (int kernel_idx = 0; kernel_idx < m_number_of_kernels; kernel_idx++) {
             if (m_active_kernel_mask[kernel_idx]) {
                 uint32_t reg_data;
@@ -376,8 +406,52 @@ private:
     // Run in the job scheduler mode
     int runJobScheduler();
 
-    // Run in the MMIO mode
-    //int runMMIO (KernelBase* reg_layout);
+    // Enable 1 bit and start hardware job scheduler
+    template <typename K>
+    int runJobScheduler (JobDescriptorPtr<K> job_ptr)
+    {
+        job_ptr->enable();
+        printf ("----> Enable job[%d] in Hardware Job Scheduler Mode.\n", job_ptr->getJobId());
+        printf ("--------> WARNING: Only 1 job will be processed, this might not be the most efficient way to use hardware job scheduler!\n");
+        printf ("--------> WARNING: You migh want to configure multiple jobs and call the un-templated method run() to run all of them in a batch!\n");
+
+        return runJobScheduler();
+    }
+
+    // Run in the MMIO mode with 1 job descriptor
+    template <typename K>
+    int runMMIO (JobDescriptorPtr<K> job_ptr)
+    {
+        if (eMode::MMIO != m_mode) {
+            printf ("ERROR: incorrect mode when trying to run MMIO!\n");
+            return -1;
+        }
+
+        K* reg_layout = job_ptr->getKernel();
+
+        if (NULL == reg_layout) {
+            printf ("ERROR: incorrect pointer to kernel register layout!\n");
+            return -1;
+        }
+
+        printf ("----> Configuring job[%d] to kernel %d in MMIO mode.\n", job_ptr->getJobId(), job_ptr->getScheduledKernelID());
+
+        if (configureJob<K> (job_ptr)) {
+            printf ("ERROR: failed to configure a job descriptor to kernel!\n");
+            return -1;
+        }
+
+        printf ("----> Starting job[%d] on kernel %d in MMIO mode.\n", job_ptr->getJobId(), job_ptr->getScheduledKernelID());
+
+        if (startKernel<K> (job_ptr->getScheduledKernelID(), reg_layout)) {
+            printf ("ERROR: failed to start kernel!\n");
+            return -1;
+        }
+
+        m_status = eStatus::RUNNING;
+
+        return 0;
+    }
 
     // Configure 1 job descriptor to kernel in MMIO mode
     template <typename K>
@@ -494,40 +568,17 @@ public:
     // Start process the manager in JOB_SCHEDULER mode
     int run();
 
-    // Start process the manager in MMIO mode
-    //int run (KernelBase* reg_layout);
-
     // Run in the MMIO mode with 1 job descriptor
     template <typename K>
     int run (JobDescriptorPtr<K> job_ptr)
     {
-        if (eMode::MMIO != m_mode) {
-            printf ("ERROR: incorrect mode when trying to run MMIO!\n");
-            return -1;
+        if (eMode::MMIO == m_mode) {
+            return runMMIO<K> (job_ptr);
         }
 
-        K* reg_layout = job_ptr->getKernel();
-
-        if (NULL == reg_layout) {
-            printf ("ERROR: incorrect pointer to kernel register layout!\n");
-            return -1;
+        if (eMode::JOB_SCHEDULER == m_mode) {
+            return runJobScheduler<K> (job_ptr);
         }
-
-        printf ("----> Configuring job[%d] to kernel %d in MMIO mode.\n", job_ptr->getJobId(), job_ptr->getScheduledKernelID());
-
-        if (configureJob<K> (job_ptr)) {
-            printf ("ERROR: failed to configure a job descriptor to kernel!\n");
-            return -1;
-        }
-
-        printf ("----> Starting job[%d] on kernel %d in MMIO mode.\n", job_ptr->getJobId(), job_ptr->getScheduledKernelID());
-
-        if (startKernel<K> (job_ptr->getScheduledKernelID(), reg_layout)) {
-            printf ("ERROR: failed to start kernel!\n");
-            return -1;
-        }
-
-        m_status = eStatus::RUNNING;
 
         return 0;
     }
@@ -571,7 +622,7 @@ public:
     eStatus status (K* reg_layout)
     {
         if (eStatus::RUNNING == m_status) {
-            if (isAllJobsDone (reg_layout)) {
+            if (isJobDone<K> (reg_layout)) {
                 m_status = eStatus::FINISHED;
             }
         }
@@ -581,25 +632,25 @@ public:
 
     // Wait until kernels of this job done, with an timeout value proposed
     template <typename K>
-    bool waitAllDone (JobDescriptorPtr<K> job_desc, uint64_t timeout_seconds = 100)
+    bool waitAllDone (JobDescriptorPtr<K> job_desc, uint64_t timeout_seconds = -1ULL)
     {
         uint64_t counter = 0;
+
         while (eStatus::FINISHED != status<K> (job_desc->getKernel())) {
-            if ((counter / 10000) >= timeout_seconds) {
+            if ((counter / 1000000) >= timeout_seconds) {
                 return false;
             }
-         //   usleep (100);
             counter++;
-            if ((counter % 100) == 99) {
-                printf ("--------> Heart beat waiting on job done - [%08ld] microseconds elapsed!\n", (counter + 1) * 100);
-            }
         }
 
         return true;
     }
 
     // Discover kernel instances in hardware with respect to the kernel name
-    int discoverKernelInstancesInHardware (const std::string kernel_name, std::vector<int>& instances);
+    int discoverKernelInstancesInHardware (const std::string kernel_name, std::vector<int> & instances);
+
+    // Reset the all job descriptors to disable status
+    void reset();
 
     // Dump all descriptors
     void dump();
@@ -640,7 +691,7 @@ private:
 class KernelBase
 {
 public:
-    KernelBase(std::string name)
+    KernelBase (std::string name)
         : m_name (name),
           m_last_scheduled_index (0)
     {
@@ -683,14 +734,14 @@ public:
         return m_kernel_params_regs.size();
     }
 
-    const std::string& getName() 
+    const std::string & getName()
     {
         return m_name;
     }
 
     void addHardwareInstance (int m_hw_kernel_id)
     {
-        m_hw_instances.push_back(m_hw_kernel_id);
+        m_hw_instances.push_back (m_hw_kernel_id);
     }
 
     int schedule()
@@ -707,10 +758,12 @@ public:
     bool isKernelIndexValid (int kernel_index)
     {
         std::vector<int>::iterator it = m_hw_instances.begin();
+
         while (it < m_hw_instances.end()) {
             if (*it == kernel_index) {
                 return true;
             }
+
             it++;
         }
 
@@ -722,9 +775,10 @@ protected:
 
     std::vector<uint64_t> m_kernel_params_regs;
 
-    int discoverHardwareInstances ()
+    int discoverHardwareInstances()
     {
         OcaccelJobManager* job_manager_ptr = OcaccelJobManager::getManager();
+
         if (job_manager_ptr->discoverKernelInstancesInHardware (m_name, m_hw_instances)) {
             printf ("ERROR: failed to discover kernel instances in hardware!\n");
             return -1;
@@ -751,39 +805,39 @@ private:
 #define KERNEL_ARGS(...) __VA_ARGS__
 
 #define Kernel(_X, __args) \
-class _X : public KernelBase \
-{\
-public:\
-\
-    static _X* get()\
+    class _X : public KernelBase \
     {\
-        static _X kernel;\
-        return &kernel;\
-    }\
-    _X (_X const &) = delete;\
-    void operator = (_X const &) = delete;\
-    ~_X()\
-    {\
-    }\
-    enum class PARAM : int {\
-       __args,\
-       PARAM_NUM\
-    };\
-private:\
-    _X() : KernelBase(#_X)\
-    {\
-        setKernelParamNumber (PARAM::PARAM_NUM);\
-        addKernelParameters(); \
-    }\
-    void setKernelParamNumber (PARAM num)\
-    {\
-        m_kernel_params_regs.resize (static_cast<int> (num), 0);\
-    }\
-    void setKernelParamRegister (PARAM reg, uint64_t offset)\
-    {\
-        m_kernel_params_regs[static_cast<int> (reg)] = offset;\
-    }\
-    virtual void addKernelParameters ();\
-}
+    public:\
+        \
+        static _X* get()\
+        {\
+            static _X kernel;\
+            return &kernel;\
+        }\
+        _X (_X const &) = delete;\
+        void operator = (_X const &) = delete;\
+        ~_X()\
+        {\
+        }\
+        enum class PARAM : int {\
+            __args,\
+            PARAM_NUM\
+        };\
+    private:\
+        _X() : KernelBase(#_X)\
+        {\
+            setKernelParamNumber (PARAM::PARAM_NUM);\
+            addKernelParameters(); \
+        }\
+        void setKernelParamNumber (PARAM num)\
+        {\
+            m_kernel_params_regs.resize (static_cast<int> (num), 0);\
+        }\
+        void setKernelParamRegister (PARAM reg, uint64_t offset)\
+        {\
+            m_kernel_params_regs[static_cast<int> (reg)] = offset;\
+        }\
+        virtual void addKernelParameters ();\
+    }
 
 #endif //__OCACCEL_JOB_MANAGER_H__

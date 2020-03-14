@@ -157,7 +157,7 @@ class Simulator:
             msg.fail_msg("SIMOUT is not valid! Exiting ...")
 
     def setup_simout(self):
-        timestamp = str(int(round(time.time() * 1000)))
+        timestamp = time.strftime("%Y%m%d-%a-%H%M%S", time.localtime())
         seed = str(random.randint(0, 0xffffffff))
         self.simout = pathjoin(self.ocaccel_root,\
                                "hardware", "sim", self.simulator,\

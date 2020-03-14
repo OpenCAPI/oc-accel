@@ -18,18 +18,20 @@
 ############################################################################
 ############################################################################
 
-set hardware_dir    $::env(OCACCEL_HARDWARE_ROOT)
-set kernel_number   $::env(KERNEL_NUMBER)
-set src_dir         $hardware_dir/hdl/infrastructure/job_manager
-set logfile         $hardware_dir/logs/create_job_manager_ips.log
-set HDL_PP          $hardware_dir/../scripts/utils/hdl_pp
-set def_file        $src_dir/def.h
+set hardware_dir            $::env(OCACCEL_HARDWARE_ROOT)
+set kernel_number           $::env(KERNEL_NUMBER)
+set src_dir                 $hardware_dir/hdl/infrastructure/job_manager
+set logfile                 $hardware_dir/logs/create_job_manager_ips.log
+set HDL_PP                  $hardware_dir/../scripts/utils/hdl_pp
+set def_file                $src_dir/def.h
 
 exec echo "#define NUM_KERNELS $kernel_number" > $def_file
 exec $HDL_PP/vcp -i $src_dir/job_scheduler.v_source -o $src_dir/job_scheduler.vcp -imacros $def_file 2>> $logfile
 exec perl -I $HDL_PP/plugins -Meperl $HDL_PP/eperl -o $src_dir/job_scheduler.v $src_dir/job_scheduler.vcp 2>> $logfile
 exec $HDL_PP/vcp -i $src_dir/jm_framework.v_source -o $src_dir/jm_framework.vcp -imacros $def_file 2>> $logfile
 exec perl -I $HDL_PP/plugins -Meperl $HDL_PP/eperl -o $src_dir/jm_framework.v $src_dir/jm_framework.vcp 2>> $logfile
+exec $HDL_PP/vcp -i $src_dir/mp_control.v_source -o $src_dir/mp_control.vcp -imacros $def_file 2>> $logfile
+exec perl -I $HDL_PP/plugins -Meperl $HDL_PP/eperl -o $src_dir/mp_control.v $src_dir/mp_control.vcp 2>> $logfile
 
 set verilog_job_manager [list \
  $src_dir/jm_framework.v \

@@ -293,14 +293,16 @@ unsigned long ocaccel_tget_us (void);
 #define OCACCEL_KERNEL_NAME_STR7           0x48              /* OCACCEL kernel name register 7 */
 #define OCACCEL_KERNEL_NAME_STR8           0x4C              /* OCACCEL kernel name register 8 */
 
-#define OCACCEL_JM_CONTROL                 0x24
-#define OCACCEL_JM_INIT_ADDR_LO            0x28
-#define OCACCEL_JM_INIT_ADDR_HI            0x2C
-#define OCACCEL_JM_CMPL_ADDR_LO            0x30
-#define OCACCEL_JM_CMPL_ADDR_HI            0x34
+#define OCACCEL_MAX_NUM_KERNELS            16
 #define OCACCEL_BASE_PER_KERNEL            0x00040000
 #define OCACCEL_BASE_KERNEL_HELPER         0x00020000
 #define OCACCEL_IRQ_HANDLER_BASE           0xFFFFFFFF // TODO: undefined yet
+#define OCACCEL_JM_BASE                    OCACCEL_BASE_PER_KERNEL * (OCACCEL_MAX_NUM_KERNELS - 1)
+#define OCACCEL_JM_CONTROL                 OCACCEL_JM_BASE + 0x24
+#define OCACCEL_JM_INIT_ADDR_LO            OCACCEL_JM_BASE + 0x28
+#define OCACCEL_JM_INIT_ADDR_HI            OCACCEL_JM_BASE + 0x2C
+#define OCACCEL_JM_CMPL_ADDR_LO            OCACCEL_JM_BASE + 0x30
+#define OCACCEL_JM_CMPL_ADDR_HI            OCACCEL_JM_BASE + 0x34
 
 #define OCACCEL_MEMBUS_WIDTH          128                /* bytes */
 #define OCACCEL_ROUND_UP(x, width) (((x) + (width) - 1) & ~((width) - 1))

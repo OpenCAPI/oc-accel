@@ -237,7 +237,7 @@ top_project: $(COMMON_VERILOG_SRCS) $(COMMON_VERILOG_SRCS)
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework/create_top_$(INFRA_TEMPLATE_SELECTION).tcl -notrace -log $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).log  -journal $(LOGS_DIR)/create_top_$(INFRA_TEMPLATE_SELECTION).jou > $(templog)
 	@echo -e "[CREATE TOP PROJECT..] done  `date +"%T %a %b %d %Y"`"
 
-hw_project: ocaccel_preprocess define_interfaces package_hostside package_infrastructure action_hw top_project
+hw_project: ocaccel_preprocess define_interfaces action_hw package_hostside package_infrastructure top_project
 	@echo -e "                       using `vivado -version |grep Vivado`"
 	@echo -e "                       CAPI_VER=$(CAPI_VER)"
 	@echo -e "[HW PROJECT]           done  `date +"%T %a %b %d %Y"`"

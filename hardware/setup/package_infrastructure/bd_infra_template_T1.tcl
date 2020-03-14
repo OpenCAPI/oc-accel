@@ -3,7 +3,6 @@ set bd_hier "infra_wrap"
 set action_frequency    $::env(ACTION_CLOCK_FREQUENCY)
 set action_name         $::env(ACTION_NAME)
 set kernel_number       $::env(KERNEL_NUMBER)
-set width_aximm_ports   $::env(WIDTH_AXIMM_PORTS)
 # Create BD Hier
 create_bd_cell -type hier $bd_hier
 
@@ -85,7 +84,7 @@ if {$action_frequency != 200} {
 
 ###############################################################################
 # Add SmartConnect for AXI lite Master
-if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 1024} {
+if {$action_frequency == 200 && $kernel_number == 1} {
     # The minimum situation, no SmartConnect is needed
     # Bypass
     puts "Bypass AXI smartconnect_axilite"
@@ -114,9 +113,11 @@ if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 102
 }
 
 
+set helper00_axim_data_width [get_property CONFIG.C_M_AXI_GMEM_DATA_WIDTH [get_bd_cells act_wrap/kernel00_wrap/kernel_helper]]
 ###############################################################################
 # Add SmartConnect for AXI MM Slave
-if {$action_frequency == 200 && $kernel_number == 1 && $width_aximm_ports == 1024} {
+if {$action_frequency == 200 && $kernel_number == 1 && $helper00_axim_data_width == 1024} {
+
     # The minimum situation, no SmartConnect is needed
     # Bypass
     puts "Bypass AXI smartconnect_aximm"

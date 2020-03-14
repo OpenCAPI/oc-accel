@@ -2,6 +2,7 @@
 set action_root $::env(ACTION_ROOT)
 set fpga_part $::env(FPGACHIP)
 set software_root $::env(OCACCEL_ROOT)/software
+set hardware_dir       $::env(OCACCEL_HARDWARE_ROOT)
 
 
 set top_name vadd
@@ -31,4 +32,8 @@ config_interface -m_axi_addr64=true
 config_export -format ip_catalog -rtl verilog -version 1.0 -vendor opencapi.org -library ocaccel
 csynth_design
 export_design -format ip_catalog -rtl verilog -vendor "opencapi.org" -library "ocaccel" -version "1.0"
+
+# Generate the register layout header files
+set kernel_top $top_name
+source $hardware_dir/setup/package_action/hls_specific/hls_action_parse.tcl
 exit

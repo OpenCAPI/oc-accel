@@ -237,6 +237,11 @@ module kernel_helper # (
     wire access_helper_r;
     assign access_helper_r = (s_axilite_i2h_araddr[REG_RANGE_BIT] == 1'b1);
 
+    reg access_helper_w_reg;
+    always @ (posedge clk)
+        if (s_axilite_i2h_awvalid)
+            access_helper_w_reg <= access_helper_w;
+
     // helper's AXI slave
     verilog_helper_s_axi # (
         .C_S_AXI_ADDR_WIDTH (REG_RANGE_BIT      ) ,
@@ -292,7 +297,7 @@ module kernel_helper # (
     assign /*  output*/  s_axilite_h2k_BREADY  = s_axilite_i2h_bready ;
 
     assign /*  input */  s_axilite_i2h_awready = access_helper_w ? wire_axilite_AWREADY : s_axilite_h2k_AWREADY;
-    assign /*  input */  s_axilite_i2h_wready  = access_helper_w ? wire_axilite_WREADY  : s_axilite_h2k_WREADY;
+    assign /*  input */  s_axilite_i2h_wready  = (access_helper_w | access_helper_w_reg) ? wire_axilite_WREADY  : s_axilite_h2k_WREADY;
     assign /*  input */  s_axilite_i2h_arready = access_helper_r ? wire_axilite_ARREADY : s_axilite_h2k_ARREADY ;
     assign /*  input */  s_axilite_i2h_rvalid  = wire_axilite_RVALID  | s_axilite_h2k_RVALID ;
     assign /*  input */  s_axilite_i2h_rdata   = wire_axilite_RVALID  ? wire_axilite_RDATA : s_axilite_h2k_RDATA;

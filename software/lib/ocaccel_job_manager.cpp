@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "ocaccel_job_manager.h"
+#include "ocaccel_internal.h"
 #include <math.h>
 #include <algorithm>
 
@@ -41,14 +42,18 @@ int OcaccelJobManager::allocateCompletionBuffer (int num_descriptors)
         return 0;
     }
 
-    m_completion_status_buffer = alignedAllocate (num_descriptors * c_completion_entry_size);
+    int num_completion_buffer_entries = (num_descriptors % c_descriptors_in_a_block) == 0 ? num_descriptors
+        : num_descriptors + c_descriptors_in_a_block - (num_descriptors % c_descriptors_in_a_block);
+    m_completion_status_buffer = alignedAllocate (num_completion_buffer_entries * c_completion_entry_size);
+    ocaccel_lib_trace ("Allocate completion buffer with %d entries\n", num_completion_buffer_entries);
 
     if (NULL == m_completion_status_buffer) {
         printf ("ERROR: unable to allocate completion buffer!\n");
         return -1;
     }
 
-    memset ((void*)m_completion_status_buffer, 0, num_descriptors * c_completion_entry_size);
+    // Init the completion buffer to all 1
+    memset ((void*)m_completion_status_buffer, ~0, num_completion_buffer_entries * c_completion_entry_size);
     return 0;
 }
 
@@ -102,10 +107,11 @@ int OcaccelJobManager::initializeDescriptors()
         for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
             JobDescriptorBase job_descriptor ((uint8_t*) descriptor_block_pointer + desc_idx * JobDescriptorBase::c_job_descriptor_size);
 
-            //Bit7: Enable interrupt. Default Value: 0
-            //Bit6: Write Completion Info back. Default Value: 1
-            //Bit0: Write 1 to start the process
-            job_descriptor.setJobControl (0x41);
+            // Bit7: Enable interrupt. Default Value: 0
+            // Bit6: Write Completion Info back. Default Value: 1
+            // Bit0: The enablement bit
+            // By default, the descriptor is not enabled. Only when they've been touched by users for kernel parameters, this bit will be set.
+            job_descriptor.setJobControl (0x40);
 
             // The next_adjcent
             job_descriptor.setNextAdjacent (num_descriptors_in_next_block - 1);
@@ -130,8 +136,51 @@ int OcaccelJobManager::initializeDescriptors()
     return 0;
 }
 
+void OcaccelJobManager::enableDescriptors()
+{
+    std::for_each (m_descriptor_block_pointers.begin(), m_descriptor_block_pointers.end(),
+    [this] (tDescriptorBlock & i) {
+        enableDescriptorBlock (i);
+    });
+}
+
+void OcaccelJobManager::enableDescriptorBlock (tDescriptorBlock descriptor_block)
+{
+    void* descriptor_block_pointer = descriptor_block.first;
+    int num_descriptors_in_current_block = descriptor_block.second;
+
+    ocaccel_lib_trace ("Enable Descriptor Block @ %p for %d descriptors\n", descriptor_block_pointer, num_descriptors_in_current_block);
+
+    for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
+        JobDescriptorBase job_descriptor ((uint8_t*)descriptor_block_pointer + desc_idx * JobDescriptorBase::c_job_descriptor_size);
+        job_descriptor.enable();
+    }
+}
+
+void OcaccelJobManager::disableDescriptors()
+{
+    std::for_each (m_descriptor_block_pointers.begin(), m_descriptor_block_pointers.end(),
+    [this] (tDescriptorBlock & i) {
+        disableDescriptorBlock (i);
+    });
+}
+
+void OcaccelJobManager::disableDescriptorBlock (tDescriptorBlock descriptor_block)
+{
+    void* descriptor_block_pointer = descriptor_block.first;
+    int num_descriptors_in_current_block = descriptor_block.second;
+
+    ocaccel_lib_trace ("Disable Descriptor Block @ %p for %d descriptors\n", descriptor_block_pointer, num_descriptors_in_current_block);
+
+    for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
+        JobDescriptorBase job_descriptor ((uint8_t*)descriptor_block_pointer + desc_idx * JobDescriptorBase::c_job_descriptor_size);
+        job_descriptor.disable();
+    }
+}
+
 void OcaccelJobManager::freeDescriptorBlock (tDescriptorBlock descriptor_block)
 {
+    ocaccel_lib_trace ("Free descriptor block %p\n", descriptor_block.first);
     free (descriptor_block.first);
 }
 
@@ -140,7 +189,7 @@ void OcaccelJobManager::dumpDescriptorBlock (tDescriptorBlock descriptor_block)
     void* descriptor_block_pointer = descriptor_block.first;
     int num_descriptors_in_current_block = descriptor_block.second;
 
-    ocaccel_lib_trace ("Descripto Block @ %p with %d descriptors\n", descriptor_block_pointer, num_descriptors_in_current_block);
+    ocaccel_lib_trace ("Descriptor Block @ %p with %d descriptors\n", descriptor_block_pointer, num_descriptors_in_current_block);
 
     for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
         JobDescriptorBase job_descriptor ((uint8_t*)descriptor_block_pointer + desc_idx * JobDescriptorBase::c_job_descriptor_size);
@@ -161,9 +210,29 @@ bool OcaccelJobManager::isAllJobsDone()
     }
 
     for (int i = 0; i < m_number_of_descriptors; i++) {
-        if (0x00 == * ((((uint8_t*)m_completion_status_buffer) + i * c_completion_entry_size))) {
+        if (0xFF == * ((((uint8_t*)m_completion_status_buffer) + i * c_completion_entry_size))) {
             return false;
         }
+    }
+
+    return true;
+}
+
+bool OcaccelJobManager::isJobDone()
+{
+    if (eMode::JOB_SCHEDULER != m_mode) {
+        printf ("ERROR: invalid mode when quering job status!\n");
+        return true;
+    }
+
+    if (NULL == m_completion_status_buffer) {
+        printf ("ERROR: completion buffer is not valid!\n");
+        return true;
+    }
+
+    // Only take a look at the very first job
+    if (0xFF == * ((((uint8_t*)m_completion_status_buffer)))) {
+        return false;
     }
 
     return true;
@@ -361,76 +430,21 @@ int OcaccelJobManager::run()
         return -1;
     }
 
+    if (eStatus::FINISHED == m_status) {
+        printf ("ERROR: job manager just finished its job before, please call reset()  before running it again!\n");
+        return -1;
+    }
+
     if (m_descriptor_block_pointers.size() <= 0) {
         printf ("ERROR: job manager must have at least 1 job descriptor block to run!\n");
         return -1;
     }
 
+    // Enable all descriptors so that hardware job scheduler can run all descriptors in a batch
+    enableDescriptors();
+
     return runJobScheduler();
 }
-
-//int OcaccelJobManager::run (KernelRegisterLayout* reg_layout)
-//{
-//    if (0 == m_number_of_kernels) {
-//        printf ("ERROR: no kernels in the card!\n");
-//        return -1;
-//    }
-//
-//    if (eStatus::INITIALIZED != m_status) {
-//        printf ("ERROR: job manager is not initialized before kicking off a run!\n");
-//        return -1;
-//    }
-//
-//    if (m_descriptor_block_pointers.size() <= 0) {
-//        printf ("ERROR: job manager must have at least 1 job descriptor block to run!\n");
-//        return -1;
-//    }
-//
-//    return runMMIO (reg_layout);
-//}
-
-//int OcaccelJobManager::runMMIO (KernelRegisterLayout* reg_layout)
-//{
-//    if (eMode::MMIO != m_mode) {
-//        printf ("ERROR: incorrect mode when trying to run MMIO!\n");
-//        return -1;
-//    }
-//
-//    if (NULL == reg_layout) {
-//        printf ("ERROR: incorrect pointer to kernel register layout!\n");
-//        return -1;
-//    }
-//
-//    for (size_t block_idx = 0; block_idx < m_descriptor_block_pointers.size(); block_idx++) {
-//        void* descriptor_block_pointer = m_descriptor_block_pointers[block_idx].first;
-//        int num_descriptors_in_current_block = m_descriptor_block_pointers[block_idx].second;
-//        uint8_t num_descriptors_in_next_block = 1;
-//        void* next_descriptor_block_pointer = NULL;
-//
-//        if (block_idx < m_descriptor_block_pointers.size() - 1) {
-//            num_descriptors_in_next_block = (uint8_t) (m_descriptor_block_pointers[block_idx + 1].second);
-//            next_descriptor_block_pointer = m_descriptor_block_pointers[block_idx + 1].first;
-//        }
-//
-//        for (int desc_idx = 0; desc_idx < num_descriptors_in_current_block; desc_idx++) {
-//            JobDescriptorPtr<K> job_ptr = std::make_shared<JobDescriptor<K> > ((uint8_t*) descriptor_block_pointer + desc_idx * JobDescriptor::c_job_descriptor_size);
-//            printf ("----> Configuring job[%zu][%d] to kernel %d in MMIO mode.\n", block_idx, desc_idx, job_ptr->getKernelID());
-//            configureJob (job_ptr, reg_layout);
-//        }
-//    }
-//
-//    // Start all active kernels
-//    for (int kernel_idx = 0; kernel_idx < m_number_of_kernels; kernel_idx++) {
-//        if (m_active_kernel_mask[kernel_idx]) {
-//            if (startKernel (kernel_idx, reg_layout)) {
-//                printf ("WARNING: failed to start kernel %d!\n", kernel_idx);
-//            }
-//        }
-//    }
-//
-//    m_status = eStatus::RUNNING;
-//    return 0;
-//}
 
 int OcaccelJobManager::runJobScheduler()
 {
@@ -486,7 +500,7 @@ int OcaccelJobManager::runJobScheduler()
     return 0;
 }
 
-int OcaccelJobManager::discoverKernelInstancesInHardware (const std::string kernel_name, std::vector<int>& instances)
+int OcaccelJobManager::discoverKernelInstancesInHardware (const std::string kernel_name, std::vector<int> & instances)
 {
     if (eStatus::INITIALIZED > m_status) {
         printf ("WARNING: Job manager is not initialized when trying to discover kernel instances."
@@ -502,13 +516,26 @@ int OcaccelJobManager::discoverKernelInstancesInHardware (const std::string kern
             return -1;
         }
 
-        if (kernel_name == std::string(hw_kernel_name)) {
+        if (kernel_name == std::string (hw_kernel_name)) {
             ocaccel_lib_trace ("Kernel %d discovered as %s\n", i, hw_kernel_name);
-            instances.push_back(i);
+            instances.push_back (i);
         }
     }
 
     return 0;
+}
+
+void OcaccelJobManager::reset()
+{
+    // Disable all descriptors
+    disableDescriptors();
+
+    if (NULL != m_completion_status_buffer) {
+        // Reset the completion buffer to all 1
+        memset ((void*)m_completion_status_buffer, ~0, m_number_of_descriptors * c_completion_entry_size);
+    }
+
+    m_status = eStatus::INITIALIZED;
 }
 
 void OcaccelJobManager::clear()
@@ -519,6 +546,7 @@ void OcaccelJobManager::clear()
     });
 
     if (NULL != m_completion_status_buffer) {
+        ocaccel_lib_trace ("Free completion buffer %p\n", m_completion_status_buffer);
         free ((void*)m_completion_status_buffer);
     }
 
@@ -546,4 +574,9 @@ void OcaccelJobManager::dump()
     [this] (tDescriptorBlock & i) {
         dumpDescriptorBlock (i);
     });
+
+    if (NULL != m_completion_status_buffer) {
+        // Dump the completion buffer
+        __hexdump (stdout, (const void*) m_completion_status_buffer, m_number_of_descriptors * c_completion_entry_size);
+    }
 }

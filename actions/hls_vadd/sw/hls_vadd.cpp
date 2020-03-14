@@ -103,13 +103,15 @@ int main (int argc, const char* argv[])
     job_desc->setKernelParameter<vadd::PARAM::in2_1> (addr_lo (vadd_in2));
     job_desc->setKernelParameter<vadd::PARAM::in2_2> (addr_hi (vadd_in2));
 
+
     // Run a job on the kernel
     if (job_manager_ptr->run<vadd> (job_desc)) {
         std::cerr << "Error running jobs" << std::endl;
         return -1;
     }
 
-    if (! (job_manager_ptr->waitAllDone<vadd> (job_desc, 100))) {
+    std::cout << "Waiting ... " << std::endl;
+    if (! (job_manager_ptr->waitAllDone<vadd> (job_desc))) {
         std::cerr << "Timeout waiting for jobs done" << std::endl;
         return -1;
     }
@@ -128,6 +130,7 @@ int main (int argc, const char* argv[])
     }
 
     sleep (1);
+
     if (ocaccel_action_trace_enabled()) {
         job_manager_ptr->dump();
     }

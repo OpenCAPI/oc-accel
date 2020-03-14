@@ -3,8 +3,11 @@ set bd_hier "infra_wrap"
 set action_frequency    $::env(ACTION_CLOCK_FREQUENCY)
 set action_name         $::env(ACTION_NAME)
 set kernel_number       $::env(KERNEL_NUMBER)
+set kernels             $::env(KERNELS)
 set width_aximm_ports   $::env(WIDTH_AXIMM_PORTS)
 set axiport_number      [expr $kernel_number+1]
+set kernel_list         [split $kernels ',']
+set kernel_list_len     [llength $kernel_list]
 # Create BD Hier
 create_bd_cell -type hier $bd_hier
 
@@ -66,6 +69,28 @@ create_bd_cell -type ip -vlnv opencapi.org:ocaccel:jm_framework:1.0 $bd_hier/jm_
 for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     create_bd_cell -type ip -vlnv opencapi.org:ocaccel:axi_lite_adaptor:1.0 $bd_hier/axilite_adaptor${xx}
+}
+
+# Set number of kernels
+set_property CONFIG.KERNEL_NUM $kernel_number [get_bd_cells $bd_hier/jm_framework]
+
+# Set Kernel names in jm
+for {set x 0} {$x < $kernel_number } {incr x} {
+    # get the kernel name from the kernels list. If the length of kernels list is smaller than kernel_number, the kernel name will be the last item in the list for all extra kernels.
+    if { $x >= $kernel_list_len } {
+        set kernel_top [lindex $kernel_list end]
+    } else {
+        set kernel_top [lindex $kernel_list $x]
+    }
+
+    for {set j 1} {$j <= 8} {incr j} {
+        set kernel_name_str(${j}) [ eval my_get_kernel_name_str $j $kernel_top ]
+    }
+
+    for {set i 1} {$i <= 8} {incr i} {
+        set prop_name [format "KERNEL_NAME_STR%d_%02d" $i $x]
+        set_property CONFIG.${prop_name} $kernel_name_str($i) [get_bd_cells $bd_hier/jm_framework]
+    }
 }
 
 ###############################################################################
