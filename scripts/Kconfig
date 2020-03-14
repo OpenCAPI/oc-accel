@@ -163,7 +163,6 @@ choice
         help
           This is an example written in HLS, from Xilinx Vitis Examples
           Refer to the README in this action directory for more information
-        select EXAMPLE_INFRA_T1
         select EXAMPLE_ACTION_A10
         select ENABLE_HLS_SUPPORT
 
@@ -172,7 +171,6 @@ choice
         help
           This is an example written in HLS, from Xilinx Vitis Examples
           Refer to the README in this action directory for more information
-        select EXAMPLE_INFRA_T1
         select EXAMPLE_ACTION_A10
         select ENABLE_HLS_SUPPORT
 
@@ -251,7 +249,7 @@ endchoice
 ###############################################################################
 choice
     bool "Infrastructure Template"
-    depends on USER_HDL_ACTION || USER_HLS_ACTION
+    depends on USER_HDL_ACTION || USER_HLS_ACTION || HLS_VADD || HLS_VADD_MATMUL
     default USER_INFRA_T1
     help
         Select the Infrastructure Template

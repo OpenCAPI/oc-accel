@@ -1,0 +1,69 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# OC-Accel Configuration Menu
+#
+CAPI_VER="opencapi30"
+ENABLE_HLS_SUPPORT=y
+HLS_SUPPORT="TRUE"
+# EXAMPLE_INFRA_T1 is not set
+# EXAMPLE_INFRA_T2 is not set
+# EXAMPLE_INFRA_T4 is not set
+# EXAMPLE_INFRA_T8 is not set
+INFRA_TEMPLATE_SELECTION="T2"
+EXAMPLE_ACTION_A10=y
+# EXAMPLE_ACTION_A11 is not set
+# EXAMPLE_ACTION_A12 is not set
+# EXAMPLE_ACTION_A20 is not set
+# EXAMPLE_ACTION_A40 is not set
+# EXAMPLE_ACTION_A80 is not set
+ACTION_TEMPLATE_SELECTION="A10"
+FPGACARD="AD9V3"
+FPGACHIP="xcvu3p-ffvc1517-2-e"
+FLASH_INTERFACE="SPIx8"
+FLASH_SIZE="64"
+FLASH_FACTORYADDR="0x00000000"
+FLASH_USERADDR="0x08000000"
+# USER_HLS_ACTION is not set
+# USER_HDL_ACTION is not set
+# HDL_PERF_TEST is not set
+# HLS_VADD_MATMUL is not set
+HLS_VADD=y
+ACTION_NAME="hls_vadd"
+OPENCAPI30=y
+# CAPI20 is not set
+FPGACARD_AD9V3=y
+# FPGACARD_AD9H3 is not set
+# FPGACARD_AD9H7 is not set
+# USER_INFRA_T1 is not set
+USER_INFRA_T2=y
+# USER_INFRA_T4 is not set
+# USER_INFRA_T8 is not set
+KERNEL_NUMBER=1
+KERNELS="vadd"
+WIDTH_AXIMM_PORTS=1024
+OCSE_PATH="/home/shgoupf/oc/ocse"
+# SIM_XSIM is not set
+SIM_XCELIUM=y
+# NO_SIM is not set
+SIMULATOR="xcelium"
+
+#
+# ================= Advanced Options: =================
+#
+SPEED_25G=y
+# SPEED_20G is not set
+PHY_SPEED="25.78125"
+AXI_ID_WIDTH=1
+ACTION_CLOCK_FREQUENCY=200
+# ACTION_CLOCK_50MHZ is not set
+# ACTION_CLOCK_100MHZ is not set
+# ACTION_CLOCK_150MHZ is not set
+ACTION_CLOCK_200MHZ=y
+# ACTION_CLOCK_250MHZ is not set
+# ACTION_CLOCK_300MHZ is not set
+# ACTION_CLOCK_350MHZ is not set
+# ACTION_CLOCK_400MHZ is not set
+# ENABLE_ILA is not set
+ILA_DEBUG="FALSE"
+UNIT_SIM_USED="FALSE"
+TIMING_LABLIMIT="-200"

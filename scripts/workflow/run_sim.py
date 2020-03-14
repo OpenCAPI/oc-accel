@@ -157,7 +157,7 @@ class Simulator:
             msg.fail_msg("SIMOUT is not valid! Exiting ...")
 
     def setup_simout(self):
-        timestamp = str(int(round(time.time() * 1000)))
+        timestamp = time.strftime("%Y%m%d-%a-%H%M%S", time.localtime())
         seed = str(random.randint(0, 0xffffffff))
         self.simout = pathjoin(self.ocaccel_root,\
                                "hardware", "sim", self.simulator,\
@@ -249,9 +249,9 @@ class Simulator:
             sim_args += " -input ncrun.tcl -r"
             unit_args = "".join(("+UVM_TESTNAME=", self.unit_test, " -seed ", self.sv_seed, " +UVM_VERBOSITY=", self.uvm_ver, " -coverage a -covfile ", self.ocaccel_root, "/hardware/setup/cov.ccf", " -covoverwrite -covtest ", self.unit_test))
             if self.unit_sim == False:
-                sim_top  = "work.top_wrapper"
+                sim_top  = "work"
             else:
-                sim_top  = "work.unit_top_wrapper"
+                sim_top  = "work"
             self.sim_log  = pathjoin(self.simout, "sim.log")
 
             if self.unit_sim == False:

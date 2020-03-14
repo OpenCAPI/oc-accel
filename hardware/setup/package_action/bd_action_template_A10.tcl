@@ -4,6 +4,7 @@ set hls_support     $::env(HLS_SUPPORT)
 set axi_id_width    $::env(AXI_ID_WIDTH)
 set kernel_list     [split $kernels ',']
 set kernel_list_len [llength $kernel_list]
+set width_aximm_ports   $::env(WIDTH_AXIMM_PORTS)
 
 set bd_hier "act_wrap"
 # Create BD Hier
@@ -17,6 +18,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_kernel${xx}_aximm
     create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $bd_hier/pin_kernel${xx}_axilite
+    create_bd_pin -dir O $bd_hier/pin_kernel${xx}_done
 }
 
 create_bd_pin -dir I $bd_hier/pin_clock_action
@@ -125,14 +127,21 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     if { $hls_support == "TRUE" } {
         # Connect many aximm ports from the HLS kernel to smartconnect_hls 
         set axi_m_idx 0
+        set axi_m_data_width {}
         foreach m $kernel_axi_masters {
             set kernel_master_port_name [dict get $m port_prefix]
+            lappend axi_m_data_width [dict get $m data_width]
             set sc_id [format "%02d" $axi_m_idx]
             connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_hls/S${sc_id}_AXI] [get_bd_intf_pins $kernel_hier/${kernel_top}/$kernel_master_port_name]
             incr axi_m_idx
         }
         connect_bd_intf_net [get_bd_intf_pins $kernel_hier/smartconnect_hls/M00_AXI] [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_k2h]
+        set max_m_data_width [lindex [lsort -integer $axi_m_data_width] end]
+
+        puts "Max data width of kernel is $max_m_data_width, setting kernel_helper data width to $max_m_data_width"
+        set_property -dict [list CONFIG.C_M_AXI_GMEM_DATA_WIDTH $max_m_data_width] [get_bd_cells $kernel_hier/kernel_helper]
     } else {
+        set_property -dict [list CONFIG.C_M_AXI_GMEM_DATA_WIDTH $width_aximm_ports] [get_bd_cells $kernel_hier/kernel_helper]
         # HDL design doesn't use smartconnect, and the name if fixed as 'm_axi_gmem'
         connect_bd_intf_net [get_bd_intf_pins $kernel_hier/$kernel_top/m_axi_gmem] [get_bd_intf_pins $kernel_hier/kernel_helper/m_axi_k2h]
     }
@@ -142,6 +151,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
 
     # Connect interrupt -----------------
     connect_bd_net [get_bd_pins $kernel_hier/${kernel_top}/interrupt] [get_bd_pins $kernel_hier/kernel_helper/interrupt_i]
+    connect_bd_net [get_bd_pins $kernel_hier/${kernel_top}/interrupt] [get_bd_pins $bd_hier/pin_kernel${xx}_done]
 
 }
 

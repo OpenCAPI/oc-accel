@@ -14,26 +14,23 @@ BEGIN {
   if ($0 ~ "Read average bandwidth") {
          a1_iter++
          a1_size[a1_iter]=$5
-         a1_usec[a1_iter]=$8
-         a1_bw[a1_iter]=$11
+         a1_bw[a1_iter]=$8
  }
   if ($0 ~ "Write average bandwidth") {
          a2_iter++
          a2_size[a2_iter]=$5
-         a2_usec[a2_iter]=$8
-         a2_bw[a2_iter]=$11
+         a2_bw[a2_iter]=$8
  }
   if ($0 ~ "Duplex average bandwidth") {
          a3_iter++
          a3_size[a3_iter]=$4
-         a3_usec[a3_iter]=$7
-         a3_bw[a3_iter]=$10
+         a3_bw[a3_iter]=$7
  }
 }
 END {
   i=1
   printf "+-------------------------------------------------------------------------------+\n"
-  printf "|            OC-Accel hdl_single_engine Throughput (MBytes/s)                   |\n"
+  printf "|            OC-Accel hdl_perf_test Throughput (MBytes/s)                       |\n"
   printf "+-------------------------------------------------------------------------------+\n"
   printf "|%11s %17s %17s %17s              |\n","Total Bytes", "Read Bandwidth", "Write Bandwidth","Duplex Bandwidth"
   printf "+-------------------------------------------------------------------------------+\n"

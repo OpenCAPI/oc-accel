@@ -3,21 +3,24 @@ set hardware_dir       $::env(OCACCEL_HARDWARE_ROOT)
 set fpga_part          $::env(FPGACHIP)
 set fpga_card          $::env(FPGACARD)
 set action_name        $::env(ACTION_NAME)
-set kernel_name        $::env(KERNEL_NAME)
+set kernels            $::env(KERNELS)
 set kernel_number      $::env(KERNEL_NUMBER)
-set template           $::env(INFRA_TEMPLATE_SELECTION)
 set project            "top_project"
 set project_dir        $hardware_dir/build/$project
-set kernel_ip_repo_dir $root_dir/actions/$action_name/hw/hls/$::env(ACTION_NAME)_${fpga_part}/$kernel_name/impl/ip
+set kernel_ip_root     $root_dir/actions/$action_name/hw/hls/
 
 set ip_repo_dir     $hardware_dir/build/ip_repo
 set interfaces_dir  $hardware_dir/build/interfaces
 set bd_name         "top"
 
+source $hardware_dir/setup/common/common_funcs.tcl
+
 create_project $project $project_dir -part $fpga_part -force
 create_bd_design $bd_name
-set_property  ip_repo_paths  [list $kernel_ip_repo_dir $ip_repo_dir $interfaces_dir] [current_project]
-update_ip_catalog
+
+# Set up the ip_repos for this project
+set_ip_repos $fpga_part $hardware_dir $kernel_ip_root $kernels
+
 add_files -norecurse $hardware_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
 
 # Add sub block designs
@@ -56,6 +59,7 @@ for {set x 0} {$x < $kernel_number } {incr x} {
     set xx [format "%02d" $x]
     connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_aximm_slave$xx]    [get_bd_intf_pins act_wrap/pin_kernel${xx}_aximm]
     connect_bd_intf_net [get_bd_intf_pins infra_wrap/pin_axilite_master$xx] [get_bd_intf_pins act_wrap/pin_kernel${xx}_axilite]
+    connect_bd_net [get_bd_pins infra_wrap/pin_${xx}_kernel_done] [get_bd_pins act_wrap/pin_kernel${xx}_done]
 }
 #Clock and resets
 

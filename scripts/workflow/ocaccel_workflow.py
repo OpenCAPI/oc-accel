@@ -21,12 +21,14 @@ import qa
 import random
 from os.path import join as pathjoin
 from os.path import isfile as isfile
+from os.path import isdir as isdir
 from env_clean import env_clean
 from env_check import env_check
 from configure import Configuration
 from make_model import make_model
 from run_sim import SimSession
 from make_image import make_image
+from make_app import make_app
 from optparse import OptionParser
 from ocaccel_utils import msg
 
@@ -78,6 +80,10 @@ parser.add_option("--no_run_sim",
 parser.add_option("-m", "--make_image",
                   action="store_true", dest="make_image", default=False,
                   help="Generate the FPGA image, default: %default")
+parser.add_option("--make_app",
+                  dest="make_app", default=None,
+                  help="Make application of the specified action (action name is"
+                  " the subdirectory name in ./actions, default: %default")
 parser.add_option("-c", "--clean",
                   action="store_true", dest="clean", default=False,
                   help="Clean the directory before running, default: %default")
@@ -155,7 +161,7 @@ logs_path = pathjoin(options.ocaccel_root, 'hardware', 'logs')
 try: 
     os.makedirs(logs_path)
 except OSError:
-    if not os.path.isdir(logs_path):
+    if not isdir(logs_path):
         raise
 
 ocaccel_workflow_log            = pathjoin(logs_path, "ocaccel_workflow.log")
@@ -206,8 +212,16 @@ if cmd != "":
         options.config_clean = True
         options.no_env_check = True
     else:
-        msg.fail_msg ("Invalid command %s" % cmd)
-        exit(1)
+        action_sw_path = pathjoin(options.ocaccel_root, 'actions', cmd, 'sw')
+        if isdir(action_sw_path):
+            options.no_configure = True
+            options.no_make_model = True
+            options.no_run_sim = True
+            options.make_image = False
+            options.make_app = cmd
+        else:
+            msg.fail_msg ("!!!!! Invalid command %s" % cmd)
+            exit(1)
 
 if __name__ == '__main__':
     msg.ok_msg_blue("--------> WELCOME to IBM OpenCAPI Acceleration Framework")
@@ -235,6 +249,9 @@ if __name__ == '__main__':
 
     if not options.no_env_check:
         env_check(options)
+
+    if options.make_app is not None:
+        make_app(options.make_app, options)
 
     question_and_answer.ask(qa.ask_make_model_str)
     if not options.no_make_model and options.simulator.lower() != "nosim":

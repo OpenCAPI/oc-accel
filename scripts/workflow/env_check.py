@@ -29,6 +29,18 @@ def env_check(options):
     assert sys.version_info >= (2, 6)
 
     msg.ok_msg_blue("--------> Environment Check") 
+
+    machine = platform.machine()
+    if machine == "ppc64le":
+        msg.warn_msg("Running on ppc64le, you can deploy the bistream, compile apps and run!")
+    elif machine == "x86_64":
+        msg.warn_msg("Running on x86_64, you can perform simulation and bitstream generation!")
+    else:
+        msg.warn_msg("Unsupported machine type %s" % machine)
+        msg.warn_msg("The supported machine types are:")
+        msg.warn_msg("    ppc64le - for deployment")
+        msg.warn_msg("    x86_64  - for simulation and bitstream generation")
+        msg.fail_msg("Not able to proceed")
     
     gcc    = SystemCMD("gcc")
     gcc    . check(existence_critical=True, minimum_version = "8")

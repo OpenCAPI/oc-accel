@@ -5,7 +5,7 @@
 CAPI_VER="opencapi30"
 ENABLE_HLS_SUPPORT=y
 HLS_SUPPORT="TRUE"
-EXAMPLE_INFRA_T1=y
+# EXAMPLE_INFRA_T1 is not set
 # EXAMPLE_INFRA_T2 is not set
 # EXAMPLE_INFRA_T4 is not set
 # EXAMPLE_INFRA_T8 is not set
@@ -34,6 +34,10 @@ OPENCAPI30=y
 FPGACARD_AD9V3=y
 # FPGACARD_AD9H3 is not set
 # FPGACARD_AD9H7 is not set
+USER_INFRA_T1=y
+# USER_INFRA_T2 is not set
+# USER_INFRA_T4 is not set
+# USER_INFRA_T8 is not set
 KERNEL_NUMBER=4
 KERNELS="vadd,matmul,vadd,matmul"
 WIDTH_AXIMM_PORTS=1024

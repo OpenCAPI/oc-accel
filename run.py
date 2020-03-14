@@ -1,1 +1,1 @@
-scripts/ide/ocaccel_workflow.py
+scripts/workflow/ocaccel_workflow.py

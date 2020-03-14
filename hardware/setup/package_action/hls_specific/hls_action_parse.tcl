@@ -17,11 +17,12 @@
 #-----------------------------------------------------------
 
 package require json
-set hls_support          $::env(HLS_SUPPORT)
-set action_hw_dir        $::env(ACTION_ROOT)/hw
-set action_sw_dir        $::env(ACTION_ROOT)/sw
-set action_hls_dir       $action_hw_dir/hls
-set register_layout_file $action_sw_dir/hls_${kernel_top}_register_layout.h
+set hls_support             $::env(HLS_SUPPORT)
+set action_hw_dir           $::env(ACTION_ROOT)/hw
+set action_sw_dir           $::env(ACTION_ROOT)/sw
+set action_hls_dir          $action_hw_dir/hls
+set register_layout_file_c  $action_sw_dir/hls_${kernel_top}_register_layout.h
+set register_layout_file_vh $action_hw_dir/kernel_register_layout.vh
 
 # find the JSON file
 if {$hls_support != TRUE} {
@@ -97,8 +98,9 @@ set axilite [lindex $kernel_axilite_slaves 0]
 if {! [dict exists $axilite registers]} {
     puts "WARNING: no registers defined for AXILite slave interface, no register layout header file will be generated!"
 } else {
-    set fp [open $register_layout_file w+]
-    puts $fp "// ---- AUTO GENERATED! DO NOT EDIT! ----"
+    set fp_c  [open $register_layout_file_c  w+]
+    set fp_vh [open $register_layout_file_vh w+]
+    puts $fp_c "// ---- AUTO GENERATED! DO NOT EDIT! ----"
     set registers [dict get $axilite registers]
     set reg_names {}
     foreach reg $registers {
@@ -107,19 +109,24 @@ if {! [dict exists $axilite registers]} {
             lappend reg_names $reg_name
         }
     }
-    puts $fp "Kernel($kernel_top, KERNEL_ARGS([join $reg_names ,]));"
-    puts $fp "void $kernel_top\:\:addKernelParameters ()
+    puts $fp_c "Kernel($kernel_top, KERNEL_ARGS([join $reg_names ,]));"
+    puts $fp_c "void $kernel_top\:\:addKernelParameters ()
     {"
+    set reg_offsets {}
     set registers [dict get $axilite registers]
     foreach reg $registers {
         set reg_name [dict get $reg name]
         set reg_offset [dict get $reg offset]
         if {$reg_name != "CTRL" && $reg_name != "GIER" && $reg_name != "IP_IER" && $reg_name != "IP_ISR"} {
-            puts $fp "        setKernelParamRegister (PARAM::$reg_name, $reg_offset);"
+            puts $fp_c "        setKernelParamRegister (PARAM::$reg_name, $reg_offset);"
+            lappend reg_offsets [string replace $reg_offset 0 1 "32'h"]
         }
     }
-    puts $fp "    }"
-    puts "$register_layout_file is successfully generated."
+    puts $fp_c "    }"
+    puts "$register_layout_file_c is successfully generated."
+
+    puts $fp_vh "parameter   WRITEREG_NUMBER = [llength $reg_offsets];"
+    puts $fp_vh "parameter   \[32*WRITEREG_NUMBER-1:0\] PARAM_ARRAY = {[join [lreverse $reg_offsets] ,]};"
 
     set prefix [dict get $axilite port_prefix]
     set kernel_axilite_name $prefix

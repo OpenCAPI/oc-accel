@@ -5,6 +5,22 @@
 `define RETURN_CODE_ENABLE
 
 module jm_framework #(
+
+    //: my $kn = NUM_KERNELS;
+    //: for (my $i = 0; $i < $kn; $i++) {
+    //: my $s = sprintf("%02d", $i);
+    //:     print qq(
+    //:         parameter  KERNEL_NAME_STR1_$s = 32'h7473_6574 ,
+    //:         parameter  KERNEL_NAME_STR2_$s = 32'h2020_2020 ,
+    //:         parameter  KERNEL_NAME_STR3_$s = 32'h2020_2020 ,
+    //:         parameter  KERNEL_NAME_STR4_$s = 32'h2020_2020 ,
+    //:         parameter  KERNEL_NAME_STR5_$s = 32'h2020_2020 ,
+    //:         parameter  KERNEL_NAME_STR6_$s = 32'h2020_2020 ,
+    //:         parameter  KERNEL_NAME_STR7_$s = 32'h2020_2020 ,
+    //:         parameter  KERNEL_NAME_STR8_$s = 32'h2020_2020 ,
+    //:     )
+    //: }
+    
     parameter ID_WIDTH = 1,
     parameter ARUSER_WIDTH = 9,
     parameter AWUSER_WIDTH = 9,
@@ -130,6 +146,22 @@ module jm_framework #(
     wire    [RETURN_WIDTH*KERNEL_NUM-1:0] complete_data;
 
 mp_control #(
+
+        //: my $kn = NUM_KERNELS;
+        //: for (my $i = 0; $i < $kn; $i++) {
+        //: my $s = sprintf("%02d", $i);
+        //:     print qq(
+        //:         .KERNEL_NAME_STR1_$s (KERNEL_NAME_STR1_$s) ,
+        //:         .KERNEL_NAME_STR2_$s (KERNEL_NAME_STR2_$s) ,
+        //:         .KERNEL_NAME_STR3_$s (KERNEL_NAME_STR3_$s) ,
+        //:         .KERNEL_NAME_STR4_$s (KERNEL_NAME_STR4_$s) ,
+        //:         .KERNEL_NAME_STR5_$s (KERNEL_NAME_STR5_$s) ,
+        //:         .KERNEL_NAME_STR6_$s (KERNEL_NAME_STR6_$s) ,
+        //:         .KERNEL_NAME_STR7_$s (KERNEL_NAME_STR7_$s) ,
+        //:         .KERNEL_NAME_STR8_$s (KERNEL_NAME_STR8_$s) ,
+        //:     )
+        //: }
+
         .PINFO_WIDTH    ( PINFO_WIDTH   ),
         .PASID_WIDTH    ( PASID_WIDTH   ),
         .DATA_WIDTH     ( LITE_DWIDTH   ),

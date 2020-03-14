@@ -20,7 +20,6 @@
  * Demonstration how to get data into the FPGA, process it using a OCACCEL
  * action and move the data out of the FPGA back to host-DRAM.
  */
-#include <boost/program_options.hpp>
 #include <getopt.h>
 #include <string.h>
 #include <libocaccel.h>
@@ -330,6 +329,8 @@ int main (int argc, char* argv[])
     rsize = (rpattern & 0x7);
     wsize = (wpattern & 0x7);
 
+
+
     rwidth = 1;
     wwidth = 1;
 
@@ -350,6 +351,18 @@ int main (int argc, char* argv[])
             rnum, rwidth, rblen, rtotal_bytes);
     printf("Parse pattern. Write:num = %d, bytes-width = %d, burst len = %d, total bytes = %ld\n",
             wnum, wwidth, wblen, wtotal_bytes);
+
+    if (rsize < 2 || wsize < 2) {
+        printf("Doesn't support AXI transfers narrower than 4 bytes\n");
+        exit_code = -1;
+        return exit_code;
+    }
+
+    if ((rblen * rwidth) < 128 || (wblen * wwidth) < 128) {
+        printf("Doesn't support transfer bytes less than 128B\n");
+        exit_code = -1;
+        return exit_code;
+    }
 
 
     uint8_t* src_base=NULL;
@@ -625,7 +638,7 @@ int main (int argc, char* argv[])
     {
         printf("Read average bandwidth (Host->FPGA): %ld bytes ( %.3f MB/s )\n",
                 rtotal_bytes,  average_bandwidth);
-        printf("Read bandwidth min, max and variance: %ld bytes ( %.3f MB/s, %.3f MB/s, %.3f MB/s )\n",
+        printf("Read bandwidth min, max and variance: %ld bytes ( %.3f MB/s, %.3f MB/s, %.3f )\n",
                 rtotal_bytes,  min_bandwidth, max_bandwidth, variance);
     }
 

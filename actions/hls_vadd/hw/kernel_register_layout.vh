@@ -1,0 +1,2 @@
+parameter   WRITEREG_NUMBER = 7;
+parameter   [32*WRITEREG_NUMBER-1:0] PARAM_ARRAY = {32'h34,32'h2c,32'h28,32'h20,32'h1c,32'h14,32'h10};

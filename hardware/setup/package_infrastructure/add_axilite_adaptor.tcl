@@ -18,11 +18,14 @@
 ############################################################################
 ############################################################################
 
-set hardware_dir     $::env(OCACCEL_HARDWARE_ROOT)
-set src_dir          $hardware_dir/hdl/infrastructure/axi_lite_adaptor
+set hardware_dir            $::env(OCACCEL_HARDWARE_ROOT)
+set action_hw_dir           $::env(ACTION_ROOT)/hw
+set src_dir                 $hardware_dir/hdl/infrastructure/axi_lite_adaptor
+set register_layout_file_vh $action_hw_dir/kernel_register_layout.vh
 
 set verilog_axilite_adaptor [list \
  $src_dir/axi_lite_adaptor.v \
+ $register_layout_file_vh \
 ]
 
 ############################################################################

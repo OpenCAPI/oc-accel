@@ -211,7 +211,10 @@ int main (int argc, const char* argv[])
     }
 
     sleep (1);
-    job_manager_ptr->dump();
+
+    if (ocaccel_action_trace_enabled()) {
+        job_manager_ptr->dump();
+    }
 
     if (0 == exit_code) {
         printf ("Data checking OK.\n");
