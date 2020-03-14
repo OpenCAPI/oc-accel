@@ -99,6 +99,7 @@ struct card_2_name ocaccel_card_2_name_tab[] = {
     {.card_id = AD9V3_OC_CARD,  .card_name = "AD9V3"},
     {.card_id = AD9H3_OC_CARD,  .card_name = "AD9H3"},
     {.card_id = AD9H7_OC_CARD,  .card_name = "AD9H7"},
+    {.card_id = BW250SOC_OC_CARD,  .card_name = "BW250SOC"},
     {.card_id = -1,             .card_name = "INVALID"}
 };
 

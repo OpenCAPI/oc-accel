@@ -95,23 +95,26 @@ config FPGACARD
     default "AD9V3"  if FPGACARD_AD9V3
     default "AD9H3"  if FPGACARD_AD9H3
     default "AD9H7"  if FPGACARD_AD9H7
+    default "BW250SOC"  if FPGACARD_BW250SOC
 
 config FPGACHIP
     string
     default "xcvu3p-ffvc1517-2-e"  if FPGACARD_AD9V3
     default "xcvu33p-fsvh2104-2-e" if FPGACARD_AD9H3
     default "xcvu37p-fsvh2892-2-e" if FPGACARD_AD9H7
+    default "xczu19eg-ffvd1760-2-i" if FPGACARD_BW250SOC
 
 
+# TODO: The flash part, USERADDR and SIZE need to be revised. BW250SOC also needs.
 config FLASH_INTERFACE
     string
-    default "SPIx8"  if  FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_AD9H7
+    default "SPIx8"  if  FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_AD9H7 || FPGACARD_BW250SOC
 
 #FLASH_SIZE: in MB
 config FLASH_SIZE
     string
     default 128 if FPGACARD_AD9H7
-    default 64 if FPGACARD_AD9V3 || FPGACARD_AD9H3
+    default 64 if FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_BW250SOC
 
 #FLASH_FACTORYADDR: For all cards, factory address is 0x0
 config FLASH_FACTORYADDR
@@ -121,7 +124,7 @@ config FLASH_FACTORYADDR
 #FLASH_USERADDR: For SPI, it is byte address.
 config FLASH_USERADDR
     string
-    default 0x08000000 if FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_AD9H7
+    default 0x08000000 if FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_AD9H7 || FPGACARD_BW250SOC
 
 ###############################################################################
 ###############################################################################
@@ -244,6 +247,11 @@ choice
         bool "AlphaData 9H7 (VU37P)"
         help
           Refer to Product webpage for more information about the card capacity.
+
+    config FPGACARD_BW250SOC
+        bool "Bittware 250SOC (ZU19EG)"
+        help
+          Refer to Product webpage for more information about the card capacity.
 endchoice
 
 ###############################################################################
@@ -338,7 +346,7 @@ choice
     
     config USER_ACTION_A11
         depends on USER_INFRA_T1
-        depends on FPGACARD_AD9V3
+        depends on FPGACARD_AD9V3 || FPGACARD_BW250SOC
         bool "A11 (Connects T1, one channel DDR4)"
         help
           Refer to OC-Accel documentation for detailed information.

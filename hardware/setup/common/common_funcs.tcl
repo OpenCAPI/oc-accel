@@ -91,7 +91,7 @@ proc my_get_card_type {} {
     if { $fpgacard eq "AD9H7" } {
         set card_type "0x33"
     }
-    if { $fpgacard eq "N250SOC" } {
+    if { $fpgacard eq "BW250SOC" } {
         set card_type "0x34"
     }
     return $card_type

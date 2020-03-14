@@ -21,7 +21,7 @@ create_bd_design $bd_name
 # Set up the ip_repos for this project
 set_ip_repos $fpga_part $hardware_dir $kernel_ip_root $kernels
 
-add_files -norecurse $hardware_dir/oc-accel-bsp/AD9V3/hdl/misc/iprog_icap.vhdl
+add_files -norecurse $hardware_dir/oc-accel-bsp/$fpga_card/hdl/misc/iprog_icap.vhdl
 
 # Add sub block designs
 # act_wrap and infra_wrap
@@ -32,7 +32,7 @@ source $hardware_dir/setup/package_infrastructure/bd_infra_template_T1.tcl
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:oc_host_if:1.0 oc_host_if
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:flash_vpd_wrapper:1.0 flash_vpd_wrapper
 create_bd_cell -type module -reference iprog_icap iprog_icap
-
+#set_property used_in_simulation false [get_files $hardware_dir/oc-accel-bsp/$fpga_card/hdl/misc/iprog_icap.vhdl]
 
 ###############################################################################
 # General Connections 
@@ -78,6 +78,8 @@ connect_bd_net [get_bd_pins infra_wrap/pin_reset_action_n] [get_bd_pins act_wrap
 # Create Ports
 create_bd_intf_port -mode Slave -vlnv opencapi.org:ocaccel:oc_phy_rtl:1.0 ocaccel_oc_phy
 connect_bd_intf_net [get_bd_intf_pins oc_host_if/ocaccel_oc_phy] [get_bd_intf_ports ocaccel_oc_phy]
+
+if { $fpga_card != "BW250SOC" } {
 create_bd_port -dir IO FPGA_FLASH_CE2_L
 connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_CE2_L] [get_bd_ports FPGA_FLASH_CE2_L]
 create_bd_port -dir IO FPGA_FLASH_DQ4
@@ -88,6 +90,7 @@ create_bd_port -dir IO FPGA_FLASH_DQ6
 connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ6] [get_bd_ports FPGA_FLASH_DQ6]
 create_bd_port -dir IO FPGA_FLASH_DQ7
 connect_bd_net [get_bd_pins /flash_vpd_wrapper/FPGA_FLASH_DQ7] [get_bd_ports FPGA_FLASH_DQ7]
+}
 create_bd_port -dir I ocde
 connect_bd_net [get_bd_pins /oc_host_if/ocde] [get_bd_ports ocde]
 
