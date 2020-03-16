@@ -229,7 +229,7 @@ module kernel_helper # (
     wire [1:0]                      wire_axilite_RRESP         ;
     wire                            wire_axilite_RVALID        ;
     wire                            wire_axilite_RREADY        ;
-    wire [CTXW-1:0]                 o_context                  ;
+    wire [CTXW-1:0]                 context                    ;
 
 
     wire access_helper_w;
@@ -282,7 +282,7 @@ module kernel_helper # (
         .interrupt_src (interrupt_src           ) ,
         .interrupt_ctx (interrupt_ctx           ) ,
         .interrupt_ack (interrupt_ack           ) ,
-        .o_context     (o_context               )
+        .o_context     (context                 )
     ) ;
 
     // Bypass most of the connections
@@ -333,7 +333,7 @@ module kernel_helper # (
     assign    /*input */  m_axi_h2i_awprot     = m_axi_k2h_AWPROT ;
     assign    /*input */  m_axi_h2i_awqos      = m_axi_k2h_AWQOS ;
     assign    /*input */  m_axi_h2i_awregion   = m_axi_k2h_AWREGION ;
-    assign    /*input */  m_axi_h2i_awuser     = o_context ;//Context (PASID)
+    assign    /*input */  m_axi_h2i_awuser     = context ;//Context (PASID)
     assign    /*input */  m_axi_h2i_wvalid     = m_axi_k2h_WVALID ;
     assign    /*output*/  m_axi_k2h_WREADY     = m_axi_h2i_wready ;
     assign    /*input */  m_axi_h2i_wdata      = m_axi_k2h_WDATA ;
@@ -353,7 +353,7 @@ module kernel_helper # (
     assign    /*input */  m_axi_h2i_arprot     = m_axi_k2h_ARPROT ;
     assign    /*input */  m_axi_h2i_arqos      = m_axi_k2h_ARQOS ;
     assign    /*input */  m_axi_h2i_arregion   = m_axi_k2h_ARREGION ;
-    assign    /*input */  m_axi_h2i_aruser     = o_context ;//Context (PASID)
+    assign    /*input */  m_axi_h2i_aruser     = context ;//Context (PASID)
     assign    /*output*/  m_axi_k2h_RVALID     = m_axi_h2i_rvalid ;
     assign    /*input */  m_axi_h2i_rready     = m_axi_k2h_RREADY ;
     assign    /*output*/  m_axi_k2h_RDATA      = m_axi_h2i_rdata ;

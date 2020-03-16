@@ -270,4 +270,4 @@ set port_list_interrupt [list \
             interrupt_ctx  \
             interrupt_ack  \
           ]
-my_create_bus_interface $interface_repo "oc_interrupt" $port_list_interrupt
+my_create_bus_interface $interface_repo "interrupt_bus" $port_list_interrupt

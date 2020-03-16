@@ -27,7 +27,7 @@ source $hardware_dir/setup/common/common_funcs.tcl
 
 puts "Creating kernel helper ip"
 
-set bus_array ""
+set bus_array [dict create interrupt_bus "master" ]
 my_package_custom_ip $hardware_dir/build/temp_projs      \
                      $hardware_dir/build/ip_repo         \
                      $hardware_dir/build/interfaces      \
