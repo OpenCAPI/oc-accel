@@ -30,6 +30,8 @@ set action_root   $::env(ACTION_ROOT)
 
 set sdram_used    $::env(SDRAM_USED)
 set hbm_used      $::env(HBM_USED)
+set eth_used      $::env(ETHERNET_USED)
+set eth_loop_back $::env(ETH_LOOP_BACK)
 set bram_used     $::env(BRAM_USED)
 set nvme_used     $::env(NVME_USED)
 set user_clock    $::env(USER_CLOCK)
@@ -65,8 +67,9 @@ set create_dwidth_conv  FALSE
 set create_interconnect FALSE
 set create_bram         FALSE
 set create_ddr4_ad9v3   FALSE
-set create_hbm_ad9h3   FALSE
-set create_hbm_ad9h7   FALSE
+set create_hbm_ad9h3    FALSE
+set create_hbm_ad9h7    FALSE
+set create_eth_mac      FALSE
 
 if { $bram_used == "TRUE" } {
   set create_clkconv_mem  TRUE
@@ -82,6 +85,12 @@ if { $bram_used == "TRUE" } {
   }
   if { $fpga_card == "AD9H7" } {
      set create_hbm_ad9h7   TRUE
+  }
+}
+
+if { $eth_used == "TRUE" } {
+  if { $eth_loop_back == "FALSE" } {
+     set create_eth_mac   TRUE
   }
 }
 
@@ -1066,6 +1075,7 @@ if { $create_hbm_ad9h7 == "TRUE" } {
   export_ip_user_files -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -no_script -sync -force  >> $log_file
   export_simulation    -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 }
+
 
 # User IPs
 set action_vhdl  $action_root/hw/vhdl

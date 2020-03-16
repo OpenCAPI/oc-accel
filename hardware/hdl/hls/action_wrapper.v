@@ -88,6 +88,26 @@ module action_wrapper (
    output                                  m_axi_card_mem0_wvalid   ,
 `endif
     //
+    // ETHERNET interface
+`ifdef ENABLE_ETHERNET
+`ifndef ENABLE_ETH_LOOP_BACK
+// we define ethernet pins only if connected to an emac (no loopback)
+   input [ 511 : 0]                        din_eth_TDATA    ,
+   input                                   din_eth_TVALID   ,
+   output                                  din_eth_TREADY   ,
+   input [  63 : 0]                        din_eth_TKEEP    ,
+   input [   0 : 0]                        din_eth_TUSER    ,
+   input                                   din_eth_TLAST    ,
+// Enable for ethernet TX
+   output [ 511 : 0]                        dout_eth_TDATA    ,
+   output                                   dout_eth_TVALID   ,
+   input                                    dout_eth_TREADY   ,
+   output [  63 : 0]                        dout_eth_TKEEP    ,
+   output [   0 : 0]                        dout_eth_TUSER    ,
+   output                                   dout_eth_TLAST    ,
+`endif
+`endif
+    //
     // AXI Host Memory inputterface
    output [ `AXI_MM_AW-1 : 0]              m_axi_host_mem_araddr    ,
    output [ 1 : 0]                         m_axi_host_mem_arburst   ,
@@ -151,6 +171,20 @@ wire interrupt_i;
 wire [63:0] temp_card_mem0_araddr;
 wire [63:0] temp_card_mem0_awaddr;
 
+    // ETHERNET interface
+    // we define the ethernet wrap signals only if ethernet loop back
+`ifdef ENABLE_ETHERNET
+`ifdef ENABLE_ETH_LOOP_BACK
+wire [511:0] dwrap_eth_TDATA;
+wire dwrap_eth_TVALID;
+wire dwrap_eth_TREADY;
+wire [63:0] dwrap_eth_TKEEP;
+wire [0:0] dwrap_eth_TUSER;
+wire [0:0] dwrap_eth_TLAST;
+`endif
+`endif
+
+
 
 reg  [31:0] reg_rdata_hijack; //This will be ORed with the return data of hls_action
 wire [31:0] temp_s_axi_ctrl_reg_rdata;
@@ -205,6 +239,42 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_mem0_wuser        (m_axi_card_mem0_wuser    ) ,
     .m_axi_card_mem0_wvalid       (m_axi_card_mem0_wvalid   ) ,
 `endif
+    // ETHERNET interface
+`ifdef ENABLE_ETHERNET
+`ifndef ENABLE_ETH_LOOP_BACK
+//ethernet enabled without loopback
+    .din_eth_TDATA                (din_eth_TDATA            ) ,
+    .din_eth_TVALID               (din_eth_TVALID           ) ,
+    .din_eth_TREADY               (din_eth_TREADY           ) ,
+    .din_eth_TKEEP                (din_eth_TKEEP            ) ,
+    .din_eth_TUSER                (din_eth_TUSER            ) ,
+    .din_eth_TLAST                (din_eth_TLAST            ) ,
+//Enable for ethernet TX
+    .dout_eth_TDATA               (dout_eth_TDATA           ) ,
+    .dout_eth_TVALID              (dout_eth_TVALID          ) ,
+    .dout_eth_TREADY              (dout_eth_TREADY          ) ,
+    .dout_eth_TKEEP               (dout_eth_TKEEP           ) ,
+    .dout_eth_TUSER               (dout_eth_TUSER           ) ,
+    .dout_eth_TLAST               (dout_eth_TLAST           ) ,
+`else
+    .din_eth_TDATA                (dwrap_eth_TDATA          ) ,
+    .din_eth_TVALID               (dwrap_eth_TVALID         ) ,
+    .din_eth_TREADY               (                         ) ,
+    .din_eth_TKEEP                (dwrap_eth_TKEEP          ) ,
+    .din_eth_TUSER                (dwrap_eth_TUSER          ) ,
+    .din_eth_TLAST                (dwrap_eth_TLAST[0]       ) ,
+//Enable for ethernet TX
+    .dout_eth_TDATA               (dwrap_eth_TDATA          ) ,
+    .dout_eth_TVALID              (dwrap_eth_TVALID         ) ,
+//Force the TREADY signal to 1 to mimic the mac
+    .dout_eth_TREADY              ('b1                      ) ,
+    .dout_eth_TKEEP               (dwrap_eth_TKEEP          ) ,
+    .dout_eth_TUSER               (dwrap_eth_TUSER          ) ,
+    .dout_eth_TLAST               (dwrap_eth_TLAST[0]       ) ,
+//Enable ethernet with loopback
+`endif
+`endif
+    //
     .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr    ) ,
     .s_axi_ctrl_reg_arready       (s_axi_ctrl_reg_arready   ) ,
     .s_axi_ctrl_reg_arvalid       (s_axi_ctrl_reg_arvalid   ) ,

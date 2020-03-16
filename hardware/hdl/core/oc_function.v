@@ -221,6 +221,29 @@ module oc_function (
 
 `ifdef ENABLE_HBM
 `endif
+`ifdef ENABLE_ETHERNET
+`ifndef ENABLE_ETH_LOOP_BACK
+    , input                  gt_ref_clk_n
+    , input                  gt_ref_clk_p
+    , input                  gt_rx_gt_port_0_n
+    , input                  gt_rx_gt_port_0_p
+    , input                  gt_rx_gt_port_1_n
+    , input                  gt_rx_gt_port_1_p
+    , input                  gt_rx_gt_port_2_n
+    , input                  gt_rx_gt_port_2_p
+    , input                  gt_rx_gt_port_3_n
+    , input                  gt_rx_gt_port_3_p
+    , output                 gt_tx_gt_port_0_n
+    , output                 gt_tx_gt_port_0_p
+    , output                 gt_tx_gt_port_1_n
+    , output                 gt_tx_gt_port_1_p
+    , output                 gt_tx_gt_port_2_n
+    , output                 gt_tx_gt_port_2_p
+    , output                 gt_tx_gt_port_3_n
+    , output                 gt_tx_gt_port_3_p
+`endif
+`endif
+
 );
 
 // ==============================================================================================================================
@@ -468,6 +491,29 @@ framework_afu  fw_afu
       .c0_ddr4_ck_t     ( c0_ddr4_ck_t     ) ,
    `endif
    `endif
+  `ifdef ENABLE_ETHERNET
+  `ifndef ENABLE_ETH_LOOP_BACK
+      .gt_ref_clk_n      ( gt_ref_clk_n       ),
+      .gt_ref_clk_p      ( gt_ref_clk_p       ),
+      .gt_rx_gt_port_0_n ( gt_rx_gt_port_0_n  ),
+      .gt_rx_gt_port_0_p ( gt_rx_gt_port_0_p  ),
+      .gt_rx_gt_port_1_n ( gt_rx_gt_port_1_n  ),
+      .gt_rx_gt_port_1_p ( gt_rx_gt_port_1_p  ),
+      .gt_rx_gt_port_2_n ( gt_rx_gt_port_2_n  ),
+      .gt_rx_gt_port_2_p ( gt_rx_gt_port_2_p  ),
+      .gt_rx_gt_port_3_n ( gt_rx_gt_port_3_n  ),
+      .gt_rx_gt_port_3_p ( gt_rx_gt_port_3_p  ),
+      .gt_tx_gt_port_0_n ( gt_tx_gt_port_0_n  ),
+      .gt_tx_gt_port_0_p ( gt_tx_gt_port_0_p  ),
+      .gt_tx_gt_port_1_n ( gt_tx_gt_port_1_n  ),
+      .gt_tx_gt_port_1_p ( gt_tx_gt_port_1_p  ),
+      .gt_tx_gt_port_2_n ( gt_tx_gt_port_2_n  ),
+      .gt_tx_gt_port_2_p ( gt_tx_gt_port_2_p  ),
+      .gt_tx_gt_port_3_n ( gt_tx_gt_port_3_n  ),
+      .gt_tx_gt_port_3_p ( gt_tx_gt_port_3_p  ),
+   `endif
+   `endif
+
 
       // -- AFU Index
       .afu_index                           ( 6'b000000 ),                                 // -- input   // -- This AFU is number 0                                                      

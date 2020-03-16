@@ -46,6 +46,8 @@ set nvme_used           $::env(NVME_USED)
 set bram_used           $::env(BRAM_USED)
 set sdram_used          $::env(SDRAM_USED)
 set hbm_used            $::env(HBM_USED)
+set eth_used            $::env(ETHERNET_USED)
+set eth_loop_back       $::env(ETH_LOOP_BACK)
 set user_clock          $::env(USER_CLOCK)
 set ila_debug           [string toupper $::env(ILA_DEBUG)]
 set simulator           $::env(SIMULATOR)
@@ -224,7 +226,21 @@ foreach ip_xci [glob -nocomplain -dir $action_ip_dir */*.xci] {
   export_ip_user_files -of_objects  [get_files "$ip_xci"] -no_script -sync -force >> $log_file
 }
 
+# Add Ethernet IP
+if { $eth_used == TRUE } {
+  if { $eth_loop_back == TRUE } {
+    puts "                        adding Ethernet loop back  (no MAC)"
+  } else {
+    puts "                        adding Ethernet block design"
+    set_property  ip_repo_paths [concat [get_property ip_repo_paths [current_project]] $ip_dir] [current_project] >> $log_file
+    update_ip_catalog -rebuild -scan_changes >> $log_file
 
+    # Commented below line for make model, uncomment for make image
+    add_files -norecurse  $ip_dir/eth_100G/eth_100G.srcs/sources_1/bd/eth_100G/eth_100G.bd  >> $log_file
+    export_ip_user_files -of_objects  [get_files  $ip_dir/eth_100G/eth_100G.srcs/sources_1/bd/eth_100G/eth_100G.bd] -no_script -sync -force -quiet >> $log_file
+  }
+
+}
 # Add OpenCAPI board support package
 
 if { $unit_sim_used == "TRUE" } {
@@ -261,6 +277,14 @@ if { $fpga_card == "AD9V3" } {
   if { $sdram_used == "TRUE" } {
     add_files -fileset constrs_1 -norecurse $top_xdc_dir/snap_ddr4_b0pins.xdc 
     set_property used_in_synthesis false [get_files $top_xdc_dir/snap_ddr4_b0pins.xdc]
+  }
+}
+
+# ETHERNET XDCs
+if { $eth_used == "TRUE" } {
+  if { $eth_loop_back == "FALSE" } {
+    add_files -fileset constrs_1 -norecurse $top_xdc_dir/snap_ethernet_pins.xdc 
+    set_property used_in_synthesis false [get_files $top_xdc_dir/snap_ethernet_pins.xdc]
   }
 }
 

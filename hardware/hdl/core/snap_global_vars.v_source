@@ -67,6 +67,14 @@
 `define ENABLE_HBM
 #endif
 
+#if defined(CONFIG_ENABLE_ETHERNET)
+`define ENABLE_ETHERNET
+#endif
+
+#if defined(CONFIG_ENABLE_ETH_LOOP_BACK)
+`define ENABLE_ETH_LOOP_BACK
+#endif
+
 #if defined(CONFIG_ACTION_HALF_WIDTH)
 `define ACTION_HALF_WIDTH
 #endif

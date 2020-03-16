@@ -146,6 +146,8 @@ while [ -z "$SETUP_DONE" ]; do
     AR='${SNAP_ROOT}/actions/hls_latency_eval_1024'
   elif [ -n "$HLS_HELLOWORLD" ]; then
     AR='${SNAP_ROOT}/actions/hls_helloworld'
+  elif [ -n "$HLS_RX100G" ]; then
+    AR='${SNAP_ROOT}/actions/hls_rx100G'
   elif [ -n "$HDL_HELLOWORLD" ]; then
     AR='${SNAP_ROOT}/actions/hdl_helloworld'
   elif [ -n "$HDL_SINGLE_ENGINE" ]; then
@@ -264,6 +266,20 @@ while [ -z "$SETUP_DONE" ]; do
     else
       echo  "DENALI                  is set to: \"$DENALI\""
     fi
+  fi
+
+  # Note: HBM is defined via snap_config
+  if [ "$HBM_USED" == "FALSE" ] && [ "$BRAM_USED" == "TRUE" ]; then
+ #      depends on ((AD9H3 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
+ 
+    #echo "=====HBM setup========================================="
+      SETUP_INFO="$SETUP_INFO\n### INFO ### Setting of HBM/DDR is NOT with real HBM/DDR!"
+  fi
+
+  # Note: ETHERNET_USED is defined via snap_config
+  if [ "$ETHERNET_USED" == "TRUE" ] && [ "$ETH_LOOP_BACK" == "TRUE" ]; then
+    #echo "=====Ethernet setup===================================="
+      SETUP_INFO="$SETUP_INFO\n### INFO ### Setting of ETHERNET is a loopback with NO MAC"
   fi
 
 

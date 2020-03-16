@@ -56,6 +56,7 @@ extern "C" {
 #define SNAP_ADDRTYPE_zzz                0x0003 /* ? */
 #define SNAP_ADDRTYPE_LCL_MEM0           0x0010 /* card specific HBM or DDR Port 0 */
 #define SNAP_ADDRTYPE_LCL_MEM1           0x0011 /* card specific HBM or DDR  Port 1 */
+#define SNAP_ADDRTYPE_HBM_P0            0x0010 /* card specific HBM Port 0 */
 
 #define SNAP_ADDRFLAG_END                0x0001 /* last element in the list */
 #define SNAP_ADDRFLAG_ADDR               0x0002 /* this one is an address */

@@ -216,6 +216,30 @@ module framework_afu (
     , output  [0 : 0]        c0_ddr4_ck_t
    `endif
    `endif
+
+// ETHERNET
+  `ifdef ENABLE_ETHERNET 
+  `ifndef ENABLE_ETH_LOOP_BACK
+    , input                  gt_ref_clk_n
+    , input                  gt_ref_clk_p
+    , input                  gt_rx_gt_port_0_n
+    , input                  gt_rx_gt_port_0_p
+    , input                  gt_rx_gt_port_1_n
+    , input                  gt_rx_gt_port_1_p
+    , input                  gt_rx_gt_port_2_n
+    , input                  gt_rx_gt_port_2_p
+    , input                  gt_rx_gt_port_3_n
+    , input                  gt_rx_gt_port_3_p
+    , output                 gt_tx_gt_port_0_n
+    , output                 gt_tx_gt_port_0_p
+    , output                 gt_tx_gt_port_1_n
+    , output                 gt_tx_gt_port_1_p
+    , output                 gt_tx_gt_port_2_n
+    , output                 gt_tx_gt_port_2_p
+    , output                 gt_tx_gt_port_3_n
+    , output                 gt_tx_gt_port_3_p
+   `endif
+   `endif
   );
 
   // // ********************************************************************************************************************************
@@ -703,6 +727,27 @@ module framework_afu (
   wire    [127:0] ro_naa_wwid                         ;
   wire     [63:0] ro_system_memory_length             ;
 
+  // ETHERNET
+`ifdef ENABLE_ETHERNET 
+`ifndef ENABLE_ETH_LOOP_BACK
+  wire    [511:0] eth1_rx_tdata                       ;
+  wire     [63:0] eth1_rx_tkeep                       ;
+  wire            eth1_rx_tlast                       ;
+  wire            eth1_rx_tvalid                      ;
+  wire            eth1_rx_tready                      ;
+  wire      [0:0] eth1_rx_tuser                       ;
+
+  wire    [511:0] eth1_tx_tdata                       ;
+  wire     [63:0] eth1_tx_tkeep                       ;
+  wire            eth1_tx_tlast                       ;
+  wire            eth1_tx_tvalid                      ;
+  wire            eth1_tx_tready                      ;
+  wire      [0:0] eth1_tx_tuser                       ;
+
+  wire            eth1_rst                            ;
+`endif
+`endif
+
   // // ********************************************************************************************************************************
   // // User clock
   // // ********************************************************************************************************************************
@@ -788,6 +833,12 @@ module framework_afu (
      assign memctl0_axi_rst_n = ~memctl0_ui_clk_sync_rst;
   `else
      assign memctl0_axi_rst_n = ~reset_nest_q;
+  `endif
+`endif
+`ifdef ENABLE_ETHERNET
+  `ifndef ENABLE_ETH_LOOP_BACK
+    wire eth_rst;
+    assign eth_rst = reset_action_d;
   `endif
 `endif
 
@@ -1271,6 +1322,25 @@ module framework_afu (
       .m_axi_card_mem0_wuser              (                            ) ,
       .m_axi_card_mem0_wvalid             ( act_axi_card_mem0_wvalid   ) ,
 `endif
+    // ETHERNET interface
+`ifdef ENABLE_ETHERNET
+`ifndef ENABLE_ETH_LOOP_BACK
+      //ethernet enabled without loopback
+      .din_eth_TDATA                      ( eth1_rx_tdata              ) ,
+      .din_eth_TVALID                     ( eth1_rx_tvalid             ) ,
+      .din_eth_TREADY                     ( eth1_rx_tready             ) ,
+      .din_eth_TKEEP                      ( eth1_rx_tkeep              ) ,
+      .din_eth_TUSER                      ( eth1_rx_tuser              ) ,
+      .din_eth_TLAST                      ( eth1_rx_tlast              ) ,
+      //Enable for ethernet TX
+      .dout_eth_TDATA                     ( eth1_tx_tdata             ) ,
+      .dout_eth_TVALID                    ( eth1_tx_tvalid            ) ,
+      .dout_eth_TREADY                    ( eth1_tx_tready            ) ,
+      .dout_eth_TKEEP                     ( eth1_tx_tkeep             ) ,
+      .dout_eth_TUSER                     ( eth1_tx_tuser             ) ,
+      .dout_eth_TLAST                     ( eth1_tx_tlast             ) ,
+`endif
+`endif
       //
       // AXI Control Register Interface
       .s_axi_ctrl_reg_araddr              ( lite_conv2act_araddr       ) ,
@@ -1338,8 +1408,7 @@ module framework_afu (
       .m_axi_host_mem_wvalid              ( mm_act2conv_wvalid         )
  ) ;  // action_w: action_wrapper
 
-`else
-
+`else  //`ifdef ENABLE_ODMA
     //TODO
     assign int_req_ack = 1'b0;
     // ODMA Mode action_wrapper
@@ -2430,5 +2499,60 @@ assign hbm_ctrl_wdata_parity = {{^(hbm_ctrl_wdata[255:248])},{^(hbm_ctrl_wdata[2
                                 {^(hbm_ctrl_wdata[31:24])},  {^(hbm_ctrl_wdata[23:16])},  {^(hbm_ctrl_wdata[15:8])},   {^(hbm_ctrl_wdata[7:0])}};
 `endif
 
+  // // ********************************************************************************************************************************
+  // // Ethernet controllers
+  // // ********************************************************************************************************************************
+
+`ifdef ENABLE_ETHERNET 
+  `ifndef ENABLE_ETH_LOOP_BACK
+eth_100G eth_100G_0
+(
+      .i_gt_ref_clk_n              ( gt_ref_clk_n                  ),
+      .i_gt_ref_clk_p              ( gt_ref_clk_p                  ),
+
+      .i_gt_rx_gt_port_0_n         ( gt_rx_gt_port_0_n             ),
+      .i_gt_rx_gt_port_0_p         ( gt_rx_gt_port_0_p             ),
+      .i_gt_rx_gt_port_1_n         ( gt_rx_gt_port_1_n             ),
+      .i_gt_rx_gt_port_1_p         ( gt_rx_gt_port_1_p             ),
+      .i_gt_rx_gt_port_2_n         ( gt_rx_gt_port_2_n             ),
+      .i_gt_rx_gt_port_2_p         ( gt_rx_gt_port_2_p             ),
+      .i_gt_rx_gt_port_3_n         ( gt_rx_gt_port_3_n             ),
+      .i_gt_rx_gt_port_3_p         ( gt_rx_gt_port_3_p             ),
+
+      .o_gt_tx_gt_port_0_n         ( gt_tx_gt_port_0_n             ),
+      .o_gt_tx_gt_port_0_p         ( gt_tx_gt_port_0_p             ),
+      .o_gt_tx_gt_port_1_n         ( gt_tx_gt_port_1_n             ),
+      .o_gt_tx_gt_port_1_p         ( gt_tx_gt_port_1_p             ),
+      .o_gt_tx_gt_port_2_n         ( gt_tx_gt_port_2_n             ),
+      .o_gt_tx_gt_port_2_p         ( gt_tx_gt_port_2_p             ),
+      .o_gt_tx_gt_port_3_n         ( gt_tx_gt_port_3_n             ),
+      .o_gt_tx_gt_port_3_p         ( gt_tx_gt_port_3_p             ),
+
+      .m_axis_rx_tdata             ( eth1_rx_tdata                 ),
+      .m_axis_rx_tkeep             ( eth1_rx_tkeep                 ),
+      .m_axis_rx_tlast             ( eth1_rx_tlast                 ),
+      .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
+      .m_axis_rx_tuser             ( eth1_rx_tuser                 ),
+      .m_axis_rx_tready            ( eth1_rx_tuser                 ),
+      .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
+      .s_axis_tx_tkeep             ( eth1_tx_tkeep                 ),
+      .s_axis_tx_tlast             ( eth1_tx_tlast                 ),
+      .s_axis_tx_tvalid            ( eth1_tx_tvalid                ),
+      .s_axis_tx_tuser             ( eth1_tx_tuser                 ),
+      .s_axis_tx_tready            ( eth1_tx_tready                ),
+
+      .i_sys_reset                 ( eth_rst                       ),
+      .i_core_rx_reset             ( eth_rst                       ),
+      .i_core_tx_reset             ( eth_rst                       ),
+      .i_capi_clk                  ( clock_afu                     ),
+
+      .i_ctl_rx_enable             ( 1'b1                          ),
+      .i_ctl_rx_rsfec_enable       ( 1'b1                          ),
+      .i_ctl_tx_enable             ( 1'b1                          ),
+      .i_ctl_tx_rsfec_enable       ( 1'b1                          )
+);
+
+`endif
+`endif
 endmodule
 
