@@ -150,7 +150,8 @@ static int ocaccel_action_info (void* handle)
 
     char kernel_name[33];
 
-    for (int i = 0; i < kernel_number; i++) {
+    int i;
+    for (i = 0; i < kernel_number; i++) {
         if (ocaccel_get_kernel_name (handle, i, kernel_name)) {
             strcpy (kernel_name, "ERROR!");
             rc = -1;

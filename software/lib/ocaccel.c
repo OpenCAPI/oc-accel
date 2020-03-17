@@ -583,8 +583,9 @@ int ocaccel_get_kernel_name (struct ocaccel_card* card, int kernel_id, char* arg
     uint32_t reg = 0;
     char tmp_name[33];
     union kernel_name kern_name;
+    int i;
 
-    for (int i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         if (ocaccel_action_read32 (card, reg_base + OCACCEL_KERNEL_NAME_STR1 + (i * 4), &reg)) {
             ocaccel_lib_trace ("ERROR: failed to read kernel name register!\n");
             return -1;
