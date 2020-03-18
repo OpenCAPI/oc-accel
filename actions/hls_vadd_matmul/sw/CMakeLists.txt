@@ -8,7 +8,7 @@ endif()
 
 # add the executable
 add_executable(hls_vadd_matmul hls_vadd_matmul.cpp)
-target_link_libraries(hls_vadd_matmul ocaccel ${Boost_LIBRARIES})
+target_link_libraries(hls_vadd_matmul ocaccel boost_program_options)
 target_include_directories(hls_vadd_matmul PRIVATE
     ${OCACCEL_ROOT}/software/include
     .
