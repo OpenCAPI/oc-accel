@@ -262,7 +262,7 @@ function detect_oc_card_name()
 # Main Start here
 # Parse any options given on the command line
 PROGRAM=$0
-card=""
+CardOption=0
 type=""
 while getopts ":vA:C:Vht:" opt; do
 	case ${opt} in
@@ -275,6 +275,7 @@ while getopts ":vA:C:Vht:" opt; do
 		;;
 	C)
 		card=${OPTARG};
+		CardOption=1
 		;;
 	t)
 		type=${OPTARG}
@@ -301,7 +302,7 @@ done
 shift $((OPTIND-1))
 # now do something with $@
 
-if  ["$card" != ""]; then
+if  [ $CardOption == 1 ]; then
   	rc=0
 	if [[ $card -gt 3 ]]; then
 		echo "Invalid option for -C -$OPTARG" >&2
