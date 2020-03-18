@@ -28,7 +28,7 @@
 #include "force_cpu.h"
 
 static int quiet = 0;
-static const char* version = GIT_VERSION;
+static const char* version = "1.0";
 
 /**
  * @brief Prints valid command line options

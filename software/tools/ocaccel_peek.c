@@ -27,7 +27,7 @@
 #include <libocaccel.h>
 #include "force_cpu.h"
 
-static const char* version = GIT_VERSION;
+static const char* version = "1.0";
 
 /**
  * @brief        prints valid command line options

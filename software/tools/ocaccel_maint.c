@@ -23,15 +23,11 @@
 #include <getopt.h>
 #include <sys/stat.h>
 
-#if !defined(OPENCAPI30)
-#include <libcxl.h>
-#endif
-
 #include <ocaccel_internal.h>
 #include <libocaccel.h>
 #include <ocaccel_global_regs.h>
 
-static const char* version = GIT_VERSION;
+const static char* version = "1.0";
 
 struct mdev_ctx {
     int card_no;     /* card_no no (0,1,2,3 */
