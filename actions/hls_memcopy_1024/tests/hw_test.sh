@@ -146,7 +146,7 @@ function test_memcopy_with_local_mem {
     echo -n "Doing snap_memcopy to ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card}  ${noirq}  \
         -i ${size}_B.bin    \
-        -d 0x0 -D LOCAL_MEM >>  \
+        -d 0x0 -D LCL_MEM0 >>  \
         snap_memcopy_with_ddr.log 2>&1"
     echo ${cmd} >> snap_memcopy_with_ddr.log
     eval ${cmd}
@@ -159,7 +159,7 @@ function test_memcopy_with_local_mem {
     echo -n "Doing snap_memcopy from ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card}   ${noirq} \
         -o ${size}_B.out    \
-        -a 0x0 -A LOCAL_MEM -s ${size} >>  \
+        -a 0x0 -A LCL_MEM0 -s ${size} >>  \
         snap_memcopy_with_ddr.log 2>&1"
     echo ${cmd} >> snap_memcopy_with_ddr.log
     eval ${cmd}
