@@ -309,74 +309,80 @@ if  [ $CardOption == 1 ]; then
 		usage
 		exit 0
 	fi
-	detect_card_name $card  "0x0632" "0x0605" "ADKU3"
-	if [ $? == 1 ]; then
-		rc=1
+
+	if [ $type -eq 3 ]; then
+		detect_oc_card_name $card  "0x062b" "0x060f" "OC-AD9V3"
+    	if [ $? == 1 ]; then
+        	rc=1
+    	fi
+		detect_oc_card_name $card  "0x062b" "0x0667" "OC-AD9H3"
+		if [ $? == 1 ]; then
+        	rc=1
+		fi
+    	detect_oc_card_name $card  "0x062b" "0x0666" "OC-AD9H7"
+        	if [ $? == 1 ]; then
+            	rc=1
+        	fi
+
+	else
+		detect_card_name $card  "0x0632" "0x0605" "ADKU3"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060a" "N250S"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0607" "S121B_v16.1_BPIx16"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0664" "S121B_v16.2_SPIx4"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060c" "RCXVUP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060d" "N250SP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0661" "FX609"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0660" "S241"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0608" "AD8K5"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x04dd" "N250SP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x060f" "AD9V3"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0667" "AD9H3"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0665" "U200"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0602" "" "GZIP"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
 	fi
-	detect_card_name $card  "0x0632" "0x060a" "N250S"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x0607" "S121B_v16.1_BPIx16"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x0664" "S121B_v16.2_SPIx4"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x060c" "RCXVUP"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x060d" "N250SP"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x0661" "FX609"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x0660" "S241"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x0608" "AD8K5"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x04dd" "N250SP"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x060f" "AD9V3"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x0667" "AD9H3"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0632" "0x0665" "U200"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_card_name $card  "0x0602" "" "GZIP"
-	if [ $? == 1 ]; then
-		rc=1
-	fi
-	detect_oc_card_name $card  "0x062b" "0x060f" "OC-AD9V3"
-    if [ $? == 1 ]; then
-        rc=1
-    fi
-	detect_oc_card_name $card  "0x062b" "0x0667" "OC-AD9H3"
-	 if [ $? == 1 ]; then
-        rc=1
-	fi
-    detect_oc_card_name $card  "0x062b" "0x0666" "OC-AD9H7"
-        if [ $? == 1 ]; then
-            rc=1
-        fi
+
 	exit $rc
 fi
 
