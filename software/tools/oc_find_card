@@ -369,6 +369,14 @@ if  [ $CardOption == 1 ]; then
 		if [ $? == 1 ]; then
 			rc=1
 		fi
+		detect_card_name $card  "0x0632" "0x0666" "AD9H7"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
+		detect_card_name $card  "0x0632" "0x0669" "U50"
+		if [ $? == 1 ]; then
+			rc=1
+		fi
 	fi
 
 	if [ $type -eq 1 ] || [ $type -eq 0 ]; then # CAPI1 or nothing requested (no -t option)
@@ -394,7 +402,7 @@ if  [ $CardOption == 1 ]; then
 		fi
 	fi
 
-	if [ $type -eq 0 ]; then # nothing requested specific cases(no -t option)
+	if [ $type -eq 0 ]; then # nothing requested => specific cases (no -t option)
 		detect_card_name $card  "0x0602" "" "GZIP"
 		if [ $? == 1 ]; then
 			rc=1
@@ -467,11 +475,11 @@ case ${accel} in
 		detect_snap_cards "0x062b" "0x0667" "OC-AD9H3"
 		RC=$?
 		;;
-        # OC-AD9H7 OpenCAPI 3.0 card from Alphadata
-        "OC-AD9H7")
-                detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
-                RC=$?
-                ;;
+	# OC-AD9H7 OpenCAPI 3.0 card from Alphadata
+    "OC-AD9H7")
+        detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
+        RC=$?
+        ;;
 	# U200 CAPI 2.0 card from Xilinx
 	"U200")
 		detect_snap_cards "0x0632" "0x0665" "U200"
@@ -487,11 +495,17 @@ case ${accel} in
 		detect_snap_cards "0x0632" "0x0667" "AD9H3"
 		RC=$?
 		;;
-        # AD9H7 CAPI 2.0 card from Alphadata
-        "AD9H7")
-                detect_snap_cards "0x0632" "0x0666" "AD9H7"
-                RC=$?
-                ;;
+    # AD9H7 CAPI 2.0 card from Alphadata
+    "AD9H7")
+        detect_snap_cards "0x0632" "0x0666" "AD9H7"
+        RC=$?
+        ;;
+    # U50 CAPI 2.0 card from Xilinx
+    "U50")
+        detect_snap_cards "0x0632" "0x0669" "U50"
+        RC=$?
+        ;;
+
 	"ALL")
 		# detect all cards and add Number of Cards
 		detect_snap_cards "0x0632" "0x0605" "ADKU3"
@@ -527,10 +541,16 @@ case ${accel} in
 		detect_snap_cards "0x0632" "0x060f" "AD9V3"
 		RC=$((RC + $?))
 
-                detect_snap_cards "0x0632" "0x0667" "AD9H3"
+        detect_snap_cards "0x0632" "0x0667" "AD9H3"
 		RC=$((RC + $?))
 
 		detect_snap_cards "0x0632" "0x0665" "U200"
+		RC=$((RC + $?))
+
+		detect_snap_cards "0x0632" "0x0666" "AD9H7"
+		RC=$((RC + $?))
+
+        detect_snap_cards "0x0632" "0x0669" "U50"
 		RC=$((RC + $?))
 
 		detect_snap_cards "0x062b" "0x060f" "OC-AD9V3"
@@ -539,8 +559,8 @@ case ${accel} in
 		detect_snap_cards "0x062b" "0x0667" "OC-AD9H3"
 		RC=$((RC + $?))
 
-                detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
-                RC=$((RC + $?))
+        detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
+        RC=$((RC + $?))
 
 		echo -e "\nTotal $RC cards detected \n"
  		;;
