@@ -58,6 +58,8 @@ function usage() {
         echo "        Prints a list of OC-AD9V3 OpenCAPI Cards found"
 	echo "     $PROGRAM -C 0"
 	echo "         Prints the Type of CAPI/OpenCAPI Card 0"
+	echo "     $PROGRAM -C 0 -t 3"
+	echo "         Prints the Type of OpenCAPI-only Card 0"
 	echo "     $PROGRAM -v -A ALL"
 	echo "         Prints Verbose Informations for all CAPI/OpenCAPI Cards"
 	echo "  Exit code will return how many accelerator's are available."
