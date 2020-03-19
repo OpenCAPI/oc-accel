@@ -29,7 +29,9 @@ normal=$(tput sgr0)
 
 # v2.0 : modified Jan 16th 2018 to have -v option providing extra information
 # v2.1 : modified Feb 26th 2020 adding AD9Hx in CAPI2 and OC modes
-version=2.1
+# v2.2 : modified March 19th 2020 adding -t (accel type) option; this is to prevent reporting 2 cards (1 CAPI2, 1 OpenCAPI) as only 1 card with 2 characteristics (both have $card ID=0)
+
+version=2.2
 accel=UNKNOWN
 VERBOSE=0
 
@@ -263,7 +265,7 @@ function detect_oc_card_name()
 # Parse any options given on the command line
 PROGRAM=$0
 CardOption=0
-type=""
+type=0
 while getopts ":vA:C:Vht:" opt; do
 	case ${opt} in
 	v)
@@ -304,13 +306,20 @@ shift $((OPTIND-1))
 
 if  [ $CardOption == 1 ]; then
   	rc=0
+
 	if [[ $card -gt 3 ]]; then
 		echo "Invalid option for -C -$OPTARG" >&2
 		usage
 		exit 0
 	fi
 
-	if [ $type -eq 3 ]; then
+	if [[ $type -gt 3 ]]; then
+		echo "Invalid option for -t -$OPTARG" >&2
+		usage
+		exit 0
+	fi
+
+	if [ $type -eq 3 ] || [ $type -eq 0 ]; then # OpenCAPI or nothing requested (no -t option)
 		detect_oc_card_name $card  "0x062b" "0x060f" "OC-AD9V3"
     	if [ $? == 1 ]; then
         	rc=1
@@ -323,8 +332,9 @@ if  [ $CardOption == 1 ]; then
         	if [ $? == 1 ]; then
             	rc=1
         	fi
+	fi
 
-	else
+	if [ $type -eq 2 ] || [ $type -eq 1 ] || [ $type -eq 0 ]; then # CAPI1/CAPI2 or nothing requested (no -t option)
 		detect_card_name $card  "0x0632" "0x0605" "ADKU3"
 		if [ $? == 1 ]; then
 			rc=1
