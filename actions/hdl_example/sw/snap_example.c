@@ -167,7 +167,7 @@ static uint32_t msec_2_ticks (int msec)
 /*
  *  Start Action and wait for Idle.
  */
-static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed, snap_action_flag_t flags)
+static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed)
 {
     int rc = 0;
     uint64_t t_start;   /* time in usec */
@@ -295,7 +295,7 @@ static int do_action (struct snap_card* h,
 
     VERBOSE0 ("Attach done\n");
     action_memcpy (h, action, dest, src, memsize);
-    rc = action_wait_idle (h, timeout, &td, flags);
+    rc = action_wait_idle (h, timeout, &td);
     print_time (td, memsize);
 
     if (0 != snap_detach_action (act)) {
@@ -576,7 +576,7 @@ int main (int argc, char* argv[])
     int start_delay = START_DELAY;
     int end_delay = END_DELAY;
     int step_delay = STEP_DELAY;
-    int delay;
+    int delay = start_delay;
     int card_no = 0;
     int cmd;
     int action = ACTION_CONFIG_COUNT;
@@ -783,7 +783,7 @@ int main (int argc, char* argv[])
             VERBOSE0 ("Start count down\n");
 
             action_count (dn, delay);
-            rc = action_wait_idle (dn, timeout + delay / 1000, &td, attach_flags);
+            rc = action_wait_idle (dn, timeout + delay / 1000, &td);
             print_time (td, 0);
         }
 
