@@ -138,6 +138,8 @@ while [ -z "$SETUP_DONE" ]; do
     AR='${SNAP_ROOT}/actions/hls_memcopy'
   elif [ -n "$HLS_MEMCOPY_1024" ]; then
     AR='${SNAP_ROOT}/actions/hls_memcopy_1024'
+  elif [ -n "$HLS_HBM_MEMCOPY_1024" ]; then
+    AR='${SNAP_ROOT}/actions/hls_hbm_memcopy_1024'
   elif [ -n "$HLS_SPONGE" ]; then
     AR='${SNAP_ROOT}/actions/hls_sponge'
   elif [ -n "$HLS_LATENCY_EVAL" ]; then
@@ -269,9 +271,7 @@ while [ -z "$SETUP_DONE" ]; do
   fi
 
   # Note: HBM is defined via snap_config
-  if [ "$HBM_USED" == "FALSE" ] && [ "$BRAM_USED" == "TRUE" ]; then
- #      depends on ((AD9H3 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
- 
+  if [ "$BRAM_USED" == "TRUE" ]; then
     #echo "=====HBM setup========================================="
       SETUP_INFO="$SETUP_INFO\n### INFO ### Setting of HBM/DDR is NOT with real HBM/DDR!"
   fi

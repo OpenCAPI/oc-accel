@@ -244,6 +244,16 @@ action_hw: prepare_logs
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_snap_ip.tcl        -notrace -log $(LOGS_DIR)/create_snap_ip.log         -journal $(LOGS_DIR)/create_snap_ip.jou
 	@touch .create_snap_ip_done
 
+# HBM part - call a different bd if simulation or HBM (HBM is not supported by xsim)
+.create_hbm_done:
+	@echo -e "[CREATE HBM..........] start `date +"%T %a %b %d %Y"`";
+	@if [ "$(BRAM_USED)" == "TRUE" ]; then \
+		cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_hbm_for_simu.tcl -notrace -log $(LOGS_DIR)/create_hbm.log -journal $(LOGS_DIR)/create_hbm.jou; \
+	else \
+		cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_hbm.tcl -notrace -log $(LOGS_DIR)/create_hbm.log -journal $(LOGS_DIR)/create_hbm.jou; \
+	fi
+	@echo -e "[CREATE HBM..........] done  `date +"%T %a %b %d %Y"`";
+	@touch .create_hbm_done
 
 create_hls_ip:
 	@cd $(BUILD_DIR) &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_hls_ip.tcl -notrace -log $(LOGS_DIR)/create_hls_ip.log -journal $(LOGS_DIR)/create_hls_ip.jou
@@ -256,6 +266,7 @@ create_project: snap_preprocess
 	@$(MAKE) -s create_hls_ip
 	@$(MAKE) -s patch_version
 	@if [ "$(ETHERNET_USED)" == "TRUE" ] && [ "$(ETH_LOOP_BACK)" == "FALSE" ]; then $(MAKE) -s .create_ethernet_done; fi
+	@if [ "$(HBM_USED)" == "TRUE" ]; then $(MAKE) -s .create_hbm_done; fi
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_framework.tcl -notrace -log $(LOGS_DIR)/create_framework.log  -journal $(LOGS_DIR)/create_framework.jou
 	@echo -e "[CREATE PROJECT......] done  `date +"%T %a %b %d %Y"`"
 
@@ -496,7 +507,7 @@ endif
 .PHONY: clean
 clean:
 	@echo -e "[CLEAN ENVIRONMENT...] start `date +"%T %a %b %d %Y"`"
-	@$(RM)    .hw_project_done .sim_project_done .create_snap_ip_done .create_ethernet_done
+	@$(RM)    .hw_project_done .sim_project_done .create_snap_ip_done .create_ethernet_done .create_hbm_done
 	@$(RM) -r $(SNAP_PP_FILES_VHD)                   \
 	          $(SNAP_TMP_FILES)                      \
 	          $(SNAP_MODELS)                         \

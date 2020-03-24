@@ -42,6 +42,7 @@ module action_wrapper (
    input [(`AXI_LITE_DW/8)-1 : 0]           s_axi_ctrl_reg_wstrb     ,
    input                                   s_axi_ctrl_reg_wvalid    ,
 `ifdef ENABLE_AXI_CARD_MEM
+`ifndef ENABLE_HBM
    output [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0]  m_axi_card_mem0_araddr   ,
    output [ 1 : 0]                         m_axi_card_mem0_arburst  ,
    output [ 3 : 0]                         m_axi_card_mem0_arcache  ,
@@ -86,6 +87,98 @@ module action_wrapper (
    output [(`AXI_CARD_MEM_DATA_WIDTH/8)-1 : 0] m_axi_card_mem0_wstrb  ,
    output [`AXI_CARD_MEM_USER_WIDTH-1 : 0] m_axi_card_mem0_wuser    ,
    output                                  m_axi_card_mem0_wvalid   ,
+
+`else
+   output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_HBM0_araddr   ,
+   output [ 1 : 0]                         m_axi_card_HBM0_arburst  ,
+   output [ 3 : 0]                         m_axi_card_HBM0_arcache  ,
+   output [ `AXI_CARD_HBM_ID_WIDTH-1 : 0]    m_axi_card_HBM0_arid     ,
+   output [ 7 : 0]                         m_axi_card_HBM0_arlen    ,
+   output [ 1 : 0]                         m_axi_card_HBM0_arlock   ,
+   output [ 2 : 0]                         m_axi_card_HBM0_arprot   ,
+   output [ 3 : 0]                         m_axi_card_HBM0_arqos    ,
+   input                                   m_axi_card_HBM0_arready  ,
+   output [ 3 : 0]                         m_axi_card_HBM0_arregion ,
+   output [ 2 : 0]                         m_axi_card_HBM0_arsize   ,
+   output [ `AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM0_aruser  ,
+   output                                  m_axi_card_HBM0_arvalid  ,
+   output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_HBM0_awaddr   ,
+   output [ 1 : 0]                         m_axi_card_HBM0_awburst  ,
+   output [ 3 : 0]                         m_axi_card_HBM0_awcache  ,
+   output [ `AXI_CARD_HBM_ID_WIDTH-1 : 0]    m_axi_card_HBM0_awid     ,
+   output [ 7 : 0]                         m_axi_card_HBM0_awlen    ,
+   output [ 1 : 0]                         m_axi_card_HBM0_awlock   ,
+   output [ 2 : 0]                         m_axi_card_HBM0_awprot   ,
+   output [ 3 : 0]                         m_axi_card_HBM0_awqos    ,
+   input                                   m_axi_card_HBM0_awready  ,
+   output [ 3 : 0]                         m_axi_card_HBM0_awregion ,
+   output [ 2 : 0]                         m_axi_card_HBM0_awsize   ,
+   output [ `AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM0_awuser  ,
+   output                                  m_axi_card_HBM0_awvalid  ,
+   input [`AXI_CARD_HBM_ID_WIDTH-1 : 0]     m_axi_card_HBM0_bid      ,
+   output                                  m_axi_card_HBM0_bready   ,
+   input [ 1 : 0]                          m_axi_card_HBM0_bresp    ,
+   input [`AXI_CARD_HBM_USER_WIDTH-1 : 0]  m_axi_card_HBM0_buser    ,
+   input                                   m_axi_card_HBM0_bvalid   ,
+   input [`AXI_CARD_HBM_DATA_WIDTH-1 : 0]   m_axi_card_HBM0_rdata    ,
+   input [`AXI_CARD_HBM_ID_WIDTH-1 : 0]     m_axi_card_HBM0_rid      ,
+   input                                   m_axi_card_HBM0_rlast    ,
+   output                                  m_axi_card_HBM0_rready   ,
+   input [ 1 : 0]                          m_axi_card_HBM0_rresp    ,
+   input [ `AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM0_ruser    ,
+   input                                   m_axi_card_HBM0_rvalid   ,
+   output [`AXI_CARD_HBM_DATA_WIDTH-1 : 0]  m_axi_card_HBM0_wdata    ,
+   output                                  m_axi_card_HBM0_wlast    ,
+   input                                   m_axi_card_HBM0_wready   ,
+   output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_HBM0_wstrb  ,
+   output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM0_wuser    ,
+   output                                  m_axi_card_HBM0_wvalid   ,
+
+   output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_HBM1_araddr   ,
+   output [ 1 : 0]                         m_axi_card_HBM1_arburst  ,
+   output [ 3 : 0]                         m_axi_card_HBM1_arcache  ,
+   output [ `AXI_CARD_HBM_ID_WIDTH-1 : 0]    m_axi_card_HBM1_arid     ,
+   output [ 7 : 0]                         m_axi_card_HBM1_arlen    ,
+   output [ 1 : 0]                         m_axi_card_HBM1_arlock   ,
+   output [ 2 : 0]                         m_axi_card_HBM1_arprot   ,
+   output [ 3 : 0]                         m_axi_card_HBM1_arqos    ,
+   input                                   m_axi_card_HBM1_arready  ,
+   output [ 3 : 0]                         m_axi_card_HBM1_arregion ,
+   output [ 2 : 0]                         m_axi_card_HBM1_arsize   ,
+   output [ `AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM1_aruser  ,
+   output                                  m_axi_card_HBM1_arvalid  ,
+   output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_HBM1_awaddr   ,
+   output [ 1 : 0]                         m_axi_card_HBM1_awburst  ,
+   output [ 3 : 0]                         m_axi_card_HBM1_awcache  ,
+   output [ `AXI_CARD_HBM_ID_WIDTH-1 : 0]    m_axi_card_HBM1_awid     ,
+   output [ 7 : 0]                         m_axi_card_HBM1_awlen    ,
+   output [ 1 : 0]                         m_axi_card_HBM1_awlock   ,
+   output [ 2 : 0]                         m_axi_card_HBM1_awprot   ,
+   output [ 3 : 0]                         m_axi_card_HBM1_awqos    ,
+   input                                   m_axi_card_HBM1_awready  ,
+   output [ 3 : 0]                         m_axi_card_HBM1_awregion ,
+   output [ 2 : 0]                         m_axi_card_HBM1_awsize   ,
+   output [ `AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM1_awuser  ,
+   output                                  m_axi_card_HBM1_awvalid  ,
+   input [`AXI_CARD_HBM_ID_WIDTH-1 : 0]     m_axi_card_HBM1_bid      ,
+   output                                  m_axi_card_HBM1_bready   ,
+   input [ 1 : 0]                          m_axi_card_HBM1_bresp    ,
+   input [`AXI_CARD_HBM_USER_WIDTH-1 : 0]  m_axi_card_HBM1_buser    ,
+   input                                   m_axi_card_HBM1_bvalid   ,
+   input [`AXI_CARD_HBM_DATA_WIDTH-1 : 0]   m_axi_card_HBM1_rdata    ,
+   input [`AXI_CARD_HBM_ID_WIDTH-1 : 0]     m_axi_card_HBM1_rid      ,
+   input                                   m_axi_card_HBM1_rlast    ,
+   output                                  m_axi_card_HBM1_rready   ,
+   input [ 1 : 0]                          m_axi_card_HBM1_rresp    ,
+   input [ `AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM1_ruser    ,
+   input                                   m_axi_card_HBM1_rvalid   ,
+   output [`AXI_CARD_HBM_DATA_WIDTH-1 : 0]  m_axi_card_HBM1_wdata    ,
+   output                                  m_axi_card_HBM1_wlast    ,
+   input                                   m_axi_card_HBM1_wready   ,
+   output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_HBM1_wstrb  ,
+   output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_HBM1_wuser    ,
+   output                                  m_axi_card_HBM1_wvalid   ,
+`endif
 `endif
     //
     // ETHERNET interface
@@ -170,6 +263,10 @@ reg hls_rst_n_q;
 wire interrupt_i;
 wire [63:0] temp_card_mem0_araddr;
 wire [63:0] temp_card_mem0_awaddr;
+wire [63:0] temp_card_HBM0_araddr;
+wire [63:0] temp_card_HBM0_awaddr;
+wire [63:0] temp_card_HBM1_araddr;
+wire [63:0] temp_card_HBM1_awaddr;
 
     // ETHERNET interface
     // we define the ethernet wrap signals only if ethernet loop back
@@ -193,6 +290,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .ap_clk                       ( ap_clk                  ) ,
     .ap_rst_n                     ( hls_rst_n_q             ) ,
 `ifdef ENABLE_AXI_CARD_MEM
+`ifndef ENABLE_HBM
     .m_axi_card_mem0_araddr       (temp_card_mem0_araddr    ) ,
     .m_axi_card_mem0_arburst      (m_axi_card_mem0_arburst  ) ,
     .m_axi_card_mem0_arcache      (m_axi_card_mem0_arcache  ) ,
@@ -238,6 +336,99 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_mem0_wstrb        (m_axi_card_mem0_wstrb    ) ,
     .m_axi_card_mem0_wuser        (m_axi_card_mem0_wuser    ) ,
     .m_axi_card_mem0_wvalid       (m_axi_card_mem0_wvalid   ) ,
+`else
+    .m_axi_card_HBM0_araddr       (temp_card_HBM0_araddr    ) ,
+    .m_axi_card_HBM0_arburst      (m_axi_card_HBM0_arburst  ) ,
+    .m_axi_card_HBM0_arcache      (m_axi_card_HBM0_arcache  ) ,
+    .m_axi_card_HBM0_arid         (m_axi_card_HBM0_arid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM0_arlen        (m_axi_card_HBM0_arlen    ) ,
+    .m_axi_card_HBM0_arlock       (m_axi_card_HBM0_arlock   ) ,
+    .m_axi_card_HBM0_arprot       (m_axi_card_HBM0_arprot   ) ,
+    .m_axi_card_HBM0_arqos        (m_axi_card_HBM0_arqos    ) ,
+    .m_axi_card_HBM0_arready      (m_axi_card_HBM0_arready  ) ,
+    .m_axi_card_HBM0_arregion     (m_axi_card_HBM0_arregion ) ,
+    .m_axi_card_HBM0_arsize       (m_axi_card_HBM0_arsize   ) ,
+    .m_axi_card_HBM0_aruser       (m_axi_card_HBM0_aruser   ) ,
+    .m_axi_card_HBM0_arvalid      (m_axi_card_HBM0_arvalid  ) ,
+    .m_axi_card_HBM0_awaddr       (temp_card_HBM0_awaddr    ) ,
+    .m_axi_card_HBM0_awburst      (m_axi_card_HBM0_awburst  ) ,
+    .m_axi_card_HBM0_awcache      (m_axi_card_HBM0_awcache  ) ,
+    .m_axi_card_HBM0_awid         (m_axi_card_HBM0_awid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM0_awlen        (m_axi_card_HBM0_awlen    ) ,
+    .m_axi_card_HBM0_awlock       (m_axi_card_HBM0_awlock   ) ,
+    .m_axi_card_HBM0_awprot       (m_axi_card_HBM0_awprot   ) ,
+    .m_axi_card_HBM0_awqos        (m_axi_card_HBM0_awqos    ) ,
+    .m_axi_card_HBM0_awready      (m_axi_card_HBM0_awready  ) ,
+    .m_axi_card_HBM0_awregion     (m_axi_card_HBM0_awregion ) ,
+    .m_axi_card_HBM0_awsize       (m_axi_card_HBM0_awsize   ) ,
+    .m_axi_card_HBM0_awuser       (m_axi_card_HBM0_awuser   ) ,
+    .m_axi_card_HBM0_awvalid      (m_axi_card_HBM0_awvalid  ) ,
+    .m_axi_card_HBM0_bid          (m_axi_card_HBM0_bid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM0_bready       (m_axi_card_HBM0_bready   ) ,
+    .m_axi_card_HBM0_bresp        (m_axi_card_HBM0_bresp    ) ,
+    .m_axi_card_HBM0_buser        (m_axi_card_HBM0_buser    ) ,
+    .m_axi_card_HBM0_bvalid       (m_axi_card_HBM0_bvalid   ) ,
+    .m_axi_card_HBM0_rdata        (m_axi_card_HBM0_rdata    ) ,
+    .m_axi_card_HBM0_rid          (m_axi_card_HBM0_rid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM0_rlast        (m_axi_card_HBM0_rlast    ) ,
+    .m_axi_card_HBM0_rready       (m_axi_card_HBM0_rready   ) ,
+    .m_axi_card_HBM0_rresp        (m_axi_card_HBM0_rresp    ) ,
+    .m_axi_card_HBM0_ruser        (m_axi_card_HBM0_ruser    ) ,
+    .m_axi_card_HBM0_rvalid       (m_axi_card_HBM0_rvalid   ) ,
+    .m_axi_card_HBM0_wdata        (m_axi_card_HBM0_wdata    ) ,
+    .m_axi_card_HBM0_wid          (                         ) ,
+    .m_axi_card_HBM0_wlast        (m_axi_card_HBM0_wlast    ) ,
+    .m_axi_card_HBM0_wready       (m_axi_card_HBM0_wready   ) ,
+    .m_axi_card_HBM0_wstrb        (m_axi_card_HBM0_wstrb    ) ,
+    .m_axi_card_HBM0_wuser        (m_axi_card_HBM0_wuser    ) ,
+    .m_axi_card_HBM0_wvalid       (m_axi_card_HBM0_wvalid   ) ,
+
+    .m_axi_card_HBM1_araddr       (temp_card_HBM1_araddr    ) ,
+    .m_axi_card_HBM1_arburst      (m_axi_card_HBM1_arburst  ) ,
+    .m_axi_card_HBM1_arcache      (m_axi_card_HBM1_arcache  ) ,
+    .m_axi_card_HBM1_arid         (m_axi_card_HBM1_arid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM1_arlen        (m_axi_card_HBM1_arlen    ) ,
+    .m_axi_card_HBM1_arlock       (m_axi_card_HBM1_arlock   ) ,
+    .m_axi_card_HBM1_arprot       (m_axi_card_HBM1_arprot   ) ,
+    .m_axi_card_HBM1_arqos        (m_axi_card_HBM1_arqos    ) ,
+    .m_axi_card_HBM1_arready      (m_axi_card_HBM1_arready  ) ,
+    .m_axi_card_HBM1_arregion     (m_axi_card_HBM1_arregion ) ,
+    .m_axi_card_HBM1_arsize       (m_axi_card_HBM1_arsize   ) ,
+    .m_axi_card_HBM1_aruser       (m_axi_card_HBM1_aruser   ) ,
+    .m_axi_card_HBM1_arvalid      (m_axi_card_HBM1_arvalid  ) ,
+    .m_axi_card_HBM1_awaddr       (temp_card_HBM1_awaddr    ) ,
+    .m_axi_card_HBM1_awburst      (m_axi_card_HBM1_awburst  ) ,
+    .m_axi_card_HBM1_awcache      (m_axi_card_HBM1_awcache  ) ,
+    .m_axi_card_HBM1_awid         (m_axi_card_HBM1_awid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM1_awlen        (m_axi_card_HBM1_awlen    ) ,
+    .m_axi_card_HBM1_awlock       (m_axi_card_HBM1_awlock   ) ,
+    .m_axi_card_HBM1_awprot       (m_axi_card_HBM1_awprot   ) ,
+    .m_axi_card_HBM1_awqos        (m_axi_card_HBM1_awqos    ) ,
+    .m_axi_card_HBM1_awready      (m_axi_card_HBM1_awready  ) ,
+    .m_axi_card_HBM1_awregion     (m_axi_card_HBM1_awregion ) ,
+    .m_axi_card_HBM1_awsize       (m_axi_card_HBM1_awsize   ) ,
+    .m_axi_card_HBM1_awuser       (m_axi_card_HBM1_awuser   ) ,
+    .m_axi_card_HBM1_awvalid      (m_axi_card_HBM1_awvalid  ) ,
+    .m_axi_card_HBM1_bid          (m_axi_card_HBM1_bid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM1_bready       (m_axi_card_HBM1_bready   ) ,
+    .m_axi_card_HBM1_bresp        (m_axi_card_HBM1_bresp    ) ,
+    .m_axi_card_HBM1_buser        (m_axi_card_HBM1_buser    ) ,
+    .m_axi_card_HBM1_bvalid       (m_axi_card_HBM1_bvalid   ) ,
+    .m_axi_card_HBM1_rdata        (m_axi_card_HBM1_rdata    ) ,
+    .m_axi_card_HBM1_rid          (m_axi_card_HBM1_rid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM1_rlast        (m_axi_card_HBM1_rlast    ) ,
+    .m_axi_card_HBM1_rready       (m_axi_card_HBM1_rready   ) ,
+    .m_axi_card_HBM1_rresp        (m_axi_card_HBM1_rresp    ) ,
+    .m_axi_card_HBM1_ruser        (m_axi_card_HBM1_ruser    ) ,
+    .m_axi_card_HBM1_rvalid       (m_axi_card_HBM1_rvalid   ) ,
+    .m_axi_card_HBM1_wdata        (m_axi_card_HBM1_wdata    ) ,
+    .m_axi_card_HBM1_wid          (                         ) ,
+    .m_axi_card_HBM1_wlast        (m_axi_card_HBM1_wlast    ) ,
+    .m_axi_card_HBM1_wready       (m_axi_card_HBM1_wready   ) ,
+    .m_axi_card_HBM1_wstrb        (m_axi_card_HBM1_wstrb    ) ,
+    .m_axi_card_HBM1_wuser        (m_axi_card_HBM1_wuser    ) ,
+    .m_axi_card_HBM1_wvalid       (m_axi_card_HBM1_wvalid   ) ,
+`endif
 `endif
     // ETHERNET interface
 `ifdef ENABLE_ETHERNET
@@ -419,7 +610,9 @@ endgenerate
 //assign  m_axi_host_mem_wuser [ `AXI_WUSER-1 : 1 ] = 'b0;
 
 
+// if DDR or DDR replaced by BRAM
 `ifdef ENABLE_AXI_CARD_MEM
+`ifndef ENABLE_HBM
 assign m_axi_card_mem0_araddr = temp_card_mem0_araddr[`AXI_CARD_MEM_ADDR_WIDTH-1:0];
 assign m_axi_card_mem0_awaddr = temp_card_mem0_awaddr[`AXI_CARD_MEM_ADDR_WIDTH-1:0];
 
@@ -430,5 +623,22 @@ begin:high_cid_fields_driver
 end
 endgenerate
 
+// if HBM
+`else
+assign m_axi_card_HBM0_araddr = temp_card_HBM0_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
+assign m_axi_card_HBM0_awaddr = temp_card_HBM0_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
+assign m_axi_card_HBM1_araddr = temp_card_HBM1_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
+assign m_axi_card_HBM1_awaddr = temp_card_HBM1_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
+
+generate if(`AXI_CARD_HBM_ID_WIDTH > 1)
+begin:high_cid_fields_driver
+    assign m_axi_card_HBM0_arid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
+    assign m_axi_card_HBM0_awid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
+    assign m_axi_card_HBM1_arid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
+    assign m_axi_card_HBM1_awid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
+end
+endgenerate
+
+`endif
 `endif
 endmodule

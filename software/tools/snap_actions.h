@@ -34,8 +34,9 @@ static const struct actions_tab snap_actions[] = {
     { "IBM", 0x1014200E, "HDL_multi-process example"                             },
 /* recommended Usage OC HLS examples use 0x10143xxx IDs */
     { "IBM", 0x10143008, "HLS_Helloworld      (512b)"                            },
-    { "IBM", 0x1014300B, "HLS_Memcopy_1024     (1024b)"                          },
-    { "PSI", 0x52320100, "X-ray Detector Data Acquisition and Analysis (512b)"   },
+    { "IBM", 0x1014300B, "HLS_Memcopy_1024   (1024b)"                            },
+    { "IBM", 0x10143010, "HLS_HBM_Memcopy_1024   (1024b)"                        },
+    { "PSI", 0x52320100, "HLS_rx100G          (512b)"                            },
 };
 
 #endif  /* __SNAP_ACTIONS_H__ */
