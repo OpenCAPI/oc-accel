@@ -346,19 +346,15 @@ int main(int argc, char *argv[])
 	char type_in_txt[20], type_out_txt[20];
 	strcpy(type_in_txt,  mem_tab[type_in%6]);
 	strcpy(type_out_txt,  mem_tab[type_out%6]);
-	//if (type_in == SNAP_ADDRTYPE_HBM_P0)  strcpy(type_in_txt,  "HBM Port 0");
-	//else 	                                strcpy(type_in_txt,  mem_tab[type_in%6]);
-	//if (type_out == SNAP_ADDRTYPE_HBM_P0) strcpy(type_out_txt, "HBM Port 0");
-	//else 	                                strcpy(type_out_txt,  mem_tab[type_out%6]);
 
 	printf("PARAMETERS:\n"
 	       "  input:       %s\n"
 	       "  output:      %s\n"
 	       "  type_in:     %x: %s\n"
-	       "  addr_in:     %016llx\n"
+	       "  addr_in:     0x%016llx\n"
 	       "  type_out:    %x: %s\n"
-	       "  addr_out:    %016llx\n"
-	       "  size_in/out: %08lx\n"
+	       "  addr_out:    0x%016llx\n"
+	       "  size_in/out: 0x%08lx\n"
 	       "  mode:        %08x\n",
 	       input  ? input  : "unknown",
 	       output ? output : "unknown",

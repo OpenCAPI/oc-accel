@@ -132,7 +132,7 @@ set port [create_bd_port -dir I CRESETN]
 
 
 #====================
-#Use the HBM left stack 0 only (16 modules of 256MB/2Gb = 4GB)
+#Use the HBM RIGHT stack 0 only (16 modules of 256MB/2Gb = 4GB)
 set cell [create_bd_cell -quiet -type ip -vlnv {xilinx.com:ip:hbm:*} hbm]
 
 #Common params for the HBM not depending on the number of memories enabled
@@ -253,24 +253,23 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
   #create the axi4 to axi3 converters
   set cell [create_bd_cell -type ip -vlnv {xilinx.com:ip:axi_protocol_converter:*} axi4_to_axi3_$i]
   set_property -dict {      \
-    CONFIG.ADDR_WIDTH {64}        \
+    CONFIG.ID_WIDTH {6}     \
+    CONFIG.ADDR_WIDTH {34}  \
   } $cell
   
 
   #create the axi_register_slice converters
-  create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 axi_register_slice_$i
-
-  #set cell [create_bd_cell -type ip -vlnv {xilinx.com:ip:axi_register_slice:*} axi_register_slice_$i ]
-  #set_property -dict {     \
-  #  CONFIG.ADDR_WIDTH {33}              \
-  #  CONFIG.DATA_WIDTH {256}             \
-  #  CONFIG.ID_WIDTH {6}                 \
-  #  CONFIG.REG_AW {10}                  \
-  #  CONFIG.REG_AR {10}                  \
-  #  CONFIG.REG_W {10}                   \
-  #  CONFIG.REG_R {10}                   \
-  #  CONFIG.REG_B {10}                   \
-  #  }  $cell
+  set cell [create_bd_cell -type ip -vlnv {xilinx.com:ip:axi_register_slice:*} axi_register_slice_$i ]
+  set_property -dict {     \
+    CONFIG.ADDR_WIDTH {34}              \
+    CONFIG.DATA_WIDTH {256}             \
+    CONFIG.ID_WIDTH {6}                 \
+    CONFIG.REG_AW {10}                  \
+    CONFIG.REG_AR {10}                  \
+    CONFIG.REG_W {10}                   \
+    CONFIG.REG_R {10}                   \
+    CONFIG.REG_B {10}                   \
+    }  $cell
 
   #create the ports
   create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_p$i\_HBM

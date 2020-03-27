@@ -733,7 +733,7 @@ module framework_afu (
   wire            eth1_tx_tready                      ;
   wire      [0:0] eth1_tx_tuser                       ;
 
-  wire            eth1_rst                            ;
+  wire            eth_rst                             ;
 `endif
 `endif
 
@@ -824,12 +824,12 @@ module framework_afu (
      assign memctl0_axi_rst_n = ~reset_nest_q;
   `endif
 `endif
-`ifdef ENABLE_ETHERNET
-  `ifndef ENABLE_ETH_LOOP_BACK
-    wire eth_rst;
-    assign eth_rst = reset_action_d;
-  `endif
-`endif
+//`ifdef ENABLE_ETHERNET
+//  `ifndef ENABLE_ETH_LOOP_BACK
+//    wire eth_rst;
+//    assign eth_rst = reset_action_d;
+//  `endif
+//`endif
 
   // // ******************************************************************************
   // // AFU DESCRIPTOR TIES
@@ -1426,6 +1426,7 @@ module framework_afu (
       .dout_eth_TKEEP                     ( eth1_tx_tkeep             ) ,
       .dout_eth_TUSER                     ( eth1_tx_tuser             ) ,
       .dout_eth_TLAST                     ( eth1_tx_tlast             ) ,
+      .eth_reset                          ( eth_rst                   ) ,
 `endif
 `endif
       //
@@ -2337,19 +2338,19 @@ block_RAM block_ram_i1
       .aresetn                  ( ~reset_action_q             )
 ) ; 
 
-//assign  hbm_ctrl_awid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_HBM0_awid;
-//assign  hbm_ctrl_awid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
-//assign  hbm_ctrl_arid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_HBM0_arid;
-//assign  hbm_ctrl_arid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
-//assign  act_axi_card_HBM0_bid = hbm_ctrl_bid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
-//assign  act_axi_card_HBM0_rid = hbm_ctrl_rid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+//assign  hbm_ctrl_awid[`AXI_CARD_HBM_ID_WIDTH-1 : 0] = act_axi_card_HBM0_awid;
+//assign  hbm_ctrl_awid[5 : `AXI_CARD_HBM_ID_WIDTH]   = 'b0;
+//assign  hbm_ctrl_arid[`AXI_CARD_HBM_ID_WIDTH-1 : 0] = act_axi_card_HBM0_arid;
+//assign  hbm_ctrl_arid[5 : `AXI_CARD_HBM_ID_WIDTH]   = 'b0;
+assign  act_axi_card_HBM0_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
+assign  act_axi_card_HBM0_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 
-//assign  hbm_ctrl_awid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_HBM1_awid;
-//assign  hbm_ctrl_awid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
-//assign  hbm_ctrl_arid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_HBM1_arid;
-//assign  hbm_ctrl_arid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
-//assign  act_axi_card_HBM1_bid = hbm_ctrl_bid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
-//assign  act_axi_card_HBM1_rid = hbm_ctrl_rid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+//assign  hbm_ctrl_awid[`AXI_CARD_HBM_ID_WIDTH-1 : 0] = act_axi_card_HBM1_awid;
+//assign  hbm_ctrl_awid[5 : `AXI_CARD_HBM_ID_WIDTH]   = 'b0;
+//assign  hbm_ctrl_arid[`AXI_CARD_HBM_ID_WIDTH-1 : 0] = act_axi_card_HBM1_arid;
+//assign  hbm_ctrl_arid[5 : `AXI_CARD_HBM_ID_WIDTH]   = 'b0;
+assign  act_axi_card_HBM1_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
+assign  act_axi_card_HBM1_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 
 
 // if HBM + (AD9H3 or AD9H7) : resets the logoc before HBM

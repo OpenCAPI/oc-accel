@@ -133,8 +133,8 @@
   `define AXI_CARD_MEM_USER_WIDTH    1
 
   `define AXI_CARD_HBM_ID_WIDTH      4
-  `define AXI_CARD_HBM_DATA_WIDTH    512
-  `define AXI_CARD_HBM_ADDR_WIDTH    33
+  `define AXI_CARD_HBM_DATA_WIDTH    256
+  `define AXI_CARD_HBM_ADDR_WIDTH    34
   `define AXI_CARD_HBM_USER_WIDTH    1
 
   `define INT_BITS    64

@@ -198,6 +198,7 @@ module action_wrapper (
    output [  63 : 0]                        dout_eth_TKEEP    ,
    output [   0 : 0]                        dout_eth_TUSER    ,
    output                                   dout_eth_TLAST    ,
+   output                                   eth_reset         ,
 `endif
 `endif
     //
@@ -340,7 +341,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_HBM0_araddr       (temp_card_HBM0_araddr    ) ,
     .m_axi_card_HBM0_arburst      (m_axi_card_HBM0_arburst  ) ,
     .m_axi_card_HBM0_arcache      (m_axi_card_HBM0_arcache  ) ,
-    .m_axi_card_HBM0_arid         (m_axi_card_HBM0_arid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM0_arid         (m_axi_card_HBM0_arid     ) ,
     .m_axi_card_HBM0_arlen        (m_axi_card_HBM0_arlen    ) ,
     .m_axi_card_HBM0_arlock       (m_axi_card_HBM0_arlock   ) ,
     .m_axi_card_HBM0_arprot       (m_axi_card_HBM0_arprot   ) ,
@@ -353,7 +354,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_HBM0_awaddr       (temp_card_HBM0_awaddr    ) ,
     .m_axi_card_HBM0_awburst      (m_axi_card_HBM0_awburst  ) ,
     .m_axi_card_HBM0_awcache      (m_axi_card_HBM0_awcache  ) ,
-    .m_axi_card_HBM0_awid         (m_axi_card_HBM0_awid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM0_awid         (m_axi_card_HBM0_awid     ) ,
     .m_axi_card_HBM0_awlen        (m_axi_card_HBM0_awlen    ) ,
     .m_axi_card_HBM0_awlock       (m_axi_card_HBM0_awlock   ) ,
     .m_axi_card_HBM0_awprot       (m_axi_card_HBM0_awprot   ) ,
@@ -363,13 +364,13 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_HBM0_awsize       (m_axi_card_HBM0_awsize   ) ,
     .m_axi_card_HBM0_awuser       (m_axi_card_HBM0_awuser   ) ,
     .m_axi_card_HBM0_awvalid      (m_axi_card_HBM0_awvalid  ) ,
-    .m_axi_card_HBM0_bid          (m_axi_card_HBM0_bid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM0_bid          (m_axi_card_HBM0_bid      ) ,
     .m_axi_card_HBM0_bready       (m_axi_card_HBM0_bready   ) ,
     .m_axi_card_HBM0_bresp        (m_axi_card_HBM0_bresp    ) ,
     .m_axi_card_HBM0_buser        (m_axi_card_HBM0_buser    ) ,
     .m_axi_card_HBM0_bvalid       (m_axi_card_HBM0_bvalid   ) ,
     .m_axi_card_HBM0_rdata        (m_axi_card_HBM0_rdata    ) ,
-    .m_axi_card_HBM0_rid          (m_axi_card_HBM0_rid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM0_rid          (m_axi_card_HBM0_rid      ) ,
     .m_axi_card_HBM0_rlast        (m_axi_card_HBM0_rlast    ) ,
     .m_axi_card_HBM0_rready       (m_axi_card_HBM0_rready   ) ,
     .m_axi_card_HBM0_rresp        (m_axi_card_HBM0_rresp    ) ,
@@ -386,7 +387,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_HBM1_araddr       (temp_card_HBM1_araddr    ) ,
     .m_axi_card_HBM1_arburst      (m_axi_card_HBM1_arburst  ) ,
     .m_axi_card_HBM1_arcache      (m_axi_card_HBM1_arcache  ) ,
-    .m_axi_card_HBM1_arid         (m_axi_card_HBM1_arid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM1_arid         (m_axi_card_HBM1_arid     ) ,
     .m_axi_card_HBM1_arlen        (m_axi_card_HBM1_arlen    ) ,
     .m_axi_card_HBM1_arlock       (m_axi_card_HBM1_arlock   ) ,
     .m_axi_card_HBM1_arprot       (m_axi_card_HBM1_arprot   ) ,
@@ -399,7 +400,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_HBM1_awaddr       (temp_card_HBM1_awaddr    ) ,
     .m_axi_card_HBM1_awburst      (m_axi_card_HBM1_awburst  ) ,
     .m_axi_card_HBM1_awcache      (m_axi_card_HBM1_awcache  ) ,
-    .m_axi_card_HBM1_awid         (m_axi_card_HBM1_awid[0]  ) ,//SR# 10394170
+    .m_axi_card_HBM1_awid         (m_axi_card_HBM1_awid     ) ,
     .m_axi_card_HBM1_awlen        (m_axi_card_HBM1_awlen    ) ,
     .m_axi_card_HBM1_awlock       (m_axi_card_HBM1_awlock   ) ,
     .m_axi_card_HBM1_awprot       (m_axi_card_HBM1_awprot   ) ,
@@ -409,13 +410,13 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_HBM1_awsize       (m_axi_card_HBM1_awsize   ) ,
     .m_axi_card_HBM1_awuser       (m_axi_card_HBM1_awuser   ) ,
     .m_axi_card_HBM1_awvalid      (m_axi_card_HBM1_awvalid  ) ,
-    .m_axi_card_HBM1_bid          (m_axi_card_HBM1_bid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM1_bid          (m_axi_card_HBM1_bid      ) ,
     .m_axi_card_HBM1_bready       (m_axi_card_HBM1_bready   ) ,
     .m_axi_card_HBM1_bresp        (m_axi_card_HBM1_bresp    ) ,
     .m_axi_card_HBM1_buser        (m_axi_card_HBM1_buser    ) ,
     .m_axi_card_HBM1_bvalid       (m_axi_card_HBM1_bvalid   ) ,
     .m_axi_card_HBM1_rdata        (m_axi_card_HBM1_rdata    ) ,
-    .m_axi_card_HBM1_rid          (m_axi_card_HBM1_rid[0]   ) ,//SR# 10394170
+    .m_axi_card_HBM1_rid          (m_axi_card_HBM1_rid      ) ,
     .m_axi_card_HBM1_rlast        (m_axi_card_HBM1_rlast    ) ,
     .m_axi_card_HBM1_rready       (m_axi_card_HBM1_rready   ) ,
     .m_axi_card_HBM1_rresp        (m_axi_card_HBM1_rresp    ) ,
@@ -447,6 +448,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TKEEP               (dout_eth_TKEEP           ) ,
     .dout_eth_TUSER               (dout_eth_TUSER           ) ,
     .dout_eth_TLAST               (dout_eth_TLAST           ) ,
+    .eth_reset_V                  (eth_reset                ) ,
 `else
     .din_eth_TDATA                (dwrap_eth_TDATA          ) ,
     .din_eth_TVALID               (dwrap_eth_TVALID         ) ,
@@ -462,6 +464,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TKEEP               (dwrap_eth_TKEEP          ) ,
     .dout_eth_TUSER               (dwrap_eth_TUSER          ) ,
     .dout_eth_TLAST               (dwrap_eth_TLAST[0]       ) ,
+    .eth_reset_V                  (                         ) ,
 //Enable ethernet with loopback
 `endif
 `endif
@@ -629,15 +632,6 @@ assign m_axi_card_HBM0_araddr = temp_card_HBM0_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1
 assign m_axi_card_HBM0_awaddr = temp_card_HBM0_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_HBM1_araddr = temp_card_HBM1_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_HBM1_awaddr = temp_card_HBM1_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-
-generate if(`AXI_CARD_HBM_ID_WIDTH > 1)
-begin:high_cid_fields_driver
-    assign m_axi_card_HBM0_arid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
-    assign m_axi_card_HBM0_awid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
-    assign m_axi_card_HBM1_arid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
-    assign m_axi_card_HBM1_awid  [ `AXI_CARD_HBM_ID_WIDTH-1 : 1 ] = 'b0;
-end
-endgenerate
 
 `endif
 `endif

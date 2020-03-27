@@ -20,6 +20,41 @@
 #include "ap_int.h"
 #include "hw_action_hbm_memcopy_1024.H"
 
+//======================== convert buffers format ===================================//
+//Convert a 1024 bits buffer to a 256 bits buffer
+void get_buffer_256( snap_membus_1024_t *buffer_1024, snap_membus_256_t *buffer_256, int size_in_words_1024)
+{
+        ap_int<MEMDW_256> mask_full = -1;
+        snap_membus_1024_t mask_256 = snap_membus_256_t(mask_full);
+
+        wb_gbuf2dbuf_loop: 
+        for (int k=0; k<size_in_words_1024; k++) {
+               for (int j=0; j<MEMDW_1024/MEMDW_256; j++) {
+#pragma HLS PIPELINE
+                  buffer_256[k*MEMDW_1024/MEMDW_256+j] = (snap_membus_256_t)((buffer_1024[k] >> j*MEMDW_256) & mask_256);
+               }
+        }
+	return;
+}
+
+//Convert a 256 bits buffer to a 1024 bits buffer
+void get_buffer_1024( snap_membus_256_t *buffer_256, snap_membus_1024_t *buffer_1024, int size_in_words_1024)
+{
+        snap_membus_1024_t data_entry_1024 = 0;
+	
+        wb_dbuf2gbuf_loop: 
+        for (int k=0; k<size_in_words_1024; k++) {
+               for (int j=0; j<MEMDW_1024/MEMDW_256; j++) {
+#pragma HLS PIPELINE
+                  data_entry_1024 |= ((snap_membus_1024_t)(buffer_256[k*MEMDW_1024/MEMDW_256+j])) << j*MEMDW_256;
+               }
+               buffer_1024[k] = data_entry_1024;
+               data_entry_1024 = 0;
+        }
+	return;
+}
+
+
 // WRITE DATA TO MEMORY
 short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 				 snap_membus_256_t *d_hbm_p0,
@@ -27,15 +62,14 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 				 snapu16_t memory_in_type,
 				 snapu16_t memory_out_type,
 				 snapu64_t output_address_1024,
-				 snapu64_t output_address,
-				 snap_membus_1024_t *buffer_gmem,
-				 snap_membus_256_t *buffer_LCLmem,
+				 snapu64_t output_address_256,
+				 snap_membus_1024_t *buf_gmem_1024,
+				 snap_membus_256_t *buf_LCLmem_256,
 				 snapu64_t size_in_bytes_to_transfer)
 {
         short rc;
-        ap_int<MEMDW_256> mask_full = -1;
-        snap_membus_1024_t mask_256 = snap_membus_256_t(mask_full);
-        snap_membus_1024_t data_entry = 0;
+        static snap_membus_256_t  buf_gmem_256[MAX_NB_OF_WORDS_READ_256];
+        static snap_membus_1024_t  buf_LCLmem_1024[MAX_NB_OF_WORDS_READ_1024];
 
         int size_in_words_1024;
         if(size_in_bytes_to_transfer %BPERDW_1024 == 0)
@@ -43,35 +77,27 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
         else
            size_in_words_1024 = (size_in_bytes_to_transfer/BPERDW_1024) + 1;
 
-
-//========================data from buffer_gmem======================================//
+//========================data from buf_gmem======================================//
         if (memory_in_type == SNAP_ADDRTYPE_HOST_DRAM) {
-           wb_gbuf2dbuf_loop: 
-           for (int k=0; k<size_in_words_1024; k++) {
-               for (int j=0; j<MEMDW_1024/MEMDW_256; j++) {
-#pragma HLS PIPELINE
-                  buffer_LCLmem[k*MEMDW_1024/MEMDW_256+j] = (snap_membus_256_t)((buffer_gmem[k] >> j*MEMDW_256) & mask_256);
-               }
-           }
 
            // From Host to Host => same 1024 bits data width
            if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
                memcpy((snap_membus_1024_t  *) (dout_gmem + output_address_1024),
-                   buffer_gmem, size_in_bytes_to_transfer);
+                   buf_gmem_1024, size_in_bytes_to_transfer);
        	       rc = 0;
            }
 
            // From Host to LCL_mem => data width conversion from 1024 to 256 bits
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P0) {
-               //buffer_LCMmem is calculated before the if
-               memcpy((snap_membus_256_t  *) (d_hbm_p0 + output_address),
-                    buffer_LCLmem, size_in_bytes_to_transfer);
+               get_buffer_256( buf_gmem_1024, buf_gmem_256, size_in_words_1024);
+               memcpy((snap_membus_256_t  *) (d_hbm_p0 + output_address_256),
+                    buf_gmem_256, size_in_bytes_to_transfer);
                rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P1) {
-               //buffer_LCMmem is calculated before the if
-               memcpy((snap_membus_256_t  *) (d_hbm_p1 + output_address),
-                    buffer_LCLmem, size_in_bytes_to_transfer);
+               get_buffer_256( buf_gmem_1024, buf_gmem_256, size_in_words_1024);
+               memcpy((snap_membus_256_t  *) (d_hbm_p1 + output_address_256),
+                    buf_gmem_256, size_in_bytes_to_transfer);
                rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
@@ -80,33 +106,25 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
                rc = 1;
         }
 //=========================data from buffer_LCLmem=====================================//
-        else if (memory_in_type == SNAP_ADDRTYPE_HBM_P0 || memory_in_type == SNAP_ADDRTYPE_HBM_P1) {
+        else if ((memory_in_type == SNAP_ADDRTYPE_HBM_P0) || (memory_in_type == SNAP_ADDRTYPE_HBM_P1)) {
 
            // From LCL_mem to Host=> data width conversion from 256 to 1024 bits
            if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
-               wb_dbuf2gbuf_loop: 
-               for (int k=0; k<size_in_words_1024; k++) {
-                   for (int j=0; j<MEMDW_1024/MEMDW_256; j++) {
-#pragma HLS PIPELINE
-                       data_entry |= ((snap_membus_1024_t)(buffer_LCLmem[k*MEMDW_1024/MEMDW_256+j])) << j*MEMDW_256;
-                   }
-                   buffer_gmem[k] = data_entry;
-                   data_entry = 0;
-               }
+               get_buffer_1024( buf_LCLmem_256, buf_LCLmem_1024, size_in_words_1024);
                memcpy((snap_membus_1024_t  *) (dout_gmem + output_address_1024),
-                   buffer_gmem, size_in_bytes_to_transfer);
+                   buf_LCLmem_1024, size_in_bytes_to_transfer);
                rc = 0;
            }
 
            // From LCL_mem to LCL_mem => same 256 bits data width
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P0) {
-               memcpy((snap_membus_256_t  *) (d_hbm_p0 + output_address),
-                   buffer_LCLmem, size_in_bytes_to_transfer);
+               memcpy((snap_membus_256_t  *) (d_hbm_p0 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
                rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P1) {
-               memcpy((snap_membus_256_t  *) (d_hbm_p1 + output_address),
-                   buffer_LCLmem, size_in_bytes_to_transfer);
+               memcpy((snap_membus_256_t  *) (d_hbm_p1 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
                rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
@@ -118,17 +136,17 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
         else if (memory_in_type == SNAP_ADDRTYPE_UNUSED) {
            if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
               memcpy((snap_membus_1024_t  *) (dout_gmem + output_address_1024),
-                       buffer_gmem, size_in_bytes_to_transfer);
+                       buf_gmem_1024, size_in_bytes_to_transfer);
        	      rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P0) {
-              memcpy((snap_membus_256_t  *) (d_hbm_p0 + output_address),
-                       buffer_LCLmem, size_in_bytes_to_transfer);
+              memcpy((snap_membus_256_t  *) (d_hbm_p0 + output_address_256),
+                       buf_LCLmem_256, size_in_bytes_to_transfer);
               rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P1) {
-              memcpy((snap_membus_256_t  *) (d_hbm_p1 + output_address),
-                       buffer_LCLmem, size_in_bytes_to_transfer);
+              memcpy((snap_membus_256_t  *) (d_hbm_p1 + output_address_256),
+                       buf_LCLmem_256, size_in_bytes_to_transfer);
               rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
@@ -149,9 +167,9 @@ short read_burst_of_data_from_mem(snap_membus_1024_t *din_gmem,
 				  snap_membus_256_t *d_hbm_p1,
 				  snapu16_t memory_type,
 				  snapu64_t input_address_1024,
-				  snapu64_t input_address,
-				  snap_membus_1024_t *buffer_gmem,
-				  snap_membus_256_t *buffer_LCLmem,
+				  snapu64_t input_address_256,
+				  snap_membus_1024_t *buf_gmem_1024,
+				  snap_membus_256_t *buf_LCLmem_256,
 				  snapu64_t size_in_bytes_to_transfer)
 {
 	short rc;
@@ -160,17 +178,17 @@ short read_burst_of_data_from_mem(snap_membus_1024_t *din_gmem,
         switch (memory_type) {
 
         case SNAP_ADDRTYPE_HOST_DRAM:
-                memcpy(buffer_gmem, (snap_membus_1024_t  *) (din_gmem + input_address_1024),
+                memcpy(buf_gmem_1024, (snap_membus_1024_t  *) (din_gmem + input_address_1024),
                      size_in_bytes_to_transfer);
        		rc =  0;
                 break;
         case SNAP_ADDRTYPE_HBM_P0:
-                memcpy(buffer_LCLmem, (snap_membus_256_t  *) (d_hbm_p0 + input_address),
+                memcpy(buf_LCLmem_256, (snap_membus_256_t  *) (d_hbm_p0 + input_address_256),
                      size_in_bytes_to_transfer);
        		rc =  0;
                 break;
         case SNAP_ADDRTYPE_HBM_P1:
-                memcpy(buffer_LCLmem, (snap_membus_256_t  *) (d_hbm_p1 + input_address),
+                memcpy(buf_LCLmem_256, (snap_membus_256_t  *) (d_hbm_p1 + input_address_256),
                      size_in_bytes_to_transfer);
        		rc =  0;
                 break;
@@ -206,8 +224,8 @@ static void process_action(snap_membus_1024_t *din_gmem,
 	snapu64_t InputAddress_256;
 	snapu64_t OutputAddress_256;
 	snapu64_t address_xfer_offset_256;
-	snap_membus_1024_t  buf_gmem[MAX_NB_OF_WORDS_READ_1024];
-	snap_membus_256_t   buf_LCLmem[MAX_NB_OF_WORDS_READ_256];
+	snap_membus_1024_t  buf_gmem_1024[MAX_NB_OF_WORDS_READ_1024];
+	snap_membus_256_t   buf_LCLmem_256[MAX_NB_OF_WORDS_READ_256];
 	// if 4096 bytes max => 64 words
 
 	// byte address received need to be aligned with port width
@@ -249,13 +267,15 @@ static void process_action(snap_membus_1024_t *din_gmem,
 
 		rc |= read_burst_of_data_from_mem(din_gmem, d_hbm_p0, d_hbm_p1,
 			act_reg->Data.in.type,
-			InputAddress_1024 + address_xfer_offset_1024, InputAddress_256 + address_xfer_offset_256,
-            buf_gmem, buf_LCLmem, xfer_size);
+			InputAddress_1024 + address_xfer_offset_1024, 
+                        InputAddress_256 + address_xfer_offset_256,
+                        buf_gmem_1024, buf_LCLmem_256, xfer_size);
 
 		rc |= write_burst_of_data_to_mem(dout_gmem, d_hbm_p0, d_hbm_p1,
 			act_reg->Data.in.type, act_reg->Data.out.type,
-			OutputAddress_1024 + address_xfer_offset_1024, OutputAddress_256 + address_xfer_offset_256,
-            buf_gmem, buf_LCLmem, xfer_size);
+			OutputAddress_1024 + address_xfer_offset_1024, 
+                        OutputAddress_256 + address_xfer_offset_256,
+                        buf_gmem_1024, buf_LCLmem_256, xfer_size);
 
 		action_xfer_size -= xfer_size;
 		address_xfer_offset_1024 += (snapu64_t)(xfer_size >> ADDR_RIGHT_SHIFT_1024);
