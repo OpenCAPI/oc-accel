@@ -270,7 +270,10 @@ def which(program):
 
     return None
 
-class SystemCMD:
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+class SystemCMD(object):
     def __init__(self, name):
         self.name = name
         self.cmd = which(name)
@@ -348,25 +351,33 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-fail_on_exit = True
 class msg:
+    fail_on_exit = True
+    quite = True
     @classmethod
-    def fail_msg(cls, msg):
-        if fail_on_exit:
-            exit(bcolors.FAIL + msg + bcolors.ENDC)
+    def fail_msg(cls, str):
+        if msg.fail_on_exit:
+            exit(bcolors.FAIL + str + bcolors.ENDC)
         else:
-            print bcolors.FAIL + msg + bcolors.ENDC
+            if not msg.quite:
+                print bcolors.FAIL + str + bcolors.ENDC
     @classmethod
-    def warn_msg(cls, msg):
-        print bcolors.WARNING + msg + bcolors.ENDC
+    def warn_msg(cls, str):
+        if not msg.quite:
+            print bcolors.WARNING + str + bcolors.ENDC
     @classmethod
-    def ok_msg(cls, msg):
-        print bcolors.OKGREEN + msg + bcolors.ENDC
+    def ok_msg(cls, str):
+        if not msg.quite:
+            print bcolors.OKGREEN + str + bcolors.ENDC
     @classmethod
-    def ok_msg_blue(cls, msg):
-        print bcolors.OKBLUE + msg + bcolors.ENDC
+    def ok_msg_blue(cls, str):
+        if not msg.quite:
+            print bcolors.OKBLUE + str + bcolors.ENDC
     @classmethod
-    def header_msg(cls, msg):
-        #print bcolors.HEADER + msg + bcolors.ENDC
-        print msg
+    def header_msg(cls, str):
+        if not msg.quite:
+            print str
+    @classmethod
+    def force_msg(cls, str):
+        print str
 

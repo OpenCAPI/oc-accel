@@ -1,9 +1,16 @@
 # Processing arguments --------------------------------------------------------
 # This script has one argument: hardware_dir
 
-set hardware_dir $::env(OCACCEL_HARDWARE_ROOT)
+set hardware_dir          $::env(OCACCEL_HARDWARE_ROOT)
+
+if { [info exists ::env(OCACCEL_HARDWARE_BUILD_DIR)] } { 
+    set hardware_build_dir    $::env(OCACCEL_HARDWARE_BUILD_DIR)
+} else {
+    set hardware_build_dir    $hardware_dir
+}
+
 source $hardware_dir/setup/common/common_funcs.tcl
-set interface_repo "$hardware_dir/build/interfaces"
+set interface_repo "$hardware_build_dir/output/interfaces"
 puts "interface_repo is set to $interface_repo"
 
 # Add interfaces

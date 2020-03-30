@@ -1,3 +1,7 @@
 [submodule "hardware/oc-accel-bsp"]
 	path = hardware/oc-accel-bsp
 	url = https://github.com/OpenCAPI/oc-accel-bsp
+[submodule "hardware/sim/ocse"]
+	path = hardware/sim/ocse
+	url = https://github.com/OpenCAPI/ocse.git
+	branch = master

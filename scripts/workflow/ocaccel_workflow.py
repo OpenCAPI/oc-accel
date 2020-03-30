@@ -29,6 +29,7 @@ from make_model import make_model
 from run_sim import SimSession
 from make_image import make_image
 from make_app import make_app
+from vivado import make_hw_project
 from optparse import OptionParser
 from ocaccel_utils import msg
 
@@ -58,8 +59,6 @@ Example with fine command line controls:
 `%prog --no_make_model -o <path to ocse root> -s xcelium -t terminal`
 * Clean the environment before running:
 `%prog -c --no_make_model -o <path to ocse root> -s xcelium -t terminal`
-* Run in interactive mode:
-`%prog -i --ocse_path <path to ocse root> --simulator xcelium --testcase "ocaccel_example -a 6 -vv"`
 * Run in unit sim model:
 `%prog --unit_sim --simulator xcelium`
 '''
@@ -84,6 +83,12 @@ parser.add_option("--make_app",
                   dest="make_app", default=None,
                   help="Make application of the specified action (action name is"
                   " the subdirectory name in ./actions, default: %default")
+parser.add_option("--make_hw_project",
+                  dest="make_hw_project", default=None,
+                  help="Make the vivado project, the value of the arg"
+                  " is the hw project step, availbe choices:"
+                  " <define_interface, package_hostside, package_infrastructure, action_hw, top_project>"
+                  ", default: %default")
 parser.add_option("-c", "--clean",
                   action="store_true", dest="clean", default=False,
                   help="Clean the directory before running, default: %default")
@@ -93,9 +98,6 @@ parser.add_option("-C", "--config_clean",
 parser.add_option("-q", "--quite",
                   action="store_true", dest="quite", default=False,
                   help="Print less message to the stdout")
-parser.add_option("-i", "--interactive",
-                  action="store_true", dest="interactive", default=False,
-                  help="Don't use the interactive mode during the flow, default: %default")
 parser.add_option("-o", "--ocse_path", dest="ocse_path", default=None,
                   help="Path to OCSE root. No default value.", metavar="DIRECTORY")
 parser.add_option("-r", "--ocaccel_root", dest="ocaccel_root", default=os.path.abspath("."),
@@ -163,6 +165,7 @@ try:
 except OSError:
     if not isdir(logs_path):
         raise
+msg.quite = options.quite
 
 ocaccel_workflow_log            = pathjoin(logs_path, "ocaccel_workflow.log")
 ocaccel_workflow_make_model_log = pathjoin(logs_path, "ocaccel_workflow.make_model.log")
@@ -222,26 +225,28 @@ if cmd != "":
         else:
             msg.fail_msg ("!!!!! Invalid command %s" % cmd)
             exit(1)
+elif options.make_hw_project is not None:
+    options.no_configure = True
+    options.no_make_model = True
+    options.no_run_sim = True
+    options.make_image = False
 
 if __name__ == '__main__':
     msg.ok_msg_blue("--------> WELCOME to IBM OpenCAPI Acceleration Framework")
-    question_and_answer = qa.QuestionAndAnswer(options)
 
-    question_and_answer.ask(qa.ask_clean_str)
     if options.clean or options.config_clean:
         env_clean(options, ocaccel_workflow_log)
         exit(0)
 
     cfg = Configuration(options)
     cfg.log = ocaccel_workflow_log
-    question_and_answer.cfg = cfg
-    question_and_answer.ask(qa.ask_configure_str)
     if not options.no_configure:
         cfg.configure()
+    cfg.setup_cfg()
 
-    if not isfile(pathjoin(options.ocaccel_root, '.ocaccel_config')):
-        msg.warn_msg("No configuration files (.ocaccel_config) found, need to do configure first!")
-        cfg.configure()
+    #if not isfile(pathjoin(options.ocaccel_root, '.ocaccel_config')):
+    #    msg.warn_msg("No configuration files (.ocaccel_config) found, need to do configure first!")
+    #    cfg.configure()
 
     # In unit sim mode, all configurations are handled automatically, no need to update the cfg
     if not options.unit_sim:
@@ -253,11 +258,15 @@ if __name__ == '__main__':
     if options.make_app is not None:
         make_app(options.make_app, options)
 
-    question_and_answer.ask(qa.ask_make_model_str)
+    if options.make_hw_project is not None:
+        if options.make_hw_project in make_hw_project:
+            make_hw_project[options.make_hw_project](cfg.kconf)
+        else:
+            msg.fail_msg("ERROR!! Invalid make_hw_project options: %s" % options.make_hw_project)
+
     if not options.no_make_model and options.simulator.lower() != "nosim":
         make_model(ocaccel_workflow_make_model_log, options, options.make_timeout)
 
-    question_and_answer.ask(qa.ask_run_sim_str)
     if not options.no_run_sim and options.simulator.lower() != "nosim":
         testcase_cmdline = options.testcase.split(" ")
         testcase_cmd = None
@@ -289,6 +298,5 @@ if __name__ == '__main__':
 
         sim.run()
 
-    question_and_answer.ask(qa.ask_make_image_str)
     if options.make_image:
         make_image(ocaccel_workflow_make_image_log, options)

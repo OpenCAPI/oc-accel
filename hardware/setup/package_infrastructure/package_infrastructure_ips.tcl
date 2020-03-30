@@ -24,6 +24,13 @@ set fpga_part           $::env(FPGACHIP)
 set infra_template      $::env(INFRA_TEMPLATE_SELECTION)
 
 set hardware_dir        $::env(OCACCEL_HARDWARE_ROOT)
+
+if { [info exists ::env(OCACCEL_HARDWARE_BUILD_DIR)] } { 
+    set hardware_build_dir    $::env(OCACCEL_HARDWARE_BUILD_DIR)
+} else {
+    set hardware_build_dir    $hardware_dir
+}
+
 set fpga_card_dir       $hardware_dir/oc-accel-bsp/$fpga_card
 
 set tcl_dir             $hardware_dir/setup/package_infrastructure
@@ -54,9 +61,9 @@ source $hardware_dir/setup/common/common_funcs.tcl
 
 ############################################################################
 if { $infra_template eq "T3" || $infra_template eq "T2" } {
-my_package_custom_ip $hardware_dir/build/temp_projs     \
-                     $hardware_dir/build/ip_repo        \
-                     $hardware_dir/build/interfaces     \
+my_package_custom_ip $hardware_build_dir/build/temp_projs     \
+                     $hardware_build_dir/build/ip_repo        \
+                     $hardware_build_dir/build/interfaces     \
                      $fpga_part                     \
                      job_manager                    \
                      $tcl_dir/add_job_manager.tcl   \
@@ -66,9 +73,9 @@ my_package_custom_ip $hardware_dir/build/temp_projs     \
 if { $infra_template eq "T2" } {
 set bus_array [dict create oc_interrupt "slave"         \
              ]
-my_package_custom_ip $hardware_dir/build/temp_projs     \
-                     $hardware_dir/build/ip_repo        \
-                     $hardware_dir/build/interfaces     \
+my_package_custom_ip $hardware_build_dir/build/temp_projs     \
+                     $hardware_build_dir/build/ip_repo        \
+                     $hardware_build_dir/build/interfaces     \
                      $fpga_part                     \
                      axilite_adaptor                \
                      $tcl_dir/add_axilite_adaptor.tcl \
@@ -83,9 +90,9 @@ set bus_array [dict create dma_wr "master"        \
                            lcl_wr "slave"         \
                            lcl_rd "slave"         \
              ]
-my_package_custom_ip $hardware_dir/build/temp_projs   \
-                     $hardware_dir/build/ip_repo      \
-                     $hardware_dir/build/interfaces   \
+my_package_custom_ip $hardware_build_dir/build/temp_projs   \
+                     $hardware_build_dir/build/ip_repo      \
+                     $hardware_build_dir/build/interfaces   \
                      $fpga_part                   \
                      data_bridge                  \
                      $tcl_dir/add_data_bridge.tcl \
@@ -95,9 +102,9 @@ set bus_array [dict create                             \
                            lcl_wr "master"             \
                            lcl_rd "master"             \
              ]
-my_package_custom_ip $hardware_dir/build/temp_projs        \
-                     $hardware_dir/build/ip_repo           \
-                     $hardware_dir/build/interfaces        \
+my_package_custom_ip $hardware_build_dir/build/temp_projs        \
+                     $hardware_build_dir/build/ip_repo           \
+                     $hardware_build_dir/build/interfaces        \
                      $fpga_part                        \
                      bridge_axi_slave                  \
                      $tcl_dir/add_bridge_axi_slave.tcl \
@@ -106,9 +113,9 @@ my_package_custom_ip $hardware_dir/build/temp_projs        \
 #############################################################################
 set bus_array [dict create mmio "slave"                   \
              ]
-my_package_custom_ip $hardware_dir/build/temp_projs           \
-                     $hardware_dir/build/ip_repo              \
-                     $hardware_dir/build/interfaces           \
+my_package_custom_ip $hardware_build_dir/build/temp_projs           \
+                     $hardware_build_dir/build/ip_repo              \
+                     $hardware_build_dir/build/interfaces           \
                      $fpga_part                           \
                      mmio_axilite_master                  \
                      $tcl_dir/add_mmio_axilite_master.tcl \
@@ -118,9 +125,9 @@ my_package_custom_ip $hardware_dir/build/temp_projs           \
 set bus_array [dict create tlx_afu "slave"            \
                            mmio "master"              \
              ]
-my_package_custom_ip $hardware_dir/build/temp_projs       \
-                     $hardware_dir/build/ip_repo          \
-                     $hardware_dir/build/interfaces       \
+my_package_custom_ip $hardware_build_dir/build/temp_projs       \
+                     $hardware_build_dir/build/ip_repo          \
+                     $hardware_build_dir/build/interfaces       \
                      $fpga_part                       \
                      opencapi30_mmio                  \
                      $tcl_dir/add_opencapi30_mmio.tcl \
@@ -132,9 +139,9 @@ set bus_array [dict create afu_tlx "master"         \
                            dma_rd "slave"           \
                            cfg_infra_c1 "slave"     \
              ]
-my_package_custom_ip $hardware_dir/build/temp_projs     \
-                     $hardware_dir/build/ip_repo        \
-                     $hardware_dir/build/interfaces     \
+my_package_custom_ip $hardware_build_dir/build/temp_projs     \
+                     $hardware_build_dir/build/ip_repo        \
+                     $hardware_build_dir/build/interfaces     \
                      $fpga_part                     \
                      opencapi30_c1                  \
                      $tcl_dir/add_opencapi30_c1.tcl \

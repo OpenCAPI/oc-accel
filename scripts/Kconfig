@@ -109,18 +109,18 @@ config FLASH_INTERFACE
 
 #FLASH_SIZE: in MB
 config FLASH_SIZE
-    string
+    int
     default 128 if FPGACARD_AD9H7
     default 64 if FPGACARD_AD9V3 || FPGACARD_AD9H3
 
 #FLASH_FACTORYADDR: For all cards, factory address is 0x0
 config FLASH_FACTORYADDR
-        string
-        default 0x00000000
+    hex
+    default 0x00000000
 
 #FLASH_USERADDR: For SPI, it is byte address.
 config FLASH_USERADDR
-    string
+    hex 
     default 0x08000000 if FPGACARD_AD9V3 || FPGACARD_AD9H3 || FPGACARD_AD9H7
 
 ###############################################################################
@@ -303,7 +303,7 @@ config KERNELS
 # !!! This doesn't show in the menuwindow
 # Override the name for existing example
 config KERNELS
-    int
+    string
     default "kernel_perf_test" if HDL_PERF_TEST
     default "vadd,matmul,vadd,matmul" if HLS_VADD_MATMUL
     default "vadd" if HLS_VADD

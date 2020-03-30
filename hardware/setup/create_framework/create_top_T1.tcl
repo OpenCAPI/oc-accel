@@ -1,16 +1,23 @@
 set root_dir           $::env(OCACCEL_ROOT)
 set hardware_dir       $::env(OCACCEL_HARDWARE_ROOT)
+
+if { [info exists ::env(OCACCEL_HARDWARE_BUILD_DIR)] } { 
+    set hardware_build_dir    $::env(OCACCEL_HARDWARE_BUILD_DIR)
+} else {
+    set hardware_build_dir    $hardware_dir
+}
+
 set fpga_part          $::env(FPGACHIP)
 set fpga_card          $::env(FPGACARD)
 set action_name        $::env(ACTION_NAME)
 set kernels            $::env(KERNELS)
 set kernel_number      $::env(KERNEL_NUMBER)
 set project            "top_project"
-set project_dir        $hardware_dir/build/$project
+set project_dir        $hardware_build_dir/build/$project
 set kernel_ip_root     $root_dir/actions/$action_name/hw/hls/
 
-set ip_repo_dir     $hardware_dir/build/ip_repo
-set interfaces_dir  $hardware_dir/build/interfaces
+set ip_repo_dir     $hardware_build_dir/build/ip_repo
+set interfaces_dir  $hardware_build_dir/build/interfaces
 set bd_name         "top"
 
 source $hardware_dir/setup/common/common_funcs.tcl

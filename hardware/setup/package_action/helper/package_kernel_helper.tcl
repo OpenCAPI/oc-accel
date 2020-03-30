@@ -22,15 +22,21 @@
 set fpga_part           $::env(FPGACHIP)
 set hardware_dir        $::env(OCACCEL_HARDWARE_ROOT)
 
+if { [info exists ::env(OCACCEL_HARDWARE_BUILD_DIR)] } { 
+    set hardware_build_dir    $::env(OCACCEL_HARDWARE_BUILD_DIR)
+} else {
+    set hardware_build_dir    $hardware_dir
+}
+
 set tcl_dir             $hardware_dir/setup/package_action/helper
 source $hardware_dir/setup/common/common_funcs.tcl
 
 puts "Creating kernel helper ip"
 
 set bus_array ""
-my_package_custom_ip $hardware_dir/build/temp_projs      \
-                     $hardware_dir/build/ip_repo         \
-                     $hardware_dir/build/interfaces      \
+my_package_custom_ip $hardware_build_dir/build/temp_projs      \
+                     $hardware_build_dir/build/ip_repo         \
+                     $hardware_build_dir/build/interfaces      \
                      $fpga_part                          \
                      kernel_helper                       \
                      $tcl_dir/add_kernel_helper.tcl      \
