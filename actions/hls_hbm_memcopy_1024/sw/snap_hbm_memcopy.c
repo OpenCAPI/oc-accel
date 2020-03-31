@@ -35,8 +35,11 @@ int verbose_flag = 0;
 
 static const char *version = GIT_VERSION;
 
+//HBM_P0 is 0x10
 static const char *mem_tab[] = { "HOST_DRAM", "CARD_DRAM", "TYPE_NVME", "FPGA_BRAM", 
-          "HBM_P0", "HBM_P1", "HBM_P2", "HBM_P3", "HBM_P4", "HBM_P5", "HBM_P6"};
+          "", "", "", "", "", "", "", "", "", "", "", "",
+          "HBM_P0", "HBM_P1", "HBM_P2", "HBM_P3", "HBM_P4", "HBM_P5", "HBM_P6",
+          "HBM_P7", "HBM_P8", "HBM_P9", "HBM_P10", "HBM_P11"};
 
 /*
  * @brief	prints valid command line options
@@ -228,6 +231,16 @@ int main(int argc, char *argv[])
                                 type_in = SNAP_ADDRTYPE_HBM_P5;
                         else if (strcmp(space, "HBM_P6") == 0)
                                 type_in = SNAP_ADDRTYPE_HBM_P6;
+                        else if (strcmp(space, "HBM_P7") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P7;
+                        else if (strcmp(space, "HBM_P8") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P8;
+                        else if (strcmp(space, "HBM_P9") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P9;
+                        else if (strcmp(space, "HBM_P10") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P10;
+                        else if (strcmp(space, "HBM_P11") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P11;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -257,6 +270,16 @@ int main(int argc, char *argv[])
                                 type_out = SNAP_ADDRTYPE_HBM_P5;
                         else if (strcmp(space, "HBM_P6") == 0)
                                 type_out = SNAP_ADDRTYPE_HBM_P6;
+                        else if (strcmp(space, "HBM_P7") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P7;
+                        else if (strcmp(space, "HBM_P8") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P8;
+                        else if (strcmp(space, "HBM_P9") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P9;
+                        else if (strcmp(space, "HBM_P10") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P10;
+                        else if (strcmp(space, "HBM_P11") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P11;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -344,8 +367,8 @@ int main(int argc, char *argv[])
 	}
 
 	char type_in_txt[20], type_out_txt[20];
-	strcpy(type_in_txt,  mem_tab[type_in%6]);
-	strcpy(type_out_txt,  mem_tab[type_out%6]);
+	strcpy(type_in_txt,  mem_tab[type_in%27]);
+	strcpy(type_out_txt,  mem_tab[type_out%27]);
 
 	printf("PARAMETERS:\n"
 	       "  input:       %s\n"
