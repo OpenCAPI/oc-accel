@@ -45,29 +45,27 @@ from ocaccel_utils import kill_pid
 from ocaccel_utils import msg 
 
 class SimSession:
-    def __init__(self, simulator_name = 'xsim', testcase_cmd = 'ocaccel_example', testcase_args = "",\
-                 ocse_path = os.path.abspath('../ocse'), ocaccel_root = os.path.abspath('.'),\
-                 sim_timeout = 600, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
+    def __init__(self, options, testcase_cmd = 'ocaccel_example', testcase_args = ""):
         # prepare the environment
-        self.simulator_name = simulator_name
+        self.simulator_name = options.simulator
         self.testcase_cmd = testcase_cmd
-        self.ocse_path = ocse_path
-        self.ocaccel_root = ocaccel_root
-        self.sim_timeout = sim_timeout
-        self.unit_sim = unit_sim
-        self.sv_seed = sv_seed
-        self.unit_test = unit_test
-        self.uvm_ver = uvm_ver
-        self.wave = wave
+        self.ocse_path = options.ocse_path
+        self.ocaccel_root = options.ocaccel_root
+        self.sim_timeout = options.sim_timeout
+        self.unit_sim = options.unit_sim
+        self.sv_seed = options.sv_seed
+        self.unit_test = options.unit_test
+        self.uvm_ver = options.uvm_ver
+        self.wave = not options.no_wave
 
         self.setup_env()
         self.check_root_path()
         self.setup_ld_libraries()
 
-        self.simulator = Simulator(simulator_name, self.ocaccel_root, self.sim_timeout, self.unit_sim, self.sv_seed, self.unit_test, self.uvm_ver, self.wave)
+        self.simulator = Simulator(self.simulator_name, self.ocaccel_root, self.sim_timeout, self.unit_sim, self.sv_seed, self.unit_test, self.uvm_ver, self.wave)
         # No OCSE if in unit sim mode
         if self.unit_sim == False:
-            self.ocse = OCSE(ocse_path, self.simulator.simout, self.sim_timeout)
+            self.ocse = OCSE(options.ocse_path, self.simulator.simout, self.sim_timeout)
         self.testcase = Testcase(testcase_cmd, self.ocaccel_root, self.simulator.simout, testcase_args)
 
     def run(self):
@@ -97,8 +95,6 @@ class SimSession:
             env['OCACCEL_ROOT'] = self.ocaccel_root
 
         self.ocaccel_root = env['OCACCEL_ROOT']
-
-        source(pathjoin(env['OCACCEL_ROOT'], '.ocaccel_config.sh'))
 
         self.action_root = pathjoin(self.ocaccel_root, 'actions', env['ACTION_NAME'])
 

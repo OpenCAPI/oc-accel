@@ -18,24 +18,60 @@
 import os
 import sys
 from os.path import join as pathjoin
-from ocaccel_utils import run_and_poll_with_progress
-from ocaccel_utils import run_to_stdout
+from os.path import isfile as isfile
+from ocaccel_utils import run_and_wait
 from ocaccel_utils import msg 
+from vivado import Vivado
 
-def make_model(log, options, timeout = 2592000):
-    msg.ok_msg_blue("--------> Make the simulation model")
-    if options.quite:
-        rc = run_and_poll_with_progress(cmd = "make -s %s" % options.simulator, work_dir = pathjoin(options.ocaccel_root, 'hardware'), log = log, max_log_len = 150, timeout = timeout)
-    else:
-        rc = run_to_stdout(cmd = "make -s %s" % options.simulator, work_dir = pathjoin(options.ocaccel_root, 'hardware'))
-
+def check_rc(rc, log):
     if rc == 0:
-        msg.ok_msg("OCACCEL simulation model generated")
+        msg.ok_msg("OCACCEL simulation exported")
     else:
-        if options.quite:
-            msg.warn_msg("Failed to make simulation model, check log in %s" % log)
+        msg.fail_msg("Failed to make simulation model, check log in %s" % log) 
 
-        msg.fail_msg("Failed to make simulation model! Exiting ... ")
+def make_model(options):
+    msg.ok_msg_blue("--------> Make the simulation model")
 
-if __name__ == '__main__':
-    make_model("./make_model.log")
+    flag_file = pathjoin('.', '.make_model')
+    if isfile(flag_file):
+        os.remove(flag_file)
+
+    tcl = pathjoin(options.ocaccel_root, 'hardware', 'setup', 'simulation', 'export_%s.tcl' % options.simulator)
+    work_dir = pathjoin(options.ocaccel_build_dir, 'hardware', 'sim')
+    sim_dir = pathjoin(work_dir, options.simulator)
+    sim_top = 'top_wrapper'
+
+    vivado = Vivado('vivado', options)
+    vivado.log = pathjoin(vivado.log_dir, 'make_model.log')
+    vivado.work_dir = work_dir
+    vivado.args  = ' -quiet -mode batch -notrace'
+    vivado.args += ' -source ' + tcl
+    vivado.args += ' -log %s' % (vivado.log)
+    vivado.args += ' -journal %s/make_model.jou' % vivado.log_dir
+    vivado.args += ' -tclargs %s' % sim_top
+
+    # export the simulation model
+    vivado.run()
+
+    # patch the sim
+    patch_sim_log = pathjoin(vivado.log_dir, 'patch_sim.log')
+    patch_script = pathjoin(options.ocaccel_root, 'hardware', 'setup', 'simulation', 'patch_sim.sh')
+    commands = '%s %s %s' % (patch_script, sim_dir, sim_top + '.sh')
+    rc = run_and_wait(cmd = commands, work_dir = work_dir, log = patch_sim_log)
+    check_rc(rc, patch_sim_log)
+
+    # make OCSE
+    make_ocse_log = pathjoin(vivado.log_dir, 'make_ocse.log')
+    rc = run_and_wait(cmd = 'make', work_dir = options.ocse_path, log = make_ocse_log)
+    check_rc(rc, make_ocse_log)
+
+    # setup the link to libdpi.so
+    os.symlink(pathjoin(options.ocse_path, 'afu_driver', 'src', 'libdpi.so'), pathjoin(sim_dir, 'libdpi.so'))
+
+    # compile the simulation model
+    compile_sim_log = pathjoin(vivado.log_dir, 'compile_%s.log' % options.simulator)
+    commands = pathjoin(sim_dir, '%s.sh' % sim_top)
+    rc = run_and_wait(cmd = commands, work_dir = sim_dir, log = compile_sim_log)
+    check_rc(rc, compile_sim_log)
+
+    open(flag_file, 'w')

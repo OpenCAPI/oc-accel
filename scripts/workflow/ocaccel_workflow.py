@@ -277,7 +277,7 @@ if __name__ == '__main__':
             msg.fail_msg("ERROR!! Invalid make_hw_project options: %s" % options.make_hw_project)
 
     if not options.no_make_model and options.simulator.lower() != "nosim":
-        make_model(ocaccel_workflow_make_model_log, options, options.make_timeout)
+        make_model(options)
 
     if not options.no_run_sim and options.simulator.lower() != "nosim":
         testcase_cmdline = options.testcase.split(" ")
@@ -293,17 +293,9 @@ if __name__ == '__main__':
             testcase_cmd = "terminal"
             testcase_args = " "
 
-        sim = SimSession(simulator_name = options.simulator,\
-                         testcase_cmd = testcase_cmd,\
-                         testcase_args = testcase_args,\
-                         ocse_path = options.ocse_path,\
-                         ocaccel_root = options.ocaccel_root,\
-                         sim_timeout = options.sim_timeout,\
-                         unit_sim = options.unit_sim,\
-                         sv_seed = options.sv_seed,\
-                         unit_test = options.unit_test,\
-                         uvm_ver = options.uvm_ver,\
-                         wave = not options.no_wave
+        sim = SimSession(options,
+                         testcase_cmd = testcase_cmd,
+                         testcase_args = testcase_args
                         )
         import atexit
         atexit.register(sim.kill_process)
