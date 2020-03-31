@@ -3,6 +3,10 @@ set bd_hier "infra_wrap"
 set action_frequency    $::env(ACTION_CLOCK_FREQUENCY)
 set action_name         $::env(ACTION_NAME)
 set kernel_number       $::env(KERNEL_NUMBER)
+set width_aximm_ports   $::env(WIDTH_AXIMM_PORTS)
+set axi_id_width        $::env(AXI_ID_WIDTH)
+
+
 # Create BD Hier
 create_bd_cell -type hier $bd_hier
 
@@ -43,6 +47,9 @@ create_bd_cell -type module -reference clock_reset_gen $bd_hier/clock_reset_gen
 
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:bridge_axi_slave:1.0 $bd_hier/bridge_axi_slave
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:data_bridge:1.0 $bd_hier/data_bridge
+set_property -dict [ list CONFIG.IDW $axi_id_width             ] [ get_bd_cells $bd_hier/bridge_axi_slave ]
+set_property -dict [ list CONFIG.IDW $axi_id_width             ] [ get_bd_cells $bd_hier/data_bridge ]
+
 create_bd_cell -type ip -vlnv opencapi.org:ocaccel:mmio_axilite_master:1.0 $bd_hier/mmio_axilite_master
 set_property -dict [ list CONFIG.IMP_VERSION $imp_version             ] [ get_bd_cells $bd_hier/mmio_axilite_master ]
 set_property -dict [ list CONFIG.BUILD_DATE $build_date               ] [ get_bd_cells $bd_hier/mmio_axilite_master ]

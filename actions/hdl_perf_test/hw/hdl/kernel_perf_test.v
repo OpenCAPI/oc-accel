@@ -22,7 +22,7 @@ module kernel_perf_test # (
            parameter C_S_AXI_CTRL_REG_ADDR_WIDTH    = 32,
        
            // Parameters of Axi Master Bus Interface AXI_HOST_MEM ; to Host memory
-           parameter C_M_AXI_HOST_MEM_ID_WIDTH      = 1,
+           parameter C_M_AXI_HOST_MEM_ID_WIDTH      = 5,
            parameter C_M_AXI_HOST_MEM_ADDR_WIDTH    = 64,
            parameter C_M_AXI_HOST_MEM_DATA_WIDTH    = 1024,
            parameter C_M_AXI_HOST_MEM_AWUSER_WIDTH  = 1,

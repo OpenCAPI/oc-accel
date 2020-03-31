@@ -157,7 +157,7 @@ module axi_lite_adaptor #(
             kernel_finish <= 1'b0;
         else if(complete_ready & complete_accept)
             kernel_finish <= 1'b0;
-        else if(kernel_done)
+        else if(kernel_done & kernel_run)
             kernel_finish <= 1'b1;
 
     always @(posedge clk or negedge resetn)
