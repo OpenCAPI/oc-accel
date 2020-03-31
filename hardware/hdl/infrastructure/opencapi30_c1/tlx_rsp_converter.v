@@ -160,7 +160,7 @@ module tlx_rsp_converter (
  always@(posedge clock_tlx or negedge resetn)
    if(~resetn) 
      afu_tlx_resp_credit <= 1'b0;
-   else if(fifo_rd_rspcnv_wrcnt[4] || fifo_wr_rspcnv_wrcnt[4] || (fifo_datcnv_o_wrcnt > 4'd5))
+   else if(fifo_rd_rspcnv_wrcnt[4] || fifo_wr_rspcnv_wrcnt[4] || (fifo_datcnv_o_wrcnt[4]))
      afu_tlx_resp_credit <= 1'b0;
    else 
      afu_tlx_resp_credit <= ((~afu_tlx_resp_credit && (rsp_credit_cnt == 4'd1)) || (rsp_credit_cnt > 4'd1)); 
@@ -479,7 +479,7 @@ module tlx_rsp_converter (
 //---- FIFO for response data ---- 
  fifo_async #(
               .DATA_WIDTH(513),
-              .ADDR_WIDTH(4),
+              .ADDR_WIDTH(5),
               .DISTR(1)
               ) mfifo_datcnv_o (
                                 .wr_clk       (clock_tlx              ),
@@ -510,7 +510,7 @@ module tlx_rsp_converter (
 //---- FIFO for response data ---- 
  fifo_async #(
               .DATA_WIDTH(513),
-              .ADDR_WIDTH(4),
+              .ADDR_WIDTH(5),
               .DISTR(1)
               ) mfifo_datcnv_e (
                                 .wr_clk      (clock_tlx              ),
