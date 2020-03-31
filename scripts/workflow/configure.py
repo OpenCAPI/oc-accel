@@ -23,6 +23,7 @@ import sys
 from os.path import isdir as isdir
 from os.path import isfile as isfile
 from os.path import join as pathjoin
+from os import environ as env
 from shutil import copyfile
 from ocaccel_utils import source
 from ocaccel_utils import run_to_stdout
@@ -55,7 +56,19 @@ class Configuration:
         self.kconf.load_config(self.user_config)
         if 'SIMULATOR' in self.kconf.syms:
             self.options.simulator = self.kconf.syms['SIMULATOR'].user_value
-   
+
+        if 'ACTION_NAME' in self.kconf.syms:
+            self.options.action_root = pathjoin(self.options.ocaccel_root,
+                                                'actions',
+                                                self.kconf.syms['ACTION_NAME'].user_value)
+            env['ACTION_ROOT'] = self.options.action_root
+
+        self.export_env()
+
+    def export_env(self):
+        for sym in self.kconf.unique_defined_syms:
+            env[str(sym.name)] = str(sym.user_value)
+
     def update_cfg(self):
         pass
 

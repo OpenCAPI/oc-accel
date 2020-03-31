@@ -51,19 +51,20 @@ def env_check(options):
         vivado . check(existence_critical=True, minimum_version = "2019.2")
         xterm  . check(existence_critical=True)
 
-    if options.simulator.lower() == "xcelium":
-        xrun   = SystemCMD("xrun")
-        xrun   . check(existence_critical=True)
-    elif options.simulator.lower() == "vcs":
-        vcs    = SystemCMD("vcs")
-        vcs    . check(existence_critical=True)
-    elif options.simulator.lower() == "nosim":
-        pass
-    elif options.simulator.lower() == "xsim":
-        # xsim is bundled with vivado, no need to check
-        pass
-    else:
-        msg.fail_msg("%s is an unknown simulator! Exiting ... " % options.simulator)
+    if options.simulator is not None:
+        if options.simulator.lower() == "xcelium":
+            xrun   = SystemCMD("xrun")
+            xrun   . check(existence_critical=True)
+        elif options.simulator.lower() == "vcs":
+            vcs    = SystemCMD("vcs")
+            vcs    . check(existence_critical=True)
+        elif options.simulator.lower() == "nosim":
+            pass
+        elif options.simulator.lower() == "xsim":
+            # xsim is bundled with vivado, no need to check
+            pass
+        else:
+            msg.fail_msg("%s is an unknown simulator! Exiting ... " % options.simulator)
 
     if options.no_run_sim == False or options.no_make_model == False:
         if options.simulator.lower() != "nosim" and options.unit_sim != True:

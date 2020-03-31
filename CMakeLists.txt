@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.17)
 
 project(oc-accel)
-set(OCACCEL_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set(OCACCEL_ROOT        ${CMAKE_CURRENT_SOURCE_DIR})
+set(OCACCEL_BUILD_DIR   ${CMAKE_CURRENT_BINARY_DIR})
 
 if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "x86_64")
     message("Running on x86_64 system, build software with OCSE")
@@ -29,6 +30,12 @@ find_package(Python COMPONENTS REQUIRED Interpreter)
 
 if (NOT Python_FOUND)
     message(FATAL_ERROR "No python executable found!")
+endif()
+
+# Make sure we have pip installed
+find_program(PIP pip)
+if (NOT PIP)
+    message(FATAL_ERROR "pip not found!")
 endif()
 
 # Define variables used in this project

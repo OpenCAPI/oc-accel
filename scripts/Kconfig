@@ -370,11 +370,6 @@ choice
 endchoice
 
 ###############################################################################
-config OCSE_PATH
-    string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
-    default "../ocse"
-
-###############################################################################
 choice
     bool "Simulator"
     default SIM_XSIM

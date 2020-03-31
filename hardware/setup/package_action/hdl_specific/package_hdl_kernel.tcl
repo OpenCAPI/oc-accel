@@ -45,9 +45,9 @@ for {set x 0} {$x < $kernel_number} {incr x} {
     puts "Creating Kernel No. $x: $kernel_top"
 
     set bus_array ""
-    my_package_custom_ip $hardware_dir/build/temp_projs      \
-                         $hardware_dir/build/ip_repo         \
-                         $hardware_dir/build/interfaces      \
+    my_package_custom_ip $hardware_dir/output/temp_projs      \
+                         $hardware_dir/output/ip_repo         \
+                         $hardware_dir/output/interfaces      \
                          $fpga_part                          \
                          $kernel_top                         \
                          $tcl_dir/add_hdl_kernel.tcl         \

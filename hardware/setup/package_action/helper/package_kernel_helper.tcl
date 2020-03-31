@@ -34,9 +34,9 @@ source $hardware_dir/setup/common/common_funcs.tcl
 puts "Creating kernel helper ip"
 
 set bus_array ""
-my_package_custom_ip $hardware_build_dir/build/temp_projs      \
-                     $hardware_build_dir/build/ip_repo         \
-                     $hardware_build_dir/build/interfaces      \
+my_package_custom_ip $hardware_build_dir/output/temp_projs      \
+                     $hardware_build_dir/output/ip_repo         \
+                     $hardware_build_dir/output/interfaces      \
                      $fpga_part                          \
                      kernel_helper                       \
                      $tcl_dir/add_kernel_helper.tcl      \

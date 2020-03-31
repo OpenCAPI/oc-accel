@@ -14,13 +14,9 @@ open_project $hls_proj
 set_top $top_name
 
 # Can that be a list?
-foreach file [ list $top_name.cpp ] {
+foreach file [ list $action_root/hw/hls/$top_name.cpp ] {
   add_files ${file} -cflags ${cflags}
 }
-
-#foreach file [ list vadd.cpp  ] {
-#  add_files -tb ${file} -cflags " -DNO_SYNTH -I/afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/luyong/p9nd2/oc_dev/internal2/actions/include -I/afs/vlsilab.boeblingen.ibm.com/data/vlsi/eclipz/c14/usr/luyong/p9nd2/oc_dev/internal2/software/include -I../../../software/examples -I../include"
-#}
 
 open_solution $top_name
 set_part $fpga_part

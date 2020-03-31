@@ -22,6 +22,7 @@ import random
 from os.path import join as pathjoin
 from os.path import isfile as isfile
 from os.path import isdir as isdir
+from os import environ as env
 from env_clean import env_clean
 from env_check import env_check
 from configure import Configuration
@@ -102,6 +103,8 @@ parser.add_option("-o", "--ocse_path", dest="ocse_path", default=None,
                   help="Path to OCSE root. No default value.", metavar="DIRECTORY")
 parser.add_option("-r", "--ocaccel_root", dest="ocaccel_root", default=os.path.abspath("."),
                   help="Path to ocaccel root, default: %default", metavar="DIRECTORY")
+parser.add_option("-b", "--ocaccel_build_dir", dest="ocaccel_build_dir", default=os.path.abspath("."),
+                  help="Path to ocaccel build directory, default: %default", metavar="DIRECTORY")
 parser.add_option("-a", "--action_root", dest="action_root", default=None,
                   help="Path to ACTION root. No default value.", metavar="DIRECTORY")
 parser.add_option("-s", "--simulator", dest="simulator", default=None,
@@ -137,6 +140,8 @@ parser.add_option("--no_wave",
 if options.ocse_path is not None:
     options.ocse_path = os.path.abspath(options.ocse_path)
 options.ocaccel_root = os.path.abspath(options.ocaccel_root)
+options.ocaccel_build_dir = os.path.abspath(options.ocaccel_build_dir)
+
 if options.action_root is not None:
     options.action_root = os.path.abspath(options.action_root)
 if options.simulator is not None:
@@ -159,12 +164,19 @@ if options.unit_sim == True:
     else:
         options.predefined_config = "hdl_unit_sim.bridge.defconfig"
 
-logs_path = pathjoin(options.ocaccel_root, 'hardware', 'logs')
+logs_path = pathjoin(options.ocaccel_build_dir, 'hardware', 'logs')
 try: 
     os.makedirs(logs_path)
 except OSError:
     if not isdir(logs_path):
         raise
+
+# Set up env for possible usage in other processes (such as vivado)
+env['OCACCEL_ROOT'] = options.ocaccel_root
+env['OCACCEL_HARDWARE_ROOT'] = pathjoin(options.ocaccel_root, 'hardware')
+env['OCACCEL_HARDWARE_BUILD_DIR'] = pathjoin(options.ocaccel_build_dir, 'hardware')
+env['LOGS_DIR'] = logs_path
+
 msg.quite = options.quite
 
 ocaccel_workflow_log            = pathjoin(logs_path, "ocaccel_workflow.log")
@@ -260,7 +272,7 @@ if __name__ == '__main__':
 
     if options.make_hw_project is not None:
         if options.make_hw_project in make_hw_project:
-            make_hw_project[options.make_hw_project](cfg.kconf)
+            make_hw_project[options.make_hw_project](options)
         else:
             msg.fail_msg("ERROR!! Invalid make_hw_project options: %s" % options.make_hw_project)
 

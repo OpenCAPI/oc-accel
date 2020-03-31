@@ -145,8 +145,8 @@ proc my_get_kernel_name_str {index kernel_name} {
 
 proc set_ip_repos {fpga_part hardware_dir kernel_ip_root kernels} {
     set unique_kernels [lsort -unique [split $kernels ',']]
-    set ip_repo_dir     $hardware_dir/build/ip_repo
-    set interfaces_dir  $hardware_dir/build/interfaces
+    set ip_repo_dir     $hardware_dir/output/ip_repo
+    set interfaces_dir  $hardware_dir/output/interfaces
 
     set ip_repos [list $ip_repo_dir $interfaces_dir]
     foreach k $unique_kernels {

@@ -19,32 +19,40 @@ import os
 import sys
 from os.path import join as pathjoin
 from os.path import isfile as isfile
+from os.path import isdir as isdir
 from ocaccel_utils import run_and_wait
 from ocaccel_utils import msg 
 from ocaccel_utils import SystemCMD
 from os import environ as env
 
 class Vivado(SystemCMD):
-    def __init__(self, args = '-h'):
-        super(Vivado, self).__init__('vivado')
-        self.args = args
+    def __init__(self, exe, options = None):
+        super(Vivado, self).__init__(exe)
+        self.args = ''
 
-        if 'OCACCEL_HARDWARE_ROOT' not in env:
-            msg.fail_msg("OCACCEL_HARDWARE_ROOT is not set in env variables!")
-    
-        if 'OCACCEL_HARDWARE_BUILD_DIR' not in env:
-            msg.fail_msg("OCACCEL_HARDWARE_BUILD_DIR is not set in env variables!")
+        self.log_dir  = pathjoin(options.ocaccel_build_dir, 'hardware', 'logs')
+        self.work_dir = pathjoin(options.ocaccel_build_dir, 'hardware', 'output')
+        self.tcl_root = pathjoin(options.ocaccel_root, 'hardware', 'setup', 'steps')
 
-        self.log_dir  = pathjoin(env['OCACCEL_HARDWARE_BUILD_DIR'], 'logs')
-        self.work_dir = pathjoin(env['OCACCEL_HARDWARE_BUILD_DIR'])
-        self.tcl_root = pathjoin(env['OCACCEL_HARDWARE_ROOT'], 'setup')
+        self.log = pathjoin(self.log_dir, 'default.log')
 
     def run(self):
+        try: 
+            os.makedirs(self.work_dir)
+        except OSError:
+            if not isdir(self.work_dir):
+                raise
+        try: 
+            os.makedirs(self.log_dir)
+        except OSError:
+            if not isdir(self.log_dir):
+                raise
+
         commands = ' '.join([self.cmd, self.args])
         msg.ok_msg_blue("--------> Running Vivado")
         msg.ok_msg_blue("--------> Work directory: %s" % self.work_dir)
         msg.ok_msg_blue("--------> Command: %s" % commands)
-        rc = run_and_wait(cmd = commands, work_dir = self.work_dir, log = '/dev/null')
+        rc = run_and_wait(cmd = commands, work_dir = self.work_dir, log = self.log)
 
         if rc == 0:
             msg.ok_msg("=========================")
@@ -53,39 +61,81 @@ class Vivado(SystemCMD):
         else:
             msg.warn_msg("====================")
             msg.warn_msg("Vivado runs failed!")
-            msg.fail_msg("====================")
+            msg.warn_msg("====================")
+            msg.fail_msg("ERROR LOG: %s" % self.log)
 
-def run_vivado(name, tcl):
+def run_vivado(name, tcl, options):
     flag_file = pathjoin('.', '.' + name)
     if isfile(flag_file):
         os.remove(flag_file)
 
-    vivado = Vivado()
+    vivado = Vivado('vivado', options)
+    vivado.log = pathjoin(vivado.log_dir, '%s.log' % name)
 
     vivado.args  = ' -quiet -mode batch -notrace'
     vivado.args += ' -source ' + pathjoin(vivado.tcl_root, tcl)
-    vivado.args += ' -log %s/%s.log' % (vivado.log_dir, name)
+    vivado.args += ' -log %s' % (vivado.log)
     vivado.args += ' -journal %s/%s.jou' % (vivado.log_dir, name)
 
     vivado.run()
     open(flag_file, 'w')
 
-def define_interfaces(config):
-    run_vivado('define_interfaces', 'common/define_interfaces.tcl')
+def run_vivado_hls(name, tcl, options):
+    flag_file = pathjoin('.', '.' + name)
+    if isfile(flag_file):
+        os.remove(flag_file)
 
-def package_hostside(config):
-    run_vivado('package_hostside', 'package_hostside/package_hostside_ips.tcl')
+    vivado_hls = Vivado('vivado_hls', options)
+    vivado_hls.work_dir = pathjoin(options.ocaccel_build_dir, 'hardware', 'output', 'hls')
+    vivado_hls.tcl_root = pathjoin(options.ocaccel_root, 'actions')
+    vivado_hls.log      = pathjoin(vivado_hls.log_dir, '%s.log' % name)
 
-def package_infrastructure(config):
-    run_vivado('package_infrastructure', 'package_infrastructure/package_infrastructure_ips.tcl')
+    vivado_hls.args = ' -f ' + pathjoin(vivado_hls.tcl_root, tcl)
 
-def top_project(config):
-    run_vivado('top_project', 'create_framework/create_top_%s.tcl' % infra_template)
+    vivado_hls.run()
+    open(flag_file, 'w')
+
+def define_interfaces(options):
+    run_vivado('define_interfaces', 'define_interfaces.tcl', options)
+
+def package_hostside(options):
+    run_vivado('package_hostside', 'package_hostside.tcl', options)
+
+def package_infrastructure(options):
+    run_vivado('package_infrastructure', 'package_infrastructure.tcl', options)
+
+def package_kernel_helper(options):
+    run_vivado('package_kernel_helper', 'package_kernel_helper.tcl', options)
+
+def action_hw(options):
+    if 'KERNELS' in env:
+        kernels = env['KERNELS']
+    else:
+        msg.fail_msg("KERNELS is not set in environment variable!!")
+
+    if 'ACTION_NAME' in env:
+        action_name = env['ACTION_NAME']
+    else:
+        msg.fail_msg("ACTION_NAME is not set in environment variable!!")
+
+    for k in sorted(set(kernels.split(',')), key = str):
+        msg.force_msg("Processing %s" % k)
+        tcl = pathjoin(action_name, 'hw', 'hls', 'run_%s_script.tcl' % k)
+        run_vivado_hls('action_hw', tcl, options)
+
+def top_project(options):
+    if 'INFRA_TEMPLATE_SELECTION' in env:
+        infra_template = env['INFRA_TEMPLATE_SELECTION']
+    else:
+        msg.fail_msg("INFRA_TEMPLATE_SELECTION is not set in environment variable!!")
+
+    run_vivado('top_project', 'create_top_%s.tcl' % infra_template, options)
 
 make_hw_project = {
     'define_interfaces'      : define_interfaces,
     'package_hostside'       : package_hostside,
     'package_infrastructure' : package_infrastructure,
+    'package_kernel_helper'  : package_kernel_helper,
+    'action_hw'              : action_hw,
     'top_project'            : top_project
 }
-

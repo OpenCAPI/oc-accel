@@ -101,9 +101,9 @@ set bus_array [dict create tlx_afu "master" \
                           cfg_infra_c1 "master"  \
                           oc_phy  ""        \
              ]
-package_ip $hardware_build_dir/build/temp_projs \
-           $hardware_build_dir/build/ip_repo    \
-           $hardware_build_dir/build/interfaces \
+package_ip $hardware_build_dir/output/temp_projs \
+           $hardware_build_dir/output/ip_repo    \
+           $hardware_build_dir/output/interfaces \
            $fpga_part           \
            oc_host_if           \
            $tcl_dir/add_opencapi30_host_if.tcl      \
@@ -113,9 +113,9 @@ package_ip $hardware_build_dir/build/temp_projs \
 set bus_array [dict create cfg_flsh "slave"   \
                            cfg_vpd "slave"     \
              ]
-package_ip $hardware_build_dir/build/temp_projs \
-           $hardware_build_dir/build/ip_repo    \
-           $hardware_build_dir/build/interfaces \
+package_ip $hardware_build_dir/output/temp_projs \
+           $hardware_build_dir/output/ip_repo    \
+           $hardware_build_dir/output/interfaces \
            $fpga_part           \
            flash_vpd_wrapper    \
            $fpga_card_dir/tcl/add_flash_vpd_wrapper.tcl      \

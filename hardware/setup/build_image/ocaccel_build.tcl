@@ -19,8 +19,13 @@
 ############################################################################
 
 set hardware_dir      $::env(OCACCEL_HARDWARE_ROOT)
-#set logs_dir      $::env(LOGS_DIR)
-#set logfile       $logs_dir/ocaccel_build.log
+
+if { [info exists ::env(OCACCEL_HARDWARE_BUILD_DIR)] } { 
+    set hardware_build_dir    $::env(OCACCEL_HARDWARE_BUILD_DIR)
+} else {
+    set hardware_build_dir    $hardware_dir
+}
+
 set capi_ver      $::env(CAPI_VER)
 set fpgacard      $::env(FPGACARD)
 set ila_debug     [string toupper $::env(ILA_DEBUG)]
@@ -28,7 +33,7 @@ set vivadoVer     [version -short]
 
 set timing_lablimit $::env(TIMING_LABLIMIT)
 #Image directory
-set img_dir $hardware_dir/build/Images
+set img_dir $hardware_build_dir/output/Images
 set ::env(IMG_DIR) $img_dir
 
 #Remove temp files
@@ -50,7 +55,7 @@ set ::env(WIDTHCOL4) $widthCol4
 ############################################################################
 ## open ocaccel project
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open top project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-open_project $hardware_dir/build/top_project/top_project.xpr
+open_project $hardware_build_dir/output/top_project/top_project.xpr
 
 
 ############################################################################
