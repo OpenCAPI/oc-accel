@@ -44,8 +44,8 @@ extern "C" {
 // 2. They will be extracted by hardware/setup/patch_version.sh
 // 3. And put into snap_global_vars.v
 // 4. Used by hardware/hls/action_wrapper.v
-#define ACTION_TYPE               0x10143010
-#define RELEASE_LEVEL             0x00000003
+#define ACTION_TYPE               0x1014300C
+#define RELEASE_LEVEL             0x00000004
 // For oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
 // Please modify ActionTypes.md file so oc_maint can recognize this action.
 // ------------ MUST READ -----------
