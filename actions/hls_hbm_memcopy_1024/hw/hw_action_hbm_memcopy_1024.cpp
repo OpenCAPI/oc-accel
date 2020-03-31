@@ -176,7 +176,7 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
                rc = 1;
         }
 //=========================data from buffer_LCLmem=====================================//
-        else if ((memory_in_type == SNAP_ADDRTYPE_HBM_P0) || (memory_in_type == SNAP_ADDRTYPE_HBM_P1)) {
+        else if ((memory_in_type >= SNAP_ADDRTYPE_HBM_P0) && (memory_in_type <= SNAP_ADDRTYPE_HBM_P11)) {
 
            // From LCL_mem to Host=> data width conversion from 256 to 1024 bits
            if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
@@ -197,6 +197,56 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
                    buf_LCLmem_256, size_in_bytes_to_transfer);
                rc = 0;
            }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P2) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p2 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P3) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p3 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P4) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p4 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P5) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p5 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P6) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p6 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P7) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p7 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P8) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p8 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P9) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p9 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P10) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p10 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P11) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p11 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
            else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
                rc = 0;
            else
@@ -206,18 +256,68 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
         else if (memory_in_type == SNAP_ADDRTYPE_UNUSED) {
            if(memory_out_type == SNAP_ADDRTYPE_HOST_DRAM) {
               memcpy((snap_membus_1024_t  *) (dout_gmem + output_address_1024),
-                       buf_gmem_1024, size_in_bytes_to_transfer);
+                   buf_gmem_1024, size_in_bytes_to_transfer);
        	      rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P0) {
               memcpy((snap_membus_256_t  *) (d_hbm_p0 + output_address_256),
-                       buf_LCLmem_256, size_in_bytes_to_transfer);
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
               rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_HBM_P1) {
               memcpy((snap_membus_256_t  *) (d_hbm_p1 + output_address_256),
-                       buf_LCLmem_256, size_in_bytes_to_transfer);
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P2) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p2 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P3) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p3 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P4) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p4 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P5) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p5 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P6) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p6 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P7) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p7 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P8) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p8 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P9) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p9 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P10) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p10 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
+           }
+           else if(memory_out_type == SNAP_ADDRTYPE_HBM_P11) {
+               memcpy((snap_membus_256_t  *) (d_hbm_p11 + output_address_256),
+                   buf_LCLmem_256, size_in_bytes_to_transfer);
+               rc = 0;
            }
            else if(memory_out_type == SNAP_ADDRTYPE_UNUSED)
               rc = 0;
