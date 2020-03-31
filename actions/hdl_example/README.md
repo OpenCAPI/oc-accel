@@ -1,3 +1,5 @@
+# This example is kept as is. It will be depricated soon.
+
 # OC-ACCEL HDL EXAMPLE
 
 The hdl_example is a multi function example. The hardware is written in VHDL, the software in C. 
