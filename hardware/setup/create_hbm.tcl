@@ -48,7 +48,7 @@ set bd_name  hbm_top
 #   --> follow HBM names <--
 # _______________________________________________________________________________
 #CHANGE_HBM_INTERFACES_NUMBER
-set  HBM_MEM_NUM 2
+set  HBM_MEM_NUM 12
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -213,14 +213,14 @@ set_property -dict [list                               \
 #  CONFIG.USER_MC_ENABLE_00 {TRUE}    => enable/disable the MC
 #  CONFIG.USER_SAXI_00 {true}         => enable/disable each of the AXI interface/HBM memory
 set_property -dict [list \
-  CONFIG.USER_MEMORY_DISPLAY {512}  \
+  CONFIG.USER_MEMORY_DISPLAY {3072}  \
   CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}  \
   CONFIG.USER_MC_ENABLE_00 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_01 {FALSE}  \
-  CONFIG.USER_MC_ENABLE_02 {FALSE}  \
-  CONFIG.USER_MC_ENABLE_03 {FALSE}  \
-  CONFIG.USER_MC_ENABLE_04 {FALSE}  \
-  CONFIG.USER_MC_ENABLE_05 {FALSE}  \
+  CONFIG.USER_MC_ENABLE_01 {TRUE}  \
+  CONFIG.USER_MC_ENABLE_02 {TRUE}  \
+  CONFIG.USER_MC_ENABLE_03 {TRUE}  \
+  CONFIG.USER_MC_ENABLE_04 {TRUE}  \
+  CONFIG.USER_MC_ENABLE_05 {TRUE}  \
   CONFIG.USER_MC_ENABLE_06 {FALSE}  \
   CONFIG.USER_MC_ENABLE_07 {FALSE}  \
 ] $cell >> $log_file
@@ -324,7 +324,7 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
     connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
     #connect_bd_intf_net [get_bd_intf_pins axi4_to_axi3_$i/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
-    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
+    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
     #create and connect output ports
     #create_bd_port -dir O -from 31 -to 0 -type data AXI_$i\_RDATA_PARITY
     #connect_bd_net [get_bd_ports AXI_$i\_RDATA_PARITY] [get_bd_pins hbm/AXI_$i\_RDATA_PARITY]

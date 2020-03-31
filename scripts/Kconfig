@@ -217,6 +217,7 @@ choice
 #		select ACTION_HALF_WIDTH
 endchoice
 
+# ACTION_HALF_WIDTH can be set to limit the width of the host data bus to 512b
 config ACTION_HALF_WIDTH
 	bool
 	default n

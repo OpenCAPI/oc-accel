@@ -98,7 +98,7 @@ set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_wstrb[127:0]}]}
 	} ]]
 set id [waveform add -cdivider divider]
-set id [waveform add -label {HBM0 READ INTERFACE} -comment {}]
+set id [waveform add -label {HBM_p0 READ INTERFACE} -comment {}]
 waveform format $id -namecolor #99ff00
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_arvalid}]}
@@ -118,7 +118,7 @@ set id [waveform add -signals [subst  {
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_rlast}]}
 	} ]]
-set id [waveform add -label {HBM0 WRITE INTERFACE} -comment {}]
+set id [waveform add -label {HBM_p0 WRITE INTERFACE} -comment {}]
 waveform format $id -namecolor #99ff00
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_awvalid}]}
@@ -139,7 +139,7 @@ set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_wlast}]}
 	} ]]
 set id [waveform add -cdivider divider]
-set id [waveform add -label {HBM1 READ INTERFACE} -comment {}]
+set id [waveform add -label {HBM_p1 READ INTERFACE} -comment {}]
 waveform format $id -namecolor #99ff00
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_arvalid}]}
@@ -159,7 +159,7 @@ set id [waveform add -signals [subst  {
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_rlast}]}
 	} ]]
-set id [waveform add -label {HBM1 WRITE INTERFACE} -comment {}]
+set id [waveform add -label {HBM_p1 WRITE INTERFACE} -comment {}]
 waveform format $id -namecolor #99ff00
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_awvalid}]}

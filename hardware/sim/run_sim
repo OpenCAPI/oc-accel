@@ -237,13 +237,13 @@
 
  echo "copy parms file CAPI_VER=$CAPI_VER parm_file=$PARM_FILE"
  case $CAPI_VER in
-#   capi10|capi20) export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OCSE_ROOT/afu_driver/src:$OCSE_ROOT/libcxl:$SNAP_ROOT/software/lib    # to find libvpi.so and libcxl.so and libsnap.so
+#   capi10|capi20) export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OCSE_ROOT/afu_driver/src:$OCSE_ROOT/libocxl:$SNAP_ROOT/software/lib    # to find libvpi.so and libocxl.so and libosnap.so
 #                  if [ "$PARM_FILE" != "" ];then # overwrite with specified parms file
 #                    if [[ -f ${SIMBASE}/${PARM_FILE} ]];then cp ${SIMBASE}/${PARM_FILE} ocse.parms
 #                    else echo "file ${SIMBASE}/${PARM_FILE} not found, leaving";exit 11;fi
 #                  fi
 #                  ;;
-   opencapi30)    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OCSE_ROOT/afu_driver/src:$OCSE_ROOT/libocxl:$SNAP_ROOT/software/lib   # to find libvpi.so and libcxl.so and libsnap.so
+   opencapi30)    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OCSE_ROOT/afu_driver/src:$OCSE_ROOT/libocxl:$SNAP_ROOT/software/lib   # to find libvpi.so and libocxl.so and libosnap.so
                   if [ "$PARM_FILE" != "" ];then # overwrite with specified parms file
                     if [[ -f ${SIMBASE}/${PARM_FILE} ]];then cp ${SIMBASE}/${PARM_FILE} ocse.parms
                     else echo "file ${SIMBASE}/${PARM_FILE} not found, leaving";exit 11;fi
