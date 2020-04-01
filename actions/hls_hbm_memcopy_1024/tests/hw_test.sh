@@ -37,7 +37,7 @@ function usage() {
     echo "    [-C <card>] card to be used for the test"
     echo "    [-t <trace_level>]"
     echo "    [-N ] not use interrupt"
-    echo "    [-duration SHORT/NORMAL] run tests (default is SHORT, which is also good for simulation)"
+    echo "    [-d SHORT/NORMAL] run tests (default is SHORT, which is also good for simulation)"
     echo
 }
 

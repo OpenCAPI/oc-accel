@@ -134,8 +134,8 @@ fi
     fi
     echo "ok"
 
-    if [ ${size} -lt 268435456 ]; then
-      echo "No test greater than 256MB with HBM"
+    if [ ${size} -gt 268435456 ]; then
+      echo "Skipping test greater than 256MB with HBM"
     else
       echo -n "Read from HBM Memory to FPGA ... "
       cmd="snap_hbm_memcopy -C${snap_card}     ${noirq}\
