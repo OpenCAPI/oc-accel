@@ -23,7 +23,7 @@ set fpga_part   $::env(FPGACHIP)
 set log_dir     $::env(LOGS_DIR)
 set log_file    $log_dir/create_hbm_host.log
 
-# user can set a specific value for the Action clock lower than the 200MHz nominal clock
+# At this time user can use only AXI Action clock set to the 200MHz nominal clock
 set action_clock_freq "200MHz"
 #overide default value if variable exist
 #set action_clock_freq $::env(FPGA_ACTION_CLK)
@@ -73,10 +73,6 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 
 
 #====================
-#create the buffer to propagate the clocks
-#create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_ibufds_inst
-#set_property -dict [list CONFIG.C_BUF_TYPE {IBUFDS}] [get_bd_cells refclk_ibufds_inst]
-
 #ARESETN is used for HBM reset
 set port [create_bd_port -dir I ARESETN]
 #CRESETN is used for converters reset
@@ -90,23 +86,6 @@ set port [create_bd_port -dir O apb_complete]
 connect_bd_net [get_bd_ports apb_complete] [get_bd_pins constant_1_one/dout]
 
 
-#if { ($vivadoVer >= "2019.2")} {
-#  set port [create_bd_port -dir I -type clk -freq_hz 300000000 refclk300_n]
-#} else {
-#  set port [create_bd_port -dir I -type clk refclk300_n]
-#  set_property {CONFIG.FREQ_HZ} {300000000} $port
-#}
-#
-#if { ($vivadoVer >= "2019.2")} {
-#  set port [create_bd_port -dir I -type clk -freq_hz 300000000 refclk300_p]
-#} else {
-#  set port [create_bd_port -dir I -type clk refclk300_p]
-#  set_property {CONFIG.FREQ_HZ} {300000000} $port 
-#}
-#connect_bd_net [get_bd_ports refclk300_p] [get_bd_pins refclk_ibufds_inst/IBUF_DS_P] >> $log_file
-#connect_bd_net [get_bd_ports refclk300_n] [get_bd_pins refclk_ibufds_inst/IBUF_DS_N] >> $log_file
-
-
 #====================
 #
 #-- Set the upper bound of the loop to the number of memory you use --
@@ -117,7 +96,6 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
   #create the axi_clock_converters for each of the HBM interfaces
 
   #create the bram controller + URAM
-      #CONFIG.READ_LATENCY {6}     
   create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_$i >> $log_file
   set_property -dict [list        \
       CONFIG.DATA_WIDTH {256}     \
@@ -152,18 +130,10 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
   connect_bd_intf_net [get_bd_intf_ports S_AXI_p$i\_HBM] [get_bd_intf_pins axi_bram_ctrl_$i/S_AXI]
 
   if { ($vivadoVer >= "2019.2")} {
-    if { $action_clock_freq == "225MHZ" } {
-      set port [create_bd_port -dir I -type clk -freq_hz 225000000 S_AXI_p$i\_HBM_ACLK]
-    } else {
-      set port [create_bd_port -dir I -type clk -freq_hz 200000000 S_AXI_p$i\_HBM_ACLK]
-    }
+    set port [create_bd_port -dir I -type clk -freq_hz 200000000 S_AXI_p$i\_HBM_ACLK]
   } else {
     set port [create_bd_port -dir I -type clk S_AXI_p$i\_HBM_ACLK]
-    if { $action_clock_freq == "225MHZ" } {
-      set_property {CONFIG.FREQ_HZ} {225000000} $port
-    } else {
-      set_property {CONFIG.FREQ_HZ} {200000000} $port
-    }
+    set_property {CONFIG.FREQ_HZ} {200000000} $port
   }
   connect_bd_net $port [get_bd_pins axi_bram_ctrl_$i/s_axi_aclk]
   
@@ -174,13 +144,11 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
 }
 #--------------------- end loop ------------------
 
-# In Vivado 2018.3, there are 32 segments of 256 MiB each in the HBM.
 assign_bd_address  >> $log_file
 
 regenerate_bd_layout
 validate_bd_design >> $log_file
 save_bd_design >> $log_file
-#return $bd
 
 #====================
 # Generate the Output products of the HBM block design.
