@@ -1134,7 +1134,7 @@ module framework_afu (
   wire            eth1_tx_tready                      ;
   wire      [0:0] eth1_tx_tuser                       ;
 
-  wire            eth_rst                             ;
+  wire            eth_m_axis_rx_rst                   ;
 `endif
 `endif
 
@@ -1225,12 +1225,12 @@ module framework_afu (
      assign memctl0_axi_rst_n = ~reset_nest_q;
   `endif
 `endif
-//`ifdef ENABLE_ETHERNET
-//  `ifndef ENABLE_ETH_LOOP_BACK
-//    wire eth_rst;
-//    assign eth_rst = reset_action_d;
-//  `endif
-//`endif
+`ifdef ENABLE_ETHERNET
+  `ifndef ENABLE_ETH_LOOP_BACK
+    wire eth_rst;
+    assign eth_rst = reset_action_d;
+  `endif
+`endif
 
   // // ******************************************************************************
   // // AFU DESCRIPTOR TIES
@@ -2277,7 +2277,7 @@ module framework_afu (
       .dout_eth_TKEEP                     ( eth1_tx_tkeep             ) ,
       .dout_eth_TUSER                     ( eth1_tx_tuser             ) ,
       .dout_eth_TLAST                     ( eth1_tx_tlast             ) ,
-      .eth_reset                          ( eth_rst                   ) ,
+      .eth_reset                          ( eth_m_axis_rx_rst         ) ,
 `endif
 `endif
       //
@@ -3662,8 +3662,9 @@ eth_100G eth_100G_0
       .s_axis_tx_tready            ( eth1_tx_tready                ),
 
       .i_sys_reset                 ( eth_rst                       ),
-      .i_core_rx_reset             ( eth_rst                       ),
-      .i_core_tx_reset             ( eth_rst                       ),
+      .i_core_rx_reset             ( 1'b0                          ),
+      .i_core_tx_reset             ( 1'b0                          ),
+      .m_axis_rx_reset             ( eth_m_axis_rx_rst             ),
       .i_capi_clk                  ( clock_afu                     ),
 
       .i_ctl_rx_enable             ( 1'b1                          ),

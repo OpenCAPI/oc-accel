@@ -112,10 +112,10 @@ static void* snap_open (struct mdev_ctx* mctx)
     handle = snap_card_alloc_dev (device, 0xffff, 0xffff);
     VERBOSE3 ("[%s] Exit %p\n", __func__, handle);
 
-    if (NULL == handle)
-        VERBOSE0 ("Error: Can not open CAPI-SNAP Device: %s\n",
-                  device);
-
+    if (NULL == handle) {
+        VERBOSE0 ("Error: Can not open OC-Accel Device: %s\n", device);
+        VERBOSE0 ("       Consider using  sudo before the command\n",
+    }
     return handle;
 }
 

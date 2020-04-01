@@ -520,7 +520,7 @@ clean:
 	@echo -e "                        IPs" 1>/dev/null 2>/dev/null;
 	@$(RM) -r ip
 	@echo -e "                        sim files" 1>/dev/null 2>/dev/null;
-	@$(RM) -r sim/ies sim/xsim sim/modelsim sim/questa sim/xcelium 
+	@$(RM) -r sim/ies sim/xsim sim/xsim.dir sim/modelsim sim/questa sim/xcelium 
 	@echo -e "                        log files" 1>/dev/null 2>/dev/null;
 	@$(RM) -r logs
 	@echo -e "                        action / application" 1>/dev/null 2>/dev/null;

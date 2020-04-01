@@ -31,6 +31,7 @@ uninstall:
 
 clean:
 	$(RM) build/config build/*~ *~
+	$(RM) ide/*.pyc
 
 distclean: clean
 	$(RM) ../software/include/autoconf.h
