@@ -134,33 +134,37 @@ fi
     fi
     echo "ok"
 
-    echo -n "Read from HBM Memory to FPGA ... "
-    cmd="snap_hbm_memcopy -C${snap_card}     ${noirq}\
+    if [ ${size} -lt 268435456 ]; then
+      echo "No test greater than 256MB with HBM"
+    else
+      echo -n "Read from HBM Memory to FPGA ... "
+      cmd="snap_hbm_memcopy -C${snap_card}     ${noirq}\
         -A HBM_P0 -a 0x0    \
         -s ${size}     >>    \
         hbm_memcopy_throughput.log 2>&1"
-    echo ${cmd} >> hbm_memcopy_throughput.log
-    eval ${cmd}
-    if [ $? -ne 0 ]; then
+      echo ${cmd} >> hbm_memcopy_throughput.log
+      eval ${cmd}
+      if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
         echo "failed, please check hbm_memcopy_throughput.log"
         exit 1
-    fi
-    echo "ok"
-
-    echo -n "Write from FPGA to Card DDR Memory ... "
-    cmd="snap_hbm_memcopy -C${snap_card}     ${noirq}\
+      fi
+      echo "ok"
+  
+      echo -n "Write from FPGA to Card DDR Memory ... "
+      cmd="snap_hbm_memcopy -C${snap_card}     ${noirq}\
         -D HBM_P0 -d 0x0    \
         -s ${size}     >>    \
         hbm_memcopy_throughput.log 2>&1"
-    echo ${cmd} >> hbm_memcopy_throughput.log
-    eval ${cmd}
-    if [ $? -ne 0 ]; then
+      echo ${cmd} >> hbm_memcopy_throughput.log
+      eval ${cmd}
+      if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
         echo "failed, please check hbm_memcopy_throughput.log"
         exit 1
+      fi
+      echo "ok"
     fi
-    echo "ok"
 }
 
 rm -f hbm_memcopy_throughput.log
