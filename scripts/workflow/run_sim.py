@@ -51,6 +51,7 @@ class SimSession:
         self.testcase_cmd = testcase_cmd
         self.ocse_path = options.ocse_path
         self.ocaccel_root = options.ocaccel_root
+        self.ocaccel_build_dir = options.ocaccel_build_dir
         self.sim_timeout = options.sim_timeout
         self.unit_sim = options.unit_sim
         self.sv_seed = options.sv_seed
@@ -58,11 +59,11 @@ class SimSession:
         self.uvm_ver = options.uvm_ver
         self.wave = not options.no_wave
 
-        self.setup_env()
         self.check_root_path()
+        self.setup_env()
         self.setup_ld_libraries()
 
-        self.simulator = Simulator(self.simulator_name, self.ocaccel_root, self.sim_timeout, self.unit_sim, self.sv_seed, self.unit_test, self.uvm_ver, self.wave)
+        self.simulator = Simulator(options)
         # No OCSE if in unit sim mode
         if self.unit_sim == False:
             self.ocse = OCSE(options.ocse_path, self.simulator.simout, self.sim_timeout)
@@ -83,29 +84,22 @@ class SimSession:
 
     def check_root_path(self):
         if not isdir(self.ocaccel_root):
-            msg.warn_msg("OCACCEL_ROOT path: %s is not valid!" % self.ocaccel_root)
-            msg.fail_msg("OCACCEL_ROOT is not valid! Exiting ...")
+            msg.warn_msg("ocaccel_root path: %s is not valid!" % self.ocaccel_root)
+            msg.fail_msg("ocaccel_root is not valid! Exiting ...")
 
-        if not isdir(self.action_root):
-            msg.warn_msg("ACTION_ROOT path: %s is not valid!" % self.action_root)
-            msg.fail_msg("ACTION_ROOT is not valid! Exiting ...")
+        if not isdir(self.ocaccel_build_dir):
+            msg.warn_msg("ocaccel_build_dir path: %s is not valid!" % self.ocaccel_build_dir)
+            msg.fail_msg("ocaccel_build_dir is not valid! Exiting ...")
 
     def setup_env(self):
-        if 'OCACCEL_ROOT' not in env:
-            env['OCACCEL_ROOT'] = self.ocaccel_root
-
-        self.ocaccel_root = env['OCACCEL_ROOT']
-
-        self.action_root = pathjoin(self.ocaccel_root, 'actions', env['ACTION_NAME'])
-
         env['PATH'] = ":".join((env['PATH'],\
-                pathjoin(env['OCACCEL_ROOT'], 'software', 'tools'),\
-                pathjoin(self.action_root, 'sw')))
+                pathjoin(self.ocaccel_build_dir, 'software', 'tools'),\
+                pathjoin(self.ocaccel_build_dir, 'actions', env['ACTION_NAME'], 'sw')))
 
         if self.unit_sim == False:
             if not isdir(self.ocse_path):
                 print self.ocse_path + " not exist!"
-                exit("OCSE ROOT is not valid! Exiting ...")
+                exit("OCSE PATH is not valid! Exiting ...")
 
     def setup_ld_libraries(self):
         if 'LD_LIBRARY_PATH' not in env:
@@ -116,10 +110,10 @@ class SimSession:
                     ":".join((env['LD_LIBRARY_PATH'],\
                               pathjoin(self.ocse_path, 'afu_driver', 'src'),\
                               pathjoin(self.ocse_path, 'libocxl'),\
-                              pathjoin(self.ocaccel_root, 'software', 'lib')))
+                              pathjoin(self.ocaccel_build_dir, 'software', 'lib')))
     def print_env(self):
         msg.header_msg("OCACCEL ROOT\t %s" % self.ocaccel_root)
-        msg.header_msg("ACTION ROOT\t %s" % self.action_root)
+        msg.header_msg("OCACCEL BUILD DIR\t %s" % self.ocaccel_build_dir)
         self.simulator.print_env()
         if self.unit_sim == False:
             self.ocse.print_env()
@@ -129,15 +123,16 @@ class SimSession:
             msg.header_msg("Unit test seed\t %s" % self.sv_seed)
  
 class Simulator:
-    def __init__(self, simulator = 'xsim', ocaccel_root = '.', sim_timeout = 60, unit_sim = False, sv_seed = '1', unit_test = '', uvm_ver = '', wave = True):
-        self.simulator = simulator
-        self.timeout = sim_timeout
-        self.ocaccel_root = ocaccel_root
-        self.unit_sim = unit_sim
-        self.sv_seed = sv_seed
-        self.unit_test = unit_test
-        self.uvm_ver = uvm_ver        
-        self.wave = wave
+    def __init__(self, options):
+        self.simulator = options.simulator
+        self.timeout = options.sim_timeout
+        self.ocaccel_root = options.ocaccel_root
+        self.ocaccel_build_dir = options.ocaccel_build_dir
+        self.unit_sim = options.unit_sim
+        self.sv_seed = options.sv_seed
+        self.unit_test = options.unit_test
+        self.uvm_ver = options.uvm_ver        
+        self.wave = not options.no_wave
         self.simout = None
         self.simulator_pid = None
         self.setup()
@@ -155,7 +150,7 @@ class Simulator:
     def setup_simout(self):
         timestamp = time.strftime("%Y%m%d-%a-%H%M%S", time.localtime())
         seed = str(random.randint(0, 0xffffffff))
-        self.simout = pathjoin(self.ocaccel_root,\
+        self.simout = pathjoin(self.ocaccel_build_dir,\
                                "hardware", "sim", self.simulator,\
                                timestamp + "." + seed)
         if self.unit_sim == True:
@@ -169,7 +164,7 @@ class Simulator:
         # In unit sim mode, simulation jobs might be submitted via LSF to run in parallel,
         # don't create the symbol link `latest` to avoid conflict.
         if self.unit_sim == False:
-            latest = pathjoin(self.ocaccel_root,\
+            latest = pathjoin(self.ocaccel_build_dir,\
                                    "hardware", "sim", self.simulator,\
                                    "latest")
             if islink(latest):
@@ -193,20 +188,20 @@ class Simulator:
             copyfile(file, self.simout)
 
         if self.simulator == "xcelium":
-            os.symlink(pathjoin(self.ocaccel_root, "hardware", "sim",\
+            os.symlink(pathjoin(self.ocaccel_build_dir, "hardware", "sim",\
                                 self.simulator, "xcelium"),\
                        pathjoin(self.simout, "xcelium"))
-            os.symlink(pathjoin(self.ocaccel_root, "hardware", "sim",\
+            os.symlink(pathjoin(self.ocaccel_build_dir, "hardware", "sim",\
                                 self.simulator, "xcelium.d"),\
                        pathjoin(self.simout, "xcelium.d"))
-            os.symlink(pathjoin(self.ocaccel_root, "hardware", "sim",\
+            os.symlink(pathjoin(self.ocaccel_build_dir, "hardware", "sim",\
                                 self.simulator, "xcelium_lib"),\
                        pathjoin(self.simout, "xcelium_lib"))
-            os.symlink(pathjoin(self.ocaccel_root, "hardware", "sim",\
+            os.symlink(pathjoin(self.ocaccel_build_dir, "hardware", "sim",\
                                 "nvme"),\
                        pathjoin(self.simout, "nvme"))
         elif self.simulator == "xsim":
-            os.symlink(pathjoin(self.ocaccel_root, "hardware", "sim",\
+            os.symlink(pathjoin(self.ocaccel_build_dir, "hardware", "sim",\
                                 self.simulator, "xsim.dir"),\
                        pathjoin(self.simout, "xsim.dir"))
 

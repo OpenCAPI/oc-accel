@@ -64,6 +64,20 @@ add_custom_command (
     WORKING_DIRECTORY ${HW_OUTPUT_DIR}
     )
 
+add_custom_command (
+    OUTPUT ${HW_OUTPUT_DIR}/.make_sim
+    POST_BUILD
+
+    COMMAND
+    ${OCACCEL_ROOT}/scripts/workflow/ocaccel_workflow.py
+    -q --ocaccel_root ${OCACCEL_ROOT} --ocaccel_build_dir ${OCACCEL_BUILD_DIR}
+    --ocse_path ${OCSE_PATH}
+    sim
+
+    DEPENDS model
+    WORKING_DIRECTORY ${HW_OUTPUT_DIR}
+    )
+
 add_custom_target (
     config
     DEPENDS ${HW_OUTPUT_DIR}/.config
@@ -86,4 +100,7 @@ add_custom_target (
     DEPENDS ${HW_OUTPUT_DIR}/.make_model
     )
 
-
+add_custom_target (
+    sim
+    DEPENDS ${HW_OUTPUT_DIR}/.make_sim
+    )
