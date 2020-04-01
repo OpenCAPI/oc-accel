@@ -36,7 +36,7 @@ BEGIN {
 END {
   i=1
   printf "+-------------------------------------------------------------------------------+\n"
-  printf "|            OC-Accel hls_memcopy_1024 Throughput (MBytes/s)                    |\n"
+  printf "|            OC-Accel hls_hbm_memcopy_1024 Throughput (MBytes/s)                |\n"
   printf "+-------------------------------------------------------------------------------+\n"
   printf "%12s %16s %16s %16s %16s\n","bytes", "Host->FPGA_RAM", "FPGA_RAM->Host","FPGA(HBM->RAM)", "FPGA(RAM->HBM)" 
   printf " -------------------------------------------------------------------------------\n"

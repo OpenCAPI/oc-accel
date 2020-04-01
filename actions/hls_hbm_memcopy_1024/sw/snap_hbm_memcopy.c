@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 	}
 
 	char type_in_txt[20], type_out_txt[20];
-        if (type_in == SNAP_ADDRTYPE_UNUSED)  strcpy(type_in_txt,  "FPGA BRAM");
+        if (type_in == SNAP_ADDRTYPE_UNUSED)  strcpy(type_in_txt,  "FPGA_BRAM");
         else                                    strcpy(type_in_txt,  mem_tab[type_in%28]);
         if (type_out == SNAP_ADDRTYPE_UNUSED) strcpy(type_out_txt, "FPGA_BRAM");
         else                                    strcpy(type_out_txt,  mem_tab[type_out%28]);
