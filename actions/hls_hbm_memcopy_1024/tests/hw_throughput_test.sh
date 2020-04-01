@@ -86,7 +86,7 @@ if [ ${size} -gt 1073741824 ]; then
     blk_count=$((${size}/1073741824))
     echo "$blk_count"
         unit_name="GB"
-        echo "Creating a" $blk_count "GBytes file ... takes serveral minutes or so ..."
+        echo "Creating a" $blk_count "GBytes file ... takes several minutes or so ..."
         dd if=/dev/urandom of=temp_A.bin count=${blk_count} bs=1G 2> dd.log
 elif [ ${size} -gt 1048576 ]; then
     blk_count=$((${size}/1048576))
@@ -205,7 +205,7 @@ echo -n "Git Version: "
 snap_peek -C ${snap_card} 0x0 || exit 1;
 echo -n "Build Date:  "
 snap_peek -C ${snap_card} 0x8 || exit 1;
-${ACTION_ROOT}/tests/process.awk snap_hbm_memcopy.log
+${ACTION_ROOT}/tests/process.awk hbm_memcopy_throughput.log
 
 echo "ok"
 

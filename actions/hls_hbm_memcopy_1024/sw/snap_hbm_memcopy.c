@@ -52,10 +52,10 @@ static void usage(const char *prog)
 	       "  -C, --card <cardno>        can be (0...3)\n"
 	       "  -i, --input <file.bin>     input file.\n"
 	       "  -o, --output <file.bin>    output file.\n"
-	       "  -A, --type-in <HOST_DRAM,  HBM_P0/P1, UNUSED, ...>.\n"
-	       "  -a, --addr-in <addr>       address e.g. in CARD_RAM.\n"
-	       "  -D, --type-out <HOST_DRAM, HBM_P0/P1, UNUSED, ...>.\n"
-	       "  -d, --addr-out <addr>      address e.g. in CARD_RAM.\n"
+	       "  -A, --type-in <HOST_DRAM, HBM_P0/P1, SNAP_ADDRTYPE_UNUSED, ...>.\n"
+	       "  -a, --addr-in <addr>       address e.g. in HOST_DRAM.\n"
+	       "  -D, --type-out <HOST_DRAM,HBM_P0/P1, SNAP_ADDRTYPE_UNUSED, ...>.\n"
+	       "  -d, --addr-out <addr>      address e.g. in HOST_DRAM.\n"
 	       "  -s, --size <size>          size of data (default is 1024).\n"
 	       "  -m, --mode <mode>          mode flags.\n"
 	       "  -t, --timeout              timeout in sec to wait for done. (10 sec default)\n"
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 	const char *output = NULL;
 	unsigned long timeout = 10;
 	unsigned int mode = 0x0;
-	const char *space = "CARD_RAM";
+	const char *space = "FPGA_BRAM";
 	struct timeval etime, stime;
 	ssize_t size = 1024;
 	uint8_t *ibuff = NULL, *obuff = NULL;
@@ -367,8 +367,10 @@ int main(int argc, char *argv[])
 	}
 
 	char type_in_txt[20], type_out_txt[20];
-	strcpy(type_in_txt,  mem_tab[type_in%28]);
-	strcpy(type_out_txt,  mem_tab[type_out%28]);
+        if (type_in == SNAP_ADDRTYPE_UNUSED)  strcpy(type_in_txt,  "FPGA BRAM");
+        else                                    strcpy(type_in_txt,  mem_tab[type_in%28]);
+        if (type_out == SNAP_ADDRTYPE_UNUSED) strcpy(type_out_txt, "FPGA_BRAM");
+        else                                    strcpy(type_out_txt,  mem_tab[type_out%28]);
 
 	printf("PARAMETERS:\n"
 	       "  input:       %s\n"

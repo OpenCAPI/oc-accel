@@ -81,7 +81,7 @@ fi
 
 #### MEMCOPY ##########################################################
 
-function test_hbm_memcopy {
+function test_memcopy {
     local size=$1
     local noirq=$2
 
@@ -121,13 +121,13 @@ touch snap_hbm_memcopy.log
 if [ "$duration" = "SHORT" ]; then
 
     for (( size=64; size<=512; size*=2 )); do
-    test_hbm_memcopy ${size}
+    test_memcopy ${size}
     done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
     for (( size=64; size<65536; size*=2 )); do
-    test_hbm_memcopy ${size}
+    test_memcopy ${size}
     done
 fi
 
@@ -143,7 +143,7 @@ function test_memcopy_with_hbm {
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_hbm_memcopy to hbm_p0 (aligned) ${size} bytes ... "
+    echo "Doing snap_hbm_memcopy to hbm_p0 (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}  ${noirq}  \
         -i ${size}_B.bin    \
         -d 0x0 -D HBM_P0 >>  \
@@ -156,7 +156,7 @@ function test_memcopy_with_hbm {
         exit 1
     fi
     
-    echo -n "Doing snap_hbm_memcopy from hbm_p0 to hbm_p1 (aligned) ${size} bytes ... "
+    echo "Doing snap_hbm_memcopy from hbm_p0 to hbm_p1 (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
         -a 0x0 -A HBM_P0   \
         -d 0x0 -D HBM_P1 -s ${size} >>  \
@@ -169,7 +169,7 @@ function test_memcopy_with_hbm {
         exit 1
     fi
 
-    echo -n "Doing snap_hbm_memcopy from hbm_p1 (aligned) ${size} bytes ... "
+    echo "Doing snap_hbm_memcopy from hbm_p1 (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
         -o ${size}_B.out    \
         -a 0x0 -A HBM_P1 -s ${size} >>  \
@@ -183,7 +183,7 @@ function test_memcopy_with_hbm {
     fi
     echo "ok"
     
-    echo -n "Check results ... "
+    echo "Check results ... "
     diff ${size}_B.bin ${size}_B.out 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
         echo "failed"
