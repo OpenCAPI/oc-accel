@@ -367,8 +367,8 @@ int main(int argc, char *argv[])
 	}
 
 	char type_in_txt[20], type_out_txt[20];
-	strcpy(type_in_txt,  mem_tab[type_in%27]);
-	strcpy(type_out_txt,  mem_tab[type_out%27]);
+	strcpy(type_in_txt,  mem_tab[type_in%28]);
+	strcpy(type_out_txt,  mem_tab[type_out%28]);
 
 	printf("PARAMETERS:\n"
 	       "  input:       %s\n"
