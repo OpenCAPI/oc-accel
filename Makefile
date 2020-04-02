@@ -39,6 +39,7 @@ clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(act
 help:
 	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";
+	@echo "* ./ocaccel_workflow.py  Drives you through the whole simulation process flow";
 	@echo "* snap_config    Configure OC-Accel framework";
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
 	@echo "* sim            Start a simulation";
@@ -58,8 +59,9 @@ help:
 	@echo "Few tools to help debug";
 	@echo "-----------------------";
 	@echo "* ./display_traces       Display traces to debug action code";
-	@echo "* ./oc_debug_timing      Display timing failing paths when image generation fails";
-	@echo "* ./ocaccel_workflow.py  Drives you through the whole process flow";
+	@echo "* ./debug_timing         Display timing failing paths when image generation fails";
+	@echo "* vivado hardware/build/Checkpoints/opt_routed_design.dcp to see logic placement.";
+	@echo "* vivado hardware/viv_project/framework.xpr to see project internal details.";
 	@echo;
 
 
