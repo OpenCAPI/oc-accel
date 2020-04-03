@@ -114,7 +114,7 @@ static void* snap_open (struct mdev_ctx* mctx)
 
     if (NULL == handle) {
         VERBOSE0 ("Error: Can not open OC-Accel Device: %s\n", device);
-        VERBOSE0 ("       Consider using  sudo before the command\n",
+        VERBOSE0 ("       Consider using  sudo before the command\n");
     }
     return handle;
 }
