@@ -2,6 +2,7 @@ set(HW_SRC_DIR        ${CMAKE_CURRENT_SOURCE_DIR})
 set(HW_BIN_DIR        ${CMAKE_CURRENT_BINARY_DIR})
 set(HW_LOG_DIR        ${HW_BIN_DIR}/logs)
 set(HW_OUTPUT_DIR     ${HW_BIN_DIR}/output)
+set(HW_CONFIG_DIR     ${HW_BIN_DIR}/config)
 
 set(HW_INTF_OUTPUT_DIR  ${HW_OUTPUT_DIR}/interfaces)
 set(HW_IP_REPO_DIR      ${HW_OUTPUT_DIR}/ip_repo)
@@ -13,6 +14,9 @@ file(MAKE_DIRECTORY ${HW_LOG_DIR})
 file(MAKE_DIRECTORY ${HW_INTF_OUTPUT_DIR})
 file(MAKE_DIRECTORY ${HW_IP_REPO_DIR})
 file(MAKE_DIRECTORY ${HW_IP_HLS_DIR})
+file(MAKE_DIRECTORY ${HW_CONFIG_DIR})
+
+include(config/kconfig.cmake)
 
 # steps to make a hardware project
 foreach(step
@@ -36,19 +40,6 @@ foreach(step
         WORKING_DIRECTORY ${HW_OUTPUT_DIR}
         )
 endforeach()
-
-add_custom_command (
-    OUTPUT ${HW_OUTPUT_DIR}/.config
-    POST_BUILD
-
-    COMMAND
-    ${OCACCEL_ROOT}/scripts/workflow/ocaccel_workflow.py
-    -q --ocaccel_root ${OCACCEL_ROOT} --ocaccel_build_dir ${OCACCEL_BUILD_DIR}
-    config
-
-    DEPENDS ${OCACCEL_ROOT}/scripts/Kconfig
-    WORKING_DIRECTORY ${HW_OUTPUT_DIR}
-    )
 
 add_custom_command (
     OUTPUT ${HW_OUTPUT_DIR}/.make_model
@@ -79,13 +70,8 @@ add_custom_command (
     )
 
 add_custom_target (
-    config
-    DEPENDS ${HW_OUTPUT_DIR}/.config
-    )
-
-add_custom_target (
     hw_project
-    DEPENDS ${HW_OUTPUT_DIR}/.config
+    DEPENDS ${HW_CONFIG_DIR}/.config
     DEPENDS ${HW_OUTPUT_DIR}/.define_interfaces
     DEPENDS ${HW_OUTPUT_DIR}/.package_hostside
     DEPENDS ${HW_OUTPUT_DIR}/.package_infrastructure
@@ -103,4 +89,5 @@ add_custom_target (
 add_custom_target (
     sim
     DEPENDS ${HW_OUTPUT_DIR}/.make_sim
+    DEPENDS ${CONFIG_ACTION_NAME}
     )

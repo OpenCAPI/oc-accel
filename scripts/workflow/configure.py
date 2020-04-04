@@ -44,15 +44,19 @@ except ImportError:
 class Configuration:
     def __init__(self, options):
         self.ocaccel_root = options.ocaccel_root
+        self.ocaccel_build_dir = options.ocaccel_build_dir
         self.action_root = options.action_root
         self.simulator = options.simulator
         self.options = options
-        self.config_file = pathjoin(self.ocaccel_root, 'scripts', 'Kconfig')
-        self.user_config = '.config'
+        self.config_file = pathjoin(self.ocaccel_root, 'hardware', 'config', 'Kconfig')
+        self.user_config = pathjoin(self.ocaccel_build_dir, 'hardware', 'config', '.config')
         self.kconf = Kconfig(self.config_file)
         self.log = None
 
     def setup_cfg(self):
+        if not isfile(self.user_config):
+            msg.fail_msg("Config file %s not exist!" % self.user_config)
+
         self.kconf.load_config(self.user_config)
         if 'SIMULATOR' in self.kconf.syms:
             self.options.simulator = self.kconf.syms['SIMULATOR'].user_value
