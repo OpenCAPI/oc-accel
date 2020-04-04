@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 #include <libosnap.h>
-#include <libocxl.h>
+//#include <libocxl.h>
 #include <osnap_tools.h>
 #include <osnap_global_regs.h>
 

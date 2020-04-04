@@ -38,8 +38,14 @@ $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 endif
 
-CPPFLAGS+= -g
-CXX=gcc
+CPPFLAGS += -DGIT_VERSION=\"$(VERSION)\"
+CPPFLAGS += -fpermissive
+CPPFLAGS += -g -O3 -I$(SNAP_ROOT)/software/include -fPIC -D_GNU_SOURCE=1 -DOPENCAPI30
+ifdef BUILD_SIMCODE
+    CPPFLAGS += -I$(OCSE_ROOT)/libocxl/ -D_SIM_
+endif
+
+CXX=g++
 
 all: all_build
 
