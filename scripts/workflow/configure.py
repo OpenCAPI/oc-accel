@@ -40,7 +40,13 @@ try:
     from menuconfig import menuconfig
 except ImportError:
     install('kconfiglib')
-
+finally:
+    import site
+    reload(site)
+    from kconfiglib import Kconfig, split_expr, expr_value, expr_str, BOOL, \
+            TRISTATE, TRI_TO_STR, AND
+    from menuconfig import menuconfig
+    
 class Configuration:
     def __init__(self, options):
         self.ocaccel_root = options.ocaccel_root
