@@ -160,6 +160,7 @@ choice
 		select ENABLE_HLS_SUPPORT
 		select DISABLE_SDRAM_AND_BRAM
 		select DISABLE_NVME
+		select DISABLE_HBM
 		select ACTION_HALF_WIDTH
 		select DISABLE_ETHERNET
 
@@ -272,18 +273,22 @@ config SDRAM_USED
 	default "TRUE"  if ENABLE_DDR
 	default "FALSE" if ! ENABLE_DDR
 
+config DISABLE_HBM
+	bool
+	default n
+
 config FORCE_HBM
 	bool
 	default y
 	#ddepends on ((AD9H3 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT
+	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
 	select ENABLE_HBM
 
 config ENABLE_HBM
 	bool
 	prompt "Enable HBM"
 	#ddepends on ((AD9H3 || AD9H7)  && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT
+	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
 	help
 	  This option enables the on-card HBM.
 

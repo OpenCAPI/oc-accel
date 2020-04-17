@@ -618,6 +618,7 @@ module framework_afu (
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p1_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p1_rid       ;
 
+/*
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p2_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p2_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p2_awsize    ;
@@ -1017,7 +1018,7 @@ module framework_afu (
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p11_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p11_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p11_rid       ;
-
+*/
   `endif
 
   `ifndef ENABLE_HBM
@@ -1807,6 +1808,7 @@ module framework_afu (
       .m_axi_card_hbm_p1_wuser              (                            ) ,
       .m_axi_card_hbm_p1_wvalid             ( act_axi_card_hbm_p1_wvalid   ) ,
 
+/*
       .m_axi_card_hbm_p2_araddr             ( act_axi_card_hbm_p2_araddr   ) ,
       .m_axi_card_hbm_p2_arburst            ( act_axi_card_hbm_p2_arburst  ) ,
       .m_axi_card_hbm_p2_arcache            ( act_axi_card_hbm_p2_arcache  ) ,
@@ -2256,7 +2258,7 @@ module framework_afu (
       .m_axi_card_hbm_p11_wstrb              ( act_axi_card_hbm_p11_wstrb    ) ,
       .m_axi_card_hbm_p11_wuser              (                            ) ,
       .m_axi_card_hbm_p11_wvalid             ( act_axi_card_hbm_p11_wvalid   ) ,
-
+*/
 `endif
 `endif
 
@@ -3177,7 +3179,7 @@ block_RAM block_ram_i1
       .s_axi_p1_HBM_rlast       ( act_axi_card_hbm_p1_rlast     ) ,
       .s_axi_p1_HBM_rvalid      ( act_axi_card_hbm_p1_rvalid    ) ,
       .s_axi_p1_HBM_rready      ( act_axi_card_hbm_p1_rready    ) ,
-
+/*
       .s_axi_p2_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p2_HBM_awaddr      ( act_axi_card_hbm_p2_awaddr    ) ,
       .s_axi_p2_HBM_awlen       ( act_axi_card_hbm_p2_awlen     ) ,
@@ -3567,7 +3569,7 @@ block_RAM block_ram_i1
       .s_axi_p11_HBM_rlast       ( act_axi_card_hbm_p11_rlast     ) ,
       .s_axi_p11_HBM_rvalid      ( act_axi_card_hbm_p11_rvalid    ) ,
       .s_axi_p11_HBM_rready      ( act_axi_card_hbm_p11_rready    ) ,
-
+*/
 //common signals
       .apb_complete             ( hbm_ctrl_apb_complete       ) ,
       .cresetn                  ( hbm_ctrl_reset_n            ) ,
@@ -3582,6 +3584,7 @@ assign  act_axi_card_hbm_p0_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 :
 assign  act_axi_card_hbm_p0_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p1_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p1_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
+/*
 assign  act_axi_card_hbm_p2_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p2_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p3_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
@@ -3602,9 +3605,9 @@ assign  act_axi_card_hbm_p10_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 
 assign  act_axi_card_hbm_p10_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p11_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p11_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
+*/
 
-
-// if HBM + (AD9H3 or AD9H7) : resets the logoc before HBM
+// if HBM + (AD9H3 or AD9H7) : resets the logic before HBM
 assign hbm_ctrl_reset_n = hbm_ctrl_apb_complete & ~reset_action_q;
 
 

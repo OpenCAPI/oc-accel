@@ -122,7 +122,7 @@ while [ -z "$SETUP_DONE" ]; do
     elif [ ! -d "$OCSE_ROOT" ]; then
       SETUP_WARNING="$SETUP_WARNING\n### WARNING ### Path to OCSE not set properly."
       SETUP_WARNING="$SETUP_WARNING\n    For simulation please clone OpenCAPI Simulation Environment (OCSE)"
-      SETUP_WARNING="$SETUP_WARNING\n    from https://github.com/xxxxxxxxx/ocse FIXME!!"
+      SETUP_WARNING="$SETUP_WARNING\n    from https://github.com/OpenCAPI/ocse"
       SETUP_WARNING="$SETUP_WARNING\n    and let \$OCSE_ROOT point to it."
       SETUP_WARNING="$SETUP_WARNING\n    Please set Simulator to 'nosim' if you do not intend to run simulation."
     fi

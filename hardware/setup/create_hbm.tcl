@@ -20,9 +20,12 @@ set vivadoVer    [version -short]
 set root_dir    $::env(SNAP_HARDWARE_ROOT)
 set denali_used $::env(DENALI_USED)
 set fpga_part   $::env(FPGACHIP)
+set fpga_card   $::env(FPGACARD)
 set log_dir     $::env(LOGS_DIR)
 set log_file    $log_dir/create_hbm_host.log
 
+# user can set a specific value for the Action clock lower than the 250MHz nominal clock
+# as of now, only 3 clock frequencies are enabled in this file: 200MHz, 225MHz and 250MHz
 # At this time, only AXI Action clock which can be used is the 200MHz nominal clock
 set action_clock_freq "200MHz"
 #overide default value if variable exist
@@ -35,7 +38,7 @@ set bd_name  hbm_top
 # _______________________________________________________________________________
 # In this file, we define all the logic to have independent 256MB/2Gb memories
 # each with an independent AXI interfaces which will be connected to the action
-# Default is HBM_MEM_NUM = 2 interfaces
+# Default is HBM_MEM_NUM = 8 interfaces
 # TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
 # param and 1) change HBM_MEM_NUM value
 # with a value between 1 and 16. If you need more memories, you need to add the 2nd stack
@@ -48,7 +51,7 @@ set bd_name  hbm_top
 #   --> follow HBM names <--
 # _______________________________________________________________________________
 #CHANGE_HBM_INTERFACES_NUMBER
-set  HBM_MEM_NUM 12
+set  HBM_MEM_NUM 2
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -89,14 +92,14 @@ set_property -dict [list CONFIG.CONST_WIDTH {32} CONFIG.CONST_VAL {0}] [get_bd_c
 
 #====================
 #create the clocks and the reset signals for the design
-create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_bufg_div2
-set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {2}] [get_bd_cells refclk_bufg_div2]
+create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_bufg_apb_clk
+set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {2}] [get_bd_cells refclk_bufg_apb_clk]
 
 #====================
-connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins refclk_bufg_div2/BUFGCE_CLR]
-connect_bd_net [get_bd_pins constant_1_one/dout] [get_bd_pins refclk_bufg_div2/BUFGCE_CE]
+connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_CLR]
+connect_bd_net [get_bd_pins constant_1_one/dout] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_CE]
 
-#ARESETN is used for HBM reset 
+#ARESETN is used for HBM reset
 set port [create_bd_port -dir I ARESETN]
 #CRESETN is used for converters reset 
 set port [create_bd_port -dir I CRESETN]
@@ -108,8 +111,11 @@ set port [create_bd_port -dir I CRESETN]
 set cell [create_bd_cell -quiet -type ip -vlnv {xilinx.com:ip:hbm:*} hbm]
 
 #Common params for the HBM not depending on the number of memories enabled
-# The reference clock provided to HBM is at 200MHz
-# and HBM IP logic generates internally the 900MHz which HBM operates at
+# The reference clock provided to HBM is AXI clock
+#  AXI clk = 200MHz => HBM refclk = 900MHz
+#  AXI clk = 225MHz => HBM refclk = 875MHz
+#  AXI clk = 250MHz => HBM refclk = 875MHz
+#LEFT stack is used for SNAP/CAPI2.0 since BSP/PSL logic is using right resources of the FPGA
 
 #Setting for Production chips: HBM_REF_CLK=200MHz
 set_property -dict [list                               \
@@ -117,9 +123,18 @@ set_property -dict [list                               \
   CONFIG.USER_HBM_STACK {1}                            \
   CONFIG.USER_AUTO_POPULATE {yes}                      \
   CONFIG.USER_SWITCH_ENABLE_00 {FALSE}                 \
-  CONFIG.USER_SINGLE_STACK_SELECTION {RIGHT}           \
   ] $cell >> $log_file
 
+
+if { $fpga_card == "AD9H3" } {
+set_property -dict [list                               \
+  CONFIG.USER_SINGLE_STACK_SELECTION {RIGHT}           \
+  ] $cell >> $log_file
+} else {
+set_property -dict [list                               \
+  CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}            \
+  ] $cell >> $log_file
+}
 
 # AXI clk is 200MHZ and is used as HBM_ref_clk 
 # AXI clk divided by 2 is used by APB_clock (50-100MHz)
@@ -169,20 +184,19 @@ set_property -dict [list                               \
 #== ALL PARAMETERS BELOW DEPEND ON THE NUMBER OF HBM MEMORIES YOU WANT TO USE ==
 #===============================================================================
 #Define here the configuration you request 
-#   
+#
 #CHANGE_HBM_INTERFACES_NUMBER
-#  CONFIG.USER_MEMORY_DISPLAY {1024}  => set the value to 512 by MC used (1024 = 2 MC used)
+#  CONFIG.USER_MEMORY_DISPLAY {2048}  => set the value to 512 by MC used (2048 = 4 MC used)
 #  CONFIG.USER_MC_ENABLE_00 {TRUE}    => enable/disable the MC
-#  CONFIG.USER_SAXI_00 {true}         => enable/disable each of the AXI interface/HBM memory
 set_property -dict [list \
-  CONFIG.USER_MEMORY_DISPLAY {3072}  \
+  CONFIG.USER_MEMORY_DISPLAY {512}  \
   CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}  \
   CONFIG.USER_MC_ENABLE_00 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_01 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_02 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_03 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_04 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_05 {TRUE}  \
+  CONFIG.USER_MC_ENABLE_01 {FALSE}  \
+  CONFIG.USER_MC_ENABLE_02 {FALSE}  \
+  CONFIG.USER_MC_ENABLE_03 {FALSE}  \
+  CONFIG.USER_MC_ENABLE_04 {FALSE}  \
+  CONFIG.USER_MC_ENABLE_05 {FALSE}  \
   CONFIG.USER_MC_ENABLE_06 {FALSE}  \
   CONFIG.USER_MC_ENABLE_07 {FALSE}  \
 ] $cell >> $log_file
@@ -195,7 +209,7 @@ connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_0_PSEL]  
 connect_bd_net [get_bd_pins constant_32_zero/dout] [get_bd_pins hbm/APB_0_PWDATA] >> $log_file
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_0_PWRITE]  >> $log_file
 
-connect_bd_net [get_bd_pins refclk_bufg_div2/BUFGCE_O] [get_bd_pins hbm/APB_0_PCLK]
+connect_bd_net [get_bd_pins refclk_bufg_apb_clk/BUFGCE_O] [get_bd_pins hbm/APB_0_PCLK]
 connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/APB_0_PRESET_N]
 
 #======
@@ -218,16 +232,17 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
   
 
   #create the axi_register_slice converters
+  #REG param is set to 10 for SLR crossing and 15 for multi-SLR crossing (auto pipeline)
   set cell [create_bd_cell -type ip -vlnv {xilinx.com:ip:axi_register_slice:*} axi_register_slice_$i ]
   set_property -dict {     \
     CONFIG.ADDR_WIDTH {34}              \
     CONFIG.DATA_WIDTH {256}             \
     CONFIG.ID_WIDTH {6}                 \
-    CONFIG.REG_AW {10}                  \
-    CONFIG.REG_AR {10}                  \
-    CONFIG.REG_W {10}                   \
-    CONFIG.REG_R {10}                   \
-    CONFIG.REG_B {10}                   \
+    CONFIG.REG_AW {15}                  \
+    CONFIG.REG_AR {15}                  \
+    CONFIG.REG_W {15}                   \
+    CONFIG.REG_R {15}                   \
+    CONFIG.REG_B {15}                   \
     }  $cell
 
   #create the ports
@@ -252,7 +267,7 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
   connect_bd_net $port [get_bd_pins axi4_to_axi3_$i/aclk]
   connect_bd_net [get_bd_pins CRESETN] [get_bd_pins axi4_to_axi3_$i/aresetn]
   
-  #connect aaxi4_to_axi3 to axi_register_slice
+  #connect axi4_to_axi3 to axi_register_slice
   connect_bd_net [get_bd_ports CRESETN] [get_bd_pins axi_register_slice_$i\/aresetn]
   connect_bd_net [get_bd_ports S_AXI_p$i\_HBM_ACLK] [get_bd_pins axi_register_slice_$i\/aclk]
   connect_bd_intf_net [get_bd_intf_pins axi4_to_axi3_$i/M_AXI] [get_bd_intf_pins axi_register_slice_$i/S_AXI]
@@ -268,13 +283,12 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
     connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
   }
-
 }
 #--------------------- end loop ------------------
 
 #This line need to be added after the loop since the S_AXI_p0_HBM_ACLK is not defined before
 connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_0] [get_bd_pins S_AXI_p0_HBM_ACLK]
-connect_bd_net [get_bd_ports S_AXI_p0_HBM_ACLK] [get_bd_pins refclk_bufg_div2/BUFGCE_I]
+connect_bd_net [get_bd_ports S_AXI_p0_HBM_ACLK] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_I]
 
 assign_bd_address >> $log_file
 
@@ -288,6 +302,7 @@ save_bd_design >> $log_file
 # It is important that this are Verilog files and set the synth_checkpoint_mode to None (Global synthesis) before generating targets
 puts "                        generating HBM output products"
 set_property synth_checkpoint_mode None [get_files  $root_dir/ip/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd] >> $log_file
+
 #comment following line if you want to debug this file
 generate_target all                     [get_files  $root_dir/ip/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd] >> $log_file
 

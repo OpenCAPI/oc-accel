@@ -23,7 +23,8 @@ set fpga_part   $::env(FPGACHIP)
 set log_dir     $::env(LOGS_DIR)
 set log_file    $log_dir/create_hbm_host.log
 
-# At this time user can use only AXI Action clock set to the 200MHz nominal clock
+# user can set a specific value for the Action clock lower than the 250MHz nominal clock
+# as of now, only 3 clock frequencies are enabled in this file: 200MHz, 225MHz and 250MHz
 set action_clock_freq "200MHz"
 #overide default value if variable exist
 #set action_clock_freq $::env(FPGA_ACTION_CLK)
@@ -48,7 +49,7 @@ set bd_name  hbm_top
 #   --> follow HBM names <--
 # _______________________________________________________________________________
 #CHANGE_HBM_INTERFACES_NUMBER
-set  HBM_MEM_NUM 12
+set  HBM_MEM_NUM 2
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -121,19 +122,33 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
       CONFIG.DATA_WIDTH {256}                \
   ] [get_bd_intf_ports S_AXI_p$i\_HBM]
   
-  if { $action_clock_freq == "225MHZ" } {
+  if { $action_clock_freq == "200MHZ" } {
+    set_property -dict [list CONFIG.FREQ_HZ {200000000} ] [get_bd_intf_ports S_AXI_p$i\_HBM]
+  } elseif { $action_clock_freq == "225MHZ" } {
     set_property -dict [list CONFIG.FREQ_HZ {225000000} ] [get_bd_intf_ports S_AXI_p$i\_HBM]
   } else {
-    set_property -dict [list CONFIG.FREQ_HZ {200000000} ] [get_bd_intf_ports S_AXI_p$i\_HBM]
+    set_property -dict [list CONFIG.FREQ_HZ {250000000} ] [get_bd_intf_ports S_AXI_p$i\_HBM]
   }
 
   connect_bd_intf_net [get_bd_intf_ports S_AXI_p$i\_HBM] [get_bd_intf_pins axi_bram_ctrl_$i/S_AXI]
 
   if { ($vivadoVer >= "2019.2")} {
-    set port [create_bd_port -dir I -type clk -freq_hz 200000000 S_AXI_p$i\_HBM_ACLK]
+    if { $action_clock_freq == "200MHZ" } {
+      set port [create_bd_port -dir I -type clk -freq_hz 200000000 S_AXI_p$i\_HBM_ACLK]
+    } elseif { $action_clock_freq == "225MHZ" } {
+      set port [create_bd_port -dir I -type clk -freq_hz 225000000 S_AXI_p$i\_HBM_ACLK]
+    } else {
+      set port [create_bd_port -dir I -type clk -freq_hz 250000000 S_AXI_p$i\_HBM_ACLK]
+    }
   } else {
     set port [create_bd_port -dir I -type clk S_AXI_p$i\_HBM_ACLK]
-    set_property {CONFIG.FREQ_HZ} {200000000} $port
+    if { $action_clock_freq == "200MHZ" } {
+      set_property {CONFIG.FREQ_HZ} {200000000} $port
+    } elseif { $action_clock_freq == "225MHZ" } {
+      set_property {CONFIG.FREQ_HZ} {225000000} $port
+    } else {
+      set_property {CONFIG.FREQ_HZ} {250000000} $port
+    }
   }
   connect_bd_net $port [get_bd_pins axi_bram_ctrl_$i/s_axi_aclk]
   
