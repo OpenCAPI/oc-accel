@@ -118,10 +118,10 @@ static void* snap_open (struct mdev_ctx* mctx)
                   device);
 	VERBOSE0("  => Make sure an FPGA card with proper OpenCAPI bin and cable is connected\n");
 	VERBOSE0("  => Check all cards availability with $SNAP_ROOT/software/tools/oc_find_card -v -AALL\n");
-        VERBOSE0("  => Otherwise you might try with \"sudo\" or adjust Root rights\n");
+	VERBOSE0("  => Otherwise you might try with \"sudo\" or adjust Root rights\n");
 	VERBOSE0("     to set rights, you may permanently: \n");
 	VERBOSE0("       create a /etc/udev/rules.d/20-ocaccel.rules file including:\n");
-        VERBOSE0("       SUBSYSTEM==\"ocxl\", DEVPATH==\"*/ocxl/IBM,oc-snap*\", MODE=\"666\", RUN=\"/bin/chmod 666 %%S/%\%p/global_mmio_area\" and reboot \n");
+	VERBOSE0("       SUBSYSTEM==\"ocxl\", DEVPATH==\"*/ocxl/IBM,oc-snap*\", MODE=\"666\", RUN=\"/bin/chmod 666 %%S/%\%p/global_mmio_area\" and reboot \n");
 	}
 
     return handle;
