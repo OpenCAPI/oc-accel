@@ -909,7 +909,7 @@ class bfm_seq_rd_wr_10_size7_len31_randid_rand_resp extends bfm_sequence_base;
         write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<10; num++)begin
-            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h31;wr_len==8'h31;});
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h1F;wr_len==8'h1F;});
             read_addr+=axi_item.rd_adr_var;
             write_addr+=axi_item.wr_adr_var;
             rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);
@@ -1092,7 +1092,7 @@ class bfm_seq_rd_wr_1024_size7_len31_randid_rand_resp extends bfm_sequence_base;
         write_addr={axi_item.write_addr_high[31:0],axi_item.write_addr_low[31:0]};
 
         for(int num=0; num<1024; num++)begin
-            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h31;wr_len==8'h31;});
+            void'(axi_item.randomize()with{rd_size==3'h7;wr_size==3'h7;rd_len==8'h1F;wr_len==8'h1F;});
             read_addr+=axi_item.rd_adr_var;
             write_addr+=axi_item.wr_adr_var;
             rd_block_byte=(1<<axi_item.rd_size)*(axi_item.rd_len+1);

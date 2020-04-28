@@ -21,6 +21,11 @@ module brdg_interrupt (
                        input                 clk              ,
                        input                 rst_n            ,
 
+                       //---- configuration --------------------------------------
+                       input      [011:0]    cfg_actag_base   ,
+                       input      [019:0]    cfg_pasid_base   ,
+                       input      [019:0]    cfg_pasid_mask   ,
+
                        //---- backoff time countdown time limit ------------------
                        input      [003:0]    backoff_limit    ,
 
@@ -31,12 +36,15 @@ module brdg_interrupt (
                        output                interrupt_ack    ,
                        input                 interrupt        ,
                        input      [063:0]    interrupt_src    ,
+                       input      [008:0]    interrupt_ctx    ,
 
                        //---- TLX interface --------------------------------------
                        output reg            tlx_cmd_valid    ,
                        output reg [067:0]    tlx_cmd_obj      ,
                        output reg [015:0]    tlx_cmd_afutag   ,     
                        output reg [007:0]    tlx_cmd_opcode   ,
+                       output reg [0019:0]   tlx_cmd_pasid    ,
+                       output reg [0011:0]   tlx_cmd_actag    ,
                        input                 tlx_rsp_valid    ,
                        input      [015:0]    tlx_rsp_afutag   ,
                        input      [007:0]    tlx_rsp_opcode   ,
@@ -108,6 +116,19 @@ module brdg_interrupt (
        tlx_cmd_obj    <= {4'd0, interrupt_src_sync};
        tlx_cmd_afutag <= {2'b11, 14'd0};
        tlx_cmd_opcode <= AFU_TLX_CMD_ENCODE_INTRP_REQ;
+     end
+
+//---- interrupt pasid and actag ----
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n) 
+     begin
+       tlx_cmd_pasid <= 20'd0;
+       tlx_cmd_actag <= 12'd0; 
+     end
+   else
+     begin
+       tlx_cmd_pasid <= ((cfg_pasid_base & cfg_pasid_mask) | ({{(20-`CTXW){1'd0}}, interrupt_ctx} & ~cfg_pasid_mask));
+       tlx_cmd_actag <= cfg_actag_base + {{(12-`CTXW){1'd0}}, interrupt_ctx}; 
      end
 
 //---- TLX response ----

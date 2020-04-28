@@ -113,8 +113,14 @@ static void* snap_open (struct mdev_ctx* mctx)
     VERBOSE3 ("[%s] Exit %p\n", __func__, handle);
 
     if (NULL == handle)
-        VERBOSE0 ("Error: Can not open CAPI-SNAP Device: %s\n",
+        {
+	VERBOSE0 ("Error: Can not open CAPI-SNAP Device: %s\n",
                   device);
+        VERBOSE0("  => You might try sudo or adjust Root rights\n");
+	VERBOSE0("     to set rights, you may permanently \n");
+	VERBOSE0 ("     create a /etc/udev/rules.d/20-ocaccel.rules file including:\n");
+        VERBOSE0 ("     SUBSYSTEM==\"ocxl\", DEVPATH==\"*/ocxl/IBM,oc-snap*\", MODE=\"666\", RUN=\"/bin/chmod 666 %%S/%\%p/global_mmio_area\" and reboot \n");
+	}
 
     return handle;
 }

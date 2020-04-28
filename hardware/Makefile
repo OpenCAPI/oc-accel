@@ -138,7 +138,9 @@ check_snap_settings:
 	@echo "                        HLS_SUPPORT     = $(HLS_SUPPORT)"
 	@echo "                        BRAM_USED       = $(BRAM_USED)"
 	@echo "                        SDRAM_USED      = $(SDRAM_USED)"
+	@echo "                        HBM_USED        = $(HBM_USED)"
 	@echo "                        NVME_USED       = $(NVME_USED)"
+	@echo "                        -----------------------"
 	@echo "                        ILA_DEBUG       = $(ILA_DEBUG)"
 	@echo "                        FLASH_USED      = $(FLASH_USED)"
 	@echo "                        FLASH_INTERFACE = $(FLASH_INTERFACE)"
@@ -246,6 +248,9 @@ create_project: snap_preprocess
 	@echo -e "[CREATE PROJECT......] done  `date +"%T %a %b %d %Y"`"
 
 hw_project_start:
+	@echo -e "======================================================="
+	@echo -e "== Precompiling the Action logic                     =="
+	@echo -e "======================================================="
 	@echo -e "[HW PROJECT..........] start `date +"%T %a %b %d %Y"`"
 
 #The difference between sim_project and hw_project is:
@@ -384,6 +389,9 @@ nosim:
 	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`"
 	@echo -e "                        Info: Not building a simulation model, since SIMULATOR is set to \"nosim\"";
 	@echo -e "[BUILD $@ MODEL....] done  `date +"%T %a %b %d %Y"`"
+	@echo "-----------"
+	@echo "  Suggested next step: to run a simulation, execute: make sim"
+
 
 ifeq ($(UNIT_SIM_USED),TRUE)
 $(SNAP_SIMULATORS):  .sim_project_done
@@ -406,6 +414,8 @@ $(SNAP_SIMULATORS):  .sim_project_done
 		fi
 	@touch .model_$@
 	@echo -e "[BUILD $@ MODEL....] done  `date +"%T %a %b %d %Y"`"
+	@echo "-----------"
+	@echo "  Suggested next step: to run a simulation, execute: make sim"
 
 else
 $(SNAP_SIMULATORS):  .sim_project_done app
@@ -428,6 +438,8 @@ $(SNAP_SIMULATORS):  .sim_project_done app
 		fi
 	@touch .model_$@
 	@echo -e "[BUILD $@ MODEL....] done  `date +"%T %a %b %d %Y"`"
+	@echo "-----------"
+	@echo "  Suggested next step: to run a simulation, execute: make sim"
 endif
 
 $(SNAP_MODELS):
@@ -452,7 +464,8 @@ sim: check_simulator
 	@echo "                        SIMULATOR is set to $(SIMULATOR)"
 	@if [ "$(SIMULATOR)" != "nosim" ]; then cd sim; ./run_sim; fi
 	@echo -e "[SIMULATION........] done  `date +"%T %a %b %d %Y"`"
-	@echo " To display traces, execute: ./display_traces"
+	@echo "-----------"
+	@echo "  Suggested next step: to display waveforms, execute: ./display_traces"
 
 sim_tmux:
 	@tmux new-session "$(MAKE) -s sim"

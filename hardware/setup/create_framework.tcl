@@ -137,7 +137,7 @@ set_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.ARGS.DIRECTIVE Explore [get_runs i
 
 #set_property STEPS.WRITE_BITSTREAM.TCL.PRE  $root_dir/oc-bip/board_support_packages/$fpga_card_lcase/xdc/snap_bitstream_pre.tcl  [get_runs impl_1]
 # this tcl is generated from Makefile
-set_property STEPS.WRITE_BITSTREAM.TCL.POST $root_dir/setup/snap_bitstream_post.tcl [get_runs impl_1]
+set_property STEPS.WRITE_BITSTREAM.TCL.POST $root_dir/setup/snap_bitstream_post.tcl [get_runs impl_1] >> $log_file
 
 # Add Files
 puts "                        importing design files"
@@ -238,7 +238,7 @@ if { $unit_sim_used == "TRUE" } {
     # Add board specific IP
     foreach ip_xci [glob -nocomplain -dir $card_ip_dir */*.xci] {
       set ip_name [exec basename $ip_xci .xci]
-      puts "                   adding IP $ip_name"
+      puts "                        adding IP $ip_name"
       add_files -norecurse   $ip_xci  -force >> $log_file
       set_property generate_synth_checkpoint false [get_files $ip_xci]
     }

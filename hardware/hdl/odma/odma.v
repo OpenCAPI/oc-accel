@@ -412,12 +412,12 @@ odma_registers #(
                
 // Interface between dsc_manager and lcl_rd_arbiter
 wire                dsc_lcl_rd_valid;      
-wire [0063:0]        dsc_lcl_rd_ea;         
+wire [0063:0]       dsc_lcl_rd_ea;         
 wire [IDW - 1:0]    dsc_lcl_rd_axi_id;     
 wire                dsc_lcl_rd_first;      
 wire                dsc_lcl_rd_last;       
 wire [0127:0]       dsc_lcl_rd_be;         
-wire [0008:0]        dsc_lcl_rd_ctx;        
+wire [0008:0]       dsc_lcl_rd_ctx;        
 wire                dsc_lcl_rd_ctx_valid;  
 wire                dsc_lcl_rd_ready;      
 wire                dsc_lcl_rd_data_valid; 
@@ -494,6 +494,8 @@ odma_descriptor_manager descriptor_manager (
          /*output               */         .lcl_rd_last        ( dsc_lcl_rd_last        ),
          /*output               */         .lcl_rd_first       ( dsc_lcl_rd_first       ),
          /*output     [0127:0]  */         .lcl_rd_be          ( dsc_lcl_rd_be          ),
+         /*output               */         .lcl_rd_ctx_valid   ( dsc_lcl_rd_ctx_valid   ),
+         /*output     [0008:0]  */         .lcl_rd_ctx         ( dsc_lcl_rd_ctx         ),
          /*input                */         .lcl_rd_ready       ( dsc_lcl_rd_ready       ),
          /*input                */         .lcl_rd_data_valid  ( dsc_lcl_rd_data_valid  ),
          /*input      [0004:0]  */         .lcl_rd_data_axi_id ( dsc_lcl_rd_data_axi_id ),
@@ -640,7 +642,9 @@ wire [IDW - 1:0]     cmp_lcl_wr_axi_id;
 wire [0127:0]        cmp_lcl_wr_be;        
 wire                 cmp_lcl_wr_first;     
 wire                 cmp_lcl_wr_last;      
-wire [1023:0]        cmp_lcl_wr_data;      
+wire [1023:0]        cmp_lcl_wr_data; 
+wire                 cmp_lcl_wr_ctx_valid;
+wire [0008:0]        cmp_lcl_wr_ctx;
 wire                 cmp_lcl_wr_ready;     
 wire                 cmp_lcl_wr_rsp_valid; 
 wire [IDW - 1:0]     cmp_lcl_wr_rsp_axi_id;
@@ -701,6 +705,8 @@ odma_completion_manager completion_manager (
          /*output               */          .lcl_wr_first      ( cmp_lcl_wr_first         ),
          /*output               */          .lcl_wr_last       ( cmp_lcl_wr_last          ),
          /*output     [1023:0]  */          .lcl_wr_data       ( cmp_lcl_wr_data          ),
+         /*output               */          .lcl_wr_ctx_valid  ( cmp_lcl_wr_ctx_valid     ),
+         /*output     [0008:0]  */          .lcl_wr_ctx        ( cmp_lcl_wr_ctx           ),
          /*input                */          .lcl_wr_ready      ( cmp_lcl_wr_ready         ),
          /*input                */          .lcl_wr_rsp_valid  ( cmp_lcl_wr_rsp_valid     ),
          /*input      [0004:0]  */          .lcl_wr_rsp_axi_id ( cmp_lcl_wr_rsp_axi_id    ),
@@ -916,7 +922,9 @@ wire [IDW - 1:0]     mm_lcl_wr_axi_id;
 wire [0127:0]        mm_lcl_wr_be;        
 wire                 mm_lcl_wr_first;     
 wire                 mm_lcl_wr_last;      
-wire [1023:0]        mm_lcl_wr_data;      
+wire [1023:0]        mm_lcl_wr_data;     
+wire                 mm_lcl_wr_ctx_valid;
+wire [8:0]           mm_lcl_wr_ctx;
 wire                 mm_lcl_wr_ready;     
 wire                 mm_lcl_wr_rsp_valid; 
 wire [IDW - 1:0]     mm_lcl_wr_rsp_axi_id;
@@ -930,7 +938,9 @@ wire [IDW - 1:0]     st_lcl_wr_axi_id;
 wire [0127:0]        st_lcl_wr_be;        
 wire                 st_lcl_wr_first;     
 wire                 st_lcl_wr_last;      
-wire [1023:0]        st_lcl_wr_data;      
+wire [1023:0]        st_lcl_wr_data;
+wire                 st_lcl_wr_ctx_valid;
+wire [8:0]           st_lcl_wr_ctx;
 wire                 st_lcl_wr_ready;     
 wire                 st_lcl_wr_rsp_valid; 
 wire [IDW - 1:0]     st_lcl_wr_rsp_axi_id;
