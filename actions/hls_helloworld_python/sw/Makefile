@@ -95,6 +95,9 @@ pywrap:
 
 #LD_LIBRARY_PATH=/tools/projects/ocse/libocxl/ python3 -c "import snap_helloworld_python"
 
+cleanl: clean
+	rm -f *.so
+
 # If you have the host code outside of the default snap directory structure, 
 # change to /path/to/snap/actions/software.mk
 include $(SNAP_ROOT)/actions/software.mk

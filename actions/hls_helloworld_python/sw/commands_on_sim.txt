@@ -1,16 +1,16 @@
 oc_maint -vvv
 
-LD_LIBRARY_PATH=/tools/projects/ocse/libocxl/ python3
-LD_LIBRARY_PATH=/home/did/projects/ocse/libocxl/ python3
+LD_LIBRARY_PATH=$OCSE_ROOT/libocxl/ python3
+#LD_LIBRARY_PATH=/home/did/projects/ocse/libocxl/ python3
 
 import sys
+import os
 
-sys.path.append("/tools/projects/oc-accel_did/actions/hls_helloworld_python/sw")
-sys.path.append("/home/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
-sys.path.append("/dataL/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
-sys.path.append("/dataL/did9/oc-accel_did/actions/hls_helloworld_python/sw")
+#sys.path.append("/home/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
 
-
+snap_action_sw=os.environ['SNAP_ROOT'] + "/actions/hls_helloworld_python/sw"
+print(snap_action_sw)
+sys.path.append(snap_action_sw)
 
 import snap_helloworld_python
  
@@ -38,6 +38,6 @@ oc_maint -vvv
 
 cp -r ../../../../actions/hls_helloworld_python/sw/* .
 
-jupyter notebook
+jupyter notebook trieres_helloworld_cosim.ipynb
 
-(then follow instrunctions on notebook)
+(then follow instrunctions on notebook: Select every cell and run it with Ctrl+D)
