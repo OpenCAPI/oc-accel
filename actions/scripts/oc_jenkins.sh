@@ -66,10 +66,11 @@ function test_all_actions() # $1 = card, $2 = accel
 	for action in $MY_ACTION ; do
 		run_test=1;
 		case $action in
-		*"10142000")
-			test_10142000 $card $accel
-			RC=$?
-			run_test=0
+		*"10142000") # HDL Example
+			cmd="./actions/hdl_example/tests/hw_test.sh"
+			#test_10142000 $card $accel
+			#RC=$?
+			#run_test=0
 		;;
 		*"10142002") # HDL NVMe example
 			cmd="./actions/hdl_single_engine/tests/hw_general_test.sh"
