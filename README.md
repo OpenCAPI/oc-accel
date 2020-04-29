@@ -22,3 +22,6 @@ By default the git repository is read-only. Users can fork the snap repository, 
 Even members with write access to this repository can't commit directly into the protected master branch. To contribute changes, please create a branch, make the changes there and issue a pull request.
 
 Pull requests to merge into the master branch must be reviewed before they will be merged.
+
+# Ignore
+Caution: .gitmodules points to LanceThompson/OpenCAPI3.0_Client_RefDesign branch workflow_lt
