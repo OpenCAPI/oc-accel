@@ -136,9 +136,9 @@ echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy.log
 echo
 
-#### MEMCOPY to and from CARD DDR #############
+#### MEMCOPY to and from CARD LOCAL MEMORY (DDR or HBM) #####
 
-function test_memcopy_with_ddr {
+function test_memcopy_with_local_mem {
     local size=$1
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
@@ -146,7 +146,7 @@ function test_memcopy_with_ddr {
     echo -n "Doing snap_memcopy to ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card}  ${noirq}  \
         -i ${size}_B.bin    \
-        -d 0x0 -D CARD_DRAM >>  \
+        -d 0x0 -D LCL_MEM0 >>  \
         snap_memcopy_with_ddr.log 2>&1"
     echo ${cmd} >> snap_memcopy_with_ddr.log
     eval ${cmd}
@@ -159,7 +159,7 @@ function test_memcopy_with_ddr {
     echo -n "Doing snap_memcopy from ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card}   ${noirq} \
         -o ${size}_B.out    \
-        -a 0x0 -A CARD_DRAM -s ${size} >>  \
+        -a 0x0 -A LCL_MEM0 -s ${size} >>  \
         snap_memcopy_with_ddr.log 2>&1"
     echo ${cmd} >> snap_memcopy_with_ddr.log
     eval ${cmd}
@@ -188,13 +188,13 @@ touch snap_memcopy_with_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
     for (( size=64; size<512; size*=2 )); do
-    test_memcopy_with_ddr ${size}
+    test_memcopy_with_local_mem ${size}
     done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
     for (( size=64; size<65536; size*=2 )); do
-    test_memcopy_with_ddr ${size}
+    test_memcopy_with_local_mem ${size}
     done
 fi
 
