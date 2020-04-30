@@ -81,16 +81,16 @@ short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
 }
 short write_burst_of_data_to_HBM(snap_membus_256_t *d_hbm_p0,
 				 snap_membus_256_t *d_hbm_p1,
-				 //snap_membus_256_t *d_hbm_p2,
-				 //snap_membus_256_t *d_hbm_p3,
-				 //snap_membus_256_t *d_hbm_p4,
-				 //snap_membus_256_t *d_hbm_p5,
-				 //snap_membus_256_t *d_hbm_p6,
-				 //snap_membus_256_t *d_hbm_p7,
-				 //snap_membus_256_t *d_hbm_p8,
-				 //snap_membus_256_t *d_hbm_p9,
-				 //snap_membus_256_t *d_hbm_p10,
-				 //snap_membus_256_t *d_hbm_p11,
+				 snap_membus_256_t *d_hbm_p2,
+				 snap_membus_256_t *d_hbm_p3,
+				 snap_membus_256_t *d_hbm_p4,
+				 snap_membus_256_t *d_hbm_p5,
+				 snap_membus_256_t *d_hbm_p6,
+				 snap_membus_256_t *d_hbm_p7,
+				 snap_membus_256_t *d_hbm_p8,
+				 snap_membus_256_t *d_hbm_p9,
+				 snap_membus_256_t *d_hbm_p10,
+				 snap_membus_256_t *d_hbm_p11,
 				 snapu16_t memory_type,
 				 snapu64_t output_address,
 				 snap_membus_256_t *buffer256,
@@ -109,7 +109,6 @@ short write_burst_of_data_to_HBM(snap_membus_256_t *d_hbm_p0,
                     buffer256, size_in_bytes_to_transfer);
                 rc = 0;
                 break;
-/*
        case SNAP_ADDRTYPE_HBM_P2:
                 memcpy((snap_membus_256_t  *) (d_hbm_p2 + output_address),
                        buffer256, size_in_bytes_to_transfer);
@@ -140,6 +139,7 @@ short write_burst_of_data_to_HBM(snap_membus_256_t *d_hbm_p0,
                        buffer256, size_in_bytes_to_transfer);
                 rc =  0;
                 break;
+
         case SNAP_ADDRTYPE_HBM_P8:
                 memcpy((snap_membus_256_t  *) (d_hbm_p8 + output_address),
                        buffer256, size_in_bytes_to_transfer);
@@ -160,7 +160,7 @@ short write_burst_of_data_to_HBM(snap_membus_256_t *d_hbm_p0,
                        buffer256, size_in_bytes_to_transfer);
                 rc =  0;
                 break;
-*/
+
         case SNAP_ADDRTYPE_UNUSED: /* no copy but with rc =0 */
                 rc =  0;
                 break;
@@ -197,16 +197,16 @@ short read_burst_of_data_from_mem(snap_membus_1024_t *din_gmem,
 }
 short read_burst_of_data_from_HBM(snap_membus_256_t *d_hbm_p0,
 				  snap_membus_256_t *d_hbm_p1,
-				  //snap_membus_256_t *d_hbm_p2,
-				  //snap_membus_256_t *d_hbm_p3,
-				  //snap_membus_256_t *d_hbm_p4,
-				  //snap_membus_256_t *d_hbm_p5,
-				  //snap_membus_256_t *d_hbm_p6,
-				  //snap_membus_256_t *d_hbm_p7,
-				  //snap_membus_256_t *d_hbm_p8,
-				  //snap_membus_256_t *d_hbm_p9,
-				  //snap_membus_256_t *d_hbm_p10,
-				  //snap_membus_256_t *d_hbm_p11,
+				  snap_membus_256_t *d_hbm_p2,
+				  snap_membus_256_t *d_hbm_p3,
+				  snap_membus_256_t *d_hbm_p4,
+				  snap_membus_256_t *d_hbm_p5,
+				  snap_membus_256_t *d_hbm_p6,
+				  snap_membus_256_t *d_hbm_p7,
+				  snap_membus_256_t *d_hbm_p8,
+				  snap_membus_256_t *d_hbm_p9,
+				  snap_membus_256_t *d_hbm_p10,
+				  snap_membus_256_t *d_hbm_p11,
 				  snapu16_t memory_type,
 				  snapu64_t input_address_256,
 				  snap_membus_256_t *buffer256,
@@ -227,7 +227,6 @@ short read_burst_of_data_from_HBM(snap_membus_256_t *d_hbm_p0,
                      size_in_bytes_to_transfer);
        		rc =  0;
                 break;
-/*
         case SNAP_ADDRTYPE_HBM_P2:
                 memcpy(buffer256, (snap_membus_256_t  *) (d_hbm_p2 + input_address_256),
                      size_in_bytes_to_transfer);
@@ -258,6 +257,7 @@ short read_burst_of_data_from_HBM(snap_membus_256_t *d_hbm_p0,
                      size_in_bytes_to_transfer);
        		rc =  0;
                 break;
+
         case SNAP_ADDRTYPE_HBM_P8:
                 memcpy(buffer256, (snap_membus_256_t  *) (d_hbm_p8 + input_address_256),
                      size_in_bytes_to_transfer);
@@ -278,7 +278,7 @@ short read_burst_of_data_from_HBM(snap_membus_256_t *d_hbm_p0,
                      size_in_bytes_to_transfer);
        		rc =  0;
                 break;
-*/
+
         case SNAP_ADDRTYPE_UNUSED: /* no copy but with rc =0 */
        		rc =  0;
                 break;
@@ -296,16 +296,16 @@ static void process_action(snap_membus_1024_t *din_gmem,
                            snap_membus_1024_t *dout_gmem,
                            snap_membus_256_t *d_hbm_p0,
                            snap_membus_256_t *d_hbm_p1,
-                           //snap_membus_256_t *d_hbm_p2,
-                           //snap_membus_256_t *d_hbm_p3,
-                           //snap_membus_256_t *d_hbm_p4,
-                           //snap_membus_256_t *d_hbm_p5,
-                           //snap_membus_256_t *d_hbm_p6,
-                           //snap_membus_256_t *d_hbm_p7,
-                           //snap_membus_256_t *d_hbm_p8,
-                           //snap_membus_256_t *d_hbm_p9,
-                           //snap_membus_256_t *d_hbm_p10,
-                           //snap_membus_256_t *d_hbm_p11,
+                           snap_membus_256_t *d_hbm_p2,
+                           snap_membus_256_t *d_hbm_p3,
+                           snap_membus_256_t *d_hbm_p4,
+                           snap_membus_256_t *d_hbm_p5,
+                           snap_membus_256_t *d_hbm_p6,
+                           snap_membus_256_t *d_hbm_p7,
+                           snap_membus_256_t *d_hbm_p8,
+                           snap_membus_256_t *d_hbm_p9,
+                           snap_membus_256_t *d_hbm_p10,
+                           snap_membus_256_t *d_hbm_p11,
                            action_reg *act_reg)
 {
 	// VARIABLES
@@ -380,9 +380,9 @@ static void process_action(snap_membus_1024_t *din_gmem,
                         membus_to_HBMbus(buffer1024, buffer256, xfer_size);
                 } else {
 		    read_burst_of_data_from_HBM(d_hbm_p0, d_hbm_p1,
-		        //d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5,
-		        //d_hbm_p6, d_hbm_p7, d_hbm_p8, d_hbm_p9,
-		        //d_hbm_p10, d_hbm_p11,
+		        d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5,
+		        d_hbm_p6, d_hbm_p7, d_hbm_p8, d_hbm_p9,
+		        d_hbm_p10, d_hbm_p11,
 			act_reg->Data.in.type,
 			(InputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_256, 
                         buffer256, xfer_size);
@@ -397,9 +397,9 @@ static void process_action(snap_membus_1024_t *din_gmem,
                         (OutputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_1024, buffer1024, xfer_size);
                 } else {
 		     write_burst_of_data_to_HBM(d_hbm_p0, d_hbm_p1,
-		        //d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5,
-		        //d_hbm_p6, d_hbm_p7, d_hbm_p8, d_hbm_p9,
-		        //d_hbm_p10, d_hbm_p11,
+		        d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5,
+		        d_hbm_p6, d_hbm_p7, d_hbm_p8, d_hbm_p9,
+		        d_hbm_p10, d_hbm_p11,
 			act_reg->Data.out.type,
 			(OutputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_256, 
                         buffer256, xfer_size);
@@ -422,16 +422,16 @@ void hls_action(snap_membus_1024_t *din_gmem,
 		snap_membus_1024_t *dout_gmem,
 		snap_membus_256_t *d_hbm_p0,
 		snap_membus_256_t *d_hbm_p1,
-		//snap_membus_256_t *d_hbm_p2,
-		//snap_membus_256_t *d_hbm_p3,
-		//snap_membus_256_t *d_hbm_p4,
-		//snap_membus_256_t *d_hbm_p5,
-		//snap_membus_256_t *d_hbm_p6,
-		//snap_membus_256_t *d_hbm_p7,
-		//snap_membus_256_t *d_hbm_p8,
-		//snap_membus_256_t *d_hbm_p9,
-		//snap_membus_256_t *d_hbm_p10,
-		//snap_membus_256_t *d_hbm_p11,
+		snap_membus_256_t *d_hbm_p2,
+		snap_membus_256_t *d_hbm_p3,
+		snap_membus_256_t *d_hbm_p4,
+		snap_membus_256_t *d_hbm_p5,
+		snap_membus_256_t *d_hbm_p6,
+		snap_membus_256_t *d_hbm_p7,
+		snap_membus_256_t *d_hbm_p8,
+		snap_membus_256_t *d_hbm_p9,
+		snap_membus_256_t *d_hbm_p10,
+		snap_membus_256_t *d_hbm_p11,
 		action_reg *act_reg)
 {
 	// Host Memory AXI Interface
@@ -449,7 +449,7 @@ void hls_action(snap_membus_1024_t *din_gmem,
 
 #pragma HLS INTERFACE m_axi port=d_hbm_p1 bundle=card_hbm_p1 offset=slave depth=512 \
   max_read_burst_length=64  max_write_burst_length=64 
-/*
+
 #pragma HLS INTERFACE m_axi port=d_hbm_p2 bundle=card_hbm_p2 offset=slave depth=512 \
   max_read_burst_length=64  max_write_burst_length=64 
 
@@ -479,7 +479,7 @@ void hls_action(snap_membus_1024_t *din_gmem,
 
 #pragma HLS INTERFACE m_axi port=d_hbm_p11 bundle=card_hbm_p11 offset=slave depth=512 \
   max_read_burst_length=64  max_write_burst_length=64 
-*/
+
 
 	// Host Memory AXI Lite Master Interface
 #pragma HLS DATA_PACK variable=act_reg
@@ -487,9 +487,9 @@ void hls_action(snap_membus_1024_t *din_gmem,
 #pragma HLS INTERFACE s_axilite port=return bundle=ctrl_reg
 
         process_action(din_gmem, dout_gmem, d_hbm_p0, d_hbm_p1,
-                       //d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5, 
-                       //d_hbm_p6, d_hbm_p7, d_hbm_p8, d_hbm_p9, 
-                       //d_hbm_p10, d_hbm_p11, 
+                       d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5, 
+                       d_hbm_p6, d_hbm_p7, d_hbm_p8, d_hbm_p9, 
+                       d_hbm_p10, d_hbm_p11, 
                       act_reg);
 }
 

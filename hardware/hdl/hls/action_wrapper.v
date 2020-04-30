@@ -179,7 +179,7 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p1_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p1_wuser    ,
    output                                  m_axi_card_hbm_p1_wvalid   ,
-/*
+
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p2_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p2_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p2_arcache  ,
@@ -629,7 +629,7 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p11_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p11_wuser    ,
    output                                  m_axi_card_hbm_p11_wvalid   ,
-*/
+
 `endif
 `endif
     //
@@ -720,7 +720,7 @@ wire [63:0] temp_card_hbm_p0_araddr;
 wire [63:0] temp_card_hbm_p0_awaddr;
 wire [63:0] temp_card_hbm_p1_araddr;
 wire [63:0] temp_card_hbm_p1_awaddr;
-/*
+
 wire [63:0] temp_card_hbm_p2_araddr;
 wire [63:0] temp_card_hbm_p2_awaddr;
 wire [63:0] temp_card_hbm_p3_araddr;
@@ -741,7 +741,7 @@ wire [63:0] temp_card_hbm_p10_araddr;
 wire [63:0] temp_card_hbm_p10_awaddr;
 wire [63:0] temp_card_hbm_p11_araddr;
 wire [63:0] temp_card_hbm_p11_awaddr;
-*/
+
     // ETHERNET interface
     // we define the ethernet wrap signals only if ethernet loop back
 `ifdef ENABLE_ETHERNET
@@ -903,7 +903,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p1_wstrb        (m_axi_card_hbm_p1_wstrb    ) ,
     .m_axi_card_hbm_p1_wuser        (m_axi_card_hbm_p1_wuser    ) ,
     .m_axi_card_hbm_p1_wvalid       (m_axi_card_hbm_p1_wvalid   ) ,
-/*
+
     .m_axi_card_hbm_p2_araddr       (temp_card_hbm_p2_araddr    ) ,
     .m_axi_card_hbm_p2_arburst      (m_axi_card_hbm_p2_arburst  ) ,
     .m_axi_card_hbm_p2_arcache      (m_axi_card_hbm_p2_arcache  ) ,
@@ -1363,7 +1363,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p11_wstrb        (m_axi_card_hbm_p11_wstrb    ) ,
     .m_axi_card_hbm_p11_wuser        (m_axi_card_hbm_p11_wuser    ) ,
     .m_axi_card_hbm_p11_wvalid       (m_axi_card_hbm_p11_wvalid   ) ,
-*/
+
 `endif
 `endif
     // ETHERNET interface
@@ -1567,7 +1567,7 @@ assign m_axi_card_hbm_p0_araddr = temp_card_hbm_p0_araddr[`AXI_CARD_HBM_ADDR_WID
 assign m_axi_card_hbm_p0_awaddr = temp_card_hbm_p0_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p1_araddr = temp_card_hbm_p1_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p1_awaddr = temp_card_hbm_p1_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-/*
+
 assign m_axi_card_hbm_p2_araddr = temp_card_hbm_p2_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p2_awaddr = temp_card_hbm_p2_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p3_araddr = temp_card_hbm_p3_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
@@ -1589,7 +1589,7 @@ assign m_axi_card_hbm_p10_araddr = temp_card_hbm_p10_araddr[`AXI_CARD_HBM_ADDR_W
 assign m_axi_card_hbm_p10_awaddr = temp_card_hbm_p10_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p11_araddr = temp_card_hbm_p11_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p11_awaddr = temp_card_hbm_p11_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-*/
+
 `endif
 `endif
 endmodule
