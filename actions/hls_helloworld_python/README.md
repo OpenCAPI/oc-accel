@@ -80,3 +80,30 @@ Ctrl+c # kill Jupyter Notebook
 exit # from xTerm
 
 ```
+
+
+
+
+### To launch a Jupyter Notebook on P9 (on the FPGA card)
+
+* Ensure you have compiled oc-accel's software on P9
+
+```
+cd ${SNAP_ROOT}
+make software
+```
+
+* Continue as any action (you may need sudo when execution jupyter to have valid access rights for the card):
+
+```
+sudo oc_maint -vvv
+
+cd ${SNAP_ROOT}/actions/hls_helloworld_python/sw/
+
+sudo jupyter notebook trieres_helloworld.ipynb # and follow the instrunctions: Select every cell and run it with Ctrl+d
+
+Ctrl+c # kill Jupyter Notebook
+
+exit # from xTerm
+
+```
