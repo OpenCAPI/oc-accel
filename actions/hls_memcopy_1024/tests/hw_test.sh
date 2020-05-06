@@ -18,7 +18,7 @@
 
 verbose=0
 snap_card=0
-duration="SHORT"
+duration="LONG"
 size=10
 
 # Get path of this script
@@ -37,7 +37,7 @@ function usage() {
     echo "    [-C <card>] card to be used for the test"
     echo "    [-t <trace_level>]"
     echo "    [-N ] not use interrupt"
-    echo "    [-duration SHORT/NORMAL] run tests (default is SHORT, which is also good for simulation)"
+    echo "    [-duration SHORT/NORMAL/LONG] run tests (default is SHORT, which is also good for simulation)"
     echo
 }
 
@@ -87,7 +87,7 @@ function test_memcopy {
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy ${size} bytes ... "
+    echo -n "Doing snap_memcopy ${size} bytes from host mem to host mem through FPGA buffer ... "
     cmd="snap_memcopy -C${snap_card} ${noirq} -X    \
         -i ${size}_A.bin    \
         -o ${size}_A.out >>    \
@@ -131,6 +131,12 @@ if [ "$duration" = "NORMAL" ]; then
     done
 fi
 
+if [ "$duration" = "LONG" ]; then
+    for (( size=64; size<268435457; size*=2 )); do
+    test_memcopy ${size}
+    done
+fi
+
 echo
 echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy.log
@@ -143,7 +149,7 @@ function test_memcopy_with_local_mem {
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy to ddr (aligned) ${size} bytes ... "
+    echo -n "Doing snap_memcopy host mem to ddr (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card}  ${noirq}  \
         -i ${size}_B.bin    \
         -d 0x0 -D LCL_MEM0 >>  \
@@ -156,7 +162,7 @@ function test_memcopy_with_local_mem {
         exit 1
     fi
     
-    echo -n "Doing snap_memcopy from ddr (aligned) ${size} bytes ... "
+    echo -n "Doing snap_memcopy from ddr to host mem (aligned) ${size} bytes ... "
     cmd="snap_memcopy -C${snap_card}   ${noirq} \
         -o ${size}_B.out    \
         -a 0x0 -A LCL_MEM0 -s ${size} >>  \
@@ -194,6 +200,12 @@ fi
 
 if [ "$duration" = "NORMAL" ]; then
     for (( size=64; size<65536; size*=2 )); do
+    test_memcopy_with_local_mem ${size}
+    done
+fi
+
+if [ "$duration" = "LONG" ]; then
+    for (( size=64; size<268435457; size*=2 )); do
     test_memcopy_with_local_mem ${size}
     done
 fi
