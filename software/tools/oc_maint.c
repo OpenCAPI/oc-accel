@@ -187,7 +187,7 @@ static void snap_version (void* handle)
     /* Get Card name */
     char buffer[16];
     snap_card_ioctl (handle, GET_CARD_NAME, (unsigned long)&buffer);
-    VERBOSE1 ("Name: %s. ", buffer);
+    VERBOSE1 ("Name: OC-%s. ", buffer);
 
     VERBOSE1 ("NVME ");
     snap_card_ioctl (handle, GET_NVME_ENABLED, (unsigned long)&ioctl_data);
