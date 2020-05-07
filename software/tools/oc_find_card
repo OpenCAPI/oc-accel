@@ -137,7 +137,7 @@ function detect_snap_cards() {
 				image_loaded=`cat /sys/class/cxl/card${card}/image_loaded`
 				load_image_on_perst=`cat /sys/class/cxl/card${card}/load_image_on_perst`
 				pci=`ls -lhaF //sys/class/cxl/card${card}/device | awk -F"../../../" '{print $2}'`
-				slot=`cat /sys/firmware/opal/msglog | grep SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
+				slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
 				pci_bis=`cd /sys/class/cxl/card${card}/device/pci*; ls -d *:*`
 
 				echo -e ""
@@ -185,7 +185,7 @@ function detect_snap_cards() {
 				load_image_on_perst="factory"
 
                                 pci=${allcards_array[$card]}
-                                slot=`cat /sys/firmware/opal/msglog | grep SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
+#                                slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
                                 echo -e ""
                                 echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
                                 psl_revision_hex=`printf '0x%x\n' ${psl_revision}`
@@ -195,7 +195,7 @@ function detect_snap_cards() {
                                 echo -e " Image loaded is self defined as                                : ${image_loaded}"
                                 echo -e " Next image to be loaded at next reset (load_image_on_perst) is : ${load_image_on_perst}"
                                 echo -e " Card PCI location is                                           : ${pci::-2}"
-                                echo -e " Card PCI physical slot is                                      : ${slot}"
+                                echo -e " Card PCI physical slot is                                      : Not Applicable"
                         else
                                 echo -n "${card} "
                         fi
