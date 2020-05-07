@@ -198,7 +198,8 @@ static void process_action(snap_membus_1024_t *din_gmem,
 			       act_reg->Data.out.size);
 
 	// test done just on LCL_MEM0 - should be extended if there is any risk
-	if ((act_reg->Data.in.type == SNAP_ADDRTYPE_LCL_MEM0) &&
+	// following test should be apply only for HBM since Data.in.size is too small to contain 4GB value
+/*	if ((act_reg->Data.in.type == SNAP_ADDRTYPE_LCL_MEM0) &&
 	    (act_reg->Data.in.size > LCL_MEM_MAX_SIZE)) {
 	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
 		return;
@@ -208,7 +209,7 @@ static void process_action(snap_membus_1024_t *din_gmem,
 	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
 		return;
         }
-
+*/
 	// buffer size is hardware limited by MAX_NB_OF_BYTES_READ
 	if(action_xfer_size %MAX_NB_OF_BYTES_READ == 0)
 		nb_blocks_to_xfer = (action_xfer_size / MAX_NB_OF_BYTES_READ);
