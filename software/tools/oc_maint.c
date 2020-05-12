@@ -116,10 +116,12 @@ static void* snap_open (struct mdev_ctx* mctx)
         {
 	VERBOSE0 ("Error: Can not open CAPI-SNAP Device: %s\n",
                   device);
-        VERBOSE0("  => You might try sudo or adjust Root rights\n");
-	VERBOSE0("     to set rights, you may permanently \n");
-	VERBOSE0 ("     create a /etc/udev/rules.d/20-ocaccel.rules file including:\n");
-        VERBOSE0 ("     SUBSYSTEM==\"ocxl\", DEVPATH==\"*/ocxl/IBM,oc-snap*\", MODE=\"666\", RUN=\"/bin/chmod 666 %%S/%\%p/global_mmio_area\" and reboot \n");
+	VERBOSE0("  => Make sure an FPGA card with proper OpenCAPI bin and cable is connected\n");
+	VERBOSE0("  => Check all cards availability with $SNAP_ROOT/software/tools/oc_find_card -v -AALL\n");
+	VERBOSE0("  => Otherwise you might try with \"sudo\" or adjust Root rights\n");
+	VERBOSE0("     to set rights, you may permanently: \n");
+	VERBOSE0("       create a /etc/udev/rules.d/20-ocaccel.rules file including:\n");
+	VERBOSE0("       SUBSYSTEM==\"ocxl\", DEVPATH==\"*/ocxl/IBM,oc-snap*\", MODE=\"666\", RUN=\"/bin/chmod 666 %%S/%\%p/global_mmio_area\" and reboot \n");
 	}
 
     return handle;
@@ -185,7 +187,7 @@ static void snap_version (void* handle)
     /* Get Card name */
     char buffer[16];
     snap_card_ioctl (handle, GET_CARD_NAME, (unsigned long)&buffer);
-    VERBOSE1 ("Name: %s. ", buffer);
+    VERBOSE1 ("Name: OC-%s. ", buffer);
 
     VERBOSE1 ("NVME ");
     snap_card_ioctl (handle, GET_NVME_ENABLED, (unsigned long)&ioctl_data);

@@ -379,7 +379,7 @@ if { $odma_used == "TRUE" }  {
 
 #create BlockRAM
 if { $create_bram == "TRUE" } {
-  puts "                        generating IP block_RAM"
+  puts "                        generating IP block_RAM (8K x 512b = 512KB)"
   create_ip -name blk_mem_gen -vendor xilinx.com -library ip -version 8.* -module_name block_RAM -dir  $ip_dir >> $log_file
   set_property -dict [list                                                           \
                       CONFIG.Interface_Type {AXI4}                                   \

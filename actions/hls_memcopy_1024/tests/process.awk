@@ -20,13 +20,13 @@ BEGIN {
 	 a2_usec[a2_iter]=$6
 	 a2_bw[a2_iter]=$9
  }
-  if ($0 ~ "CARD_DRAM to FPGA_BRAM") {
+  if ($0 ~ "HBM or DDR Port 0 to FPGA_BRAM") {
          a3_iter++
          a3_size[a3_iter]=$3
 	 a3_usec[a3_iter]=$6
 	 a3_bw[a3_iter]=$9
  }
-  if ($0 ~ "FPGA_BRAM to CARD_DRAM") {
+  if ($0 ~ "FPGA_BRAM to HBM or DDR Port 0") {
          a4_iter++
          a4_size[a4_iter]=$3
 	 a4_usec[a4_iter]=$6
@@ -38,7 +38,8 @@ END {
   printf "+-------------------------------------------------------------------------------+\n"
   printf "|            OC-Accel hls_memcopy_1024 Throughput (MBytes/s)                    |\n"
   printf "+-------------------------------------------------------------------------------+\n"
-  printf "%12s %16s %16s %16s %16s\n","bytes", "Host->FPGA_RAM", "FPGA_RAM->Host","FPGA(DDR->RAM)", "FPGA(RAM->DDR)" 
+  printf "+------------LCL stands for DDR or HBM memory accordingto hardware--------------+\n"
+  printf "%12s %16s %16s %16s %16s\n","bytes", "Host->FPGA_RAM", "FPGA_RAM->Host","FPGA(LCL->BRAM)", "FPGA(BRAM->LCL)" 
   printf " -------------------------------------------------------------------------------\n"
   while (i <= a1_iter) {
     printf "%12s %16s %16s %16s %16s\n",a1_size[i], a1_bw[i], a2_bw[i], a3_bw[i], a4_bw[i]
