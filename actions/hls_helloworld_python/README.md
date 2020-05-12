@@ -10,6 +10,7 @@
 * To get started use the following steps:
 ```
 git clone git@github.com:diamantopoulos/oc-accel.git
+cd oc-accel
 git checkout add_action_hls_helloworld_python
 cd oc-accel
 vim snap_env.sh -> export ACTION_ROOT=${SNAP_ROOT}/actions/hls_helloworld_python/
