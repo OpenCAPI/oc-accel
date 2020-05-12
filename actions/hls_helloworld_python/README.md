@@ -11,7 +11,7 @@
 
 ```
 # Installing python development library
-sudo apt-get install python3-dev python3-venv
+sudo apt-get install python3-dev python3-venv swig curl
 
 # Installing pip
 python3 -m pip install --user --upgrade pip
