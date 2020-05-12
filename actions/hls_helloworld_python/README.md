@@ -7,15 +7,32 @@
   * code can then run in hardware when the FPGA is programmed (will transform all characters to upper case in hardware)
 * The example code uses the copy mechanism to get/put the file from/to system host memory to/from DDR FPGA attached memory
 
+* Some packages you may need to install on your system
+
+```
+# Installing python development library
+sudo apt-get install python3-dev python3-venv
+
+# Installing pip
+python3 -m pip install --user --upgrade pip
+python3 -m pip install --user virtualenv
+```
+
+
 * To get started use the following steps:
 ```
 git clone git@github.com:diamantopoulos/oc-accel.git
+git clone https://github.com/OpenCAPI/ocse
 cd oc-accel
 git checkout add_action_hls_helloworld_python
-cd oc-accel
 vim snap_env.sh -> export ACTION_ROOT=${SNAP_ROOT}/actions/hls_helloworld_python/
+vim snap_env.sh -> export OCSE_ROOT==${SNAP_ROOT}/../ocse
+. snap_env.sh
 make software
 cd actions/hls_helloworld_python/sw
+python3 -m venv env
+source env/bin/activate
+pip3 install -r requirements.txt
 make pywrap  # to compile the appropriate libraries for SWIG
 ```
 
@@ -53,7 +70,7 @@ print("Output from FPGA:"+output)
 
 print("Output from CPU :"+input.upper())
 
-exit # from python shell
+exit() # from python shell
 
 exit # from xTerm
 ```
@@ -72,11 +89,16 @@ make sim
 ```
 oc_maint -vvv
 
-cp -r ../../../../actions/hls_helloworld_python/sw/* .    # to copy .so library in simulation's folder
+cp ../../../../actions/hls_helloworld_python/sw/snap_helloworld_python.py .
+cp ../../../../actions/hls_helloworld_python/sw/trieres_helloworld_cosim.ipynb .
 
+# For Jupyter:
 jupyter notebook trieres_helloworld_cosim.ipynb # and follow the instrunctions: Select every cell and run it with Ctrl+d
 
-Ctrl+c # kill Jupyter Notebook
+# For Jupyter Lab:
+jupyter-lab trieres_helloworld_cosim.ipynb # and follow the instrunctions: Select every cell and run it with Ctrl+d
+
+Ctrl+c # kill Jupyter Notebook / Jupyter Lab
 
 exit # from xTerm
 
