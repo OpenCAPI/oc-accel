@@ -21,8 +21,9 @@ git clone git@github.com:diamantopoulos/oc-accel.git
 git clone https://github.com/OpenCAPI/ocse
 cd oc-accel
 git checkout add_action_hls_helloworld_python
+make snap_config        #select (X) HLS Action - manually set ACTION ...
 vim snap_env.sh -> export ACTION_ROOT=${SNAP_ROOT}/actions/hls_helloworld_python/
-vim snap_env.sh -> export OCSE_ROOT==${SNAP_ROOT}/../ocse
+# Check ocse PATH if not default ~/ocse
 . snap_env.sh
 make software
 cd actions/hls_helloworld_python/sw
