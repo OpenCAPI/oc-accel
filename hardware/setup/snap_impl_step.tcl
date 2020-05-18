@@ -80,6 +80,18 @@ if { [catch "$command > $logfile" errMsg] } {
   report_utilization -file  ${rpt_dir}_${step}_utilization.rpt -quiet
 }
 
+## Adding elf file to project and loading on microblaze BRAM for 250SOC only
+
+if { $fpgacard == "BW250SOC" } {
+
+import_files -fileset sim_1 -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
+import_files -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
+set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
+set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
+set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
+set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
+}
+
 ##
 ## Vivado 2017.4 has problems to place the SNAP core logic, if they can place inside the PSL
 if { ($vivadoVer >= "2017.4") && ($cloud_flow == "FALSE") } {

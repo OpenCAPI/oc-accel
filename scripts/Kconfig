@@ -24,6 +24,7 @@ choice
 		bool "OpenCAPI3.0: Bittware 250SOC (ZU19EG with DDR)"
 		select OPENCAPI30
 		select DISABLE_NVME
+		select ENABLE_FLASH
 		help
 		  Bittware 250SOC has ethernet and 8GB DDR4 SDRAM each on PL and PS side. Uses Xilinx ZynqMP SOC ZU19EG.
 	
