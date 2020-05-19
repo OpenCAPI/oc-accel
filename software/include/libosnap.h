@@ -348,7 +348,7 @@ int snap_action_sync_execute_job (struct snap_action* action,
 #if 0 /* FIXME Discuss how this must be done correctly */
 /**
  * Allow the action to use interrupts to signal results back to the
- * application. If an irq happens libsnap will call the interrupt
+ * application. If an irq happens libosnap will call the interrupt
  * handler function if it got registered with snap_action_register_irq.
  */
 typedef int (*snap_action_irq_t) (struct snap_action* action, int irq);

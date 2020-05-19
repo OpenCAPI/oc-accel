@@ -75,6 +75,7 @@ static int process_action(snap_membus_t *din_gmem,
 }
 
 //--- TOP LEVEL MODULE -------------------------------------------------
+// snap_membus_t is defined in actions/include/hls_snap.H
 void hls_action(snap_membus_t *din_gmem,
 	snap_membus_t *dout_gmem,
 	/* snap_membus_t *d_ddrmem, // CAN BE COMMENTED IF UNUSED */

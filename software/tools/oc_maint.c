@@ -114,7 +114,7 @@ static void* snap_open (struct mdev_ctx* mctx)
 
     if (NULL == handle)
         {
-	VERBOSE0 ("Error: Can not open CAPI-SNAP Device: %s\n",
+	VERBOSE0 ("Error: Can not open OC-Accel Device: %s\n",
                   device);
         VERBOSE0("  => You might try sudo or adjust Root rights\n");
 	VERBOSE0("     to set rights, you may permanently \n");
@@ -231,10 +231,12 @@ static bool decode_action (uint32_t atype)
     int md_size = sizeof (snap_actions) / sizeof (struct actions_tab);
 
     for (i = 0; i < md_size; i++) {
-        if (atype == snap_actions[i].dev1) {
+        if (atype >= snap_actions[i].dev1) {
+          if (atype <= snap_actions[i].dev2) {
             VERBOSE1 ("%s %s\n", snap_actions[i].vendor,
                       snap_actions[i].description);
             return true;
+          }
         }
     }
 

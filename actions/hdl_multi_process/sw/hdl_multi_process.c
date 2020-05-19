@@ -70,6 +70,7 @@
 static const char* version = GIT_VERSION;
 static  int verbose_level = 0;
 
+/*
 static uint64_t get_usec (void)
 {
     struct timeval t;
@@ -77,7 +78,7 @@ static uint64_t get_usec (void)
     gettimeofday (&t, NULL);
     return t.tv_sec * 1000000 + t.tv_usec;
 }
-
+*/
 
 static void* alloc_mem (uint32_t align, uint64_t bytes)
 {
@@ -119,6 +120,7 @@ static void action_write (FILE* log, struct snap_card* h, uint32_t addr, uint32_
     return;
 }
 
+/*
 static uint32_t action_read (FILE* log, struct snap_card* h, uint32_t addr)
 {
     int rc;
@@ -132,7 +134,7 @@ static uint32_t action_read (FILE* log, struct snap_card* h, uint32_t addr)
 
     return data;
 }
-
+*/
 
 static void mem_init (void* mem_addr, uint32_t init_data, uint64_t total_bytes)
 {
