@@ -186,17 +186,21 @@ if { $simulator != "nosim" } {
   puts "                        importing simulation files for $simulator"
   if {$unit_sim_used == "TRUE"} {
     add_files -scan_for_includes $root_dir/sim/unit_verif  >> $log_file
-
   }
   add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_src/$sim_top.sv  >> $log_file
   set_property file_type SystemVerilog [get_files $sim_src/$sim_top.sv]
   set_property used_in_synthesis false [get_files $sim_src/$sim_top.sv]
   
-  # DDR4 Sim Files (need update for 250SOC)
-  if { (($fpga_card == "AD9V3") || ($fpga_card == "BW250SOC"))&& ($sdram_used == "TRUE") } {
+  # DDR4 Sim Files
+  if { ($fpga_card == "AD9V3") && ($sdram_used == "TRUE") } {
     add_files    -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/ddr4_model.sv  >> $log_file
     add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_dir/src/ddr4_dimm_ad9v3.sv  >> $log_file
     set_property used_in_synthesis false           [get_files $sim_dir/src/ddr4_dimm_ad9v3.sv]
+  }
+  if { ($fpga_card == "BW250SOC") && ($sdram_used == "TRUE") } {
+    add_files    -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/ddr4_model.sv  >> $log_file
+    add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_dir/src/ddr4_dimm_250soc.sv  >> $log_file
+    set_property used_in_synthesis false           [get_files $sim_dir/src/ddr4_dimm_250soc.sv]
   }
 }
 

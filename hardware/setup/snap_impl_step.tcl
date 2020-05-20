@@ -54,6 +54,18 @@ if { $impl_flow == "CLOUD_BASE" } {
   set opt_route_directive [get_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.ARGS.DIRECTIVE [get_runs impl_1]]
 }
 
+## Adding elf file to project and loading on microblaze BRAM for 250SOC only
+
+if { $fpgacard == "BW250SOC" } {
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Adding elf file" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+import_files -fileset sim_1 -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
+import_files -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
+set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
+set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
+set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
+set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
+}
+
 ##
 ## optimizing design
 if { $cloud_flow == "TRUE" } {
@@ -80,17 +92,6 @@ if { [catch "$command > $logfile" errMsg] } {
   report_utilization -file  ${rpt_dir}_${step}_utilization.rpt -quiet
 }
 
-## Adding elf file to project and loading on microblaze BRAM for 250SOC only
-
-if { $fpgacard == "BW250SOC" } {
-
-import_files -fileset sim_1 -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
-import_files -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
-set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
-set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
-set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
-set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
-}
 
 ##
 ## Vivado 2017.4 has problems to place the SNAP core logic, if they can place inside the PSL
