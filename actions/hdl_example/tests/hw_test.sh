@@ -23,7 +23,12 @@ verbose=0
 snap_card=0
 iteration=1
 ddr_test=0
-SNAP_ROOT="."
+
+# Get path of this script
+THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
+ACTION_ROOT=$(dirname ${THIS_DIR})
+SNAP_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
+
 FUNC="${SNAP_ROOT}/actions/hdl_example/sw/snap_example"
 
 function test () # $1 = card, $2 = action, $3 = 4k or 64, $4 = min_align, $5 = dma_size
