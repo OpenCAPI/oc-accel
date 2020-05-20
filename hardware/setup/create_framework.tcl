@@ -186,7 +186,6 @@ if { $simulator != "nosim" } {
   puts "                        importing simulation files for $simulator"
   if {$unit_sim_used == "TRUE"} {
     add_files -scan_for_includes $root_dir/sim/unit_verif  >> $log_file
-
   }
   add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_src/$sim_top.sv  >> $log_file
   set_property file_type SystemVerilog [get_files $sim_src/$sim_top.sv]
@@ -197,6 +196,11 @@ if { $simulator != "nosim" } {
     add_files    -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/ddr4_model.sv  >> $log_file
     add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_dir/src/ddr4_dimm_ad9v3.sv  >> $log_file
     set_property used_in_synthesis false           [get_files $sim_dir/src/ddr4_dimm_ad9v3.sv]
+  }
+  if { ($fpga_card == "BW250SOC") && ($sdram_used == "TRUE") } {
+    add_files    -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/ddr4_model.sv  >> $log_file
+    add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_dir/src/ddr4_dimm_250soc.sv  >> $log_file
+    set_property used_in_synthesis false           [get_files $sim_dir/src/ddr4_dimm_250soc.sv]
   }
 }
 
@@ -224,7 +228,6 @@ foreach ip_xci [glob -nocomplain -dir $action_ip_dir */*.xci] {
   export_ip_user_files -of_objects  [get_files "$ip_xci"] -no_script -sync -force >> $log_file
 }
 
-
 # Add OpenCAPI board support package
 
 if { $unit_sim_used == "TRUE" } {
@@ -244,6 +247,20 @@ if { $unit_sim_used == "TRUE" } {
     }
 }
 
+if {$fpga_card == "BW250SOC"} {
+  puts "                        adding Flash IP "
+  add_files $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.vhd -norecurse  >> $log_file
+  add_files -norecurse $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/design_1.bd  >> $log_file
+  export_ip_user_files -of_objects  [get_files  $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/design_1.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
+#  puts "                        adding  $fpga_card_dir/ip/qspi_mb.elf"
+#  add_files -norecurse [get_files "$fpga_card_dir/ip/qspi_mb.elf"]
+#  puts "                        setting prop1"
+#  set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sources_1] {$fpga_card_dir/ip/qspi_mb.elf}]
+#  puts "                        setting prop2"
+#  set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sources_1] {$fpga_card_dir/ip/qspi_mb.elf}]
+}
+
+
 # XDC
 puts "                        importing other XDCs"
 
@@ -257,7 +274,7 @@ if { $user_clock == "TRUE" } {
 }
 
 # DDR XDCs
-if { $fpga_card == "AD9V3" } {
+if { ($fpga_card == "AD9V3") || ($fpga_card == "BW250SOC") } {
   if { $sdram_used == "TRUE" } {
     add_files -fileset constrs_1 -norecurse $top_xdc_dir/snap_ddr4_b0pins.xdc 
     set_property used_in_synthesis false [get_files $top_xdc_dir/snap_ddr4_b0pins.xdc]
