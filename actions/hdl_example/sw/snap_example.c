@@ -69,7 +69,8 @@
             printf(fmt, ## __VA_ARGS__);    \
     } while (0)
 
-static const char* version = GIT_VERSION;
+static const char* version = "Version 1.0";
+static const char* gitversion = GIT_VERSION;
 static  int verbose_level = 0;
 
 static uint64_t get_usec (void)
@@ -633,6 +634,7 @@ int main (int argc, char* argv[])
 
         case 'V':   /* version */
             VERBOSE0 ("%s\n", version);
+            VERBOSE0 ("%s\n", gitversion);
             exit (EXIT_SUCCESS);;
 
         case 'h':   /* help */
@@ -703,6 +705,11 @@ int main (int argc, char* argv[])
         }
     }
 
+    if (argc == 1) {       // to provide help when program is called without argument
+        usage(argv[0]);
+        exit(EXIT_FAILURE);
+        }
+    
     if (end_delay > 16000) {
         usage (argv[0]);
         exit (1);
