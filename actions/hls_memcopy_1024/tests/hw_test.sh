@@ -18,7 +18,7 @@
 
 verbose=0
 snap_card=0
-duration="SHORT"
+duration="NORMAL"
 size=10
 
 # Get path of this script
@@ -37,7 +37,7 @@ function usage() {
     echo "    [-C <card>] card to be used for the test"
     echo "    [-t <trace_level>]"
     echo "    [-N ] not use interrupt"
-    echo "    [-d SHORT/NORMAL/LONG] run tests (default is SHORT, which is also good for simulation)"
+    echo "    [-d SHORT/NORMAL/LONG] run tests (default is NORMAL, change to SHORT for simulation)"
     echo
 }
 
