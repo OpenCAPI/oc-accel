@@ -190,7 +190,7 @@ function usage() {
 	echo "    [-t <trace_level>]"
 	echo "    [-i <iteration>]"
 	echo "    [-D] Perform DDR test"
-        echo "    [-d] SHORT (simulation case or NORMAL hardware test case)"
+        echo "    [-d] use SHORT for simulation case or NORMAL for hardware test case"
 }
 
 #
@@ -211,14 +211,6 @@ while getopts "C:t:i:d:hD" opt; do
 	;;
 	d)
 	duration=$OPTARG;
-	if [ "$duration" = "SHORT" ] ; then   # Simulation test case
-			timeoutsim=60;
-			endsimu=40;
-		else
-			timeoutsim=2;	# hardware test case
-			endsimu=60;
-		
-	fi
 	;;
 	D)
 	ddr_test=1;
@@ -236,6 +228,14 @@ done
 MIN_ALIGN=1
 MIN_BLOCK=1
 echo -n " (Align: $MIN_ALIGN Min Block: $MIN_BLOCK) "
+if [ "$duration" = "SHORT" ] ; then   # Simulation test case
+	timeoutsim=60
+	endsimu=40
+else
+	echo ">>> To avoid timeout, -d SHORT should be used for simulation <<<"
+	timeoutsim=2	# hardware test case
+	endsimu=60
+fi
 
 for ((iter=1;iter <= iteration;iter++))
 {
@@ -258,7 +258,7 @@ for ((iter=1;iter <= iteration;iter++))
 		exit 1
 	fi
 
-	if [ "$duration" = "SHORT" ; then 
+	if [ "$duration" = "SHORT" ]; then 
 		echo "# we postpone this simulation test to later debug"
 	else 
 		test    $snap_card 2 4k $MIN_ALIGN $MIN_BLOCK
