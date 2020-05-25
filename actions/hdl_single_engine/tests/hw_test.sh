@@ -18,7 +18,7 @@
 
 verbose=0
 snap_card=0
-short=1
+duration="NORMAL"
 
 # Get path of this script
 THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
@@ -34,19 +34,19 @@ function usage() {
     echo "  test_<action_type>.sh"
     echo "  test function bridge with hdl_single_engine with different axi_size and different number of axi_id"
     echo "    [-C <card>] card to be used for the test"
-    echo "    [-s] choose to run long or short test:"
-    echo "         if this argument is not given or given as 1, run shorter test for simulation"
-    echo "         if this argument is given as 0, run longer test on card"
+    echo "    [-d] choose duration NORMAL(default) or SHORT test:"
+    echo "         if this argument is NORMAL (default), run normal test (used for hardware test)"
+    echo "         if this argument is SHORT           , run short (used for simulation)"
     echo
 }
 
-while getopts ":C:s:h" opt; do
+while getopts ":C:d:h" opt; do
     case $opt in
         C)  
         snap_card=$OPTARG;
         ;;
-        s)  
-        short=$OPTARG;
+        d)  
+        duration=$OPTARG;
         ;;
         h)
         usage;
@@ -102,7 +102,7 @@ touch hdl_single_engine_general_test.log
 exp=0
 while [ $exp -lt 16 ]
 do
-    if [ $short -ne 1 ]; then
+    if [ "$duration" = "NORMAL" ]; then
         echo "Run long test, preferred to run on card"
         test_single_engine 10000 2 255 ${exp}
         test_single_engine 10000 3 255 ${exp}
@@ -110,17 +110,14 @@ do
         test_single_engine 10000 5 127 ${exp}
         test_single_engine 10000 6 63  ${exp}
         test_single_engine 10000 7 31  ${exp}
-    else
-        echo "Run short test, preferred to run for simulation"
-        test_single_engine 5 2 255 ${exp}
-        test_single_engine 5 3 255 ${exp}
-        test_single_engine 5 4 255 ${exp}
-        test_single_engine 5 5 127 ${exp}
-        test_single_engine 5 6 63  ${exp}
-        test_single_engine 5 7 31  ${exp}
     fi
     exp=$(($exp + 1))
 done
+
+if [ "$duration" = "SHORT" ]; then
+    echo "Run short test, preferred to run for simulation"
+    test_single_engine 5 2 255 ${exp} 
+fi
 
 ##Print build date and version
 #echo

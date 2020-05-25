@@ -1,1 +1,1 @@
-../../../../actions/$ACT/tests/hw_test.sh -duration SHORT
+../../../../actions/$ACT/tests/hw_test.sh -d SHORT
