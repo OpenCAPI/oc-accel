@@ -96,15 +96,6 @@ choice
 
 	default HDL_EXAMPLE
 
-	config HLS_ACTION
-		bool "HLS Action - manually set ACTION_ROOT in snap_env.sh!"
-		select ENABLE_HLS_SUPPORT
-		help
-		  This option is a placeholder for an action written by the user in HLS.
-		  Please remember to set the environment variable "ACTION_ROOT"
-		  in snap_env.sh to the directory of the action source code.
-		  Also need to select the AXI data width to host is 512b or 1024b.
-
 	config HDL_ACTION
 		bool "HDL Action - manually set ACTION_ROOT in snap_env.sh!"
 		help
@@ -127,23 +118,34 @@ choice
 		  - Write data to server memory
 		select DISABLE_SDRAM_AND_BRAM
 
-	config HDL_MULTI_PROCESS
-		bool "HDL Multi-Process"
-		help
-		  This is a very simple example written in Verilog for
-		  - Multi-process testing
-		select DISABLE_SDRAM_AND_BRAM
+#experimental - not available yet
+#	config HDL_MULTI_PROCESS
+#		bool "HDL Multi-Process"
+#		help
+#		  This is a very simple example written in Verilog for
+#		  - Multi-process testing
+#		select DISABLE_SDRAM_AND_BRAM
 
-	config HDL_UNIT_SIM
-		bool "HDL UNIT SIM"
+#experimental - not available yet
+#	config HDL_UNIT_SIM
+#		bool "HDL UNIT SIM"
+#		help
+#		  This is a random/configrable test for bridge mode
+#		  - This action include an AXI-master vip 
+#		  - Generate random AXI read/write commands
+#		  - Data check rely on verification code
+#		  - No OCSE and software will be invoked for this action
+#                  - Only UVM based testbench
+#		select DISABLE_SDRAM_AND_BRAM
+
+	config HLS_ACTION
+		bool "HLS Action - manually set ACTION_ROOT in snap_env.sh!"
+		select ENABLE_HLS_SUPPORT
 		help
-		  This is a random/configrable test for bridge mode
-		  - This action include an AXI-master vip 
-		  - Generate random AXI read/write commands
-		  - Data check rely on verification code
-		  - No OCSE and software will be invoked for this action
-                  - Only UVM based testbench
-		select DISABLE_SDRAM_AND_BRAM
+		  This option is a placeholder for an action written by the user in HLS.
+		  Please remember to set the environment variable "ACTION_ROOT"
+		  in snap_env.sh to the directory of the action source code.
+		  Also need to select the AXI data width to host is 512b or 1024b.
 
 	config HLS_HELLOWORLD
 		bool "HLS HelloWorld"
@@ -611,33 +613,36 @@ config UNIT_SIM_USED
 	default "TRUE"  if ENABLE_UNIT_VERIF
 	default "FALSE" if ! ENABLE_UNIT_VERIF
 
-config ENABLE_ODMA
-	bool "Enable ODMA (not available)"
-    default n
-	help
-	   Enable ODMA instead of TLX-AXI bridge.
+#experimental - not available yet
+#config ENABLE_ODMA
+#	bool "Enable ODMA (not available)"
+#    default n
+#	help
+#	   Enable ODMA instead of TLX-AXI bridge.
 
 config ODMA_USED
 	string
 	default "TRUE"  if ENABLE_ODMA
 	default "FALSE" if ! ENABLE_ODMA
 
-config ENABLE_ODMA_ST_MODE
-	bool "Enable ODMA AXI4-Stream data transfer mode."
-    default n
-	help
-	   Enable ODMA Stream mode.
+#experimental - not available yet
+#config ENABLE_ODMA_ST_MODE
+#	bool "Enable ODMA AXI4-Stream data transfer mode."
+#    default n
+#	help
+#	   Enable ODMA Stream mode.
 
 config ODMA_ST_MODE_USED
 	string
 	default "TRUE"  if ENABLE_ODMA_ST_MODE
 	default "FALSE" if ! ENABLE_ODMA_ST_MODE
 
-config ENABLE_ODMA_512
-	bool "Enable ODMA data transfer with 512b data width."
-    default n
-	help
-	   Enable ODMA data width with 512bits.
+#experimental - not available yet
+#config ENABLE_ODMA_512
+#	bool "Enable ODMA data transfer with 512b data width."
+#    default n
+#	help
+#	   Enable ODMA data width with 512bits.
 
 config ODMA_512_USED
 	string
