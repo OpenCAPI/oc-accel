@@ -78,10 +78,10 @@ function test_all_actions() # $1 = card, $2 = accel
 		*"1014300b") # HLS Memcopy
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
-		*"10143008") # HLS Hello World 512 bits wide bus
+		*"10143008") # HLS Hello World  512 bits wide bus
 			cmd="./actions/hls_helloworld/tests/hw_test.sh"
 		;;
-               *"10143009") # HLS Hello World 1024 bits wide bus
+                *"10143009") # HLS Hello World 1024 bits wide bus
                         cmd="./actions/hls_helloworld/tests/hw_test.sh"
                 ;;
 		*)
@@ -97,6 +97,7 @@ function test_all_actions() # $1 = card, $2 = accel
 				eval ${cmd}
 				RC=$?
 				echo "RUN: $cmd on $accel[$card] Done RC=$RC"
+                        fi
 			else
 				echo "Error: No Test case found for Action: $action on $accel[$card]"
 				echo "       Missing File: $cmd"
