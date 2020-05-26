@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-## Copyright 2019 International Business Machines
+## Copyright 2020 International Business Machines
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -61,20 +61,20 @@ done
 
 export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 
-####iHELLOWORLD ##########################################################
+####HELLOWORLD_512 ##########################################################
 
-function test_helloworld {
+function test_helloworld_512 {
     cmd="echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\" > tin"
     echo "cmd: ${cmd}"
     eval ${cmd}
     cmd="echo \"HELLO WORLD. THIS IS MY FIRST CAPI SNAP EXPERIENCE. IT'S REAL FUN.\" > tCAP"
     echo "cmd: ${cmd}"
     eval ${cmd}
-    echo -n "Doing snap_helloworld "
-    cmd="snap_helloworld -C${snap_card} -i tin -o tout >> snap_helloworld.log 2>&1"
+    echo -n "Doing snap_helloworld_512 "
+    cmd="snap_helloworld_512 -C${snap_card} -i tin -o tout >> snap_helloworld_512.log 2>&1"
     eval ${cmd}
     if [ $? -ne 0 ]; then
-	cat snap_helloworld.log
+	cat snap_helloworld_512.log
 	echo "cmd: ${cmd}"
 	echo "failed"
 	exit 1
@@ -95,14 +95,14 @@ function test_helloworld {
 
 }
 
-rm -f snap_helloworld.log
-touch snap_helloworld.log
+rm -f snap_helloworld_512.log
+touch snap_helloworld_512.log
 
 # Whatever duration is, we run the test
 # duration is used to run short test in simulation for example
 # helloworld is short by nature, so we can ignore duration setting
 # if [ "$duration" = "NORMAL" ]; then
-  test_helloworld 
+  test_helloworld_512 
 #  fi
 
 rm -f *.bin *.bin *.out
