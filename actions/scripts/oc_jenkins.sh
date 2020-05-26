@@ -78,9 +78,12 @@ function test_all_actions() # $1 = card, $2 = accel
 		*"1014300b") # HLS Memcopy
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
-		*"10143008") # HLS Hello World
+		*"10143008") # HLS Hello World 512 bits wide bus
 			cmd="./actions/hls_helloworld/tests/hw_test.sh"
 		;;
+               *"10143009") # HLS Hello World 1024 bits wide bus
+                        cmd="./actions/hls_helloworld/tests/hw_test.sh"
+                ;;
 		*)
 			echo "Error: Action: $action is not valid !"
 			run_test=0
