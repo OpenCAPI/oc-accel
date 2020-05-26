@@ -79,10 +79,10 @@ function test_all_actions() # $1 = card, $2 = accel
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
 		*"10143008") # HLS Hello World  512 bits wide bus
-			cmd="./actions/hls_helloworld/tests/hw_test.sh"
+			cmd="./actions/hls_helloworld_512/tests/hw_test.sh"
 		;;
                 *"10143009") # HLS Hello World 1024 bits wide bus
-                        cmd="./actions/hls_helloworld/tests/hw_test.sh"
+                        cmd="./actions/hls_helloworld_1024/tests/hw_test.sh"
                 ;;
 		*)
 			echo "Error: Action: $action is not valid !"
@@ -102,7 +102,6 @@ function test_all_actions() # $1 = card, $2 = accel
 				echo "Error: No Test case found for Action: $action on $accel[$card]"
 				echo "       Missing File: $cmd"
 				RC=99
-			fi
 		fi
 	done
 	echo "$0 return code is : RC=$RC"
