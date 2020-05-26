@@ -53,10 +53,10 @@ extern "C" {
 
 /* Data structure used to exchange information between action and application */
 /* Size limit is 108 Bytes */
-typedef struct helloworld_job {
+typedef struct helloworld_512_job {
 	struct snap_addr in;	/* input data */
 	struct snap_addr out;   /* offset table */
-} helloworld_job_t;
+} helloworld_512_job_t;
 
 #ifdef __cplusplus
 }
