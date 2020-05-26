@@ -75,6 +75,8 @@ static int process_action(snap_membus_512_t *din_gmem,
 }
 
 //--- TOP LEVEL MODULE -------------------------------------------------
+// snap_membus_512_t is defined in actions/include/hls_snap_1024.H
+// which deals with both 512 and 1024 bits wide busses
 void hls_action(snap_membus_512_t *din_gmem,
 	snap_membus_512_t *dout_gmem,
 	/* snap_membus_512_t *d_ddrmem, // CAN BE COMMENTED IF UNUSED */

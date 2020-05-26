@@ -56,6 +56,22 @@ extern "C" {
 #define SNAP_ADDRTYPE_zzz                0x0003 /* ? */
 #define SNAP_ADDRTYPE_LCL_MEM0           0x0010 /* card specific HBM or DDR Port 0 */
 #define SNAP_ADDRTYPE_LCL_MEM1           0x0011 /* card specific HBM or DDR  Port 1 */
+#define SNAP_ADDRTYPE_HBM_P0             0x0010 /* card specific HBM Port 0 */
+#define SNAP_ADDRTYPE_HBM_P1             0x0011 /* card specific HBM Port 1 */
+#define SNAP_ADDRTYPE_HBM_P2             0x0012 /* card specific HBM Port 2 */
+#define SNAP_ADDRTYPE_HBM_P3             0x0013 /* card specific HBM Port 3 */
+#define SNAP_ADDRTYPE_HBM_P4             0x0014 /* card specific HBM Port 4 */
+#define SNAP_ADDRTYPE_HBM_P5             0x0015 /* card specific HBM Port 5 */
+#define SNAP_ADDRTYPE_HBM_P6             0x0016 /* card specific HBM Port 6 */
+#define SNAP_ADDRTYPE_HBM_P7             0x0017 /* card specific HBM Port 7 */
+#define SNAP_ADDRTYPE_HBM_P8             0x0018 /* card specific HBM Port 8 */
+#define SNAP_ADDRTYPE_HBM_P9             0x0019 /* card specific HBM Port 9 */
+#define SNAP_ADDRTYPE_HBM_P10            0x001A /* card specific HBM Port 10 */
+#define SNAP_ADDRTYPE_HBM_P11            0x001B /* card specific HBM Port 11 */
+#define SNAP_ADDRTYPE_HBM_P12            0x001C /* card specific HBM Port 12 */
+#define SNAP_ADDRTYPE_HBM_P13            0x001D /* card specific HBM Port 13 */
+#define SNAP_ADDRTYPE_HBM_P14            0x001E /* card specific HBM Port 14 */
+#define SNAP_ADDRTYPE_HBM_P15            0x001F /* card specific HBM Port 15 */
 
 #define SNAP_ADDRFLAG_END                0x0001 /* last element in the list */
 #define SNAP_ADDRFLAG_ADDR               0x0002 /* this one is an address */

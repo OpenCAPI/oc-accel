@@ -72,8 +72,8 @@ function test_all_actions() # $1 = card, $2 = accel
 			#RC=$?
 			#run_test=0
 		;;
-		*"10142002") # HDL NVMe example
-			cmd="./actions/hdl_single_engine/tests/hw_general_test.sh"
+		*"10142002") # HDL Single Engine
+			cmd="./actions/hdl_single_engine/tests/hw_test.sh"
 		;;
 		*"1014300b") # HLS Memcopy
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
@@ -373,7 +373,6 @@ if [[ $accel != "ALL" ]]; then
 		echo "`date` Image Test on Accel: $accel was executed $test_done time(s)"
 		exit 0
 	fi
-	# Parm (-A Nallatech 250S or AlphaData KU3 or Semptian NSA121B) was set, but no file (-F) to test
 	# Run Software Test on one Type of Card
 	echo "Test Software on: $accel Card: $CARD"
 	if [ $CARD -eq "-1" ]; then

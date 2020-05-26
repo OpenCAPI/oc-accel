@@ -52,9 +52,9 @@ $(SNAP_ROOT)/software/lib/libosnap.so:
 
 
 # Resolve dependencies to required libraries
-#$(projs) $(libs): $(OCSE_ROOT)/libcxl/libcxl.so $(SNAP_ROOT)/software/lib/libosnap.so
+#$(projs) $(libs): $(OCSE_ROOT)/libocxl/libocxl.so $(SNAP_ROOT)/software/lib/libosnap.so
 #
-#$(OCSE_ROOT)/libcxl/libcxl.so $(SNAP_ROOT)/software/lib/libosnap.so:
+#$(OCSE_ROOT)/libocxl/libocxl.so $(SNAP_ROOT)/software/lib/libosnap.so:
 #	$(MAKE) -C `dirname $@`
 
 ### Deactivate existing implicit rule
