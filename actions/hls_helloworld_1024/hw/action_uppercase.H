@@ -21,19 +21,19 @@
 #include <string.h>
 #include <ap_int.h>
 
-#include "hls_snap.H"
+#include "hls_snap_1024.H"
 #include <action_changecase.h> /* HelloWorld Job definition */
 
 
-typedef char word_t[BPERDW];
+typedef char word_t[BPERDW_1024];
 //---------------------------------------------------------------------
 // This is generic. Just adapt names for a new action
 // CONTROL is defined and handled by SNAP 
-// helloworld_job_t is user defined in hls_helloworld/include/action_change_case.h
+// helloworld_1024_job_t is user defined in hls_helloworld_1024/include/action_change_case.h
 typedef struct {
 	CONTROL Control;	/*  16 bytes */
-	helloworld_job_t Data;	/* up to 108 bytes */
-	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(helloworld_job_t)];
+	helloworld_1024_job_t Data;	/* up to 108 bytes */
+	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(helloworld_1024_job_t)];
 } action_reg;
 
 #endif  /* __ACTION_UPPERCASE_H__*/

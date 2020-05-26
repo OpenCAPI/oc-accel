@@ -73,11 +73,11 @@ static void usage(const char *prog)
         "------------------------\n"
         "echo Clean possible temporary old files \n"
 	"echo Prepare the text to process\n"
-	"echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\""
+	"echo \"Hello world_1024. This is my first CAPI SNAP experience. It's real fun.\""
 	" > /tmp/t1\n"
 	"\n"
 	"echo Run the application + hardware action\n"
-	"snap_helloworld -i /tmp/t1 -o /tmp/t2\n"
+	"snap_helloworld_1024 -i /tmp/t1 -o /tmp/t2\n"
 	"echo Display input file: && cat /tmp/t1\n"
 	"echo Display output file from FPGA executed action -UPPER CASE expected-:"
 	" && cat /tmp/t2\n"
@@ -87,8 +87,8 @@ static void usage(const char *prog)
 
 // Function that fills the MMIO registers / data structure 
 // these are all data exchanged between the application and the action
-static void snap_prepare_helloworld(struct snap_job *cjob,
-				 struct helloworld_job *mjob,
+static void snap_prepare_helloworld_1024(struct snap_job *cjob,
+				 struct helloworld_1024_job *mjob,
 				 void *addr_in,
 				 uint32_t size_in,
 				 uint8_t type_in,
@@ -96,7 +96,7 @@ static void snap_prepare_helloworld(struct snap_job *cjob,
 				 uint32_t size_out,
 				 uint8_t type_out)
 {
-	fprintf(stderr, "  prepare helloworld job of %ld bytes size\n", sizeof(*mjob));
+	fprintf(stderr, "  prepare helloworld_1024 job of %ld bytes size\n", sizeof(*mjob));
 
 	assert(sizeof(*mjob) <= SNAP_JOBSIZE);
 	memset(mjob, 0, sizeof(*mjob));
@@ -112,7 +112,7 @@ static void snap_prepare_helloworld(struct snap_job *cjob,
 	snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-/* main program of the application for the hls_helloworld example        */
+/* main program of the application for the hls_helloworld_1024 example        */
 /* This application will always be run on CPU and will call either       */
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
 int main(int argc, char *argv[])
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 	struct snap_action *action = NULL;
 	char device[128];
 	struct snap_job cjob;
-	struct helloworld_job mjob;
+	struct helloworld_1024_job mjob;
 	const char *input = NULL;
 	const char *output = NULL;
 	unsigned long timeout = 600;
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Fill the stucture of data exchanged with the action
-	snap_prepare_helloworld(&cjob, &mjob,
+	snap_prepare_helloworld_1024(&cjob, &mjob,
 			     (void *)addr_in,  size, type_in,
 			     (void *)addr_out, size, type_out);
 
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
 				"only with HOST_DRAM\n");
 	}
 	// Display the time of the action call (MMIO registers filled + execution)
-	fprintf(stdout, "SNAP helloworld took %lld usec\n",
+	fprintf(stdout, "SNAP helloworld_1024 took %lld usec\n",
 		(long long)timediff_usec(&etime, &stime));
 
 	// Detach action + disallocate the card
