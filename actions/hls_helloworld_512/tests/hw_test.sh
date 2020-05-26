@@ -79,6 +79,18 @@ function test_helloworld_512 {
 	echo "failed"
 	exit 1
     fi
+    echo "tin is:"
+    cat tin
+    echo "tout is:"
+    cat tout
+    echo "Checking produced tout vs reference tCAP:"
+    diff tout tCAP
+    if [ $? -ne 0 ]; then
+       echo "cmd: ${cmd}"
+       echo "failed"
+       exit 1
+    fi
+
     echo "ok"
 
     echo -n "Check results ... "
