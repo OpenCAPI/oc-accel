@@ -69,7 +69,8 @@
             printf(fmt, ## __VA_ARGS__);    \
     } while (0)
 
-static const char* version = GIT_VERSION;
+static const char* version = "Version 1.0";
+static const char* gitversion = GIT_VERSION;
 static  int verbose_level = 0;
 
 static uint64_t get_usec (void)
@@ -167,7 +168,7 @@ static uint32_t msec_2_ticks (int msec)
 /*
  *  Start Action and wait for Idle.
  */
-static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed, snap_action_flag_t flags)
+static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed)
 {
     int rc = 0;
     uint64_t t_start;   /* time in usec */
@@ -295,7 +296,7 @@ static int do_action (struct snap_card* h,
 
     VERBOSE0 ("Attach done\n");
     action_memcpy (h, action, dest, src, memsize);
-    rc = action_wait_idle (h, timeout, &td, flags);
+    rc = action_wait_idle (h, timeout, &td);
     print_time (td, memsize);
 
     if (0 != snap_detach_action (act)) {
@@ -337,28 +338,31 @@ static int memcpy_test (struct snap_card* dnc,
     }
 
     if (action > 2) {
-        /* Make sure to have SDRAM for action 2,3,4,5,6 */
-        snap_card_ioctl (dnc, GET_SDRAM_SIZE, (unsigned long)&ddr_mem_size);
+        //DDR size checking is disabled because in future versions, oc-accel will not
+        //store DDR information in snap_core registers
 
-        if (0 == ddr_mem_size) {
-            VERBOSE0 ("Error: No SDRAM configured on SNAP Card\n");
-            return 1;
-        }
+        /* Make sure to have SDRAM for action 2,3,4,5,6 */
+     //   snap_card_ioctl (dnc, GET_SDRAM_SIZE, (unsigned long)&ddr_mem_size);
+
+     //   if (0 == ddr_mem_size) {
+     //       VERBOSE0 ("Error: No SDRAM configured on SNAP Card\n");
+     //       return 1;
+     //   }
 
         ddr_mem_size = ddr_mem_size * MEGAB;
 
-        if (blocks > (int) (ddr_mem_size / 64 / 2)) {
-            VERBOSE0 ("Error: Number of Blocks: %d exceeds Card Mem Blocks: %lld\n",
-                      blocks, (long long) (ddr_mem_size / 64 / 2));
-            return 1;
-        }
+  //      if (blocks > (int) (ddr_mem_size / 64 / 2)) {
+  //          VERBOSE0 ("Error: Number of Blocks: %d exceeds Card Mem Blocks: %lld\n",
+  //                    blocks, (long long) (ddr_mem_size / 64 / 2));
+  //          return 1;
+  //      }
 
         /* Check Card Ram base and Size */
-        if ((card_ram_base + memsize) > ddr_mem_size) {
-            VERBOSE0 ("Error: Size: 0x%llx exceeds DDR3 Limit: 0x%llx for Offset: 0x%llx\n",
-                      (long long)memsize, (long long)ddr_mem_size, (long long)card_ram_base);
-            return 1;
-        }
+   //     if ((card_ram_base + memsize) > ddr_mem_size) {
+   //         VERBOSE0 ("Error: Size: 0x%llx exceeds DDR3 Limit: 0x%llx for Offset: 0x%llx\n",
+   //                   (long long)memsize, (long long)ddr_mem_size, (long long)card_ram_base);
+   //         return 1;
+   //     }
     }
 
     switch (action) {
@@ -455,11 +459,11 @@ static int memcpy_test (struct snap_card* dnc,
                   src, (long long)memsize, blocks_4k, blocks_64, align);
         dest = src + memsize;   /* Need to check */
 
-        if ((uint64_t) (dest + memsize) > ddr_mem_size) {
-            VERBOSE0 ("Error Size 0x%llx and Offset 0x%llx Exceed Memory\n",
-                      (long long)memsize, (long long)card_ram_base);
-            break;
-        }
+    //    if ((uint64_t) (dest + memsize) > ddr_mem_size) {
+    //        VERBOSE0 ("Error Size 0x%llx and Offset 0x%llx Exceed Memory\n",
+    //                  (long long)memsize, (long long)card_ram_base);
+    //        break;
+    //    }
 
         VERBOSE1 ("  To DDR: %p timeout: %d sec\n", dest, timeout);
         rc = do_action (dnc, attach_flags, action, timeout, dest, src, memsize);
@@ -576,7 +580,7 @@ int main (int argc, char* argv[])
     int start_delay = START_DELAY;
     int end_delay = END_DELAY;
     int step_delay = STEP_DELAY;
-    int delay;
+    int delay = start_delay;
     int card_no = 0;
     int cmd;
     int action = ACTION_CONFIG_COUNT;
@@ -630,6 +634,7 @@ int main (int argc, char* argv[])
 
         case 'V':   /* version */
             VERBOSE0 ("%s\n", version);
+            VERBOSE0 ("%s\n", gitversion);
             exit (EXIT_SUCCESS);;
 
         case 'h':   /* help */
@@ -700,6 +705,11 @@ int main (int argc, char* argv[])
         }
     }
 
+    if (argc == 1) {       // to provide help when program is called without argument
+        usage(argv[0]);
+        exit(EXIT_FAILURE);
+        }
+    
     if (end_delay > 16000) {
         usage (argv[0]);
         exit (1);
@@ -783,7 +793,7 @@ int main (int argc, char* argv[])
             VERBOSE0 ("Start count down\n");
 
             action_count (dn, delay);
-            rc = action_wait_idle (dn, timeout + delay / 1000, &td, attach_flags);
+            rc = action_wait_idle (dn, timeout + delay / 1000, &td);
             print_time (td, 0);
         }
 

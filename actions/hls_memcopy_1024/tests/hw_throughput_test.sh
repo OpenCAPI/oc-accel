@@ -136,7 +136,7 @@ fi
 
     echo -n "Read from Card DDR Memory to FPGA ... "
     cmd="snap_memcopy -C${snap_card}     ${noirq}\
-        -A CARD_DRAM -a 0x0    \
+        -A LCL_MEM0 -a 0x0   \
         -s ${size}     >>    \
         memcopy_throughput.log 2>&1"
     echo ${cmd} >> memcopy_throughput.log
@@ -150,7 +150,7 @@ fi
 
     echo -n "Write from FPGA to Card DDR Memory ... "
     cmd="snap_memcopy -C${snap_card}     ${noirq}\
-        -D CARD_DRAM -d 0x0    \
+        -D LCL_MEM0 -d 0x0   \
         -s ${size}     >>    \
         memcopy_throughput.log 2>&1"
     echo ${cmd} >> memcopy_throughput.log
@@ -192,7 +192,7 @@ if [ "$duration" = "INCR" ]; then
   # -lt 32 means 2GB
   # -lt 33 means 4GB
   # -lt 34 means 8GB
-    while [ $exp -lt 31 ]
+    while [ $exp -lt 29 ]
     do
         test_memcopy ${size}
         exp=$(($exp + 1))
@@ -205,7 +205,7 @@ echo -n "Git Version: "
 snap_peek -C ${snap_card} 0x0 || exit 1;
 echo -n "Build Date:  "
 snap_peek -C ${snap_card} 0x8 || exit 1;
-${ACTION_ROOT}/tests/process.awk snap_memcopy.log
+${ACTION_ROOT}/tests/process.awk memcopy_throughput.log
 
 echo "ok"
 

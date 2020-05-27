@@ -23,7 +23,13 @@ verbose=0
 snap_card=0
 iteration=1
 ddr_test=0
-SNAP_ROOT="."
+duration="NORMAL"
+
+# Get path of this script
+THIS_DIR=$(dirname $(readlink -f "$BASH_SOURCE"))
+ACTION_ROOT=$(dirname ${THIS_DIR})
+SNAP_ROOT=$(dirname $(dirname ${ACTION_ROOT}))
+
 FUNC="${SNAP_ROOT}/actions/hdl_example/sw/snap_example"
 
 function test () # $1 = card, $2 = action, $3 = 4k or 64, $4 = min_align, $5 = dma_size
@@ -183,7 +189,8 @@ function usage() {
 	echo "    [-C <card>]        card to be used for the test"
 	echo "    [-t <trace_level>]"
 	echo "    [-i <iteration>]"
-	echo "    [-d] Perform DDR test"
+	echo "    [-D] Perform DDR test"
+        echo "    [-d] use SHORT for simulation case or NORMAL for hardware test case"
 }
 
 #
@@ -191,7 +198,7 @@ function usage() {
 #
 PROGRAM=$0
 
-while getopts "C:t:i:hd" opt; do
+while getopts "C:t:i:d:hD" opt; do
 	case $opt in
 	C)
 	snap_card=$OPTARG;
@@ -203,6 +210,9 @@ while getopts "C:t:i:hd" opt; do
 	iteration=$OPTARG;
 	;;
 	d)
+	duration=$OPTARG;
+	;;
+	D)
 	ddr_test=1;
         ;;
 	h)
@@ -218,31 +228,45 @@ done
 MIN_ALIGN=1
 MIN_BLOCK=1
 echo -n " (Align: $MIN_ALIGN Min Block: $MIN_BLOCK) "
+if [ "$duration" = "SHORT" ] ; then   # Simulation test case
+	timeoutsim=60
+	endsimu=40
+else
+	echo ">>> To avoid timeout, -d SHORT should be used for simulation <<<"
+	timeoutsim=2	# hardware test case
+	endsimu=60
+fi
 
 for ((iter=1;iter <= iteration;iter++))
 {
 	echo "Iteration $iter of $iteration on CARD[$snap_card]"
-	echo "Testing Action 1 from 200 msec to 1 sec in 200 msec steps"
-	cmd="${FUNC} -a 1 -C${snap_card} -e 1000 -t 2"
+	echo "Testing Action 1 from 20  msec to 10*$endsimu msec in 10*$endsimu msec steps"
+        echo "timeoutsim = $timeoutsim"
+	cmd="${FUNC} -a 1 -C${snap_card} -e $endsimu -t $timeoutsim"
 	eval ${cmd}
 	if [ $? -ne 0 ]; then
        		echo "cmd: ${cmd}"
        		echo "failed"
        		exit 1
 	fi
-	echo "Testing Action 1 from 200 msec to 1 sec in 200 msec steps with Interrupts"
-	cmd="${FUNC} -a 1 -C${snap_card} -e 1000 -t 2 -I"
+	echo "Testing Action 1 from 20 msec to 10*$endsimu msec in 10*$endsimu msec steps with Interrupts"
+	cmd="${FUNC} -a 1 -C${snap_card} -e $endsimu -t $timeoutsim -I"
 	eval ${cmd}
 	if [ $? -ne 0 ]; then
 		echo "cmd: ${cmd}"
 		echo "failed"
 		exit 1
 	fi
-	test    $snap_card 2 4k $MIN_ALIGN $MIN_BLOCK
-	test    $snap_card 2 64 $MIN_ALIGN $MIN_BLOCK
-	test_sb $snap_card 2    $MIN_ALIGN $MIN_BLOCK
-	test_bs $snap_card 2    $MIN_ALIGN $MIN_BLOCK
-	test_rnd $snap_card 2   $MIN_ALIGN $MIN_BLOCK
+
+	if [ "$duration" = "SHORT" ]; then 
+		echo "# we postpone this simulation test to later debug"
+	else 
+		test    $snap_card 2 4k $MIN_ALIGN $MIN_BLOCK
+		test    $snap_card 2 64 $MIN_ALIGN $MIN_BLOCK
+		test_sb $snap_card 2    $MIN_ALIGN $MIN_BLOCK
+		test_bs $snap_card 2    $MIN_ALIGN $MIN_BLOCK
+		test_rnd $snap_card 2   $MIN_ALIGN $MIN_BLOCK
+	fi
 
 	# Check SDRAM
 	if [ $ddr_test -eq 1 ]; then
