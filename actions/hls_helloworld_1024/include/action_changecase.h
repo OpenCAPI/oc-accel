@@ -44,8 +44,8 @@ extern "C" {
 // 2. They will be extracted by hardware/setup/patch_version.sh
 // 3. And put into snap_global_vars.v
 // 4. Used by hardware/hls/action_wrapper.v
-#define ACTION_TYPE               0x10143008
-#define RELEASE_LEVEL             0x00000022
+#define ACTION_TYPE               0x10143009
+#define RELEASE_LEVEL             0x00000010
 // For snap_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
 // Please modify this file so snap_maint can recognize this action.
 // ------------ MUST READ -----------
@@ -53,10 +53,10 @@ extern "C" {
 
 /* Data structure used to exchange information between action and application */
 /* Size limit is 108 Bytes */
-typedef struct helloworld_job {
+typedef struct helloworld_1024_job {
 	struct snap_addr in;	/* input data */
 	struct snap_addr out;   /* offset table */
-} helloworld_job_t;
+} helloworld_1024_job_t;
 
 #ifdef __cplusplus
 }

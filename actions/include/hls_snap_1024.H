@@ -53,12 +53,18 @@
 #define WPERDW_512 (64/BPERDW_512) // Number of words per DW if MEMDW=512 => WPERDW =  1 ?????
 #define ADDR_RIGHT_SHIFT_512 6
 #define SNAP_HLS_JOBSIZE 108
+/* 256-bit host AXI data width*/
+#define MEMDW_256 256             // 256-bit Bus width for Host memory
+#define BPERDW_256 (MEMDW_256/8)  // Bytes per Data Word
+#define WPERDW_256 (BPERDW_256/4) // Number of words per DW
+#define ADDR_RIGHT_SHIFT_256 5
 /* 1024-bit host AXI data width*/
 #define MEMDW_1024 1024             // 1024-bit Bus width for Host memory
 #define BPERDW_1024 (MEMDW_1024/8)  // Bytes per Data Word
 #define WPERDW_1024 (BPERDW_1024/4) // Number of words per DW
 #define ADDR_RIGHT_SHIFT_1024 7
 
+typedef ap_uint<MEMDW_256>  snap_membus_256_t;   /* 256-bit ddr memory access */
 typedef ap_uint<MEMDW_512>  snap_membus_512_t;   /* 512-bit ddr memory access */
 typedef ap_uint<MEMDW_1024> snap_membus_1024_t;  /* 1024-bit snap memory access */
 typedef ap_uint<64> snapu64_t;

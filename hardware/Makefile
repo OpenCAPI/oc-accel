@@ -216,10 +216,10 @@ action_hw: prepare_logs
 		echo "                        Error: Path to ACTION_ROOT is not defined properly"; exit -1; \
 	fi
 	@echo "Calling make -C $(ACTION_ROOT) hw" > $(LOGS_DIR)/action_make.log
-	@$(MAKE) -C $(ACTION_ROOT) hw >> $(LOGS_DIR)/action_make.log;
-	@if [ $$? -ne 0 ]; then \
-		echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
-	fi
+	@$(MAKE) -C $(ACTION_ROOT) hw; \
+		if [ $$? -ne 0 ]; then \
+			echo -e "                        Error: please look into $(LOGS_DIR)/action_make.log"; exit -1; \
+		fi
 	@if [ "$(HLS_SUPPORT)" == "TRUE" ]; then \
 	        echo "Calling make -C $(ACTION_ROOT)/hw vhdl" >> $(LOGS_DIR)/action_make.log; \
 		$(MAKE) -kC $(ACTION_ROOT)/hw vhdl >> $(LOGS_DIR)/action_make.log; \
@@ -249,7 +249,7 @@ create_project: snap_preprocess
 
 hw_project_start:
 	@echo -e "======================================================="
-	@echo -e "== Precompiling the Action logic                     =="
+	@echo -e "== Precompiling the Action logic: `cat $(SNAP_ROOT)/snap_env.sh|grep actions|cut -f3- -d/`"
 	@echo -e "======================================================="
 	@echo -e "[HW PROJECT..........] start `date +"%T %a %b %d %Y"`"
 
@@ -314,11 +314,13 @@ else
 	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
 	@$(RM) -r .bitstream_name.txt
 endif
+ifeq ($(ILA_DEBUG),TRUE)
 	@echo -e "Generating ltx file for ILA debug."
 	@cd $(BUILD_DIR) && vivado -mode batch -source $(SETUP_DIR)/gen_probe_ltx.tcl -notrace  -log $(LOGS_DIR)/gen_probe_ltx.log         -journal $(LOGS_DIR)/gen_probe_ltx.jou
 	@echo -e "Generation of ltx file done."
 	@mv $(BUILD_DIR)/probe.ltx $(BUILD_DIR)/Images
 	@echo -e "Moved ltx file into Image."
+endif
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
 
 allow_%:
@@ -490,10 +492,12 @@ clean:
 	@$(RM) $(SNAP_ROOT)/hardware/hdl/core/*_tmp
 	@echo -e "                        vivado project" 1>/dev/null 2>/dev/null; 
 	@$(RM) -r viv_project*
+	@echo -e "                        snap bitstream file" 1>/dev/null 2>/dev/null; 
+	@$(RM) $(SNAP_ROOT)/hardware/setup/snap_bitstream_post.tcl
 	@echo -e "                        IPs" 1>/dev/null 2>/dev/null;
 	@$(RM) -r ip
 	@echo -e "                        sim files" 1>/dev/null 2>/dev/null;
-	@$(RM) -r sim/ies sim/xsim sim/modelsim sim/questa sim/xcelium 
+	@$(RM) -r sim/ies sim/xsim sim/xsim.dir sim/modelsim sim/questa sim/xcelium 
 	@echo -e "                        log files" 1>/dev/null 2>/dev/null;
 	@$(RM) -r logs
 	@echo -e "                        action / application" 1>/dev/null 2>/dev/null;

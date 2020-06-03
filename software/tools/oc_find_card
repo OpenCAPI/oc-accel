@@ -193,8 +193,8 @@ function detect_snap_cards() {
                                 echo -e " Device ID    is                                                : ${check_dev}"
                                 echo -e " Sub device   is                                                : ${check_sub}"
                                 echo -e " Image loaded is self defined as                                : ${image_loaded}"
-                                echo -e " Next image to be loaded at next reset (load_image_on_perst) is : ${load_image_on_perst}"
-                                echo -e " Card PCI location is                                           : ${pci::-2}"
+#                               echo -e " Next image to be loaded at next reset (load_image_on_perst) is : ${load_image_on_perst}"  # OC doesn't support this feature
+                                echo -e " Virtual Card PCI location is                                   : ${pci::-2}"
                                 echo -e " Card PCI physical slot is                                      : Not Applicable"
                         else
                                 echo -n "${card} "

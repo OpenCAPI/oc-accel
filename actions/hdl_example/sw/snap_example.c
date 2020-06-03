@@ -69,7 +69,8 @@
             printf(fmt, ## __VA_ARGS__);    \
     } while (0)
 
-static const char* version = GIT_VERSION;
+static const char* version = "Version 1.0";
+static const char* gitversion = GIT_VERSION;
 static  int verbose_level = 0;
 
 static uint64_t get_usec (void)
@@ -167,7 +168,7 @@ static uint32_t msec_2_ticks (int msec)
 /*
  *  Start Action and wait for Idle.
  */
-static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed, snap_action_flag_t flags)
+static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed)
 {
     int rc = 0;
     uint64_t t_start;   /* time in usec */
@@ -176,7 +177,6 @@ static int action_wait_idle (struct snap_card* h, int timeout, uint64_t* elapsed
     //if ((flags & SNAP_ACTION_DONE_IRQ) != 0) {
     //    snap_action_assign_irq ((void*)h, ACTION_IRQ_SRC_HIGH);
     //}
-    VERBOSE1("flags = %d\n", flags);
 
     /* FIXME Use struct snap_action and not struct snap_card */
     snap_action_start ((void*)h);
@@ -296,7 +296,7 @@ static int do_action (struct snap_card* h,
 
     VERBOSE0 ("Attach done\n");
     action_memcpy (h, action, dest, src, memsize);
-    rc = action_wait_idle (h, timeout, &td, flags);
+    rc = action_wait_idle (h, timeout, &td);
     print_time (td, memsize);
 
     if (0 != snap_detach_action (act)) {
@@ -580,7 +580,7 @@ int main (int argc, char* argv[])
     int start_delay = START_DELAY;
     int end_delay = END_DELAY;
     int step_delay = STEP_DELAY;
-    int delay = 10;
+    int delay = start_delay;
     int card_no = 0;
     int cmd;
     int action = ACTION_CONFIG_COUNT;
@@ -590,7 +590,7 @@ int main (int argc, char* argv[])
     int memcpy_iter = DEFAULT_MEMCPY_ITER;
     int memcpy_align = DEFAULT_MEMCPY_BLOCK;
     uint64_t card_ram_base = DDR_MEM_BASE_ADDR; /* Base of Card DDR or Block Ram */
-    int timeout = 200;
+    int timeout = ACTION_WAIT_TIME;
     snap_action_flag_t attach_flags = 0;
     uint64_t td;
     struct snap_action* act = NULL;
@@ -634,6 +634,7 @@ int main (int argc, char* argv[])
 
         case 'V':   /* version */
             VERBOSE0 ("%s\n", version);
+            VERBOSE0 ("%s\n", gitversion);
             exit (EXIT_SUCCESS);;
 
         case 'h':   /* help */
@@ -704,6 +705,11 @@ int main (int argc, char* argv[])
         }
     }
 
+    if (argc == 1) {       // to provide help when program is called without argument
+        usage(argv[0]);
+        exit(EXIT_FAILURE);
+        }
+    
     if (end_delay > 16000) {
         usage (argv[0]);
         exit (1);
@@ -787,7 +793,7 @@ int main (int argc, char* argv[])
             VERBOSE0 ("Start count down\n");
 
             action_count (dn, delay);
-            rc = action_wait_idle (dn, timeout + delay / 1000, &td, attach_flags);
+            rc = action_wait_idle (dn, timeout + delay / 1000, &td);
             print_time (td, 0);
         }
 

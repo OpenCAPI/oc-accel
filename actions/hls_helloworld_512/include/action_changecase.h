@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __ACTION_MEMCOPY_H__
-#define __ACTION_MEMCOPY_H__
+#ifndef __ACTION_CHANGECASE_H__
+#define __ACTION_CHANGECASE_H__
 
 /*
- * Copyright 2016, 2017 International Business Machines
+ * Copyright 2017 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,21 +44,22 @@ extern "C" {
 // 2. They will be extracted by hardware/setup/patch_version.sh
 // 3. And put into snap_global_vars.v
 // 4. Used by hardware/hls/action_wrapper.v
-#define ACTION_TYPE               0x1014300B
-#define RELEASE_LEVEL             0x00000003
+#define ACTION_TYPE               0x10143008
+#define RELEASE_LEVEL             0x00000022
 // For oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
 // Please modify ActionTypes.md file so oc_maint can recognize this action.
 // ------------ MUST READ -----------
 
 
-
-typedef struct memcopy_job {
+/* Data structure used to exchange information between action and application */
+/* Size limit is 108 Bytes */
+typedef struct helloworld_512_job {
 	struct snap_addr in;	/* input data */
 	struct snap_addr out;   /* offset table */
-} memcopy_job_t;
+} helloworld_512_job_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif	/* __ACTION_MEMCOPY_H__ */
+#endif	/* __ACTION_CHANGECASE_H__ */

@@ -72,15 +72,18 @@ function test_all_actions() # $1 = card, $2 = accel
 			#RC=$?
 			#run_test=0
 		;;
-		*"10142002") # HDL NVMe example
-			cmd="./actions/hdl_single_engine/tests/hw_general_test.sh"
+		*"10142002") # HDL Single Engine
+			cmd="./actions/hdl_single_engine/tests/hw_test.sh"
 		;;
 		*"1014300b") # HLS Memcopy
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
-		*"10143008") # HLS Hello World
-			cmd="./actions/hls_helloworld/tests/hw_test.sh"
+		*"10143008") # HLS Hello World  512 bits wide bus
+			cmd="./actions/hls_helloworld_512/tests/hw_test.sh"
 		;;
+                *"10143009") # HLS Hello World 1024 bits wide bus
+                        cmd="./actions/hls_helloworld_1024/tests/hw_test.sh"
+                ;;
 		*)
 			echo "Error: Action: $action is not valid !"
 			run_test=0
@@ -94,11 +97,11 @@ function test_all_actions() # $1 = card, $2 = accel
 				eval ${cmd}
 				RC=$?
 				echo "RUN: $cmd on $accel[$card] Done RC=$RC"
+                        fi
 			else
 				echo "Error: No Test case found for Action: $action on $accel[$card]"
 				echo "       Missing File: $cmd"
 				RC=99
-			fi
 		fi
 	done
 	echo "$0 return code is : RC=$RC"
@@ -373,7 +376,6 @@ if [[ $accel != "ALL" ]]; then
 		echo "`date` Image Test on Accel: $accel was executed $test_done time(s)"
 		exit 0
 	fi
-	# Parm (-A Nallatech 250S or AlphaData KU3 or Semptian NSA121B) was set, but no file (-F) to test
 	# Run Software Test on one Type of Card
 	echo "Test Software on: $accel Card: $CARD"
 	if [ $CARD -eq "-1" ]; then
