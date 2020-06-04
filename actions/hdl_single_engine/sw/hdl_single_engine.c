@@ -639,6 +639,16 @@ int main (int argc, char* argv[])
 
     }  // while(1)
 
+    if (optind != argc) {
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+    
+    if (argc == 1) {       // to provide help when program is called without argument
+          usage(argv[0]);
+          exit(EXIT_FAILURE);
+        }
+
 
     if (rnum == 0 && wnum == 0)
     {

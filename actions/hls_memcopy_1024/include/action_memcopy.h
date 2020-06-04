@@ -46,8 +46,8 @@ extern "C" {
 // 4. Used by hardware/hls/action_wrapper.v
 #define ACTION_TYPE               0x1014300B
 #define RELEASE_LEVEL             0x00000003
-// For snap_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
-// Please modify this file so snap_maint can recognize this action.
+// For oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
+// Please modify ActionTypes.md file so oc_maint can recognize this action.
 // ------------ MUST READ -----------
 
 

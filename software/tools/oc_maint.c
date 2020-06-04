@@ -114,7 +114,7 @@ static void* snap_open (struct mdev_ctx* mctx)
 
     if (NULL == handle)
         {
-	VERBOSE0 ("Error: Can not open CAPI-SNAP Device: %s\n",
+	VERBOSE0 ("Error: Can not open OC-Accel Device: %s\n",
                   device);
 	VERBOSE0("  => Make sure an FPGA card with proper OpenCAPI bin and cable is connected\n");
 	VERBOSE0("  => Check all cards availability with $SNAP_ROOT/software/tools/oc_find_card -v -AALL\n");
@@ -187,7 +187,7 @@ static void snap_version (void* handle)
     /* Get Card name */
     char buffer[16];
     snap_card_ioctl (handle, GET_CARD_NAME, (unsigned long)&buffer);
-    VERBOSE1 ("Name: %s. ", buffer);
+    VERBOSE1 ("Name: OC-%s. ", buffer);
 
     VERBOSE1 ("NVME ");
     snap_card_ioctl (handle, GET_NVME_ENABLED, (unsigned long)&ioctl_data);
@@ -233,10 +233,12 @@ static bool decode_action (uint32_t atype)
     int md_size = sizeof (snap_actions) / sizeof (struct actions_tab);
 
     for (i = 0; i < md_size; i++) {
-        if (atype == snap_actions[i].dev1) {
+        if (atype >= snap_actions[i].dev1) {
+          if (atype <= snap_actions[i].dev2) {
             VERBOSE1 ("%s %s\n", snap_actions[i].vendor,
                       snap_actions[i].description);
             return true;
+          }
         }
     }
 

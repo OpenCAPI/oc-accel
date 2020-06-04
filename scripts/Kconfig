@@ -106,15 +106,6 @@ choice
 
 	default HDL_EXAMPLE
 
-	config HLS_ACTION
-		bool "HLS Action - manually set ACTION_ROOT in snap_env.sh!"
-		select ENABLE_HLS_SUPPORT
-		help
-		  This option is a placeholder for an action written by the user in HLS.
-		  Please remember to set the environment variable "ACTION_ROOT"
-		  in snap_env.sh to the directory of the action source code.
-		  Also need to select the AXI data width to host is 512b or 1024b.
-
 	config HDL_ACTION
 		bool "HDL Action - manually set ACTION_ROOT in snap_env.sh!"
 		help
@@ -137,26 +128,37 @@ choice
 		  - Write data to server memory
 		select DISABLE_SDRAM_AND_BRAM
 
-	config HDL_MULTI_PROCESS
-		bool "HDL Multi-Process"
-		help
-		  This is a very simple example written in Verilog for
-		  - Multi-process testing
-		select DISABLE_SDRAM_AND_BRAM
+#experimental - not available yet
+#	config HDL_MULTI_PROCESS
+#		bool "HDL Multi-Process"
+#		help
+#		  This is a very simple example written in Verilog for
+#		  - Multi-process testing
+#		select DISABLE_SDRAM_AND_BRAM
 
-	config HDL_UNIT_SIM
-		bool "HDL UNIT SIM"
-		help
-		  This is a random/configrable test for bridge mode
-		  - This action include an AXI-master vip 
-		  - Generate random AXI read/write commands
-		  - Data check rely on verification code
-		  - No OCSE and software will be invoked for this action
-                  - Only UVM based testbench
-		select DISABLE_SDRAM_AND_BRAM
+#experimental - not available yet
+#	config HDL_UNIT_SIM
+#		bool "HDL UNIT SIM"
+#		help
+#		  This is a random/configrable test for bridge mode
+#		  - This action include an AXI-master vip 
+#		  - Generate random AXI read/write commands
+#		  - Data check rely on verification code
+#		  - No OCSE and software will be invoked for this action
+#                  - Only UVM based testbench
+#		select DISABLE_SDRAM_AND_BRAM
 
-	config HLS_HELLOWORLD
-		bool "HLS HelloWorld"
+	config HLS_ACTION
+		bool "HLS Action - manually set ACTION_ROOT in snap_env.sh!"
+		select ENABLE_HLS_SUPPORT
+		help
+		  This option is a placeholder for an action written by the user in HLS.
+		  Please remember to set the environment variable "ACTION_ROOT"
+		  in snap_env.sh to the directory of the action source code.
+		  Also need to select the AXI data width to host is 512b or 1024b.
+
+	config HLS_HELLOWORLD_512
+		bool "HLS HelloWorld_512"
 		help
 		  This is the simplest example to start with:
 		  - Reading text from the server memory
@@ -167,6 +169,18 @@ choice
 		select DISABLE_SDRAM_AND_BRAM
 		select DISABLE_NVME
 		select ACTION_HALF_WIDTH
+
+        config HLS_HELLOWORLD_1024
+                bool "HLS HelloWorld_1024"
+                help
+                  This is the simplest example to start with:
+                  - Reading text from the server memory
+                  - Processing changing case of the text
+                  - Writing back the text to the server memory
+                  This example is written in C and compiled with HLS 
+                select ENABLE_HLS_SUPPORT
+                select DISABLE_SDRAM_AND_BRAM
+                select DISABLE_NVME
 
 	config HLS_MEMCOPY_1024
 		bool "HLS Memcopy 1024b"
@@ -196,6 +210,7 @@ choice
 #		select ACTION_HALF_WIDTH
 endchoice
 
+# ACTION_HALF_WIDTH can be set to limit the width of the host data bus to 512b
 config ACTION_HALF_WIDTH
 	bool
 	default n
@@ -233,7 +248,7 @@ config FORCE_SDRAM
 	bool
 	default y
 	depends on ((AD9V3 || BW250SOC) && FORCE_SDRAM_OR_BRAM && ! ENABLE_BRAM)
-    select ENABLE_DDR
+	select ENABLE_DDR
 
 config ENABLE_DDR
 	bool
@@ -241,8 +256,7 @@ config ENABLE_DDR
 	depends on ((AD9V3 || BW250SOC) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
 	help
 	  This option enables the on-card SDRAM.
-	  SNAP supports FIXME GB DDR4
-	#FIXME
+	  SNAP supports 8GB DDR4 on the AlphaData AD9V3 card.
 
 config SDRAM_USED
 	string
@@ -621,33 +635,36 @@ config UNIT_SIM_USED
 	default "TRUE"  if ENABLE_UNIT_VERIF
 	default "FALSE" if ! ENABLE_UNIT_VERIF
 
-config ENABLE_ODMA
-	bool "Enable ODMA (not available)"
-    default n
-	help
-	   Enable ODMA instead of TLX-AXI bridge.
+#experimental - not available yet
+#config ENABLE_ODMA
+#	bool "Enable ODMA (not available)"
+#    default n
+#	help
+#	   Enable ODMA instead of TLX-AXI bridge.
 
 config ODMA_USED
 	string
 	default "TRUE"  if ENABLE_ODMA
 	default "FALSE" if ! ENABLE_ODMA
 
-config ENABLE_ODMA_ST_MODE
-	bool "Enable ODMA AXI4-Stream data transfer mode."
-    default n
-	help
-	   Enable ODMA Stream mode.
+#experimental - not available yet
+#config ENABLE_ODMA_ST_MODE
+#	bool "Enable ODMA AXI4-Stream data transfer mode."
+#    default n
+#	help
+#	   Enable ODMA Stream mode.
 
 config ODMA_ST_MODE_USED
 	string
 	default "TRUE"  if ENABLE_ODMA_ST_MODE
 	default "FALSE" if ! ENABLE_ODMA_ST_MODE
 
-config ENABLE_ODMA_512
-	bool "Enable ODMA data transfer with 512b data width."
-    default n
-	help
-	   Enable ODMA data width with 512bits.
+#experimental - not available yet
+#config ENABLE_ODMA_512
+#	bool "Enable ODMA data transfer with 512b data width."
+#    default n
+#	help
+#	   Enable ODMA data width with 512bits.
 
 config ODMA_512_USED
 	string
@@ -655,7 +672,7 @@ config ODMA_512_USED
 	default "FALSE" if ! ENABLE_ODMA_512
 
 config ENABLE_FLASH
-	bool "Enable FLASH"
+	bool "Enable FLASH (Disabling will require JTAG programming)"
     default y
 	help
 	   Enable FLASH in oc-bip.

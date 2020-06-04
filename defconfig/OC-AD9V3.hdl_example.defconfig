@@ -1,0 +1,83 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# Kernel Configuration
+#
+export AD9V3=y
+# AD9H3 is not set
+# AD9H7 is not set
+export FPGACARD=AD9V3
+export FLASH_INTERFACE=SPIx8
+export FLASH_SIZE=64
+export FLASH_FACTORYADDR=0x00000000
+export FLASH_USERADDR=0x08000000
+export OPENCAPI30=y
+export CAPI_VER=opencapi30
+export FPGACHIP=xcvu3p-ffvc1517-2-e
+export NUM_OF_ACTIONS=1
+# HLS_ACTION is not set
+# HDL_ACTION is not set
+export HDL_EXAMPLE=y
+# HDL_SINGLE_ENGINE is not set
+# HDL_MULTI_PROCESS is not set
+# HDL_UNIT_SIM is not set
+# HLS_HELLOWORLD is not set
+# HLS_MEMCOPY_1024 is not set
+export ACTION_HALF_WIDTH=y
+export HALF_WIDTH=TRUE
+# ENABLE_HLS_SUPPORT is not set
+export HLS_SUPPORT=FALSE
+# DISABLE_SDRAM_AND_BRAM is not set
+# FORCE_SDRAM_OR_BRAM is not set
+export SDRAM_USED=FALSE
+export HBM_USED=FALSE
+export ENABLE_BRAM=y
+export BRAM_USED=TRUE
+export DDR3_USED=FALSE
+export DDR4_USED=FALSE
+export ENABLE_DDRI=y
+export DDRI_USED=TRUE
+export DISABLE_NVME=y
+# FORCE_NVME is not set
+export NVME_USED=FALSE
+export USER_CLOCK=FALSE
+# ACTION_USER_CLOCK is not set
+export SIM_XSIM=y
+# SIM_IRUN is not set
+# SIM_XCELIUM is not set
+# SIM_MODELSIM is not set
+# SIM_QUESTA is not set
+# NO_SIM is not set
+export SIMULATOR=xsim
+export DENALI_USED=FALSE
+export OCSE_PATH=../ocse
+
+#
+# ================= Advanced Options: =================
+#
+export SPEED_25G=y
+# SPEED_20G is not set
+export PHY_SPEED=25.78125
+export AXI_ID_WIDTH=1
+# Action_clock_50MHz is not set
+# Action_clock_100MHz is not set
+# Action_clock_150MHz is not set
+export Action_clock_200MHz=y
+# Action_clock_250MHz is not set
+# Action_clock_300MHz is not set
+# Action_clock_350MHz is not set
+# Action_clock_400MHz is not set
+export USER_CLOCK_FREQ=200
+export HLS_CLOCK_PERIOD_CONSTRAINT=4ns
+# ENABLE_ILA is not set
+export ILA_DEBUG=FALSE
+export CLOUD_USER_FLOW=FALSE
+export CLOUD_BUILD_BITFILE=FALSE
+export UNIT_SIM_USED=FALSE
+# ENABLE_ODMA is not set
+export ODMA_USED=FALSE
+# ENABLE_ODMA_ST_MODE is not set
+export ODMA_ST_MODE_USED=FALSE
+# ENABLE_ODMA_512 is not set
+export ODMA_512_USED=FALSE
+export ENABLE_FLASH=y
+export FLASH_USED=TRUE
