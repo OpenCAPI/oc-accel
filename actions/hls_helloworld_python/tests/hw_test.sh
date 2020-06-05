@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-## Copyright 2019 International Business Machines
+## Copyright 2020 International Business Machines
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ done
 
 export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 
-####iHELLOWORLD ##########################################################
+####iHELLOWORLD PYTHON ##########################################################
 
 function test_helloworld {
     cmd="echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\" > tin"
@@ -79,6 +79,18 @@ function test_helloworld {
 	echo "failed"
 	exit 1
     fi
+    echo "tin is:"
+    cat tin
+    echo "tout is:"
+    cat tout
+    echo "Checking produced tout vs reference tCAP:"
+    diff tout tCAP
+    if [ $? -ne 0 ]; then
+       echo "cmd: ${cmd}"
+       echo "failed"
+       exit 1
+    fi
+
     echo "ok"
 
     echo -n "Check results ... "

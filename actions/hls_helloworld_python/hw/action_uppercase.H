@@ -21,11 +21,11 @@
 #include <string.h>
 #include <ap_int.h>
 
-#include "hls_snap.H"
+#include "hls_snap_1024.H"
 #include <action_changecase_python.h> /* HelloWorld Job definition */
 
 
-typedef char word_t[BPERDW];
+typedef char word_t[BPERDW_1024];
 //---------------------------------------------------------------------
 // This is generic. Just adapt names for a new action
 // CONTROL is defined and handled by SNAP 
