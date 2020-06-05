@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 International Business Machines
+ * Copyright 2017 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,23 +20,26 @@
 #include <stdint.h>
 
 struct actions_tab {
-    const char* vendor;
-    uint32_t dev1;
-    const char* description;
+        const char *vendor;
+        uint32_t dev1;
+        uint32_t dev2;
+        const char *description;
 };
 
 static const struct actions_tab snap_actions[] = {
-/* KEEP names without space as they as reused in test */
-/* Recommended Usage OC HDL examples use 0x10142xxx IDs */
-    { "IBM", 0x10142000, "hdl_example in VHDL  (512b)"                           },
-    { "IBM", 0x10142002, "hdl_single_engine in Verilog (1024b)"                  },
-    { "IBM", 0x10142004, "UVM test for unit verification (no OCSE and software)" },
-    { "IBM", 0x1014200E, "HDL multi-process example"                             },
-/* recommended Usage OC HLS examples use 0x10143xxx IDs */
-    { "IBM", 0x10143008, "HLS_Helloworld      (512b)"                            },
-    { "IBM", 0x10143004, "HLS_Helloworld_Python (512b)"                          },
-    { "IBM", 0x10143005, "HLS_Mmult_Python (512b)"                               },
-    { "IBM", 0x1014300B, "HLS_Memcopy_1024     (1024b)"                          },
+  { "Reserved", 0x00000000, 0x00000000, "Reserved" },
+  { "IBM", 0x10142000, 0x10142000, "HDL_example in VHDL  (512b)" },
+  { "IBM", 0x10142002, 0x10142002, "HDL single_engine in Verilog (1024b)" },
+  { "IBM", 0x10142004, 0x10142004, "UVM test for unit verification (no OCSE and software)" },
+  { "IBM", 0x1014200E, 0x1014200E, "HDL_multi-process example" },
+  { "IBM", 0x1014200F, 0x10140FFF, "Reserved for HDL IBM Actions" },
+  { "IBM", 0x10143008, 0x10143008, "HLS Helloworld_512    (512b)" },
+  { "IBM", 0x10143009, 0x10143009, "HLS Helloworld_1024   (1024b)" },
+  { "IBM", 0x1014300B, 0x1014300B, "HLS Memcopy_1024 (1024b)" },
+  { "IBM", 0x1014300C, 0x1014300C, "HLS HBM Memcopy  (1024b)" },
+  { "IBM", 0x1014300D, 0x1014FFFF, "Reserved for HLS IBM Actions" },
+  { "PSI", 0x52320001, 0x523200FF, "X-ray Detector Data Acquisition and Analysis" },
+  { "Reserved", 0xFFFF0000, 0xFFFFFFFF, "Reserved" },
 };
 
 #endif  /* __SNAP_ACTIONS_H__ */

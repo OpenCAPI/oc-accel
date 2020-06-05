@@ -148,6 +148,8 @@ while [ -z "$SETUP_DONE" ]; do
     AR='${SNAP_ROOT}/actions/hls_helloworld_512'
   elif [ -n "$HLS_HELLOWORLD_1024" ]; then
     AR='${SNAP_ROOT}/actions/hls_helloworld_1024'
+  elif [ -n "$HLS_HELLOWORLD_PYTHON" ]; then
+    AR='${SNAP_ROOT}/actions/hls_helloworld_python'
   elif [ -n "$HDL_HELLOWORLD" ]; then
     AR='${SNAP_ROOT}/actions/hdl_helloworld'
   elif [ -n "$HDL_SINGLE_ENGINE" ]; then
