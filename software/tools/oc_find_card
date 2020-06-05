@@ -429,7 +429,7 @@ if  [ $CardOption == 1 ]; then
         	if [ $? == 1 ]; then
             	rc=1
         	fi
-		detect_oc_card_name $card  "0x062b" "0x060d" "OC-BW250SOC"
+		detect_oc_card_name $card  "0x062b" "0x066a" "OC-BW250SOC"
         	if [ $? == 1 ]; then
             	rc=1
         	fi
@@ -581,7 +581,7 @@ case ${accel} in
 		;;
 	# OC-BW250SOC OpenCAPI 3.0 card from Bittware
 	"OC-BW250SOC")
-		detect_snap_cards "0x062b" "0x060d" "OC-BW250SOC"
+		detect_snap_cards "0x062b" "0x066a" "OC-BW250SOC"
 		RC=$?
 		;;
 	# U200 CAPI 2.0 card from Xilinx
@@ -666,7 +666,7 @@ case ${accel} in
 		detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x062b" "0x060d" "OC-BW250SOC"
+		detect_snap_cards "0x062b" "0x066a" "OC-BW250SOC"
 		RC=$((RC + $?))
 
 		echo -e "\nTotal $RC cards detected \n"
