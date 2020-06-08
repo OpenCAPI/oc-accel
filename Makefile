@@ -15,7 +15,7 @@
 #
 
 SHELL=/bin/bash
-PLATFORM ?= $(shell uname -i)
+PLATFORM ?= $(shell uname -m)
 
 export SNAP_ROOT=$(abspath .)
 
