@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-PLATFORM ?= $(shell uname -i)
+PLATFORM ?= $(shell uname -m)
 
 subdirs += $(wildcard hls_*) $(wildcard hdl_*)
 software_subdirs = $(addsuffix /sw,$(subdirs))
