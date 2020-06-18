@@ -120,7 +120,7 @@ LDFLAGS += -L$(SNAP_ROOT)/software/lib
 #   FORCE_32BIT=0  Use machine default
 #   FORCE_32BIT=1  Enforce 32-bit build
 #
-PLATFORM ?= $(shell uname -i)
+PLATFORM ?= $(shell uname -m)
 ifeq ($(PLATFORM),x86_64)
 BUILD_SIMCODE=1
 

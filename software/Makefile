@@ -26,7 +26,7 @@
 # we should discuss creating a new generic.mk or alike file.
 #
 
-PLATFORM ?= $(shell uname -i)
+PLATFORM ?= $(shell uname -m)
 export SNAP_ROOT=$(abspath ..)
 
 -include ../snap_env.sh
