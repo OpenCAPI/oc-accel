@@ -8,7 +8,8 @@ IBM | 10.14.20.02 | 10.14.20.02 | HDL single_engine in Verilog (1024b)
 IBM | 10.14.20.04 | 10.14.20.04 | UVM test for unit verification (no OCSE and software)
 IBM | 10.14.20.0E | 10.14.20.0E | HDL_multi-process example
 IBM | 10.14.20.0F | 10.14.0F.FF | Reserved for HDL IBM Actions
-IBM | 10.14.30.08 | 10.14.30.08 | HLS Helloworld    (512b)
+IBM | 10.14.30.08 | 10.14.30.08 | HLS Helloworld_512    (512b)
+IBM | 10.14.30.09 | 10.14.30.09 | HLS Helloworld_1024   (1024b)
 IBM | 10.14.30.0B | 10.14.30.0B | HLS Memcopy_1024 (1024b)
 IBM | 10.14.30.0C | 10.14.30.0C | HLS HBM Memcopy  (1024b)
 IBM | 10.14.30.0D | 10.14.FF.FF | Reserved for HLS IBM Actions

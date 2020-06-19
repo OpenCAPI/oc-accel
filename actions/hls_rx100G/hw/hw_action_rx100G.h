@@ -22,7 +22,7 @@
 #include <ap_int.h>
 #include <hls_stream.h>
 
-#include "hls_snap.H"
+#include "hls_snap_1024.H"
 #include "../include/action_rx100G.h" /* HelloWorld Job definition */
 
 #define OUTPUT_RAW        0
@@ -36,7 +36,7 @@
 // 1: simplify the data casting style
 /*S2OC #define RELEASE-LEVEL		0x00000005*/
 
-typedef char word_t[BPERDW];
+typedef char word_t[BPERDW_512];
 
 typedef ap_ufixed<PEDE_G0_PRECISION,14, SC_RND_CONV> pedeG0_t;
 typedef ap_fixed<PEDE_G0_PRECISION+1,14, SC_RND_CONV> pedeG0_signed_t;
@@ -173,7 +173,7 @@ void apply_gain_correction(DATA_STREAM &in, DATA_STREAM &out,
 		snap_HBMbus_t *d_hbm_p6, snap_HBMbus_t *d_hbm_p7,
 		snap_HBMbus_t *d_hbm_p8, snap_HBMbus_t *d_hbm_p9,
 	    ap_uint<2> output_mode);
-void write_data(DATA_STREAM &in, snap_membus_t *dout_gmem,
+void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem,
 		size_t out_frame_buffer_addr, size_t out_frame_status_addr, snap_HBMbus_t *d_hbm_stat);
 
 extern packed_pedeG0_t packed_pedeG0[NMODULES * 512 * 1024 / 32];

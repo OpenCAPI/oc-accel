@@ -15,7 +15,7 @@
  */
 
 /*
- * SNAP HLS_HELLOWORLD EXAMPLE
+ * SNAP HLS_HELLOWORLD_512 EXAMPLE
  *
  * Tasks for the user:
  *   1. Explore HLS pragmas to get better timing behavior.
@@ -29,17 +29,17 @@
 //----------------------------------------------------------------------
 //--- MAIN PROGRAM -----------------------------------------------------
 //----------------------------------------------------------------------
-static int process_action(snap_membus_t *din_gmem,
-	      snap_membus_t *dout_gmem,
-	      /* snap_membus_t *d_ddrmem, *//* not needed */
+static int process_action(snap_membus_512_t *din_gmem,
+	      snap_membus_512_t *dout_gmem,
+	      /* snap_membus_512_t *d_ddrmem, *//* not needed */
 	      action_reg *act_reg)
 {
     uint32_t size, bytes_to_transfer;
     uint64_t i_idx, o_idx;
 
     /* byte address received need to be aligned with port width */
-    i_idx = act_reg->Data.in.addr >> ADDR_RIGHT_SHIFT;
-    o_idx = act_reg->Data.out.addr >> ADDR_RIGHT_SHIFT;
+    i_idx = act_reg->Data.in.addr >> ADDR_RIGHT_SHIFT_512;
+    o_idx = act_reg->Data.out.addr >> ADDR_RIGHT_SHIFT_512;
     size = act_reg->Data.in.size;
 
     main_loop:
@@ -49,10 +49,10 @@ static int process_action(snap_membus_t *din_gmem,
 	unsigned char i;
 
 	/* Limit the number of bytes to process to a 64B word */
-	bytes_to_transfer = MIN(size, BPERDW);
+	bytes_to_transfer = MIN(size, BPERDW_512);
 
         /* Read in one word_t */
-	memcpy((char*) text, din_gmem + i_idx, BPERDW);
+	memcpy((char*) text, din_gmem + i_idx, BPERDW_512);
 
 	/* Convert lower cases to upper cases byte per byte */
     uppercase_conversion:
@@ -63,7 +63,7 @@ static int process_action(snap_membus_t *din_gmem,
 	}
 
 	/* Write out one word_t */
-	memcpy(dout_gmem + o_idx, (char*) text, BPERDW);
+	memcpy(dout_gmem + o_idx, (char*) text, BPERDW_512);
 
 	size -= bytes_to_transfer;
 	i_idx++;
@@ -75,10 +75,11 @@ static int process_action(snap_membus_t *din_gmem,
 }
 
 //--- TOP LEVEL MODULE -------------------------------------------------
-// snap_membus_t is defined in actions/include/hls_snap.H
-void hls_action(snap_membus_t *din_gmem,
-	snap_membus_t *dout_gmem,
-	/* snap_membus_t *d_ddrmem, // CAN BE COMMENTED IF UNUSED */
+// snap_membus_512_t is defined in actions/include/hls_snap_1024.H
+// which deals with both 512 and 1024 bits wide busses
+void hls_action(snap_membus_512_t *din_gmem,
+	snap_membus_512_t *dout_gmem,
+	/* snap_membus_512_t *d_ddrmem, // CAN BE COMMENTED IF UNUSED */
 	action_reg *act_reg)
 {
     // Host Memory AXI Interface - CANNOT BE REMOVED - NO CHANGE BELOW
@@ -114,8 +115,8 @@ int main(void)
 #define MEMORY_LINES 1
     int rc = 0;
     unsigned int i;
-    static snap_membus_t  din_gmem[MEMORY_LINES];
-    static snap_membus_t  dout_gmem[MEMORY_LINES];
+    static snap_membus_512_t  din_gmem[MEMORY_LINES];
+    static snap_membus_512_t  dout_gmem[MEMORY_LINES];
 
     action_reg act_reg;
 

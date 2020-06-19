@@ -23,7 +23,7 @@
 
 packed_pedeG0_t packed_pedeG0[NMODULES * 512 * 1024 / 32];
 
-void copy_data(snap_membus_t *din_gmem, snap_HBMbus_t *d_hbm0, snap_HBMbus_t *d_hbm1, size_t in_addr) {
+void copy_data(snap_membus_512_t *din_gmem, snap_HBMbus_t *d_hbm0, snap_HBMbus_t *d_hbm1, size_t in_addr) {
 	for (size_t i = 0; i < NMODULES * 512 * 1024 / 32; i ++) {
 		ap_uint<512> tmp = din_gmem[in_addr+i];
 		d_hbm0[i] = tmp(255,0);
@@ -34,7 +34,7 @@ void copy_data(snap_membus_t *din_gmem, snap_HBMbus_t *d_hbm0, snap_HBMbus_t *d_
 	}
 }
 
-void load_data_to_hbm(snap_membus_t *din_gmem, uint64_t in_gain_pedestal_addr,
+void load_data_to_hbm(snap_membus_512_t *din_gmem, uint64_t in_gain_pedestal_addr,
 		snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1,
 		snap_HBMbus_t *d_hbm_p2, snap_HBMbus_t *d_hbm_p3,
 		snap_HBMbus_t *d_hbm_p4, snap_HBMbus_t *d_hbm_p5,
@@ -86,7 +86,7 @@ d_hbm_p1[i] = tmp(511,256);
 
 #define BURST_SIZE 4
 
-void save_pedestal(snap_membus_t *dout_gmem, size_t offset) {
+void save_pedestal(snap_membus_512_t *dout_gmem, size_t offset) {
 	for (size_t i = 0; i < NPIXEL * 2 / 64 / BURST_SIZE; i ++) {
 #pragma HLS PIPELINE II = 4
 
@@ -99,7 +99,7 @@ void save_pedestal(snap_membus_t *dout_gmem, size_t offset) {
 	}
 }
 
-void load_pedestal(snap_membus_t *din_gmem, size_t offset) {
+void load_pedestal(snap_membus_512_t *din_gmem, size_t offset) {
 	for (size_t i = 0; i < NPIXEL * 2 / 64 / BURST_SIZE; i ++) {
 #pragma HLS PIPELINE II = 4
 		packed_pedeG0_t tmp[BURST_SIZE];
@@ -118,17 +118,17 @@ void load_pedestal(snap_membus_t *din_gmem, size_t offset) {
 
 // Taken from HBM_memcopy action
 //convert buffer 256b to 512b
-static void HBMbus_to_membus(snap_HBMbus_t *data_in, snap_membus_t *data_out,
+static void HBMbus_to_membus(snap_HBMbus_t *data_in, snap_membus_512_t *data_out,
                              uint64_t size_in_words_512)
 {
 #pragma HLS INLINE off
-        static snap_membus_t data_entry = 0;
+        static snap_membus_512_t data_entry = 0;
 
         hbm2mem_loop:
         for (int k=0; k<size_in_words_512; k++) {
 #pragma HLS PIPELINE II=2
             for (int j = 0; j < 2; j++) {
-                data_entry |= ((snap_membus_t)(data_in[k*2+j])) << j*MEMDW/2;
+                data_entry |= ((snap_membus_512_t)(data_in[k*2+j])) << j*MEMDW_512/2;
             }
             data_out[k] = data_entry;
             data_entry = 0;
@@ -183,7 +183,7 @@ void make_packet(AXI_STREAM &din_eth, uint64_t frame_number, uint32_t eth_packet
 
 void collect_data(AXI_STREAM &din_eth,
 		eth_settings_t eth_settings,
-		snap_membus_t *dout_gmem,
+		snap_membus_512_t *dout_gmem,
 		size_t out_frame_buffer_addr, size_t out_frame_status_addr,
 		snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1,
 		snap_HBMbus_t *d_hbm_p2, snap_HBMbus_t *d_hbm_p3,
@@ -240,8 +240,8 @@ void collect_data(AXI_STREAM &din_eth,
 //----------------------------------------------------------------------
 //--- MAIN PROGRAM -----------------------------------------------------
 //----------------------------------------------------------------------
-static int process_action(snap_membus_t *din_gmem,
-		snap_membus_t *dout_gmem,
+static int process_action(snap_membus_512_t *din_gmem,
+		snap_membus_512_t *dout_gmem,
 		snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1,
 		snap_HBMbus_t *d_hbm_p2, snap_HBMbus_t *d_hbm_p3,
 		snap_HBMbus_t *d_hbm_p4, snap_HBMbus_t *d_hbm_p5,
@@ -266,10 +266,10 @@ static int process_action(snap_membus_t *din_gmem,
 	send_gratious_arp(dout_eth, act_reg->Data.fpga_mac_addr, act_reg->Data.fpga_ipv4_addr);
 
 	// Fill data structures
-	size_t in_gain_pedestal_addr = act_reg->Data.in_gain_pedestal_data_addr >> ADDR_RIGHT_SHIFT;
-	size_t out_frame_buffer_addr = act_reg->Data.out_frame_buffer_addr >> ADDR_RIGHT_SHIFT;
-	size_t out_frame_status_addr = act_reg->Data.out_frame_status_addr >> ADDR_RIGHT_SHIFT;
-    size_t jf_packet_headers_addr = act_reg->Data.out_jf_packet_headers_addr >> ADDR_RIGHT_SHIFT;
+	size_t in_gain_pedestal_addr = act_reg->Data.in_gain_pedestal_data_addr >> ADDR_RIGHT_SHIFT_512;
+	size_t out_frame_buffer_addr = act_reg->Data.out_frame_buffer_addr >> ADDR_RIGHT_SHIFT_512;
+	size_t out_frame_status_addr = act_reg->Data.out_frame_status_addr >> ADDR_RIGHT_SHIFT_512;
+    size_t jf_packet_headers_addr = act_reg->Data.out_jf_packet_headers_addr >> ADDR_RIGHT_SHIFT_512;
 
 	eth_settings_t eth_settings;
 	eth_settings.fpga_mac_addr = act_reg->Data.fpga_mac_addr;
@@ -351,8 +351,9 @@ static int process_action(snap_membus_t *din_gmem,
 }
 
 //--- TOP LEVEL MODULE -------------------------------------------------
-//S2OC snap_membus_t and snap_HBMbus_t are defined in actions/include/hls_snap.H
-void hls_action(snap_membus_t *din_gmem, snap_membus_t *dout_gmem,
+//S2OC snap_membus_512_t is defined in actions/include/hls_snap_1024.H
+//S2OC snap_HBMbus_t = snap_membus_256_t is defined in actions/include/hls_snap_1024.H
+void hls_action(snap_membus_512_t *din_gmem, snap_membus_512_t *dout_gmem,
 		snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1,
 		snap_HBMbus_t *d_hbm_p2, snap_HBMbus_t *d_hbm_p3,
 		snap_HBMbus_t *d_hbm_p4, snap_HBMbus_t *d_hbm_p5,

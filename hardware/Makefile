@@ -23,7 +23,7 @@
 ## So, the root directory is one level above.
 ##
 SHELL=/bin/bash
-PLATFORM ?= $(shell uname -i)
+PLATFORM ?= $(shell uname -m)
 
 export SNAP_ROOT=$(abspath ..)
 export SNAP_HARDWARE_ROOT=$(SNAP_ROOT)/hardware
@@ -51,7 +51,7 @@ FPGACARD_LOWER = $(shell echo $(FPGACARD) | tr A-Z a-z)
 
 export DCP_ROOT ?= $(SNAP_ROOT)/dcp
 
-# luyong says: Remove it again when PRFLOW enabled again. 
+# luyong says: Remove it again when PRFLOW enabled again.
 # It should come from Kconfig
 USE_PRFLOW ?= FALSE
 export IGNORE_CHECK_PSL ?= $(USE_PRFLOW)
@@ -471,7 +471,7 @@ $(SNAP_MODELS):
 	@$(MAKE) -s $(subst .model_,,$@)
 
 ifeq ($(UNIT_SIM_USED),TRUE)
-model: check_simulator 
+model: check_simulator
 	@$(MAKE) -s $(SIMULATOR)
 
 else
@@ -513,14 +513,14 @@ clean:
 	          $(SNAP_MODELS)                         \
 	          *build
 	@$(RM) $(SNAP_ROOT)/hardware/hdl/core/*_tmp
-	@echo -e "                        vivado project" 1>/dev/null 2>/dev/null; 
+	@echo -e "                        vivado project" 1>/dev/null 2>/dev/null;
 	@$(RM) -r viv_project*
-	@echo -e "                        snap bitstream file" 1>/dev/null 2>/dev/null; 
+	@echo -e "                        snap bitstream file" 1>/dev/null 2>/dev/null;
 	@$(RM) $(SNAP_ROOT)/hardware/setup/snap_bitstream_post.tcl
 	@echo -e "                        IPs" 1>/dev/null 2>/dev/null;
 	@$(RM) -r ip
 	@echo -e "                        sim files" 1>/dev/null 2>/dev/null;
-	@$(RM) -r sim/ies sim/xsim sim/xsim.dir sim/modelsim sim/questa sim/xcelium 
+	@$(RM) -r sim/ies sim/xsim sim/xsim.dir sim/modelsim sim/questa sim/xcelium
 	@echo -e "                        log files" 1>/dev/null 2>/dev/null;
 	@$(RM) -r logs
 	@echo -e "                        action / application" 1>/dev/null 2>/dev/null;

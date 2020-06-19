@@ -1,5 +1,5 @@
-#ifndef __ACTION_HLS_MEMCOPY_H__
-#define __ACTION_HLS_MEMCOPY_H__
+#ifndef __ACTION_UPPERCASE_H__
+#define __ACTION_UPPERCASE_H__
 
 /*
  * Copyright 2017 International Business Machines
@@ -21,20 +21,21 @@
 #include <string.h>
 #include <ap_int.h>
 
+/* Note that OC-ACCEL introduces the 1024 bit bus possibility    */
+/* hls_snap_1024.H covers both legacy 512 as well as 1024 cases  */
 #include "hls_snap_1024.H"
-#include <action_memcopy.h> /* Memcopy Job definition */
+#include <action_changecase.h> /* HelloWorld Job definition */
 
 
-#define MAX_NB_OF_BYTES_READ	(256 * 1024)
-#define LCL_MEM_MAX_SIZE	(256 * 1024 * 1024)  // HBM is 256MB
-#define MAX_NB_OF_WORDS_READ_512    (MAX_NB_OF_BYTES_READ/BPERDW_512)
-#define MAX_NB_OF_WORDS_READ_1024	(MAX_NB_OF_BYTES_READ/BPERDW_1024)
-
+typedef char word_t[BPERDW_512];
 //---------------------------------------------------------------------
+// This is generic. Just adapt names for a new action
+// CONTROL is defined and handled by SNAP 
+// helloworld_1024_job_t is user defined in hls_helloworld/include/action_change_case.h
 typedef struct {
 	CONTROL Control;	/*  16 bytes */
-	memcopy_job_t Data;	/* up to 108 bytes */
-	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(memcopy_job_t)];
+	helloworld_512_job_t Data;	/* up to 108 bytes */
+	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(helloworld_512_job_t)];
 } action_reg;
 
-#endif  /* __ACTION_HLS_MEMCOPY_H__ */
+#endif  /* __ACTION_UPPERCASE_H__*/

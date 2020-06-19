@@ -16,7 +16,7 @@
 
 #include "hw_action_rx100G.h"
 
-void write_data(DATA_STREAM &in, snap_membus_t *dout_gmem, size_t out_frame_buffer_addr, size_t out_frame_status_addr, snap_HBMbus_t *d_hbm_stat) {
+void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_buffer_addr, size_t out_frame_status_addr, snap_HBMbus_t *d_hbm_stat) {
 	data_packet_t packet_in;
 	in.read(packet_in);
 
@@ -86,7 +86,7 @@ void write_data(DATA_STREAM &in, snap_membus_t *dout_gmem, size_t out_frame_buff
 
 				// Status info is filled only every NMODULES frames, but interleaved between modules.
 				if (packet_in.frame_number % (NMODULES) == packet_in.module)
-					memcpy(dout_gmem+out_frame_status_addr, &statistics, BPERDW);
+					memcpy(dout_gmem+out_frame_status_addr, &statistics, BPERDW_512);
 			}
 
 			ap_uint<1> last_axis_user;
@@ -129,6 +129,6 @@ void write_data(DATA_STREAM &in, snap_membus_t *dout_gmem, size_t out_frame_buff
               statistics(64 + i * 32 + 31, 64 + i * 32) = head[i];
         }
 
-	memcpy(dout_gmem+out_frame_status_addr, &statistics, BPERDW);
+	memcpy(dout_gmem+out_frame_status_addr, &statistics, BPERDW_512);
 
 }

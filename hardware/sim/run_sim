@@ -533,7 +533,7 @@
    echo "**** append msgs from ocse.log"|tee -a stim.log; grep -i "error" ocse.log|tee -a stim.log
    cd $OCSE_ROOT;	  	OCSEVERS=`git log --pretty=format:"%h %ad" -n1 --date=iso|awk '{print $1 " "  $2}'`;cd - >/dev/null
 #  cd $OCSE_ROOT;        	OCSEVERS=`git describe --all --long`;cd - >/dev/null
-   if [ "$AET" == "1" ];then $OCSE_ROOT/debug/debug >debug.lst;fi # assume you need debug info
+#  if [ "$AET" == "1" ];then $OCSE_ROOT/debug/debug >debug.lst;fi # assume you need debug info
  else OCSEVERS="N/A"
  fi
  if [ "$PAR" -ne "1" ] ;then
