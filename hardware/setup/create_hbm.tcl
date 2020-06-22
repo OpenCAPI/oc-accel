@@ -40,14 +40,13 @@ set bd_name  hbm_top
 # each with an independent AXI interfaces which will be connected to the action
 # Default is HBM_MEM_NUM = 8 interfaces
 # TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change HBM_MEM_NUM value
-# with a value between 1 and 16. If you need more memories, you need to add the 2nd stack
+# param and 1) change HBM_MEM_NUM value with a value between 1 and 32. 
 # and 2) set the right params enabling AXI and MC
 # -------------------------------------------------------
 # If you modify the number of AXI interfaces, don't forget to modify also :
 #   actions/hls_hbm_memcopy/hw/hw_action_memcopy.cpp
-#   hardware/hdl/hls/action_wrapper.vhd_source
-#   hardware/hdl/core/psl_accel_ad9h3.vhd_source
+#   hardware/hdl/hls/action_wrapper.v
+#   hardware/hdl/core/framework_afu.v
 #   --> follow HBM names <--
 # _______________________________________________________________________________
 #CHANGE_HBM_INTERFACES_NUMBER
@@ -115,27 +114,42 @@ set cell [create_bd_cell -quiet -type ip -vlnv {xilinx.com:ip:hbm:*} hbm]
 #  AXI clk = 200MHz => HBM refclk = 900MHz
 #  AXI clk = 225MHz => HBM refclk = 875MHz
 #  AXI clk = 250MHz => HBM refclk = 875MHz
-#LEFT stack is used for SNAP/CAPI2.0 since BSP/PSL logic is using right resources of the FPGA
+#in AD9H3, HBM LEFT stack is used for SNAP/CAPI2.0 since BSP/PSL logic is using right resources of the FPGA
+#in AD9H3, HBM RIGHT stack is used for OC-Accel.OC3.0 since TLx/DLx logic is using left resources of the FPGA
+#in AD9H7, HBM LEFT stack is used for OC-Accel.OC3.0 since path is quicker to HBM left resources of the FPGA
 
 #Setting for Production chips: HBM_REF_CLK=200MHz
 set_property -dict [list                               \
-  CONFIG.USER_HBM_DENSITY {4GB}                        \
-  CONFIG.USER_HBM_STACK {1}                            \
   CONFIG.USER_AUTO_POPULATE {yes}                      \
   CONFIG.USER_SWITCH_ENABLE_00 {FALSE}                 \
   ] $cell >> $log_file
 
 
-if { $fpga_card == "AD9H3" } {
-set_property -dict [list                               \
-  CONFIG.USER_SINGLE_STACK_SELECTION {RIGHT}           \
-  ] $cell >> $log_file
+if { $HBM_MEM_NUM < 16 } {
+  set_property -dict [list                               \
+    CONFIG.USER_HBM_DENSITY {4GB}                        \
+    CONFIG.USER_HBM_STACK {1}                            \
+    CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}  \
+    ] $cell >> $log_file
+    if { $fpga_card == "AD9H3" } {
+    set_property -dict [list                             \
+      CONFIG.USER_SINGLE_STACK_SELECTION {RIGHT}         \
+      ] $cell >> $log_file
+    } else {
+    set_property -dict [list                             \
+      CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}          \
+      ] $cell >> $log_file
+    }
 } else {
-set_property -dict [list                               \
-  CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}            \
-  ] $cell >> $log_file
-}
-
+  set_property -dict [list                               \
+     CONFIG.USER_HBM_DENSITY {8GB}                       \
+     CONFIG.USER_HBM_STACK {2}                           \
+     CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}             \
+     CONFIG.USER_CLK_SEL_LIST1 {AXI_16_ACLK}             \
+     CONFIG.USER_SWITCH_ENABLE_01 {FALSE}                \
+     CONFIG.USER_MC_ENABLE_APB_01 {TRUE}                 \
+    ] $cell >> $log_file
+} 
 # AXI clk is 200MHZ and is used as HBM_ref_clk 
 # AXI clk divided by 2 is used by APB_clock (50-100MHz)
   set_property -dict [list                               \
@@ -189,17 +203,30 @@ set_property -dict [list                               \
 #  CONFIG.USER_MEMORY_DISPLAY {2048}  => set the value to 512 by MC used (2048 = 4 MC used)
 #  CONFIG.USER_MC_ENABLE_00 {TRUE}    => enable/disable the MC
 set_property -dict [list \
-  CONFIG.USER_MEMORY_DISPLAY {512}  \
-  CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}  \
+  CONFIG.USER_MEMORY_DISPLAY {3072}  \
   CONFIG.USER_MC_ENABLE_00 {TRUE}  \
   CONFIG.USER_MC_ENABLE_01 {TRUE}  \
   CONFIG.USER_MC_ENABLE_02 {TRUE}  \
   CONFIG.USER_MC_ENABLE_03 {TRUE}  \
   CONFIG.USER_MC_ENABLE_04 {TRUE}  \
   CONFIG.USER_MC_ENABLE_05 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_06 {FALSE}  \
-  CONFIG.USER_MC_ENABLE_07 {FALSE}  \
+  CONFIG.USER_MC_ENABLE_06 {FALSE} \
+  CONFIG.USER_MC_ENABLE_07 {FALSE} \
 ] $cell >> $log_file
+
+
+if { $HBM_MEM_NUM > 15 } {
+  set_property -dict [list \
+    CONFIG.USER_MC_ENABLE_08 {FALSE} \
+    CONFIG.USER_MC_ENABLE_09 {FALSE} \
+    CONFIG.USER_MC_ENABLE_10 {FALSE} \
+    CONFIG.USER_MC_ENABLE_11 {FALSE} \
+    CONFIG.USER_MC_ENABLE_12 {FALSE} \
+    CONFIG.USER_MC_ENABLE_13 {FALSE} \
+    CONFIG.USER_MC_ENABLE_14 {FALSE} \
+    CONFIG.USER_MC_ENABLE_15 {FALSE} \
+  ] $cell >> $log_file
+}
 
 
 #add log_file to remove the warning on screen

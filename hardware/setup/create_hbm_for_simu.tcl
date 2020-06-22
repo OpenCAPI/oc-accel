@@ -38,14 +38,13 @@ set bd_name  hbm_top
 # each with an independent AXI interfaces which will be connected to the action
 # Default is HBM_MEM_NUM = 2 interfaces
 # TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change HBM_MEM_NUM value
-# with a value between 1 and 16. If you need more memories, you need to add the 2nd stack
+# param and 1) change HBM_MEM_NUM value with a value between 1 and 32
 # and 2) set the right params enabling AXI and MC
 # -------------------------------------------------------
 # If you modify the number of AXI interfaces, don't forget to modify also :
 #   actions/hls_hbm_memcopy/hw/hw_action_memcopy.cpp
-#   hardware/hdl/hls/action_wrapper.vhd_source
-#   hardware/hdl/core/psl_accel_ad9h3.vhd_source
+#   hardware/hdl/hls/action_wrapper.v
+#   hardware/hdl/core/framework_afu.v
 #   --> follow HBM names <--
 # _______________________________________________________________________________
 #CHANGE_HBM_INTERFACES_NUMBER

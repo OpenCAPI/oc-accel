@@ -317,50 +317,28 @@ static void process_action(snap_membus_1024_t *din_gmem,
 	snapu32_t ReturnCode = SNAP_RETC_SUCCESS;
 	snapu64_t InputAddress;
 	snapu64_t OutputAddress;
-	//snapu64_t InputAddress_1024;
-	//snapu64_t OutputAddress_1024;
 	snapu64_t address_xfer_offset;
-	//snapu64_t address_xfer_offset_1024;
-	//snapu64_t InputAddress_256;
-	//snapu64_t OutputAddress_256;
-	//snapu64_t address_xfer_offset_256;
 	snap_membus_1024_t  buffer1024[MAX_NB_OF_WORDS_READ_1024];
 	snap_membus_256_t   buffer256[MAX_NB_OF_WORDS_READ_256];
-	// if 4096 bytes max => 64 words
 
 	// byte address received need to be aligned with port width
 	// -- shift depends on the size of the bus => do it later
-	//InputAddress_1024 = (act_reg->Data.in.addr)   >> ADDR_RIGHT_SHIFT_1024;
-	//OutputAddress_1024 = (act_reg->Data.out.addr) >> ADDR_RIGHT_SHIFT_1024;
-	//InputAddress_256 = (act_reg->Data.in.addr)    >> ADDR_RIGHT_SHIFT_256;
-	//OutputAddress_256 = (act_reg->Data.out.addr)  >> ADDR_RIGHT_SHIFT_256;
 	InputAddress = (act_reg->Data.in.addr);
 	OutputAddress = (act_reg->Data.out.addr);
 
 	address_xfer_offset = 0x0;
-	//address_xfer_offset_256 = 0x0;
-	//address_xfer_offset_1024 = 0x0;
-	// testing sizes to prevent from writing out of bounds
+	
 	action_xfer_size = MIN(act_reg->Data.in.size,
 			       act_reg->Data.out.size);
-
-	// test done just on HBM_P0 - should be extended if there is any risk
-	if ((act_reg->Data.in.type == SNAP_ADDRTYPE_HBM_P0) &&
-	    (act_reg->Data.in.size > LCL_MEM_MAX_SIZE)) {
-	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
-		return;
-        }
-	if ((act_reg->Data.out.type == SNAP_ADDRTYPE_HBM_P0) &&
-	    (act_reg->Data.out.size > LCL_MEM_MAX_SIZE)) {
-	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
-		return;
-        }
 
 	// buffer size is hardware limited by MAX_NB_OF_BYTES_READ
 	if(action_xfer_size %MAX_NB_OF_BYTES_READ == 0)
 		nb_blocks_to_xfer = (action_xfer_size / MAX_NB_OF_BYTES_READ);
 	else
 		nb_blocks_to_xfer = (action_xfer_size / MAX_NB_OF_BYTES_READ) + 1;
+
+        // memcopy can be from/to following types: 
+        // SNAP_ADDRTYPE_UNUSED (=BRAM) , SNAP_ADDRTYPE_HOST_DRAM, SNAP_ADDRTYPE_HBM_P0 to SNAP_ADDRTYPE_HBM_P7
 
 	// transferring buffers one after the other
 	L0:
@@ -370,15 +348,20 @@ static void process_action(snap_membus_1024_t *din_gmem,
 		xfer_size = MIN(action_xfer_size,
 				(snapu32_t)MAX_NB_OF_BYTES_READ);
 
+                // Source is Host (1024b) 
                 if (act_reg->Data.in.type == SNAP_ADDRTYPE_HOST_DRAM) {
                     read_burst_of_data_from_mem(din_gmem, act_reg->Data.in.type,
-                        (InputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_1024, buffer1024, xfer_size);
+                        (InputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_1024, 
+                        buffer1024, xfer_size);
 
+                    // Conversion is needed only if dest is HBM (256b) => buffer256 will be used
                     if ((act_reg->Data.out.type >= SNAP_ADDRTYPE_HBM_P0) &&
                         (act_reg->Data.out.type <= SNAP_ADDRTYPE_HBM_P7))
                         //convert buffer 1024 to 256b
                         membus_to_HBMbus(buffer1024, buffer256, xfer_size);
-                } else {
+
+                // Source is BRAM or HBM (256b) 
+                } else  {
 		    read_burst_of_data_from_HBM(d_hbm_p0, d_hbm_p1,
 		        d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5,
 		        d_hbm_p6, d_hbm_p7, d_hbm_p8, d_hbm_p9,
@@ -386,15 +369,22 @@ static void process_action(snap_membus_1024_t *din_gmem,
 			act_reg->Data.in.type,
 			(InputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_256, 
                         buffer256, xfer_size);
-		}
+                } 
+
+                // Destination is Host (1024b)
                 if (act_reg->Data.out.type == SNAP_ADDRTYPE_HOST_DRAM) {
+
+                    // Conversion is needed only if Host was HBM(256b) => buffer1024 will be used
                     if ((act_reg->Data.in.type >= SNAP_ADDRTYPE_HBM_P0) &&
                         (act_reg->Data.in.type <= SNAP_ADDRTYPE_HBM_P7))
                         //convert buffer 256b to 1024b
                         HBMbus_to_membus(buffer256, buffer1024, xfer_size);
 
-                     write_burst_of_data_to_mem(dout_gmem, act_reg->Data.out.type,
-                        (OutputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_1024, buffer1024, xfer_size);
+                    write_burst_of_data_to_mem(dout_gmem, act_reg->Data.out.type,
+                        (OutputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_1024, 
+                        buffer1024, xfer_size);
+
+                // Destination is BRAM or HBM (256b)
                 } else {
 		     write_burst_of_data_to_HBM(d_hbm_p0, d_hbm_p1,
 		        d_hbm_p2, d_hbm_p3, d_hbm_p4, d_hbm_p5,
