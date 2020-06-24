@@ -136,6 +136,11 @@ check_snap_settings:
 	@echo "                        PHY_SPEED       = $(PHY_SPEED)"
 	@echo "                        NUM_OF_ACTIONS  = $(NUM_OF_ACTIONS)"
 	@echo "                        HLS_SUPPORT     = $(HLS_SUPPORT)"
+	@if [ "$(HALF_WIDTH)" == "TRUE" ]; then \
+		echo "                        ACTION HOST I/F = 512 bits";\
+	else \
+		echo "                        ACTION HOST I/F = 1024 bits";\
+	fi
 	@echo "                        BRAM_USED       = $(BRAM_USED)"
 	@echo "                        SDRAM_USED      = $(SDRAM_USED)"
 	@echo "                        HBM_USED        = $(HBM_USED)"

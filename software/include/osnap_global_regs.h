@@ -137,6 +137,7 @@ extern "C" {
 #define AD9V3_OC_CARD   0x031     /* OpenCAPI 3.0*/
 #define AD9H3_OC_CARD   0x032     /* OpenCAPI 3.0*/
 #define AD9H7_OC_CARD   0x033     /* OpenCAPI 3.0*/
+#define BW250SOC_OC_CARD   0x034     /* OpenCAPI 3.0*/
 
 /*
  * Freerunning Timer (FRT)
