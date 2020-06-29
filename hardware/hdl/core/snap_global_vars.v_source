@@ -23,6 +23,10 @@
 `define AD9V3
 #endif
 
+#if defined(CONFIG_BW250SOC)
+`define BW250SOC
+#endif
+
 #if defined(CONFIG_AD9H3)
 `define AD9H3
 #endif

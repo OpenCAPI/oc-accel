@@ -19,7 +19,7 @@ choice
 		select DISABLE_NVME
 		help
 		  AlphaData 9V3 has ethernet and 16GB DDR4 SDRAM. Uses Xilinx FPGA VU3P.
-	
+
 	config AD9H3
 		bool "OpenCAPI3.0: AlphaData 9H3 (VU33P with HBM)"
 		select OPENCAPI30
@@ -33,24 +33,34 @@ choice
 		select DISABLE_NVME
 		help
 		  AlphaData 9H7 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU37P.
+
+	config BW250SOC
+		bool "OpenCAPI3.0: Bittware 250SOC (ZU19EG with DDR)"
+		select OPENCAPI30
+		select DISABLE_NVME
+		select ENABLE_FLASH
+		help
+		  Bittware 250SOC has ethernet and 8GB DDR4 SDRAM each on PL and PS side. Uses Xilinx ZynqMP SOC ZU19EG.
+	
 endchoice
 
 
 config FPGACARD
 	string
 	default "AD9V3"  if AD9V3
+	default "BW250SOC"  if BW250SOC
 	default "AD9H3"  if AD9H3
 	default "AD9H7"  if AD9H7
 
 config FLASH_INTERFACE
 	string
-	default "SPIx8"  if  AD9V3 || AD9H3 || AD9H7
+	default "SPIx8"  if  AD9V3 || AD9H3 || AD9H7 || BW250SOC
 
 #FLASH_SIZE: in MB
 config FLASH_SIZE
 	string
 	default 128 if AD9H7
-	default 64 if AD9V3 || AD9H3
+	default 64 if AD9V3 || AD9H3 || BW250SOC
 
 #FLASH_FACTORYADDR: For all cards, factory address is 0x0
 config FLASH_FACTORYADDR
@@ -60,7 +70,7 @@ config FLASH_FACTORYADDR
 #FLASH_USERADDR: For SPI, it is byte address.
 config FLASH_USERADDR
 	string
-	default 0x08000000 if AD9V3 || AD9H3 || AD9H7
+	default 0x08000000 if AD9V3 || AD9H3 || AD9H7 || BW250SOC
 
 config OPENCAPI30
 	bool
@@ -73,6 +83,7 @@ config CAPI_VER
 config FPGACHIP
 	string
 	default "xcvu3p-ffvc1517-2-e" if AD9V3
+	default "xczu19eg-ffvd1760-2-i" if BW250SOC
 	default "xcvu33p-fsvh2104-2-e" if AD9H3
 	default "xcvu37p-fsvh2892-2-e" if AD9H7
 
@@ -237,13 +248,13 @@ config FORCE_SDRAM_OR_BRAM
 config FORCE_SDRAM
 	bool
 	default y
-	depends on (AD9V3 && FORCE_SDRAM_OR_BRAM && ! ENABLE_BRAM)
-    	select ENABLE_DDR
+	depends on ((AD9V3 || BW250SOC) && FORCE_SDRAM_OR_BRAM && ! ENABLE_BRAM)
+	select ENABLE_DDR
 
 config ENABLE_DDR
 	bool
 	prompt "Enable DDR"
-	depends on (AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
+	depends on ((AD9V3 || BW250SOC) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
 	help
 	  This option enables the on-card SDRAM.
 	  SNAP supports 8GB DDR4 on the AlphaData AD9V3 card.
@@ -297,7 +308,7 @@ config DDR3_USED
 config ENABLE_DDR4
 	bool
 	default y
-	depends on (ENABLE_DDR && (N250S || S121B || N250SP || AD8K5 || RCXVUP || FX609 || S241 || AD9V3))
+	depends on (ENABLE_DDR && (N250S || S121B || N250SP || AD8K5 || RCXVUP || FX609 || S241 || AD9V3 || BW250SOC))
 
 config DDR4_USED
 	string
