@@ -67,8 +67,9 @@ set create_dwidth_conv  FALSE
 set create_interconnect FALSE
 set create_bram         FALSE
 set create_ddr4_ad9v3   FALSE
-#set create_hbm_ad9h3    FALSE
-#set create_hbm_ad9h7    FALSE
+set create_ddr4_bw250soc   FALSE
+set create_hbm_ad9h3    FALSE
+set create_hbm_ad9h7    FALSE
 set create_eth_mac      FALSE
 
 if { $bram_used == "TRUE" } {
@@ -82,18 +83,21 @@ if { $bram_used == "TRUE" } {
   if { $fpga_card == "AD9V3"  } {
      set create_ddr4_ad9v3   TRUE
   }
-#} elseif {$hbm_used == "TRUE" } {
-  #if { $fpga_card == "AD9H3" } {
-     #set create_hbm_ad9h3   TRUE
-  #}
-  #if { $fpga_card == "AD9H7" } {
-     #set create_hbm_ad9h7   TRUE
-  #}
 }
 
 if { $eth_used == "TRUE" } {
   if { $eth_loop_back == "FALSE" } {
      set create_eth_mac   TRUE
+  }
+}
+if { $fpga_card == "BW250SOC"  } {
+     set create_ddr4_bw250soc   TRUE
+} elseif {$hbm_used == "TRUE" } {
+  if { $fpga_card == "AD9H3" } {
+     set create_hbm_ad9h3   TRUE
+  }
+  if { $fpga_card == "AD9H7" } {
+     set create_hbm_ad9h7   TRUE
   }
 }
 
@@ -837,7 +841,7 @@ if { $create_interconnect == "TRUE" } {
 
 # axi_dwidth_converter
 if { $create_dwidth_conv == "TRUE" } {
-  puts "                        generating axi_dwidth_converter ......"
+  puts "                        generating axi_dwidth_converter (action host I/F = 512 bits)"
   create_ip -name axi_dwidth_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_dwidth_converter -dir $ip_dir  >> $log_file
   set_property -dict [list CONFIG.ADDR_WIDTH {64}              \
                            CONFIG.FIFO_MODE {2}                \
@@ -973,7 +977,7 @@ if { $user_clock == "TRUE" } {
 }
 
 
-#DDR4 create ddr4sdramm with ECC (AD9V3)
+#DDR4 create ddr4sdramm with ECC (AD9V3 and BW250SOC)
 if { $create_ddr4_ad9v3 == "TRUE" } {
   puts "	                generating IP ddr4sdram for $fpga_card"
   create_ip -name ddr4 -vendor xilinx.com -library ip -version 2.* -module_name ddr4sdram -dir $ip_dir >> $log_file
@@ -993,6 +997,38 @@ if { $create_ddr4_ad9v3 == "TRUE" } {
                       CONFIG.C0.DDR4_AxiAddressWidth {33}                                     \
                       CONFIG.C0.DDR4_AxiIDWidth {4}                                           \
                       CONFIG.C0.BANK_GROUP_WIDTH {2}                                          \
+                     ] [get_ips ddr4sdram] >> $log_file
+
+  set_property generate_synth_checkpoint false [get_files $ip_dir/ddr4sdram/ddr4sdram.xci]                    >> $log_file
+  generate_target {instantiation_template}     [get_files $ip_dir/ddr4sdram/ddr4sdram.xci]                    >> $log_file
+  generate_target all                          [get_files $ip_dir/ddr4sdram/ddr4sdram.xci]                    >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/ddr4sdram/ddr4sdram.xci] -no_script -force  >> $log_file
+  export_simulation -of_objects [get_files $ip_dir/ddr4sdram/ddr4sdram.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+
+  #DDR4 create ddr4sdramm example design
+  puts "	                generating ddr4sdram example design"
+  open_example_project -in_process -force -dir $ip_dir     [get_ips ddr4sdram] >> $log_file
+}
+
+if { $create_ddr4_bw250soc == "TRUE" } {
+  puts "	                generating IP ddr4sdram for $fpga_card"
+  create_ip -name ddr4 -vendor xilinx.com -library ip -version 2.* -module_name ddr4sdram -dir $ip_dir >> $log_file
+  set_property -dict [list                                                                    \
+   			CONFIG.C0.BANK_GROUP_WIDTH {1} \
+			CONFIG.C0.DDR4_AxiAddressWidth {32} \
+			CONFIG.C0.DDR4_AxiDataWidth {512} \
+			CONFIG.C0.DDR4_AxiSelection {true}                                      \
+			CONFIG.C0.DDR4_CLKOUT0_DIVIDE {5} \
+			CONFIG.C0.DDR4_CasLatency {17} \
+			CONFIG.C0.DDR4_CasWriteLatency {12} \
+                        CONFIG.C0.DDR4_CustomParts $top_xdc_dir/bw250soc_custom_parts_2400.csv  \
+   			CONFIG.C0.DDR4_DataMask {NO_DM_NO_DBI} \
+   			CONFIG.C0.DDR4_DataWidth {72} \
+   			CONFIG.C0.DDR4_Ecc {true} \
+   			CONFIG.C0.DDR4_InputClockPeriod {4998} \
+   			CONFIG.C0.DDR4_MemoryPart {DDR4_2400_250SP} \
+   			CONFIG.C0.DDR4_TimePeriod {833} \
+   			CONFIG.C0.DDR4_isCustom {true} \
                      ] [get_ips ddr4sdram] >> $log_file
 
   set_property generate_synth_checkpoint false [get_files $ip_dir/ddr4sdram/ddr4sdram.xci]                    >> $log_file

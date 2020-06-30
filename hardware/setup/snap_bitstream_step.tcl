@@ -82,6 +82,7 @@ set command  "write_bitstream -force -file $img_dir/$IMAGE_NAME"
 #if { [file exists $root_dir/setup/$fpgacard/snap_bitstream_pre.tcl] == 1 } {
 #  source $root_dir/setup/$fpgacard/snap_bitstream_pre.tcl
 #}
+##
 
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: user image" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 if { [catch "$command > $logfile" errMsg] } {
@@ -89,7 +90,9 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
   exit 42
 } else {
+if { $fpgacard != "BW250SOC" } {
   write_cfgmem -force -format bin -size $flash_size -interface  $flash_interface -loadbit "up 0x0 $img_dir/$IMAGE_NAME.bit" $img_dir/$IMAGE_NAME >> $logfile
+ }
 }
 
 # Also write the factory bitstream if it was selected
@@ -114,4 +117,18 @@ if { $factory_image == "TRUE" } {
   } else {
     write_cfgmem -force -format bin -size $flash_size -interface $flash_interface -loadbit "up 0x0 $img_dir/$IMAGE_NAME.bit" $img_dir/$IMAGE_NAME >> $logfile
   }
+ }
+
+if { $fpgacard == "BW250SOC" } {
+set elfpath $root_dir/oc-bip/board_support_packages/bw250soc/ip/250_soc_fsbl.elf
+set bitpath $img_dir/$IMAGE_NAME.bit
+#exec cat $root_dir/oc-bip/board_support_packages/bw250soc/ip/output.bif | sed 's/250_soc_fsbl/$elfpath/g' | sed 's/oc_fpga_top/$bitpath/g' > $img_dir/output.bif
+exec echo "//arch = zynqmp; split = false; format = BIN" > $img_dir/output.bif
+exec echo "the_ROM_image:" >> $img_dir/output.bif
+exec echo "{" >> $img_dir/output.bif
+exec echo "	\[fsbl_config\]a53_x64" >> $img_dir/output.bif
+exec echo "	\[bootloader\]$elfpath" >> $img_dir/output.bif
+exec echo "	\[destination_device = pl\]$bitpath" >> $img_dir/output.bif
+exec echo "}" >> $img_dir/output.bif
+exec bootgen -arch zynqmp -image $img_dir/output.bif -o $img_dir/${IMAGE_NAME}.bin
 }

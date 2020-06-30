@@ -38,6 +38,8 @@ elif [ "$FPGACARD" == "AD9H3" ]; then
   CARD_TYPE="32"
 elif [ "$FPGACARD" == "AD9H7" ]; then
   CARD_TYPE="33"
+elif [ "$FPGACARD" == "BW250SOC" ]; then
+  CARD_TYPE="34"
 fi
 
 SRC="define CARD_TYPE 8'h.*"

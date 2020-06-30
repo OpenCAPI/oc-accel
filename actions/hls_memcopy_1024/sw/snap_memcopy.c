@@ -77,7 +77,7 @@ static void usage(const char *prog)
 	       "\n"
 	       "Example on a real card :\n"
 	       "------------------------\n"
-	       "cd /home/snap && export ACTION_ROOT=/home/snap/actions/hls_memcopy\n"
+	       "cd /home/oc-accel && export ACTION_ROOT=/home/oc-accel/actions/hls_memcopy_1024\n"
 	       "source snap_path.sh\n"
 	       "oc_maint -vv\n"
 	       "echo create a 512MB file with random data ...wait...\n"

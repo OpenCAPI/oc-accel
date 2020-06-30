@@ -215,6 +215,28 @@ module framework_afu (
     , output  [0 : 0]        c0_ddr4_ck_c
     , output  [0 : 0]        c0_ddr4_ck_t
    `endif
+  `ifdef BW250SOC
+  
+   // DDR4 SDRAM Interface
+ // , output [511:0]       dbg_bus //Unused
+    , input                  c0_sys_clk_p
+    , input                  c0_sys_clk_n
+    , output  [16 : 0]       c0_ddr4_adr
+    , output  [1 : 0]        c0_ddr4_ba
+    , output  [0 : 0]        c0_ddr4_cke
+    , output  [0 : 0]        c0_ddr4_cs_n
+    , inout   [8 : 0]        c0_ddr4_dm_dbi_n
+    , inout   [71 : 0]       c0_ddr4_dq
+    , inout   [8 : 0]        c0_ddr4_dqs_c
+    , inout   [8 : 0]        c0_ddr4_dqs_t
+    , output  [0 : 0]        c0_ddr4_odt
+    , output  [0 : 0]        c0_ddr4_bg
+    , output                 c0_ddr4_reset_n
+    , output                 c0_ddr4_act_n
+    , output  [0 : 0]        c0_ddr4_ck_c
+    , output  [0 : 0]        c0_ddr4_ck_t
+   `endif
+
    `endif
 
 // ETHERNET
@@ -1091,6 +1113,12 @@ module framework_afu (
   wire [511 : 0]  ddr4_dbg_bus                   ;
   wire            memctl0_ui_clk_sync_rst        ; //reset generated from DDR MIG
 `endif
+`ifdef BW250SOC
+  wire            ddr4_dbg_clk                   ;
+  wire [511 : 0]  ddr4_dbg_bus                   ;
+  wire            memctl0_ui_clk_sync_rst        ; //reset generated from DDR MIG
+`endif
+
 `endif
 
 
@@ -3005,6 +3033,91 @@ block_RAM block_ram_i1
 // if DDR on AD9V3 (no BRAM)
 `ifdef ENABLE_DDR
 `ifdef AD9V3
+  //
+  // DDR4SDRAM
+  //
+     ddr4sdram ddr4memctl0_bank
+      (
+      .c0_init_calib_complete      ( memctl0_init_calib_complete ) ,
+      .dbg_clk                     ( ddr4_dbg_clk                ) ,
+      .c0_sys_clk_p                ( c0_sys_clk_p                ) ,
+      .c0_sys_clk_n                ( c0_sys_clk_n                ) ,
+      .dbg_bus                     ( ddr4_dbg_bus                ) ,
+      .c0_ddr4_adr                 ( c0_ddr4_adr                 ) ,
+      .c0_ddr4_ba                  ( c0_ddr4_ba                  ) ,
+      .c0_ddr4_cke                 ( c0_ddr4_cke                 ) ,
+      .c0_ddr4_cs_n                ( c0_ddr4_cs_n                ) ,
+      .c0_ddr4_dm_dbi_n            ( c0_ddr4_dm_dbi_n            ) ,
+      .c0_ddr4_dq                  ( c0_ddr4_dq                  ) ,
+      .c0_ddr4_dqs_c               ( c0_ddr4_dqs_c               ) ,
+      .c0_ddr4_dqs_t               ( c0_ddr4_dqs_t               ) ,
+      .c0_ddr4_odt                 ( c0_ddr4_odt                 ) ,
+      .c0_ddr4_bg                  ( c0_ddr4_bg                  ) ,
+      .c0_ddr4_reset_n             ( c0_ddr4_reset_n             ) ,
+      .c0_ddr4_act_n               ( c0_ddr4_act_n               ) ,
+      .c0_ddr4_ck_c                ( c0_ddr4_ck_c                ) ,
+      .c0_ddr4_ck_t                ( c0_ddr4_ck_t                ) ,
+      .c0_ddr4_ui_clk              ( memctl0_ui_clk              ) ,//output
+      .c0_ddr4_ui_clk_sync_rst     ( memctl0_ui_clk_sync_rst     ) ,//output
+      .c0_ddr4_aresetn             ( memctl0_axi_rst_n           ) ,
+      .c0_ddr4_s_axi_ctrl_awvalid  ( memctl0_axi_ctrl_awvalid    ) ,
+      .c0_ddr4_s_axi_ctrl_awready  ( memctl0_axi_ctrl_awready    ) ,
+      .c0_ddr4_s_axi_ctrl_awaddr   ( memctl0_axi_ctrl_awaddr     ) ,
+      .c0_ddr4_s_axi_ctrl_wvalid   ( memctl0_axi_ctrl_wvalid     ) ,
+      .c0_ddr4_s_axi_ctrl_wready   ( memctl0_axi_ctrl_wready     ) ,
+      .c0_ddr4_s_axi_ctrl_wdata    ( memctl0_axi_ctrl_wdata      ) ,
+      .c0_ddr4_s_axi_ctrl_bvalid   ( memctl0_axi_ctrl_bvalid     ) ,
+      .c0_ddr4_s_axi_ctrl_bready   ( memctl0_axi_ctrl_bready     ) ,
+      .c0_ddr4_s_axi_ctrl_bresp    ( memctl0_axi_ctrl_bresp      ) ,
+      .c0_ddr4_s_axi_ctrl_arvalid  ( memctl0_axi_ctrl_arvalid    ) ,
+      .c0_ddr4_s_axi_ctrl_arready  ( memctl0_axi_ctrl_arready    ) ,
+      .c0_ddr4_s_axi_ctrl_araddr   ( memctl0_axi_ctrl_araddr     ) ,
+      .c0_ddr4_s_axi_ctrl_rvalid   ( memctl0_axi_ctrl_rvalid     ) ,
+      .c0_ddr4_s_axi_ctrl_rready   ( memctl0_axi_ctrl_rready     ) ,
+      .c0_ddr4_s_axi_ctrl_rdata    ( memctl0_axi_ctrl_rdata      ) ,
+      .c0_ddr4_s_axi_ctrl_rresp    ( memctl0_axi_ctrl_rresp      ) ,
+      .c0_ddr4_interrupt           ( memctl0_interrupt           ) ,
+      .c0_ddr4_s_axi_awid          ( memctl0_axi_awid            ) ,
+      .c0_ddr4_s_axi_awaddr        ( memctl0_axi_awaddr          ) ,
+      .c0_ddr4_s_axi_awlen         ( memctl0_axi_awlen           ) ,
+      .c0_ddr4_s_axi_awsize        ( memctl0_axi_awsize          ) ,
+      .c0_ddr4_s_axi_awburst       ( memctl0_axi_awburst         ) ,
+      .c0_ddr4_s_axi_awlock        ( memctl0_axi_awlock          ) ,
+      .c0_ddr4_s_axi_awcache       ( memctl0_axi_awcache         ) ,
+      .c0_ddr4_s_axi_awprot        ( memctl0_axi_awprot          ) ,
+      .c0_ddr4_s_axi_awqos         ( memctl0_axi_awqos           ) ,
+      .c0_ddr4_s_axi_awvalid       ( memctl0_axi_awvalid         ) ,
+      .c0_ddr4_s_axi_awready       ( memctl0_axi_awready         ) ,
+      .c0_ddr4_s_axi_wdata         ( memctl0_axi_wdata           ) ,
+      .c0_ddr4_s_axi_wstrb         ( memctl0_axi_wstrb           ) ,
+      .c0_ddr4_s_axi_wlast         ( memctl0_axi_wlast           ) ,
+      .c0_ddr4_s_axi_wvalid        ( memctl0_axi_wvalid          ) ,
+      .c0_ddr4_s_axi_wready        ( memctl0_axi_wready          ) ,
+      .c0_ddr4_s_axi_bready        ( memctl0_axi_bready          ) ,
+      .c0_ddr4_s_axi_bid           ( memctl0_axi_bid             ) ,
+      .c0_ddr4_s_axi_bresp         ( memctl0_axi_bresp           ) ,
+      .c0_ddr4_s_axi_bvalid        ( memctl0_axi_bvalid          ) ,
+      .c0_ddr4_s_axi_arid          ( memctl0_axi_arid            ) ,
+      .c0_ddr4_s_axi_araddr        ( memctl0_axi_araddr          ) ,
+      .c0_ddr4_s_axi_arlen         ( memctl0_axi_arlen           ) ,
+      .c0_ddr4_s_axi_arsize        ( memctl0_axi_arsize          ) ,
+      .c0_ddr4_s_axi_arburst       ( memctl0_axi_arburst         ) ,
+      .c0_ddr4_s_axi_arlock        ( memctl0_axi_arlock          ) ,
+      .c0_ddr4_s_axi_arcache       ( memctl0_axi_arcache         ) ,
+      .c0_ddr4_s_axi_arprot        ( memctl0_axi_arprot          ) ,
+      .c0_ddr4_s_axi_arqos         ( memctl0_axi_arqos           ) ,
+      .c0_ddr4_s_axi_arvalid       ( memctl0_axi_arvalid         ) ,
+      .c0_ddr4_s_axi_arready       ( memctl0_axi_arready         ) ,
+      .c0_ddr4_s_axi_rready        ( memctl0_axi_rready          ) ,
+      .c0_ddr4_s_axi_rlast         ( memctl0_axi_rlast           ) ,
+      .c0_ddr4_s_axi_rvalid        ( memctl0_axi_rvalid          ) ,
+      .c0_ddr4_s_axi_rresp         ( memctl0_axi_rresp           ) ,
+      .c0_ddr4_s_axi_rid           ( memctl0_axi_rid             ) ,
+      .c0_ddr4_s_axi_rdata         ( memctl0_axi_rdata           ) ,
+      .sys_rst                     ( memctl0_reset_q             )
+    );
+`endif
+`ifdef BW250SOC
   //
   // DDR4SDRAM
   //
