@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <iostream>
 #include "hw_action_rx100G.h"
 
 enum rcv_state_t {RCV_INIT, RCV_JF_HEADER, RCV_GOOD, RCV_IGNORE};
@@ -72,7 +72,7 @@ void decode_eth_1(ap_uint<512> val_in, packet_header_t &header_out) {
 
 	ap_uint<32> udp_payload_pos = ipv4_payload_pos + 64; // 112 + 160 + 64 = 336 bits (42 bytes)
 
-	header_out.jf_frame_number = val_in(udp_payload_pos + 64-1, udp_payload_pos) - 1;
+	header_out.jf_frame_number = val_in(udp_payload_pos + 64-1, udp_payload_pos);
 	header_out.jf_exptime = val_in(udp_payload_pos + 96-1, udp_payload_pos + 64);
 	header_out.jf_packet_number = val_in(udp_payload_pos + 128 - 1, udp_payload_pos + 96);
 	header_out.jf_bunch_id(63,16) = val_in(udp_payload_pos + 176 - 1, udp_payload_pos + 128);
@@ -136,7 +136,7 @@ void send_gratious_arp(AXI_STREAM &out, ap_uint<48> mac, ap_uint<32> ipv4_addres
 
 }
 
-void read_eth_packet(AXI_STREAM &in, DATA_STREAM &out, eth_settings_t eth_settings, snap_HBMbus_t *d_hbm_header) {
+void read_eth_packet(AXI_STREAM &in, DATA_STREAM &out, eth_settings_t eth_settings, rx100g_hbm_t *d_hbm_header) {
 	rcv_state_t rcv_state = RCV_INIT;
 	uint64_t packets_read = 0;
 	ap_uint<8> axis_packet = 0; // 0..256 , but >=128 means error
@@ -146,13 +146,19 @@ void read_eth_packet(AXI_STREAM &in, DATA_STREAM &out, eth_settings_t eth_settin
 
 	packet_out.exit = 0;
 
+
+	uint8_t encountered_triggers = 0;
+	ap_uint<24> frame_number_last_trigger = 0;
+	ap_uint<24> frame_number_last_no_trigger  = 0;
+	ap_uint<1> trigger_set = 0; // This is only for beginning, to filter situation, where no filter was used
+
 	while (packet_out.exit == 0) {
 #pragma HLS PIPELINE
 		in.read(packet_in);
 		switch (rcv_state) {
 		case RCV_INIT:
+			rcv_state = RCV_IGNORE;
 			decode_eth_1(packet_in.data, header);
-			// UDP port is not checked - should it be as well?
 			if ((header.dest_mac == eth_settings.fpga_mac_addr) && // MAC address
 					(header.ether_type == 0x0800) &&  // Ether_type = IP
 					(header.ip_version == 4) &&       // Protocol = IPv4
@@ -160,14 +166,19 @@ void read_eth_packet(AXI_STREAM &in, DATA_STREAM &out, eth_settings_t eth_settin
 					(header.ipv4_protocol == 0x11) && // UDP
 					(header.ipv4_total_len == 8268)) {
 				// Frame number counts from 0 (it is shifted by one vs. JUNGFRAU header info
-				// Quit if frame number reported is >= frame_number_to_quit
-				if (header.jf_frame_number >= eth_settings.frame_number_to_quit) packet_out.exit = 1;
-				else if (header.jf_frame_number < eth_settings.frame_number_to_stop) {
-				   axis_packet = 0;
-				   rcv_state = RCV_JF_HEADER;
-				} else rcv_state = RCV_IGNORE;
+				// If Frame number is lower than first frame number it should be ignored
+				// As this is leftover from the previous measurement
+				if (header.jf_frame_number >= eth_settings.first_frame_number) {
+				    header.jf_frame_number -= eth_settings.first_frame_number;
+
+				    // Quit if frame number reported is >= frame_number_to_quit
+				    if (header.jf_frame_number >= eth_settings.frame_number_to_quit) packet_out.exit = 1;
+				    else if (header.jf_frame_number < eth_settings.frame_number_to_stop) {
+					axis_packet = 0;
+					rcv_state = RCV_JF_HEADER;
+				    }
+                                }
 			}
-			else rcv_state = RCV_IGNORE;
 			break;
 		case RCV_JF_HEADER:
 			decode_eth_2(packet_in.data, header);
@@ -180,15 +191,72 @@ void read_eth_packet(AXI_STREAM &in, DATA_STREAM &out, eth_settings_t eth_settin
 			packet_out.module = header.udp_dest_port % NMODULES;
 			packet_out.trigger = header.jf_debug[31];
 
+			if (header.jf_frame_number < eth_settings.pedestalG0_frames) {
+				packet_out.pedestal = 1;
+				packet_out.save = 0;
+			} else {
+				packet_out.frame_number -= eth_settings.pedestalG0_frames;
+
+				if (eth_settings.expected_triggers == 0) {
+					packet_out.pedestal = 0;
+					packet_out.save = 1;
+				} else {
+					packet_out.pedestal = 0;
+					packet_out.save = 0;
+					ap_int<25> delta = packet_out.frame_number - (frame_number_last_trigger + eth_settings.delay_per_trigger);
+					if ((encountered_triggers == eth_settings.expected_triggers) &&
+							(delta > eth_settings.frames_per_trigger + DELAY_FRAMES_STOP_AND_QUIT)) {
+						// All expected triggers were observed + delay, so data collection can finish
+						packet_out.exit = 1;
+					} else if (packet_out.trigger && !trigger_set) {
+						// This is the first trigger that is encountered
+						trigger_set = 1;
+						frame_number_last_trigger = packet_out.frame_number;
+						encountered_triggers = 1;
+						if (eth_settings.delay_per_trigger == 0) {
+							packet_out.frame_number = 0;
+							packet_out.save = 1;
+						}
+					} else if ((packet_out.trigger == 1)
+							&& (frame_number_last_no_trigger > frame_number_last_trigger + 2 * eth_settings.delay_per_trigger + eth_settings.frames_per_trigger)
+							&& (delta > eth_settings.frames_per_trigger)
+							&& (encountered_triggers < eth_settings.expected_triggers)) {
+						// Frame is set as start of new sequence, if:
+						// 1. Trigger was observed in this frame AND
+						// 2. Frame without trigger was observed after previous sequence ended and shutter closing time was accounted AND
+						// 3. This frame is after previous sequence ended AND
+						// 4. There was not enough triggers observed till now
+						trigger_set = 1;
+						frame_number_last_trigger = packet_out.frame_number;
+						encountered_triggers ++;
+						if (eth_settings.delay_per_trigger == 0) {
+							packet_out.frame_number = (encountered_triggers - 1 ) * eth_settings.frames_per_trigger;
+							packet_out.save = 1;
+						}
+					} else if (trigger_set && (delta >= 0) && (delta < eth_settings.frames_per_trigger)) {
+						// Trigger is set and frame number is in a proper window
+						packet_out.frame_number = (encountered_triggers - 1 ) * eth_settings.frames_per_trigger + delta;
+						packet_out.save = 1;
+					} else if (!packet_out.trigger && (packet_out.frame_number > frame_number_last_no_trigger)
+							&& (delta >= eth_settings.frames_per_trigger + eth_settings.delay_per_trigger) ) {
+						// Trigger is not set AND this frame is after last frame with no trigger
+						// AND after current sequence
+						frame_number_last_no_trigger = packet_out.frame_number;
+					} else if (!packet_out.trigger && !trigger_set) {
+						// Trigger was not yet observed and this frame is without trigger, so it can be used to calculate G0
+						packet_out.pedestal = 1;
+					}
+				}
+			}
+
 			// First AXI-stream packet contains only 303-bits of frame payload, so there is a need to align
 			packet_out.data(303,0) = packet_in.data(511, 208);
 
 			// For each packet, part of JF header is saved
-			if (packet_out.eth_packet == ((128 / NMODULES) * packet_out.module + packet_out.frame_number) % 128) {
-				ap_uint<28> hbm_addr = header.jf_frame_number * NMODULES + (packet_out.module);
+			if (packet_out.save && (packet_out.eth_packet == 0)) {
+				ap_uint<28> hbm_addr = header.jf_frame_number * NMODULES + packet_out.module;
 				ap_uint<256> save_to_memory;
-				save_to_memory(31,0)    = header.jf_frame_number;
-				save_to_memory(63,32)   = header.jf_packet_number;
+				save_to_memory(63,0)    = header.jf_frame_number;
 				save_to_memory(79,64)   = header.udp_src_port;
 				save_to_memory(95,80)   = header.udp_dest_port;
 				save_to_memory(127,96)  = header.jf_debug;
@@ -197,7 +265,10 @@ void read_eth_packet(AXI_STREAM &in, DATA_STREAM &out, eth_settings_t eth_settin
 				d_hbm_header[hbm_addr]  = save_to_memory;
 			}
 
-			rcv_state = RCV_GOOD;
+			if (packet_out.save || packet_out.pedestal)
+				rcv_state = RCV_GOOD;
+			else
+				rcv_state = RCV_IGNORE;
 			break;
 
 		case RCV_GOOD:
@@ -219,3 +290,4 @@ void read_eth_packet(AXI_STREAM &in, DATA_STREAM &out, eth_settings_t eth_settin
 	// In this case a last packet is sent to inform later steps of the pipeline to quit.
 	out.write(packet_out);
 }
+

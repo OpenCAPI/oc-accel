@@ -22,8 +22,15 @@
 #include <ap_int.h>
 #include <hls_stream.h>
 
-#include "hls_snap_1024.H"
 #include "../include/action_rx100G.h" /* HelloWorld Job definition */
+
+#ifdef OCACCEL
+#include <osnap_types.h>
+#include "hls_snap_1024.H"
+#else
+#include <snap_types.h>
+#include "hls_snap.H"
+#endif
 
 #define OUTPUT_RAW        0
 #define OUTPUT_CONV       1
@@ -34,7 +41,6 @@
 
 //--------------------------------------------------------------------
 // 1: simplify the data casting style
-/*S2OC #define RELEASE-LEVEL		0x00000005*/
 
 typedef char word_t[BPERDW_512];
 
@@ -48,6 +54,9 @@ typedef ap_ufixed<16,14, SC_RND_CONV> pedeG1G2_t;
 typedef ap_ufixed<16,3, SC_RND_CONV>  gainG1G2_t;
 
 typedef ap_uint<PEDE_G0_PRECISION*32> packed_pedeG0_t;
+
+typedef snap_membus_512_t rx100g_mem_t;
+typedef snap_HBMbus_t rx100g_hbm_t;
 
 //---------------------------------------------------------------------
 // This is generic. Just adapt names for a new action
@@ -71,12 +80,14 @@ typedef hls::stream<ap_axiu_for_eth> AXI_STREAM;
 
 struct data_packet_t {
 	ap_uint<512> data;
-    ap_uint<18*32> conv_data;
+	ap_uint<18*32> conv_data;
 	ap_uint<24> frame_number; // allowing 16 million frames or 2.5h at 2 kHz
 	ap_uint<4> module; // 0..16
 	ap_uint<8> eth_packet; // 0..128
 	ap_uint<8> axis_packet; // 0..128
-    ap_uint<1> axis_user; // TUSER from AXIS
+	ap_uint<1> axis_user; // TUSER from AXIS
+    ap_uint<1> pedestal; // Contributes to pedestal G0? (only for MODE = MODE_CONV)
+    ap_uint<1> save;     // Contributes to pedestal G0? (only for MODE = MODE_CONV)
 	ap_uint<1> exit; // exit
 	ap_uint<1> trigger; // debug flag on
 };
@@ -86,9 +97,14 @@ typedef hls::stream<data_packet_t> DATA_STREAM;
 struct eth_settings_t {
 	uint64_t frame_number_to_stop;
 	uint64_t frame_number_to_quit;
+	uint64_t first_frame_number;
 	uint64_t fpga_mac_addr;
 	uint32_t fpga_ipv4_addr;
 	uint32_t fpga_udp_port;
+        uint8_t expected_triggers; 
+        ap_uint<24> frames_per_trigger;
+        ap_uint<24> pedestalG0_frames;
+        uint16_t delay_per_trigger;
 };
 
 struct conversion_settings_t {
@@ -154,28 +170,25 @@ void data_pack(ap_uint<512> &out, ap_int<16> in[32]);
 
 void send_gratious_arp(AXI_STREAM &out, ap_uint<48> mac, ap_uint<32> ipv4_address);
 
-void read_eth_packet(AXI_STREAM &deth_in, DATA_STREAM &raw_out, eth_settings_t eth_settings, snap_HBMbus_t *d_hbm_header);
-
-void filter_packets(DATA_STREAM &in, DATA_STREAM &out);
+void read_eth_packet(AXI_STREAM &deth_in, DATA_STREAM &raw_out, eth_settings_t eth_settings, rx100g_hbm_t *d_hbm_header);
 
 void pedestalG0(DATA_STREAM &in, DATA_STREAM &out, conversion_settings_t conversion_settings);
-void gainG0(DATA_STREAM &in, DATA_STREAM &out, snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1);
-void correctG1(DATA_STREAM &in, DATA_STREAM &out, snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1,
-		snap_HBMbus_t *d_hbm_p2, snap_HBMbus_t *d_hbm_p3);
-void correctG2(DATA_STREAM &in, DATA_STREAM &out, snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1,
-		snap_HBMbus_t *d_hbm_p2, snap_HBMbus_t *d_hbm_p3);
-void merge_converted_stream(DATA_STREAM &in, DATA_STREAM &out, ap_uint<2> output_type);
 
 void apply_gain_correction(DATA_STREAM &in, DATA_STREAM &out,
-		snap_HBMbus_t *d_hbm_p0, snap_HBMbus_t *d_hbm_p1,
-		snap_HBMbus_t *d_hbm_p2, snap_HBMbus_t *d_hbm_p3,
-		snap_HBMbus_t *d_hbm_p4, snap_HBMbus_t *d_hbm_p5,
-		snap_HBMbus_t *d_hbm_p6, snap_HBMbus_t *d_hbm_p7,
-		snap_HBMbus_t *d_hbm_p8, snap_HBMbus_t *d_hbm_p9,
-	    ap_uint<2> output_mode);
-void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem,
-		size_t out_frame_buffer_addr, size_t out_frame_status_addr, snap_HBMbus_t *d_hbm_stat);
+		rx100g_hbm_t *d_hbm_p0, rx100g_hbm_t *d_hbm_p1,
+		rx100g_hbm_t *d_hbm_p2, rx100g_hbm_t *d_hbm_p3,
+		rx100g_hbm_t *d_hbm_p4, rx100g_hbm_t *d_hbm_p5,
+		rx100g_hbm_t *d_hbm_p6, rx100g_hbm_t *d_hbm_p7,
+		rx100g_hbm_t *d_hbm_p8, rx100g_hbm_t *d_hbm_p9,
+		ap_uint<2> output_mode);
 
-extern packed_pedeG0_t packed_pedeG0[NMODULES * 512 * 1024 / 32];
+void check_for_trigger(DATA_STREAM &in, DATA_STREAM &out, uint8_t expected_triggers, ap_uint<24> frames_per_trigger,
+                       uint16_t delay_per_trigger);
+
+void write_data(DATA_STREAM &in, rx100g_mem_t *dout_gmem,
+		size_t out_frame_buffer_addr, size_t out_frame_status_addr, rx100g_hbm_t *d_hbm_stat);
+
+extern packed_pedeG0_t packed_pedeG0[NPIXEL / 32];
+extern ap_uint<32> pixel_mask[NPIXEL / 32];
 
 #endif  /* __ACTION_RX100G_H__*/

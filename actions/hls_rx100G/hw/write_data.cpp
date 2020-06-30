@@ -16,7 +16,7 @@
 
 #include "hw_action_rx100G.h"
 
-void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_buffer_addr, size_t out_frame_status_addr, snap_HBMbus_t *d_hbm_stat) {
+void write_data(DATA_STREAM &in, rx100g_mem_t *dout_gmem, size_t out_frame_buffer_addr, size_t out_frame_status_addr, rx100g_hbm_t *d_hbm_stat) {
 	data_packet_t packet_in;
 	in.read(packet_in);
 
@@ -39,6 +39,8 @@ void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_
 #pragma HLS UNROLL
 		head[i] = 0L;
 	}
+
+	ap_uint<512> statistics = 0;
 
 	while (packet_in.exit == 0) {
 
@@ -69,7 +71,6 @@ void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_
 
 			if (packet_in.frame_number > head[packet_in.module]) {
 				head[packet_in.module] = packet_in.frame_number;
-				ap_uint<512> statistics = 0;
 
 				statistics(31,0) = counter_ok;
 				statistics(63,32) = counter_wrong;
@@ -81,8 +82,6 @@ void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_
 				for (int i = 0; i < NMODULES; i++) {
 					statistics(64 + i * 32 + 31, 64 + i * 32) = head[i];
 				}
-				statistics(96 + 32 * NMODULES + 31, 96 + 32 * NMODULES) = hbm_cell_addr;
-				statistics(96 + 32 * NMODULES + 39, 96 + 32 * NMODULES + 32) = hbm_bit_addr;
 
 				// Status info is filled only every NMODULES frames, but interleaved between modules.
 				if (packet_in.frame_number % (NMODULES) == packet_in.module)
@@ -100,9 +99,12 @@ void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_
 			memcpy(dout_gmem + out_frame_addr, buffer, 128*64);
 
 			if ((packet_in.axis_packet == 127) && (packet_in.axis_user == 0)) {
-				(hbm_cache[module0])[hbm_bit_addr] = 1;
+				ap_uint<256> tmp = ap_uint<256>(1) << hbm_bit_addr;
+				hbm_cache[module0] |= tmp;
 				counter_ok++;
-			} else counter_wrong++;
+			} else
+				counter_wrong++;
+
 
 			in.read(packet_in);
 		}
@@ -114,21 +116,12 @@ void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_
 	for (int i = 0; i < NMODULES; i++)
 		memcpy(d_hbm_stat + hbm_cache_addr[i], hbm_cache + i, 32);
 
-
-
-	ap_uint<512> statistics = 0;
-
 	statistics(31,0) = counter_ok;
 	statistics(63,32) = counter_wrong;
 
-        // Save information about last trigger signal timing
-        if ((packet_in.module == 0) && (packet_in.trigger == 1))
-              statistics(64 + 32 * NMODULES + 31, 64 + 32 * NMODULES) = packet_in.frame_number;
-
-        for (int i = 0; i < NMODULES; i++) {
-              statistics(64 + i * 32 + 31, 64 + i * 32) = head[i];
-        }
+	// For all packets, set head as MAX number
+	for (int i = 0; i < NMODULES; i++)
+		statistics(64 + i * 32 + 31, 64 + i * 32) = INT32_MAX;
 
 	memcpy(dout_gmem+out_frame_status_addr, &statistics, BPERDW_512);
-
 }

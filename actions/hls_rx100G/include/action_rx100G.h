@@ -18,8 +18,7 @@
  * limitations under the License.
  */
 
-/*S2OC #include <snap_types.h> */
-#include <osnap_types.h>
+#define OCACCEL
 
 #define FRAME_BUF_SIZE        16384L
 #define FRAME_STATUS_BUF_SIZE 16384
@@ -37,7 +36,9 @@
 #define MODE_PEDEG1         3
 #define MODE_PEDEG2         4
 #define MODE_RESET          5
-#define MODE_CONV_BSHUF     6
+#define MODE_QUIT         255
+
+#define DELAY_FRAMES_STOP_AND_QUIT 5
 
 struct online_statistics_t {
 	uint32_t good_packets;
@@ -47,7 +48,8 @@ struct online_statistics_t {
 };
 
 struct header_info_t {
-	uint64_t jf_frame_number;
+	uint32_t jf_frame_number;
+	uint32_t jf_packet_number;
 	uint16_t udp_src_port;
 	uint16_t udp_dest_port;
 	uint32_t jf_debug;
@@ -61,31 +63,25 @@ extern "C" {
 #endif
 
 /* This number is unique and is declared in ~snap/ActionTypes.md */
-/*S2OC  #define RX100G-ACTION-TYPE 0x52320100 */
-// ------------ MUST READ -----------
-// ACTION_TYPE and RELEASE_LEVEL are automatically handled. 
-// 1. Define them in header file (here), use HEX 32bits numbers
-// 2. They will be extracted by hardware/setup/patch_version.sh
-// 3. And put into snap_global_vars.v
-// 4. Used by hardware/hls/action_wrapper.v
-#define ACTION_TYPE               0x52320100
-#define RELEASE_LEVEL             0x00000005
-// For oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
-// Please modify ActionTypes.md file so oc_maint can recognize this action.
-// ------------ MUST READ -----------
-//
+#define ACTION_TYPE   0x52320100
+#define RELEASE_LEVEL 0x00000007
+
 /* Data structure used to exchange information between action and application */
 /* Size limit is 108 Bytes */
 typedef struct rx100G_job {
-	uint64_t in_gain_pedestal_data_addr;
-	uint64_t out_frame_buffer_addr;
-	uint64_t out_frame_status_addr;
-	uint64_t out_jf_packet_headers_addr;
+   uint64_t in_gain_pedestal_data_addr;
+    uint64_t out_frame_buffer_addr;
+    uint64_t out_frame_status_addr;
+    uint64_t out_jf_packet_headers_addr;
+    uint64_t first_frame_number;
     uint64_t expected_frames;
     uint64_t pedestalG0_frames;
     uint64_t fpga_mac_addr;
     uint32_t fpga_ipv4_addr;
     uint32_t mode;
+    uint32_t frames_per_trigger;
+    uint16_t expected_triggers; // 0 = don't wait for trigger
+    uint16_t delay_per_trigger;
 } rx100G_job_t;
 
 #ifdef __cplusplus
@@ -131,6 +127,5 @@ struct RAW_JFUDP_Packet
 	// 96 + 8192 =  8282 bytes
 };
 #pragma pack(pop)
-
 
 #endif	/* __ACTION_CHANGECASE_H__ */

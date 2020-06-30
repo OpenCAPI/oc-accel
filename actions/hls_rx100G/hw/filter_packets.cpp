@@ -16,32 +16,47 @@
 
 #include "hw_action_rx100G.h"
 
-void filter_packets(DATA_STREAM &in, DATA_STREAM &out) {
-	data_packet_t packet_in, packet_out;
+void check_for_trigger(DATA_STREAM &in, DATA_STREAM &out, uint8_t expected_triggers, ap_uint<24> frames_per_trigger,
+		uint16_t delay_per_trigger) {
+	uint8_t encountered_triggers = 0;
+	ap_uint<24> frame_number_last_trigger = 0;
+	ap_uint<24> frame_number_last_no_trigger  = 0;
+	ap_uint<1> trigger_set = 0; // This is only for beginning, to filter situation, where no filter was used
 
+	data_packet_t packet_in;
 	in.read(packet_in);
-	ap_uint<8> axis_packet = 0;
 
 	while (packet_in.exit == 0) {
-		if (packet_in.axis_packet == axis_packet) {
-			// packet_in is what is expected
-			packet_out = packet_in;
-			out.write(packet_out);
-			axis_packet = (axis_packet + 1) % 128;
-		} else {
-			packet_out.axis_user = 1; // Mark the packet as a wrong one
-			for (int i = axis_packet; i < 128; i++) {
-				packet_out.axis_packet = i;
-				out.write(packet_out);
+#pragma HLS PIPELINE
+		if (expected_triggers == 0) out.write(packet_in);
+		else {
+			ap_int<25> delta = packet_in.frame_number - (frame_number_last_trigger + delay_per_trigger);
+
+			if ((trigger_set == 1) && (delta >= 0) && (delta < frames_per_trigger)) {
+				// Trigger is set and frame number is in a proper window
+				packet_in.frame_number = (encountered_triggers - 1 ) * frames_per_trigger + delta;
+				out.write(packet_in);
+			} else if ((packet_in.trigger == 0) && (packet_in.frame_number > frame_number_last_no_trigger))
+				// Trigger is not set and this frame is after last frame with no trigger
+				frame_number_last_no_trigger = packet_in.frame_number;
+			else if ((packet_in.trigger == 1) && (packet_in.frame_number > frame_number_last_no_trigger) &&
+					(frame_number_last_no_trigger > frame_number_last_trigger + delay_per_trigger + frames_per_trigger)
+					&& (delta > frames_per_trigger) && (encountered_triggers < expected_triggers)) {
+				// After all frames saved (frame_number_last_trigger + delay_per_trigger + frames_per_trigger)
+				// there was at least one frame that had no trigger high
+				// Only then frame with trigger up can start new save sequence
+				trigger_set = 1;
+				frame_number_last_trigger = packet_in.frame_number;
+				encountered_triggers ++;
+				if (delay_per_trigger == 0) {
+					// If there is no delay between trigger
+					// this frame is also saved
+					packet_in.frame_number = (encountered_triggers - 1 ) * frames_per_trigger;
+					out.write(packet_in);
+				}
 			}
-			packet_out = packet_in;
-			out.write(packet_out);
-			axis_packet = 1;
-		} in.read(packet_in);
-	}
-	packet_out.axis_user = 1;
-	for (int i = 0; i < (128 - axis_packet) % 128; i++) {
-		out.write(packet_out);
+		}
+		in.read(packet_in);
 	}
 	out.write(packet_in);
 }
