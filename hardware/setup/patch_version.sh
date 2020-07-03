@@ -71,7 +71,7 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
    if [ "$HBM_USED" == "TRUE" ]; then
       #Here we use for the HBM the SDRAM_SIZE as the number of AXI interfaces
       SDRAM_SIZE_DEC=`find $ACTION_ROOT -name *.[hH] | xargs grep "#define\s\+HBM_AXI_IF_NB" | awk '{print $NF}'`
-      printf -v SDRAM_SIZE_HEX "%x" "$SDRAM_SIZE_DEC"
+      printf -v SDRAM_SIZE "%x" "$SDRAM_SIZE_DEC"
       if [ -z $SDRAM_SIZE_DEC ]; then
          echo "   -------------------------------------------------------------------------------------------------"
          echo "   -- WARNING : Impossible to check coherency of HBM AXI interfaces numbers between action and chip.           "
@@ -89,7 +89,7 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
    fi
       
    SRC="define SDRAM_SIZE 16'h.*"
-   DST="define SDRAM_SIZE 16'h${SDRAM_SIZE_HEX=}"
+   DST="define SDRAM_SIZE 16'h${SDRAM_SIZE}"
    sed -i "s/$SRC/$DST/" $1/$2
 
 fi
