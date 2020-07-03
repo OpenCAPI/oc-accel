@@ -30,6 +30,8 @@ set action_root   $::env(ACTION_ROOT)
 
 set sdram_used    $::env(SDRAM_USED)
 set hbm_used      $::env(HBM_USED)
+set eth_used      $::env(ETHERNET_USED)
+set eth_loop_back $::env(ETH_LOOP_BACK)
 set bram_used     $::env(BRAM_USED)
 set nvme_used     $::env(NVME_USED)
 set user_clock    $::env(USER_CLOCK)
@@ -66,20 +68,30 @@ set create_interconnect FALSE
 set create_bram         FALSE
 set create_ddr4_ad9v3   FALSE
 set create_ddr4_bw250soc   FALSE
-set create_hbm_ad9h3   FALSE
-set create_hbm_ad9h7   FALSE
+set create_hbm_ad9h3    FALSE
+set create_hbm_ad9h7    FALSE
+set create_eth_mac      FALSE
 
 if { $bram_used == "TRUE" } {
-  set create_clkconv_mem  TRUE
-  set create_bram        TRUE
+  if {$hbm_used == "FALSE" } {
+# if DDR replaced by DRAM
+    set create_clkconv_mem  TRUE
+    set create_bram        TRUE
+  }
 } elseif { $sdram_used == "TRUE" } {
   set create_clkconv_mem  TRUE
   if { $fpga_card == "AD9V3"  } {
      set create_ddr4_ad9v3   TRUE
   }
-  if { $fpga_card == "BW250SOC"  } {
-     set create_ddr4_bw250soc   TRUE
+}
+
+if { $eth_used == "TRUE" } {
+  if { $eth_loop_back == "FALSE" } {
+     set create_eth_mac   TRUE
   }
+}
+if { $fpga_card == "BW250SOC"  } {
+     set create_ddr4_bw250soc   TRUE
 } elseif {$hbm_used == "TRUE" } {
   if { $fpga_card == "AD9H3" } {
      set create_hbm_ad9h3   TRUE
@@ -829,7 +841,7 @@ if { $create_interconnect == "TRUE" } {
 
 # axi_dwidth_converter
 if { $create_dwidth_conv == "TRUE" } {
-  puts "                        generating axi_dwidth_converter ......"
+  puts "                        generating axi_dwidth_converter (action host I/F = 512 bits)"
   create_ip -name axi_dwidth_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_dwidth_converter -dir $ip_dir  >> $log_file
   set_property -dict [list CONFIG.ADDR_WIDTH {64}              \
                            CONFIG.FIFO_MODE {2}                \
@@ -1031,77 +1043,78 @@ if { $create_ddr4_bw250soc == "TRUE" } {
 }
 
 #HBM controller(AD9H3/AD9H7)
-if { ($create_hbm_ad9h3 == "TRUE") || ($create_hbm_ad9h7 == "TRUE") } {
-  puts "                        generating axi_hbm_dwidth_converter ......"
-  create_ip -name axi_dwidth_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_hbm_dwidth_converter -dir $ip_dir  >> $log_file
-  set_property -dict [list CONFIG.PROTOCOL {AXI4}              \
-                           CONFIG.ADDR_WIDTH {33}              \
-                           CONFIG.SI_DATA_WIDTH {512}          \
-                           CONFIG.MI_DATA_WIDTH {256}          \
-                           CONFIG.MAX_SPLIT_BEATS {16}         \
-                           ] [get_ips axi_hbm_dwidth_converter]
-  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] >> $log_file
-  generate_target {instantiation_template}     [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] >> $log_file
-  generate_target all                          [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] >> $log_file
-  export_ip_user_files -of_objects             [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] -no_script -sync -force  >> $log_file
-  export_simulation    -of_objects             [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+#if { ($create_hbm_ad9h3 == "TRUE") || ($create_hbm_ad9h7 == "TRUE") } {
+#  puts "                        generating axi_hbm_dwidth_converter ......"
+#  create_ip -name axi_dwidth_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_hbm_dwidth_converter -dir $ip_dir  >> $log_file
+#  set_property -dict [list CONFIG.PROTOCOL {AXI4}              \
+#                           CONFIG.ADDR_WIDTH {33}              \
+#                           CONFIG.SI_DATA_WIDTH {512}          \
+#                           CONFIG.MI_DATA_WIDTH {256}          \
+#                           CONFIG.MAX_SPLIT_BEATS {16}         \
+#                           ] [get_ips axi_hbm_dwidth_converter]
+#  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] >> $log_file
+#  generate_target {instantiation_template}     [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] >> $log_file
+#  generate_target all                          [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] >> $log_file
+#  export_ip_user_files -of_objects             [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] -no_script -sync -force  >> $log_file
+#  export_simulation    -of_objects             [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+#
+#  puts "	                generating IP hbm_ctrl for $fpga_card"
+#  create_ip -name hbm -vendor xilinx.com -library ip -version 1.0 -module_name hbm_ctrl -dir $ip_dir >> $log_file
+#  set_property -dict [list                                                  \
+#                      CONFIG.USER_HBM_REF_CLK_0 {200}                       \
+#                      CONFIG.USER_HBM_REF_CLK_PS_0 {2500.00}                \
+#                      CONFIG.USER_HBM_REF_CLK_XDC_0 {5.00}                  \
+#                      CONFIG.USER_HBM_FBDIV_0 {18}                          \
+#                      CONFIG.USER_HBM_RES_0 {9}                             \
+#                      CONFIG.USER_HBM_LOCK_REF_DLY_0 {20}                   \
+#                      CONFIG.USER_HBM_LOCK_FB_DLY_0 {20}                    \
+#                      CONFIG.USER_HBM_HEX_CP_RES_0 {0x00009600}             \
+#                      CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001414}    \
+#                      CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000482}    \
+#                      CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}               \
+#                      CONFIG.USER_SAXI_01 {false}                           \
+#                      CONFIG.USER_SAXI_02 {false}                           \
+#                      CONFIG.USER_SAXI_03 {false}                           \
+#                      CONFIG.USER_SAXI_04 {false}                           \
+#                      CONFIG.USER_SAXI_05 {false}                           \
+#                      CONFIG.USER_SAXI_06 {false}                           \
+#                      CONFIG.USER_SAXI_07 {false}                           \
+#                      CONFIG.USER_SAXI_08 {false}                           \
+#                      CONFIG.USER_SAXI_09 {false}                           \
+#                      CONFIG.USER_SAXI_10 {false}                           \
+#                      CONFIG.USER_SAXI_11 {false}                           \
+#                      CONFIG.USER_SAXI_12 {false}                           \
+#                      CONFIG.USER_SAXI_13 {false}                           \
+#                      CONFIG.USER_SAXI_14 {false}                           \
+#                      CONFIG.USER_SAXI_15 {false}                           \
+#                     ] [get_ips hbm_ctrl] >> $log_file
+#
+#  set_property generate_synth_checkpoint false [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
+#  generate_target {instantiation_template}     [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
+#  generate_target all                          [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
+#  export_ip_user_files -of_objects             [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -no_script -force  >> $log_file
+#  export_simulation -of_objects [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+#}
+#
+#if { $create_hbm_ad9h7 == "TRUE" } {
+#  puts "                        generating axi_hbm_register_slice ......"
+#  create_ip -name axi_register_slice -vendor xilinx.com -library ip -version 2.1 -module_name axi_hbm_register_slice -dir $ip_dir  >> $log_file
+#  set_property -dict [list CONFIG.ADDR_WIDTH {33}              \
+#                           CONFIG.DATA_WIDTH {256}             \
+#                           CONFIG.ID_WIDTH {6}                 \
+#                           CONFIG.REG_AW {7}                   \
+#                           CONFIG.REG_AR {7}                   \
+#                           CONFIG.REG_W {1}                    \
+#                           CONFIG.REG_R {1}                    \
+#                           CONFIG.REG_B {7}                    \
+#                           ] [get_ips axi_hbm_register_slice]
+#  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
+#  generate_target {instantiation_template}     [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
+#  generate_target all                          [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
+#  export_ip_user_files -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -no_script -sync -force  >> $log_file
+#  export_simulation    -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+#}
 
-  puts "	                generating IP hbm_ctrl for $fpga_card"
-  create_ip -name hbm -vendor xilinx.com -library ip -version 1.0 -module_name hbm_ctrl -dir $ip_dir >> $log_file
-  set_property -dict [list                                                  \
-                      CONFIG.USER_HBM_REF_CLK_0 {200}                       \
-                      CONFIG.USER_HBM_REF_CLK_PS_0 {2500.00}                \
-                      CONFIG.USER_HBM_REF_CLK_XDC_0 {5.00}                  \
-                      CONFIG.USER_HBM_FBDIV_0 {18}                          \
-                      CONFIG.USER_HBM_RES_0 {9}                             \
-                      CONFIG.USER_HBM_LOCK_REF_DLY_0 {20}                   \
-                      CONFIG.USER_HBM_LOCK_FB_DLY_0 {20}                    \
-                      CONFIG.USER_HBM_HEX_CP_RES_0 {0x00009600}             \
-                      CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001414}    \
-                      CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000482}    \
-                      CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}               \
-                      CONFIG.USER_SAXI_01 {false}                           \
-                      CONFIG.USER_SAXI_02 {false}                           \
-                      CONFIG.USER_SAXI_03 {false}                           \
-                      CONFIG.USER_SAXI_04 {false}                           \
-                      CONFIG.USER_SAXI_05 {false}                           \
-                      CONFIG.USER_SAXI_06 {false}                           \
-                      CONFIG.USER_SAXI_07 {false}                           \
-                      CONFIG.USER_SAXI_08 {false}                           \
-                      CONFIG.USER_SAXI_09 {false}                           \
-                      CONFIG.USER_SAXI_10 {false}                           \
-                      CONFIG.USER_SAXI_11 {false}                           \
-                      CONFIG.USER_SAXI_12 {false}                           \
-                      CONFIG.USER_SAXI_13 {false}                           \
-                      CONFIG.USER_SAXI_14 {false}                           \
-                      CONFIG.USER_SAXI_15 {false}                           \
-                     ] [get_ips hbm_ctrl] >> $log_file
-
-  set_property generate_synth_checkpoint false [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
-  generate_target {instantiation_template}     [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
-  generate_target all                          [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
-  export_ip_user_files -of_objects             [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -no_script -force  >> $log_file
-  export_simulation -of_objects [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
-}
-
-if { $create_hbm_ad9h7 == "TRUE" } {
-  puts "                        generating axi_hbm_register_slice ......"
-  create_ip -name axi_register_slice -vendor xilinx.com -library ip -version 2.1 -module_name axi_hbm_register_slice -dir $ip_dir  >> $log_file
-  set_property -dict [list CONFIG.ADDR_WIDTH {33}              \
-                           CONFIG.DATA_WIDTH {256}             \
-                           CONFIG.ID_WIDTH {6}                 \
-                           CONFIG.REG_AW {7}                   \
-                           CONFIG.REG_AR {7}                   \
-                           CONFIG.REG_W {1}                    \
-                           CONFIG.REG_R {1}                    \
-                           CONFIG.REG_B {7}                    \
-                           ] [get_ips axi_hbm_register_slice]
-  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
-  generate_target {instantiation_template}     [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
-  generate_target all                          [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] >> $log_file
-  export_ip_user_files -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -no_script -sync -force  >> $log_file
-  export_simulation    -of_objects             [get_files $ip_dir/axi_hbm_register_slice/axi_hbm_register_slice.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
-}
 
 # User IPs
 set action_vhdl  $action_root/hw/vhdl

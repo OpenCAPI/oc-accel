@@ -78,6 +78,9 @@ function test_all_actions() # $1 = card, $2 = accel
 		*"1014300b") # HLS Memcopy
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
+		*"1014300c") # HLS HBM Memcopy
+			cmd="./actions/hls_hbm_memcopy_1024/tests/hw_test.sh"
+		;;
 		*"10143008") # HLS Hello World  512 bits wide bus
 			cmd="./actions/hls_helloworld_512/tests/hw_test.sh"
 		;;

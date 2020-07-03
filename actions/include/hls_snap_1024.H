@@ -67,6 +67,7 @@
 typedef ap_uint<MEMDW_256>  snap_membus_256_t;   /* 256-bit ddr memory access */
 typedef ap_uint<MEMDW_512>  snap_membus_512_t;   /* 512-bit ddr memory access */
 typedef ap_uint<MEMDW_1024> snap_membus_1024_t;  /* 1024-bit snap memory access */
+typedef ap_uint<MEMDW_256>  snap_HBMbus_t;       /* 256-bit HBM memory access */
 typedef ap_uint<64> snapu64_t;
 typedef ap_uint<32> snapu32_t;
 typedef ap_uint<16> snapu16_t;

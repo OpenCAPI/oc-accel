@@ -128,6 +128,7 @@ choice
 		  - Read data from server memory and check whether its right data
 		  - Write data to server memory
 		select DISABLE_SDRAM_AND_BRAM
+		select DISABLE_ETHERNET
 
 #experimental - not available yet
 #	config HDL_MULTI_PROCESS
@@ -169,7 +170,9 @@ choice
 		select ENABLE_HLS_SUPPORT
 		select DISABLE_SDRAM_AND_BRAM
 		select DISABLE_NVME
+		select DISABLE_HBM
 		select ACTION_HALF_WIDTH
+		select DISABLE_ETHERNET
 
         config HLS_HELLOWORLD_1024
                 bool "HLS HelloWorld_1024"
@@ -182,9 +185,12 @@ choice
                 select ENABLE_HLS_SUPPORT
                 select DISABLE_SDRAM_AND_BRAM
                 select DISABLE_NVME
+		select DISABLE_HBM
+		select DISABLE_ETHERNET
 
 	config HLS_MEMCOPY_1024
 		bool "HLS Memcopy 1024b"
+                depends on ! (AD9H3 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
 		  - Read data from the server memory or from the card DDR
@@ -195,6 +201,33 @@ choice
 		select ENABLE_HLS_SUPPORT
 		select FORCE_SDRAM_OR_BRAM
 		select DISABLE_NVME
+		select DISABLE_ETHERNET
+
+	config HLS_HBM_MEMCOPY_1024
+		bool "HLS HBM Memcopy 1024b"
+                depends on (AD9H3 || AD9H7)
+		help
+		  This is a basic example to start accessing data:
+		  - Read data from the server memory or from the FPGA HBM 
+		  - Write data to the server memory or to the FPGA HBM 
+		  - A temporary buffer is used in the FPGA (configurable size)
+		  All combination can be done.
+		  This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select FORCE_SDRAM_OR_BRAM
+		select DISABLE_ETHERNET
+
+	config HLS_RX100G
+		bool "HLS 100G receiver (512b)"
+                depends on AD9H3
+		help
+		   This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select ENABLE_ETHERNET
+		select ENABLE_SIMU_WO_ETH
+		select FORCE_SDRAM_OR_BRAM
+		select FORCE_HBM
+		select ACTION_HALF_WIDTH
 
 #	config HLS_SPONGE
 #		bool "HLS Sponge"
@@ -264,16 +297,22 @@ config SDRAM_USED
 	default "TRUE"  if ENABLE_DDR
 	default "FALSE" if ! ENABLE_DDR
 
+config DISABLE_HBM
+	bool
+	default n
+
 config FORCE_HBM
 	bool
 	default y
-	depends on ((AD9H3 || AD9H7) && FORCE_SDRAM_OR_BRAM && ! ENABLE_BRAM)
-    select ENABLE_HBM
+	#ddepends on ((AD9H3 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
+	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
+	select ENABLE_HBM
 
 config ENABLE_HBM
 	bool
 	prompt "Enable HBM"
-	depends on ((AD9H3 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
+	#ddepends on ((AD9H3 || AD9H7)  && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
+	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
 	help
 	  This option enables the on-card HBM.
 
@@ -284,26 +323,22 @@ config HBM_USED
 
 config ENABLE_BRAM
 	bool
-	prompt "Enable BRAM to replace DDR or HBM for experimental use"
-	depends on ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
+	prompt ">> Replace DDR by 512KB BRAM"
+	depends on AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
+	help
+	  This is a development option. The AXI attached on-card SDRAM will be replaced by 512KB BRAM.
+
+config ENABLE_BRAM
+	bool
+	prompt ">> Replace HBM by 32KB URAM (mandatory when simulating HBM with xsim)"
+	depends on !AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
 	help
 	  This is a development option. The AXI attached on-card SDRAM will be replaced by 512KB BRAM.
 
 config BRAM_USED
 	string
-	default "TRUE"  if ENABLE_BRAM
-	default "FALSE" if ! ENABLE_BRAM
-
-#FIXME We don't have DDR3 anymore.
-config ENABLE_DDR3
-	bool
-	default y
-	depends on (ENABLE_DDR && ADKU3)
-
-config DDR3_USED
-	string
-	default "TRUE"  if ENABLE_DDR3
-	default "FALSE" if ! ENABLE_DDR3
+	default "TRUE"  if (ENABLE_BRAM || REPLACE_HBM_BY_BRAM)
+	default "FALSE" if ! (ENABLE_BRAM || REPLACE_HBM_BY_BRAM)
 
 config ENABLE_DDR4
 	bool
@@ -348,6 +383,37 @@ config NVME_USED
 	default "TRUE"  if ENABLE_NVME
 	default "FALSE" if ! ENABLE_NVME
 
+config ENABLE_ETHERNET
+        bool "Enable Ethernet support"
+        default N
+	depends on ((AD9V3 || AD9H3 || AD9H7) && ! (DISABLE_ETHERNET))
+        help
+          This option controls the instantiation of an Ethernet IP
+          together with the AXI interfaces for MMIO control and action access.
+
+config DISABLE_ETHERNET
+        bool
+        default n
+
+config ENABLE_ETH_LOOP_BACK
+         bool ">> Ethernet loopback in the action wrapper (no 100G MAC IP)"
+         default "TRUE"  if  ENABLE_SIMU_WO_ETH
+         default "FALSE" if !ENABLE_SIMU_WO_ETH
+         depends on (AD9H3 && ENABLE_ETHERNET)
+         help
+           This option prevent the instantiation of an Ethernet IP
+           Instead it shortens the action ethernet AXI out interface to ethernet input interface.
+
+config ETH_LOOP_BACK
+        string
+        default "TRUE"  if  ENABLE_ETH_LOOP_BACK
+        default "FALSE" if !ENABLE_ETH_LOOP_BACK
+
+config ETHERNET_USED
+        string
+        default "TRUE"  if  ENABLE_ETHERNET
+        default "FALSE" if !ENABLE_ETHERNET
+
 config USER_CLOCK
 	string
 	default "TRUE"  if ACTION_USER_CLOCK
@@ -358,6 +424,16 @@ config ACTION_USER_CLOCK
 	bool
 	default n
 
+config HBM_AXI_IF_NUM
+        prompt "Number of HBM AXI interfaces, range 1-32 (default 12)"
+	depends on ENABLE_HBM
+	int
+	default 12
+	range 1 32
+	help
+	  HBM AXI interfaces generated in the chip
+	  This need to be coherent with what is implemented in the HLS action code
+          Please select one of them.
 
 choice
 	bool "Simulator"

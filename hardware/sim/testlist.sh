@@ -107,6 +107,7 @@
                       step "snap_example_set -F -b0x0 -s0x100 -p0x5 -t150"
                     fi;;
         "1014300B") a0="hls_memcopy_1024";;
+        "1014300C") a0="hls_hbm_memcopy_1024";;
         "10143008") a0="hls_helloworld";;
         *) echo "unknown action0 type=$t0l, exiting";exit 1;;
       esac; echo "action0 type0s=$t0s type0l=$t0l $a0"
@@ -122,6 +123,7 @@
       case $t1l in
         "10142000") a1="hdl_example";;
         "1014300B") a1="hls_memcopy_1024";;
+        "1014300C") a1="hls_hbm_memcopy_1024";;
         "10143008") a1="hls_helloworld";;
         *) echo "unknown action1 type=$t1l, exiting";exit 1;;
       esac; echo "action0 type1s=$t1s type1l=$t1l $a1"
@@ -295,6 +297,31 @@
         fi
       done
     fi # hls_memcopy
+ #
+    if [[ "$t0l" == "1014300C" || "${env_action}" == "hls_hbm_memcopy"* ]];then echo -e "$del\ntesting snap_hbm_memcopy"
+      step "snap_hbm_memcopy -h"
+#     for size in 1 64 80 85 128 240 $rnd1k $rnd1k4k;do to=$((size*50+10))   # 64B aligned       01/20/2017: error 128B issues 120, CR968181, wait for Vivado 2017.1
+      for i in 1 2 3 $rnd10 $rnd32;do size=$((i*$xfer));to=$((size*50+10))   # 64B aligned       01/20/2017: error 128B issues 120, CR968181, wait for Vivado 2017.1
+        #### select 1 type of data generation
+        # head -c $size </dev/zero|tr '\0' 'x' >${size}.in;head ${size}.in;echo                       # same char mult times
+        # cat /dev/urandom|tr -dc 'a-zA-Z0-9'|fold -w ${size}|head -n 1 >${size}.in;head ${size}.in   # random data alphanumeric, includes EOF
+          dd if=/dev/urandom bs=${size} count=1 >${size}.in                                           # random data any char, no echo due to unprintable char
+        #### select 1 checking method
+        if [[ $((size%64)) == 0 ]];then echo "size is aligned"
+          step "snap_hbm_memcopy -i ${size}.in -D HBM_P0 -d0x0 -v -X -t$to"
+          step "snap_hbm_memcopy -A HBM_P0 -a0x0 -o ${size}.out -s{size} -v -X -t$to"
+          if diff ${size}.in ${size}.out>/dev/null;then echo -e "RC=$rc file_diff ok$del";             else echo -e "$t RC=$rc file_diff is wrong$del";exit 1;fi
+#         step "snap_hbm_memcopy -N -i ${size}.in -o ${size}.out -v -X -t$to"
+#         if diff ${size}.in ${size}.out>/dev/null;then echo -e "RC=$rc file_diff ok$del";rm ${size}.*;else echo -e "$t RC=$rc file_diff is wrong$del";exit 1;fi
+        else echo "size is not aligned"
+          step "snap_hbm_memcopy -i ${size}.in -D HBM_P0 -d0x0 -v -X -t$to"
+          step "snap_hbm_memcopy -A HBM_P0 -a0x0 -o ${size}.out -s{size} -v -X -t$to"
+          if diff ${size}.in ${size}.out>/dev/null;then echo -e "RC=$rc file_diff ok$del";             else echo -e "$t RC=$rc file_diff is wrong$del";exit 1;fi
+#         step "snap_hbm_memcopy -N -i ${size}.in -o ${size}.out -v -t$to"
+#         if diff ${size}.in ${size}.out>/dev/null;then echo -e "RC=$rc file_diff ok$del";rm ${size}.*;else echo -e "$t RC=$rc file_diff is wrong$del";exit 1;fi
+        fi
+      done
+    fi # hls_hbm_memcopy
  #
     if [[ "$t0l" == "10143001" || "${env_action}" == "hls_sponge"* ]];then echo -e "$del\ntesting sponge"
       step "snap_checksum -h"
