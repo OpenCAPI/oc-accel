@@ -22,6 +22,7 @@ set denali_used $::env(DENALI_USED)
 set fpga_part   $::env(FPGACHIP)
 set log_dir     $::env(LOGS_DIR)
 set log_file    $log_dir/create_hbm_host.log
+set hbm_axi_if_num   $::env(HBM_AXI_IF_NUM)
 
 # user can set a specific value for the Action clock lower than the 250MHz nominal clock
 # as of now, only 3 clock frequencies are enabled in this file: 200MHz, 225MHz and 250MHz
@@ -36,9 +37,9 @@ set bd_name  hbm_top
 # _______________________________________________________________________________
 # In this file, we define all the logic to have independent 256MB/2Gb memories
 # each with an independent AXI interfaces which will be connected to the action
-# Default is HBM_MEM_NUM = 2 interfaces
+# Default is hbm_axi_if_num = 12 interfaces
 # TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change HBM_MEM_NUM value with a value between 1 and 32
+# param and 1) change HBM_AXI_IF_NUM value n Kconfig menu with a value between 1 and 32
 # and 2) set the right params enabling AXI and MC
 # -------------------------------------------------------
 # If you modify the number of AXI interfaces, don't forget to modify also :
@@ -48,7 +49,8 @@ set bd_name  hbm_top
 #   --> follow HBM names <--
 # _______________________________________________________________________________
 #CHANGE_HBM_INTERFACES_NUMBER
-set  HBM_MEM_NUM 12
+#set  HBM_MEM_NUM 12
+#this parameter is taken from Kmenu => set hbm_axi_if_num
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -59,7 +61,7 @@ create_bd_design $bd_name  >> $log_file
 current_bd_design $bd_name
 
 # Create HBM IP
-puts "                        generating HBM Host IP with $HBM_MEM_NUM AXI interfaces of 32KB BRAM each"
+puts "                        generating HBM Host IP with $hbm_axi_if_num AXI interfaces of 32KB BRAM each"
 
 #======================================================
 # Create 'sources_1' fileset (if not found)
@@ -91,7 +93,7 @@ connect_bd_net [get_bd_ports apb_complete] [get_bd_pins constant_1_one/dout]
 #-- Set the upper bound of the loop to the number of memory you use --
 
 #--------------------- start loop ------------------
-for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
+for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 
   #create the axi_clock_converters for each of the HBM interfaces
 

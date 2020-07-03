@@ -239,8 +239,6 @@ module oc_function (
    `endif
    `endif
 
-`ifdef ENABLE_HBM
-`endif
 `ifdef ENABLE_ETHERNET
 `ifndef ENABLE_ETH_LOOP_BACK
     , input                  gt_ref_clk_n

@@ -65,6 +65,9 @@ extern "C" {
 /* This number is unique and is declared in ~snap/ActionTypes.md */
 #define ACTION_TYPE   0x52320100
 #define RELEASE_LEVEL 0x00000007
+// Following number defines the number of AXI interfaces for the HBM. It is used to check compatibility
+// with the number of AXI interfaces in the hardware and is set in the image "oc_maint" shows it).
+#define HBM_AXI_IF_NB             12
 
 /* Data structure used to exchange information between action and application */
 /* Size limit is 108 Bytes */

@@ -23,6 +23,7 @@ set fpga_part   $::env(FPGACHIP)
 set fpga_card   $::env(FPGACARD)
 set log_dir     $::env(LOGS_DIR)
 set log_file    $log_dir/create_hbm_host.log
+set hbm_axi_if_num   $::env(HBM_AXI_IF_NUM)
 
 # user can set a specific value for the Action clock lower than the 250MHz nominal clock
 # as of now, only 3 clock frequencies are enabled in this file: 200MHz, 225MHz and 250MHz
@@ -38,9 +39,9 @@ set bd_name  hbm_top
 # _______________________________________________________________________________
 # In this file, we define all the logic to have independent 256MB/2Gb memories
 # each with an independent AXI interfaces which will be connected to the action
-# Default is HBM_MEM_NUM = 8 interfaces
+# Default is hbm_axi_if_num = 12 interfaces
 # TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change HBM_MEM_NUM value with a value between 1 and 32. 
+# param and 1) change in menu the HBM_AXI_IF_NUM with a value between 1 and 32. 
 # and 2) set the right params enabling AXI and MC
 # -------------------------------------------------------
 # If you modify the number of AXI interfaces, don't forget to modify also :
@@ -50,7 +51,8 @@ set bd_name  hbm_top
 #   --> follow HBM names <--
 # _______________________________________________________________________________
 #CHANGE_HBM_INTERFACES_NUMBER
-set  HBM_MEM_NUM 12
+#set  HBM_MEM_NUM 12
+##This number is now taken from the Kmenu => hbm_axi_if_num
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -61,7 +63,7 @@ create_bd_design $bd_name  >> $log_file
 current_bd_design $bd_name
 
 # Create HBM IP
-puts "                        generating HBM Host IP with $HBM_MEM_NUM AXI interfaces of 256MB HBM each"
+puts "                        generating HBM Host IP with $hbm_axi_if_num AXI interfaces of 256MB HBM each"
 
 #======================================================
 # Create 'sources_1' fileset (if not found)
@@ -125,7 +127,7 @@ set_property -dict [list                               \
   ] $cell >> $log_file
 
 
-if { $HBM_MEM_NUM < 16 } {
+if { $hbm_axi_if_num < 16 } {
   set_property -dict [list                               \
     CONFIG.USER_HBM_DENSITY {4GB}                        \
     CONFIG.USER_HBM_STACK {1}                            \
@@ -142,13 +144,27 @@ if { $HBM_MEM_NUM < 16 } {
     }
 } else {
   set_property -dict [list                               \
+     CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}           \
      CONFIG.USER_HBM_DENSITY {8GB}                       \
      CONFIG.USER_HBM_STACK {2}                           \
-     CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}             \
-     CONFIG.USER_CLK_SEL_LIST1 {AXI_16_ACLK}             \
      CONFIG.USER_SWITCH_ENABLE_01 {FALSE}                \
+     CONFIG.USER_CLK_SEL_LIST0 {AXI_07_ACLK}             \
+     CONFIG.USER_CLK_SEL_LIST1 {AXI_16_ACLK}             \
+     CONFIG.USER_HBM_REF_CLK_PS_1 {2500.00}              \
+     CONFIG.USER_HBM_REF_CLK_XDC_1 {5.00}                \
+     CONFIG.USER_HBM_RES_1 {9}                           \
+     CONFIG.USER_HBM_LOCK_REF_DLY_1 {20}                 \
+     CONFIG.USER_HBM_LOCK_FB_DLY_1 {20}                  \
+     CONFIG.USER_HBM_REF_CLK_1 {200}                     \
+     CONFIG.USER_HBM_FBDIV_1 {18}                        \
+     CONFIG.USER_HBM_HEX_CP_RES_1 {0x00009600}           \
+     CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_1 {0x00001414}  \
+     CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_1 {0x00000482}  \
      CONFIG.USER_MC_ENABLE_APB_01 {TRUE}                 \
+     CONFIG.USER_APB_PCLK_1 {100}                        \
+     CONFIG.USER_APB_PCLK_PERIOD_1 {10.0}                \
     ] $cell >> $log_file
+
 } 
 # AXI clk is 200MHZ and is used as HBM_ref_clk 
 # AXI clk divided by 2 is used by APB_clock (50-100MHz)
@@ -202,31 +218,51 @@ if { $HBM_MEM_NUM < 16 } {
 #CHANGE_HBM_INTERFACES_NUMBER
 #  CONFIG.USER_MEMORY_DISPLAY {2048}  => set the value to 512 by MC used (2048 = 4 MC used)
 #  CONFIG.USER_MC_ENABLE_00 {TRUE}    => enable/disable the MC
+
+set axi_mc_nb [expr {(($hbm_axi_if_num +1 ) / 2)}]
+set axi_mc_display [expr {($axi_mc_nb * 512)}]
 set_property -dict [list \
-  CONFIG.USER_MEMORY_DISPLAY {3072}  \
-  CONFIG.USER_MC_ENABLE_00 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_01 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_02 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_03 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_04 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_05 {TRUE}  \
-  CONFIG.USER_MC_ENABLE_06 {FALSE} \
-  CONFIG.USER_MC_ENABLE_07 {FALSE} \
-] $cell >> $log_file
-
-
-if { $HBM_MEM_NUM > 15 } {
-  set_property -dict [list \
-    CONFIG.USER_MC_ENABLE_08 {FALSE} \
-    CONFIG.USER_MC_ENABLE_09 {FALSE} \
-    CONFIG.USER_MC_ENABLE_10 {FALSE} \
-    CONFIG.USER_MC_ENABLE_11 {FALSE} \
-    CONFIG.USER_MC_ENABLE_12 {FALSE} \
-    CONFIG.USER_MC_ENABLE_13 {FALSE} \
-    CONFIG.USER_MC_ENABLE_14 {FALSE} \
-    CONFIG.USER_MC_ENABLE_15 {FALSE} \
+    CONFIG.USER_MEMORY_DISPLAY {axi_mc_display}  \
   ] $cell >> $log_file
+
+for {set i 0} {$i < 16} {incr i} {
+  #Manage 1 vs 2 digits
+  if { $i < $axi_mc_nb} {
+     if { $i < 10} {
+        set_property -dict [list              \
+           CONFIG.USER_MC_ENABLE_0$i {TRUE}   \
+           CONFIG.USER_PHY_ENABLE_0$i {TRUE}  \
+        ] $cell >> $log_file
+     } else {
+        set_property -dict [list              \
+           CONFIG.USER_MC_ENABLE_$i {TRUE}   \
+           CONFIG.USER_PHY_ENABLE_$i {TRUE}  \
+        ] $cell >> $log_file
+     }
+  } else {
+     if { $i < 10} {
+        set_property -dict [list              \
+           CONFIG.USER_MC_ENABLE_0$i {FALSE}   \
+           CONFIG.USER_PHY_ENABLE_0$i {TRUE}  \
+        ] $cell >> $log_file
+     } else {
+        set_property -dict [list              \
+           CONFIG.USER_MC_ENABLE_$i {FALSE}   \
+           CONFIG.USER_PHY_ENABLE_$i {TRUE}  \
+        ] $cell >> $log_file
+     }
+  }
 }
+#Disable the SAXI interface if not used in last MC
+if { $hbm_axi_if_num%2 == 1} {
+     if { $hbm_axi_if_num < 10} {
+        set_property -dict [list CONFIG.USER_SAXI_0$hbm_axi_if_num {FALSE}] $cell >> $log_file
+     } else {
+        set_property -dict [list CONFIG.USER_SAXI_$hbm_axi_if_num  {FALSE} ] $cell >> $log_file
+     }
+}
+#===============================================================================
+
 
 
 #add log_file to remove the warning on screen
@@ -239,6 +275,16 @@ connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_0_PWRITE]
 connect_bd_net [get_bd_pins refclk_bufg_apb_clk/BUFGCE_O] [get_bd_pins hbm/APB_0_PCLK]
 connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/APB_0_PRESET_N]
 
+if { $hbm_axi_if_num > 15 } {
+connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PENABLE] >> $log_file
+connect_bd_net [get_bd_pins constant_22_zero/dout] [get_bd_pins hbm/APB_1_PADDR]  >> $log_file
+connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PSEL]    >> $log_file
+connect_bd_net [get_bd_pins constant_32_zero/dout] [get_bd_pins hbm/APB_1_PWDATA] >> $log_file
+connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PWRITE]  >> $log_file
+
+  connect_bd_net [get_bd_pins refclk_bufg_apb_clk/BUFGCE_O] [get_bd_pins hbm/APB_1_PCLK]
+  connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/APB_1_PRESET_N]
+}
 #======
 # Connect output ports
 set port [create_bd_port -dir O apb_complete]
@@ -248,7 +294,7 @@ connect_bd_net [get_bd_ports apb_complete] [get_bd_pins hbm/apb_complete_0]
 #-- Set the upper bound of the loop to the number of memory you use --
 
 #--------------------- start loop ------------------
-for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
+for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 
   #create the axi4 to axi3 converters
   set cell [create_bd_cell -type ip -vlnv {xilinx.com:ip:axi_protocol_converter:*} axi4_to_axi3_$i]
@@ -316,6 +362,9 @@ for {set i 0} {$i < $HBM_MEM_NUM} {incr i} {
 #This line need to be added after the loop since the S_AXI_p0_HBM_ACLK is not defined before
 connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_0] [get_bd_pins S_AXI_p0_HBM_ACLK]
 connect_bd_net [get_bd_ports S_AXI_p0_HBM_ACLK] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_I]
+if { $hbm_axi_if_num > 15 } {
+  connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_1] [get_bd_pins S_AXI_p0_HBM_ACLK]
+}
 
 assign_bd_address >> $log_file
 

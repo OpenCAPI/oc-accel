@@ -144,6 +144,9 @@ check_snap_settings:
 	@echo "                        BRAM_USED       = $(BRAM_USED)"
 	@echo "                        SDRAM_USED      = $(SDRAM_USED)"
 	@echo "                        HBM_USED        = $(HBM_USED)"
+	@if [ "$(HBM_USED)" == "TRUE" ]; then \
+		echo "                        HBM AXI I/F nb  = $(HBM_AXI_IF_NUM)";\
+	fi
 	@echo "                        NVME_USED       = $(NVME_USED)"
 	@echo "                        ETHERNET_USED   = $(ETHERNET_USED)"
 	@echo "                        ETH_LOOP_BACK   = $(ETH_LOOP_BACK)"

@@ -185,6 +185,8 @@ choice
                 select ENABLE_HLS_SUPPORT
                 select DISABLE_SDRAM_AND_BRAM
                 select DISABLE_NVME
+		select DISABLE_HBM
+		select DISABLE_ETHERNET
 
 	config HLS_MEMCOPY_1024
 		bool "HLS Memcopy 1024b"
@@ -422,6 +424,16 @@ config ACTION_USER_CLOCK
 	bool
 	default n
 
+config HBM_AXI_IF_NUM
+        prompt "Number of HBM AXI interfaces, range 1-32 (default 12)"
+	depends on ENABLE_HBM
+	int
+	default 12
+	range 1 32
+	help
+	  HBM AXI interfaces generated in the chip
+	  This need to be coherent with what is implemented in the HLS action code
+          Please select one of them.
 
 choice
 	bool "Simulator"
