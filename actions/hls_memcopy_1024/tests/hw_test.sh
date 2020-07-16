@@ -51,6 +51,7 @@ while getopts ":C:t:d:Nh" opt; do
     ;;
     d)
     duration=$OPTARG;
+    echo "test duration :    $duration"
     ;;
     N)
     noirq=" -N ";
