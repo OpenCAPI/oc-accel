@@ -17,25 +17,27 @@ sudo apt-get install python3-dev python3-venv swig curl
 
 * To get started use the following steps:
 ```
-git clone git@github.com:diamantopoulos/oc-accel.git
+git clone https://github.com/OpenCAPI/oc-accel.git #if using regular https
+git git@github.com:OpenCAPI/oc-accel.git  # if using ssh with privileges
 git clone https://github.com/OpenCAPI/ocse
 cd oc-accel
-git checkout add_action_hls_helloworld_python
-make snap_config        #select (X) HLS Action - manually set ACTION ...
-vim snap_env.sh -> export ACTION_ROOT=${SNAP_ROOT}/actions/hls_helloworld_python/
+make snap_config        #select (X) HLS_helloworld_python 
+vim snap_env.sh -> export SNAP_ROOT=/home/oc-accel  #or your oc-accel directory
 # Check ocse PATH if not default ~/ocse
 . snap_env.sh
-make software
+make software           # this will compile any required tools
 cd actions/hls_helloworld_python/sw
-python3 -m venv env
-source env/bin/activate
+python3 -m venv env     # to create a local dev environment
+                        # note you will have a "env" before the prompt to remind
+                        # you the local environment you work in
+source env/bin/activate # 
 pip3 install -r requirements.txt
 make pywrap  # to compile the appropriate libraries for SWIG
 ```
 
 ### To launch a Python shell and use the OCSE (RTL simulation)
 
-* Run action simulation
+* Run action simulation in your swig env
 
 ```
 cd ${SNAP_ROOT}
@@ -48,7 +50,7 @@ make sim
 oc_maint -vvv
 
 LD_LIBRARY_PATH=$OCSE_ROOT/libocxl/ python3
-
+# once inside python call the libs
 import sys
 import os
 

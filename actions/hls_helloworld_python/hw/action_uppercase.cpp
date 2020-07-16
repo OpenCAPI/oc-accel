@@ -29,7 +29,7 @@
 //----------------------------------------------------------------------
 //--- MAIN PROGRAM -----------------------------------------------------
 //----------------------------------------------------------------------
-static int process_action(snap_membus_t *din_gmem,
+static int process_action(snap_membus_1024_t *din_gmem,
 	      snap_membus_1024_t *dout_gmem,
 	      /* snap_membus_1024_t *d_ddrmem, *//* not needed */
 	      action_reg *act_reg)
