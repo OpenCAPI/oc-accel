@@ -1,0 +1,29 @@
+oc_maint -vvv
+
+LD_LIBRARY_PATH=/tools/projects/ocse/libocxl/ python3
+LD_LIBRARY_PATH=/home/did/projects/ocse/libocxl/ python3
+
+import sys
+
+sys.path.append("/tools/projects/oc-accel_did/actions/hls_mmult_python/sw")
+sys.path.append("/home/did/projects/oc-accel_did/actions/hls_mmult_python/sw")
+
+import dieres
+import numpy as np
+ 
+#a = np.ones(16*16, np.int32)
+a = np.arange(0,16*16,1,np.int32)
+print(a)
+
+
+#b = np.ones(16*16, np.int32)*2
+b=np.arange(10,16*16+10,1,np.int32)
+print(b)
+
+c = np.zeros(16*16, np.int32)
+print(c)
+
+dieres.mmult(a,b,c)
+print(c)
+
+
