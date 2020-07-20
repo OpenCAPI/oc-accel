@@ -22,7 +22,7 @@ git git@github.com:OpenCAPI/oc-accel.git  # if using ssh with privileges
 git clone https://github.com/OpenCAPI/ocse
 cd oc-accel
 make snap_config        #select (X) HLS_helloworld_python 
-vim snap_env.sh -> export SNAP_ROOT=/home/oc-accel  #or your oc-accel directory
+vim snap_env.sh -> export SNAP_ROOT=/home/~/oc-accel  #or your oc-accel directory
 # Check ocse PATH if not default ~/ocse
 . snap_env.sh
 make software           # this will compile any required tools
@@ -31,7 +31,7 @@ python3 -m venv env     # to create a local dev environment
                         # note you will have a "env" before the prompt to remind
                         # you the local environment you work in
 source env/bin/activate # 
-pip3 install -r requirements.txt
+pip3 install -r requirements.txt # to be improved : some errors might occur depending on environment
 make pywrap  # to compile the appropriate libraries for SWIG
 ```
 
