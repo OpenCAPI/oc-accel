@@ -188,6 +188,20 @@ choice
 		select DISABLE_HBM
 		select DISABLE_ETHERNET
 
+        config HLS_HELLOWORLD_PYTHON
+                bool "HLS Helloworld_python"
+                help
+                  This is a basic example to start accessing data using python scripting:
+                  - Reading text from the server memory
+                  - Processing changing case of the text
+                  - Writing back the text to the server memory
+                  This example is written in C and compiled with HLS
+                  It does the minimum exchanges between host mem and the FPGA
+                  and is aimed at being called by a python script
+                select ENABLE_HLS_SUPPORT
+                select DISABLE_SDRAM_OR_BRAM
+                select DISABLE_NVME
+
 	config HLS_MEMCOPY_1024
 		bool "HLS Memcopy 1024b"
                 depends on ! (AD9H3 || AD9H7)

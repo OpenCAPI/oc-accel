@@ -1,0 +1,43 @@
+oc_maint -vvv
+
+LD_LIBRARY_PATH=$OCSE_ROOT/libocxl/ python3
+#LD_LIBRARY_PATH=/home/did/projects/ocse/libocxl/ python3
+
+import sys
+import os
+
+#sys.path.append("/home/did/projects/oc-accel_did/actions/hls_helloworld_python/sw")
+
+snap_action_sw=os.environ['SNAP_ROOT'] + "/actions/hls_helloworld_python/sw"
+print(snap_action_sw)
+sys.path.append(snap_action_sw)
+
+import snap_helloworld_python
+ 
+input = "Hello world. This is my first CAPI SNAP experience with Python. It's extremely fun"
+output = "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+
+#snap_helloworld_python.uppercase(input, output)
+out, output = snap_helloworld_python.uppercase(input)
+
+print("Output from FPGA:"+output)
+
+print("Output from CPU :"+input.upper())
+
+
+
+
+
+
+
+
+
+Jupyter
+
+oc_maint -vvv
+
+cp -r ../../../../actions/hls_helloworld_python/sw/* .
+
+jupyter notebook trieres_helloworld_cosim.ipynb
+
+(then follow instrunctions on notebook: Select every cell and run it with Ctrl+D)
