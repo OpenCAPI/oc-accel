@@ -76,6 +76,7 @@ if [ -z "$SNAP_CONFIG" ]; then
     oc_maint -C ${snap_card} -v || exit 1;
     snap_peek -C ${snap_card} 0x0 || exit 1;
     snap_peek -C ${snap_card} 0x8 || exit 1;
+    snap_peek 0x0030 |grep 30|cut -c22-23
     echo
 fi
 

@@ -432,7 +432,10 @@ $(SNAP_SIMULATORS):  .sim_project_done
 		echo; echo "Error: Makefile target $@ called with SIMULATOR set to \"$(SIMULATOR)\""; \
 		exit -1; \
 	fi
-	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`"
+		echo; echo "Error: Simulating HBM with xsim is not supported. Use BRAM or another simulator."; \
+		exit -1; \
+	fi
+	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`";
 	@echo -e "                        export_simulation";
 	@cd $(SIM_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/export_$@.tcl -notrace -log $(LOGS_DIR)/compile_$@.log -journal $(LOGS_DIR)/compile_$@.jou
 	@echo -e "                        patch simulation";
@@ -454,6 +457,9 @@ else
 $(SNAP_SIMULATORS):  .sim_project_done app
 	@if [ "$(SIMULATOR)" != "$@" ]; then \
 		echo; echo "Error: Makefile target $@ called with SIMULATOR set to \"$(SIMULATOR)\""; \
+		exit -1; \
+	elif [ "$(SIMULATOR)" == "xsim" ] && [ "$(HBM_USED)" == "TRUE" ] && [ "$(BRAM_USED)" == "FALSE" ]; then \
+		echo; echo "Error: Simulating HBM with xsim is not supported. in menu, select BRAM or another simulator."; \
 		exit -1; \
 	fi
 	@echo -e "[BUILD $@ MODEL....] start `date +"%T %a %b %d %Y"`"

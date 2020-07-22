@@ -311,11 +311,11 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
     CONFIG.ADDR_WIDTH {34}              \
     CONFIG.DATA_WIDTH {256}             \
     CONFIG.ID_WIDTH {6}                 \
-    CONFIG.REG_AW {15}                  \
-    CONFIG.REG_AR {15}                  \
-    CONFIG.REG_W {15}                   \
-    CONFIG.REG_R {15}                   \
-    CONFIG.REG_B {15}                   \
+    CONFIG.REG_AW {10}                  \
+    CONFIG.REG_AR {10}                  \
+    CONFIG.REG_W {10}                   \
+    CONFIG.REG_R {10}                   \
+    CONFIG.REG_B {10}                   \
     }  $cell
 
   #create the ports

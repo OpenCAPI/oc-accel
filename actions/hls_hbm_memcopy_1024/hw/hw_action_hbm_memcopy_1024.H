@@ -25,7 +25,7 @@
 #include <action_memcopy.h> /* Memcopy Job definition */
 
 
-#define MAX_NB_OF_BYTES_READ	(256 * 1024)
+#define MAX_NB_OF_BYTES_READ	(128 * 1024)
 #define LCL_MEM_MAX_SIZE	(256 * 1024 * 1024)  // HBM is 256MB each
 #define MAX_NB_OF_WORDS_READ_256    (MAX_NB_OF_BYTES_READ/BPERDW_256)
 #define MAX_NB_OF_WORDS_READ_512    (MAX_NB_OF_BYTES_READ/BPERDW_512)

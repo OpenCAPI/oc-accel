@@ -48,7 +48,7 @@ extern "C" {
 #define RELEASE_LEVEL             0x00000004
 // Following number defines the number of AXI interfaces for the HBM. It is used to check compatibility
 // with the number of AXI interfaces in the hardware and is set in the image "oc_maint" shows it).
-#define HBM_AXI_IF_NB             12
+#define HBM_AXI_IF_NB             32
 
 // For oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
 // Please modify ActionTypes.md file so oc_maint can recognize this action.
