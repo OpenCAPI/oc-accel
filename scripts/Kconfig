@@ -533,18 +533,21 @@ choice
 	default SPEED_25G 
 	help
 	  PHY Speed of Transceive IP
-          There are two choices of phy speed the framework supports. Please select
+          OC-ACCEL supports two choices of phy speed, please select
           one of them.
-
+          25BGBps is the default.
+          => Pay attention that 20GBps while reducing build time, requires server to be
+             in a specific unsupported test mode !!
 	config SPEED_25G
-		bool "25G: Transceive IP at 25.78125 Gbps"
+		bool "25G: Transceive IP default speed: 25.78125 Gbps"
 		help
 		  Generate Transceive IP with 25.78125 Gbps. Uses Xilinx IP.
 	
 	config SPEED_20G
-		bool "20G: Transceive IP at 20.0 Gbps"
+		bool "20G: Transceive IP at 20.0 Gbps => See Help for warning"
 		help
 		  Generate Transceive IP with 20.0 Gbps. Uses Xilinx IP.
+		  WARNING: While reducing build time, it requires server to be in a specific unsupported test mode !!
 endchoice
 
 config PHY_SPEED 
