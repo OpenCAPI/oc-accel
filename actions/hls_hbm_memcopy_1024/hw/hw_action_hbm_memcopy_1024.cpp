@@ -30,7 +30,7 @@
 // the application shouldn't use more interfaces than the number you have stated in Kconfig menu.
 // (extra interfaces not connected will be removed if not connected to the wrapper)
 
-#define HBM_AXI_IF_NB             12
+#define HBM_AXI_IF_NB             32
 
 //===================================================================================//
 
