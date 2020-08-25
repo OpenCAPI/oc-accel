@@ -70,21 +70,22 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
 
    if [ "$HBM_USED" == "TRUE" ]; then
       #Here we use for the HBM the SDRAM_SIZE as the number of AXI interfaces
-      SDRAM_SIZE_DEC=`find $ACTION_ROOT -name *.[hH] | xargs grep "#define\s\+HBM_AXI_IF_NB" | awk '{print $NF}'`
+      SDRAM_SIZE_DEC=`find $ACTION_ROOT -name *.[cC]* | xargs grep "#define\s\+HBM_AXI_IF_NB" | awk '{print $NF}'`
       printf -v SDRAM_SIZE "%x" "$SDRAM_SIZE_DEC"
       if [ -z $SDRAM_SIZE_DEC ]; then
          echo "   -------------------------------------------------------------------------------------------------"
          echo "   -- WARNING : Impossible to check coherency of HBM AXI interfaces numbers between action and chip.           "
-         echo "   --           Please define the variable HBM_AXI_IF_NB in hls_youraction/include/xxx.h file "
+         echo "   --           Please define the variable HBM_AXI_IF_NB in hls_youraction/hw/xxx.cpp file "
          echo "   -------------------------------------------------------------------------------------------------"
       elif [ $SDRAM_SIZE_DEC != $HBM_AXI_IF_NUM ]; then
          echo "   ---------------------------------------------------------------------------------------------"
-         echo "   -- ERROR : HBM AXI interfaces defined in hls_youraction/include/xxx.h is ($SDRAM_SIZE_DEC)              --"
-         echo "   --         is different than the one specified in the Kconfig menu ($HBM_AXI_IF_NUM)!! Please correct.  --"
+         echo "   -- ERROR : HBM AXI interfaces defined in hls_youraction/hw/xxx.cpp is ($SDRAM_SIZE_DEC)                 --"
+         echo "   --         is different than the one specified in the Kconfig menu ($HBM_AXI_IF_NUM)!!                  --"
+         echo "   --         Please correct one or the other to keep coherency.                              --"
          echo "   ---------------------------------------------------------------------------------------------"
          exit 1
       else
-         echo "                        HBM AXI interfaces defined in HLS action is $SDRAM_SIZE_DEC"
+         echo "                        HBM AXI interfaces defined in HLS action is $SDRAM_SIZE_DEC (as in chip wrapper)"
       fi
    fi
       

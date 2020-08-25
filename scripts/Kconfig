@@ -344,11 +344,12 @@ config ENABLE_BRAM
 
 config ENABLE_BRAM
 	bool
-	prompt ">> Replace HBM by 32KB URAM (recommended for HBM - mandatory when simulating HBM with xsim)"
+	prompt ">> Replace HBM by 32KB URAM (recommended for simulating HBM)"
 	depends on !AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
 	help
-	  This is a development option. The AXI attached on-card SDRAM will be replaced by 512KB BRAM.
+	  This is a development option. The AXI attached on-card SDRAM will be replaced by 32KB URAM.
 	  As of today, there are still some issues to simulate the HBM even with some other simulators.
+	  => xsim simulator doesn't support HBM simulation
 
 config BRAM_USED
 	string

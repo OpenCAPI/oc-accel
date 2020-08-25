@@ -20,6 +20,20 @@
 #include "ap_int.h"
 #include "hw_action_hbm_memcopy_1024.H"
 
+//======================== IMPORTANT ================================================//
+// The following number defines the number of AXI interfaces for the HBM that is used in the HLS code below.
+//    (see #pragma HLS INTERFACE m_axi port=d_hbm_pxx bundle=card_hbm_pxx)
+// It is used to check the compatibility with the number of AXI interfaces set for the wrapper (in Kconfig menu) 
+// This number is written in the binary image so that the "oc_maint" command displays the number of implemented HBM.
+// Minimum is 1 - Maximum is 32
+// You can define this number to a lower number than the number of AXI interfaces coded in this HLS code BUT 
+// the application shouldn't use more interfaces than the number you have stated in Kconfig menu.
+// (extra interfaces not connected will be removed if not connected to the wrapper)
+
+#define HBM_AXI_IF_NB             12
+
+//===================================================================================//
+
 //======================== convert buffers format ===================================//
 //Convert a 1024 bits buffer to a 256 bits buffer
 void membus_to_HBMbus( snap_membus_1024_t *buffer_1024, snap_membus_256_t *buffer_256, int size_in_words_1024)

@@ -283,6 +283,9 @@ while [ -z "$SETUP_DONE" ]; do
   if [ "$SIM_XSIM" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
       SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with xsim is not supported, but you can build an image!"
   fi
+  if [ "$SIM_IRUN" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
+      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues. It is recommended to use BRAM for simulation. (Keep however real HBM to use it in the hardware.)"
+  fi
 
 
   # Note: ETHERNET_USED is defined via snap_config
