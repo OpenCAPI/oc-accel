@@ -397,8 +397,8 @@ cloud_merge: allow_cloud_merge $(SNAP_BASE_DCP) $(SNAP_ACTION_DCP)
 
 ocse: prepare_logs
 	@echo -e "[COMPILE OCSE .......] start `date +"%T %a %b %d %Y"`"
-	@$(SNAP_ROOT)/check_ocse.sh > $(LOGS_DIR)/compile_pslse.log 2>&1
-	@$(MAKE) -C $(OCSE_ROOT) >> $(LOGS_DIR)/compile_pslse.log 2>&1; \
+	@$(SNAP_ROOT)/check_ocse.sh > $(LOGS_DIR)/compile_ocse.log 2>&1
+	@$(MAKE) -C $(OCSE_ROOT) >> $(LOGS_DIR)/compile_ocse.log 2>&1; \
 	if [ $$? -ne 0 ]; then echo -e "                        Error: please look into $(LOGS_DIR)/compile_ocse.log"; exit -1; fi
 	@echo -e "[COMPILE OCSE .......] done  `date +"%T %a %b %d %Y"`"
 
