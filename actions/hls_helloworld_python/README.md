@@ -1,6 +1,6 @@
 # HLS_HELLOWORLD_PYTHON EXAMPLE
 
-* Provides a simple base allowing to discover AC-ACCEL
+* Provides a simple base allowing to discover OC-ACCEL
 * Python code is changing characters case of a user phrase
   * code can be executed on the CPU (will transform all characters to lower case)
   * code can be simulated (will transform all characters to upper case in simulation)
