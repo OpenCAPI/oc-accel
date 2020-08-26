@@ -75,8 +75,8 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 if [ -z "$SNAP_CONFIG" ]; then
     echo "Get CARD VERSION"
     oc_maint -C ${snap_card} -v || exit 1;
-    snap_peek -C ${snap_card} 0x0 || exit 1;
-    snap_peek -C ${snap_card} 0x8 || exit 1;
+#    snap_peek -C ${snap_card} 0x0 || exit 1;
+#    snap_peek -C ${snap_card} 0x8 || exit 1;
     echo
 fi
 
@@ -89,7 +89,7 @@ function test_memcopy {
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
     echo -n "Doing snap_memcopy ${size} bytes from host mem to host mem through FPGA buffer ... "
-    cmd="snap_memcopy -C${snap_card} ${noirq} -X    \
+    cmd="snap_memcopy -C${snap_card} ${noirq} -X -t 720   \
         -i ${size}_A.bin    \
         -o ${size}_A.out >>    \
         snap_memcopy.log 2>&1"
@@ -121,7 +121,7 @@ touch snap_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
 
-    for (( size=64; size<=512; size*=2 )); do
+    for (( size=64; size<=256; size*=2 )); do
     test_memcopy ${size}
     done
 fi
@@ -151,7 +151,7 @@ function test_memcopy_with_local_mem {
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
     echo -n "Doing snap_memcopy host mem to ddr (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card}  ${noirq}  \
+    cmd="snap_memcopy -C${snap_card}  ${noirq}  -t 720 \
         -i ${size}_B.bin    \
         -d 0x0 -D LCL_MEM0 >>  \
         snap_memcopy_with_ddr.log 2>&1"
@@ -164,7 +164,7 @@ function test_memcopy_with_local_mem {
     fi
     
     echo -n "Doing snap_memcopy from ddr to host mem (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card}   ${noirq} \
+    cmd="snap_memcopy -C${snap_card}   ${noirq} -t 720 \
         -o ${size}_B.out    \
         -a 0x0 -A LCL_MEM0 -s ${size} >>  \
         snap_memcopy_with_ddr.log 2>&1"
