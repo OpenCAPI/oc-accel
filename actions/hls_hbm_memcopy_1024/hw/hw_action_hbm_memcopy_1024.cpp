@@ -25,12 +25,14 @@
 //    (see #pragma HLS INTERFACE m_axi port=d_hbm_pxx bundle=card_hbm_pxx)
 // It is used to check the compatibility with the number of AXI interfaces set for the wrapper (in Kconfig menu) 
 // This number is written in the binary image so that the "oc_maint" command displays the number of implemented HBM.
-// Minimum is 1 - Maximum is 32
+// Minimum is 1 - Maximum is 32 
+//          NOTE : for VU3P chip it is not recommended to use more than 12, as
+//                 timing closure is too difficult otherwise.
 // You can define this number to a lower number than the number of AXI interfaces coded in this HLS code BUT 
 // the application shouldn't use more interfaces than the number you have stated in Kconfig menu.
 // (extra interfaces not connected will be removed if not connected to the wrapper)
 
-#define HBM_AXI_IF_NB             32
+#define HBM_AXI_IF_NB             12
 
 //===================================================================================//
 

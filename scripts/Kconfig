@@ -441,10 +441,10 @@ config ACTION_USER_CLOCK
 	default n
 
 config HBM_AXI_IF_NUM
-        prompt "Number of HBM AXI interfaces, range 1-32 (default 32)"
+        prompt "Number of HBM AXI interfaces, range 1-32 (default 12)"
 	depends on ENABLE_HBM
 	int
-	default 32
+	default 12 
 	range 1 32
 	help
 	  HBM AXI interfaces generated in the chip
