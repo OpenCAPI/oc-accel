@@ -74,7 +74,7 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 if [ -z "$SNAP_CONFIG" ]; then
     echo "Get CARD VERSION"
-    oc_maint -C ${snap_card} -v || exit 1;
+#    oc_maint -C ${snap_card} -v || exit 1;
 #    snap_peek -C ${snap_card} 0x0 || exit 1;
 #    snap_peek -C ${snap_card} 0x8 || exit 1;
     echo
@@ -121,7 +121,7 @@ touch snap_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
 
-    for (( size=64; size<=256; size*=2 )); do
+    for (( size=64; size<128; size*=2 )); do
     test_memcopy ${size}
     done
 fi
@@ -194,7 +194,7 @@ rm -f snap_memcopy_with_ddr.log
 touch snap_memcopy_with_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<512; size*=2 )); do
+    for (( size=64; size<128; size*=2 )); do
     test_memcopy_with_local_mem ${size}
     done
 fi
