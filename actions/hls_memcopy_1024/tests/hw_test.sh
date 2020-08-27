@@ -120,7 +120,6 @@ rm -f snap_memcopy.log
 touch snap_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
-
     for (( size=64; size<128; size*=2 )); do
     test_memcopy ${size}
     done
@@ -194,9 +193,10 @@ rm -f snap_memcopy_with_ddr.log
 touch snap_memcopy_with_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<128; size*=2 )); do
-    test_memcopy_with_local_mem ${size}
-    done
+    echo "    Mem module test has been removed in SHORT case"
+#    for (( size=64; size<128; size*=2 )); do
+#    test_memcopy_with_local_mem ${size}
+#    done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
