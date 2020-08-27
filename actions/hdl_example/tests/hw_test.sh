@@ -229,8 +229,8 @@ MIN_ALIGN=1
 MIN_BLOCK=1
 echo -n " (Align: $MIN_ALIGN Min Block: $MIN_BLOCK) "
 if [ "$duration" = "SHORT" ] ; then   # Simulation test case
-	timeoutsim=60
-	endsimu=40
+	timeoutsim=120
+	endsimu=20
 else
 	echo ">>> To avoid timeout, -d SHORT should be used for simulation <<<"
 	timeoutsim=2	# hardware test case
@@ -249,18 +249,20 @@ for ((iter=1;iter <= iteration;iter++))
        		echo "failed"
        		exit 1
 	fi
+
+	if [ "$duration" = "SHORT" ]; then 
+		echo "# Tests with interrupts or sb bs and rnd are not evaluated in SHORT mode"
+	else
+	       	
 	echo "Testing Action 1 from 20 msec to 10*$endsimu msec in 10*$endsimu msec steps with Interrupts"
 	cmd="${FUNC} -a 1 -C${snap_card} -e $endsimu -t $timeoutsim -I"
 	eval ${cmd}
-	if [ $? -ne 0 ]; then
-		echo "cmd: ${cmd}"
-		echo "failed"
+		if [ $? -ne 0 ]; then
+			echo "cmd: ${cmd}"
+			echo "failed"
 		exit 1
-	fi
-
-	if [ "$duration" = "SHORT" ]; then 
-		echo "# we postpone this simulation test to later debug"
-	else 
+		fi
+		
 		test    $snap_card 2 4k $MIN_ALIGN $MIN_BLOCK
 		test    $snap_card 2 64 $MIN_ALIGN $MIN_BLOCK
 		test_sb $snap_card 2    $MIN_ALIGN $MIN_BLOCK
