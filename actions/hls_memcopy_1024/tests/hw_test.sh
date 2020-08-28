@@ -138,7 +138,6 @@ if [ "$duration" = "LONG" ]; then
 fi
 
 echo
-echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy.log
 echo
 
@@ -193,7 +192,7 @@ rm -f snap_memcopy_with_ddr.log
 touch snap_memcopy_with_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
-    echo "    Mem module test has been removed in SHORT case"
+    echo "    Mem module test is not run in SHORT case"
 #    for (( size=64; size<128; size*=2 )); do
 #    test_memcopy_with_local_mem ${size}
 #    done
@@ -212,7 +211,6 @@ if [ "$duration" = "LONG" ]; then
 fi
 
 echo
-echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy_with_ddr.log
 echo
 
