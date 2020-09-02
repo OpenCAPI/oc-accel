@@ -2,6 +2,22 @@
 
 OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that helps you implement your FPGA acceleration solutions with OpenCAPI technology.
 
+# Quick Start
+ * Install Xilinx tools
+ * Install OpenCAPI Simulation Engine and Oc-accel framework
+ * ```git clone git@github.com:OpenCAPI/ocse ``` 
+ * ```git clone https://github.com/OpenCAPI/oc-accel.git```
+ * cd oc-accel
+ *``` make snap_config```
+ * Choose a card
+ * Select hls_helloworld example
+ * exit
+ * run make sim (or make sim_tmux)
+ * in the xterm run snap_helloworld to get the application help
+ * copy paste simulation case : ```snap_helloworld_1024 .........```
+ * check test passes ok
+ * to generate the flash content run ```make image```
+
 # Documentation
  <https://opencapi.github.io/oc-accel-doc/>
 
