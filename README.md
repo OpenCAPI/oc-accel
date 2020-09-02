@@ -3,28 +3,48 @@
 OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that helps you implement your FPGA acceleration solutions with OpenCAPI technology.
 
 # Quick Start
- * Install Xilinx tools
- * Install OpenCAPI Simulation Engine and Oc-accel framework
+ * Dependencies 
+ * Install Xilinx tools with desired part (used by the card you want to test)
+ * Run the Xilinx setup shell with proper license and path settings
+ * Clone OpenCAPI Simulation Engine and Oc-accel framework
  ```console
  git clone git@github.com:OpenCAPI/ocse
  git clone https://github.com/OpenCAPI/oc-accel.git
  cd oc-accel
  make snap_config
  ```
- * Choose a card
+ * In the menu :
  * Select hls_helloworld example
  * exit
  * run make sim (or make sim_tmux)
- * in the xterm run snap_helloworld to get the application help
+ * in the xterm run 
+ ```console
+ snap_helloworld_1024
+ ```
+ to get the application help
  * copy paste simulation case : 
  ```console
- snap_helloworld_1024 .........
- ```
+echo Clean possible temporary old files 
+echo Prepare the text to process
+echo "Hello world_1024. This is my first CAPI SNAP experience. It's real fun." > /tmp/t1
+
+echo Run the application + hardware action
+snap_helloworld_1024 -i /tmp/t1 -o /tmp/t2
+echo Display input file: && cat /tmp/t1
+echo Display output file from FPGA executed action -UPPER CASE expected-: && cat /tmp/t2
+```
+
  * check test passes ok
  * to generate the flash content run
  ```console
  make image
  ```
+ This produces the project.mcs file to be loaded in memory of a OC cards plugged in a POWER9 server
+ File is located at $OC-ROOT/hardware/build/Images/project.mcs
+ 
+# Check on POWER9 OpenCAPI server
+* Card is new : need to use Xilinx vivado_lab and JTAG probe to load the fpga
+* Card is already programmed with a previous OC binary , use OpenCAPI Utils tools to load the .mcs file https://github.com/OpenCAPI/oc-utils.git
 
 # Documentation
  <https://opencapi.github.io/oc-accel-doc/>
