@@ -14,8 +14,8 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
  * On a POWER9 server:
    * Install lib-ocxl on server:
      ```console
-     sudo apt-get install libocxl-dev ## for Ubuntu
-     sudo yum install libocxl-devel   ## for RHEL
+     sudo apt-get install libocxl-dev # for Ubuntu
+     sudo yum install libocxl-devel   # for RHEL
      ```
 
 # Quick Start, Step 1: Simulate and Build FPGA on x86:
@@ -53,12 +53,12 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
         * Use OpenCAPI Utils tools to load the oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin file.
            ```console
            sudo git clone https://github.ibm.com/OC-Enablement/oc-utils.git
-           sudo make install ## default installation
+           sudo make install # default installation
            ```
-           * Flash the card memory.
-           ```console
-           sudo oc-flash-script oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
-           ```
+        * Flash the card memory.
+          ```console
+          sudo oc-flash-script oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
+          ```
 * Install oc-accel on the POWER server and compile code:
   ```console
   git clone https://github.com/OpenCAPI/oc-accel.git
@@ -67,7 +67,7 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
   ```
 * Run the default test:
   ```console
-  ./actions/hls_helloworld_1024/sw/test/hw_test.sh
+  ./actions/hls_helloworld_1024/tests/hw_test.sh
   ```
 * Check results
 
