@@ -8,7 +8,7 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
     * Run the Xilinx setup shell with proper license and path settings
 
 # Quick Start
- * Clone OpenCAPI Simulation Engine and Oc-accel framework
+ * Clone OpenCAPI Simulation Engine and OC-Accel framework
  ```console
  git clone git@github.com:OpenCAPI/ocse
  git clone https://github.com/OpenCAPI/oc-accel.git
@@ -16,42 +16,45 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
  make snap_config  ## this uses an opensource Kconfig menu
  ```
  * In the menu: 
-    * select a card and an example to test
+    * Select a card and an example (eg: hls_helloworld_1024) to test (use space bar)
     * Exit the menu
  * Now run a simulation on X86 with default xsim simulator
   ```console
   make sim     ## (or make sim_tmux if no xterm available)
   ```
- * In the term run 
+ * In the terminal run: 
  ```console
  snap_helloworld_1024 # the default help will propose the simulation example 
  ```
  * Run the proposed test and check it passes ok
- * To generate the flash content run
+ * To generate the flash content run:
  ```console
  make image
  ```
- This produces the project.mcs file (it is the full description of the FPGA content) to be loaded in memory of a OC cards plugged in a POWER9 server
- File is located at $OC-ROOT/hardware/build/Images/project.bin
+ This produces a .bin file (it is the full description of the FPGA content) to be loaded in memory of the chosen OC card plugged in a POWER9 server
+ File is located at $OC-ROOT/hardware/build/Images/oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
  
 # Check on POWER9 OpenCAPI server
-* Card is new : need to use Xilinx vivado_lab and JTAG probe to load the fpga
-* Card is already programmed with a previous OC binary , use OpenCAPI Utils tools to load the .mcs file
+* Card is new : need to use Xilinx vivado_lab and JTAG probe to load the fpga (check card supplier procedure)
+* Card is already programmed with a previous OC binary , use OpenCAPI Utils tools to load the oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin file.
+   * Transfer the .bin file into the POWER server by any mean (scp, ftp, ...)
    ```console
    sudo git clone https://github.com/OpenCAPI/oc-accel.git
    ```
    * Follow https://github.com/OpenCAPI/oc-utils.git installation procedure.
-   * Flash the card memory
+   * Flash the card memory.
    ```console
-   sudo oc-flash-script project.bin
+   sudo oc-flash-script oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
    ```
-* Install oc-accel on the POWER server   
+* Install oc-accel on the POWER server and compile code:
 ```console
 git clone https://github.com/OpenCAPI/oc-accel.git
 cd oc-accel
 make all
-## Run a default test when available
-./actions/the_example_you_choose/sw/test/hw_test.sh
+```
+* Run the default test:
+```console
+./actions/hls_helloworld_1024/sw/test/hw_test.sh
 ```
 Check results
 
