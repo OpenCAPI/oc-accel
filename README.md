@@ -2,49 +2,58 @@
 
 OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that helps you implement your FPGA acceleration solutions with OpenCAPI technology.
 
+# Dependencies 
+ * on a X86 server:
+    * Install Xilinx tools (Vivado) with desired part (used by the card you want to test)
+    * Run the Xilinx setup shell with proper license and path settings
+
 # Quick Start
- * Dependencies 
- * Install Xilinx tools with desired part (used by the card you want to test)
- * Run the Xilinx setup shell with proper license and path settings
  * Clone OpenCAPI Simulation Engine and Oc-accel framework
  ```console
  git clone git@github.com:OpenCAPI/ocse
  git clone https://github.com/OpenCAPI/oc-accel.git
  cd oc-accel
- make snap_config
+ make snap_config  ## this uses an opensource Kconfig menu
  ```
- * In the menu :
- * Select hls_helloworld example
- * exit
- * run make sim (or make sim_tmux)
- * in the xterm run 
+ * In the menu: 
+    * select a card and an example to test
+    * Exit the menu
+ * Now run a simulation on X86 with default xsim simulator
+  ```console
+  make sim     ## (or make sim_tmux if no xterm available)
+  ```
+ * In the term run 
  ```console
- snap_helloworld_1024
+ snap_helloworld_1024 # the default help will propose the simulation example 
  ```
- to get the application help
- * copy paste simulation case : 
- ```console
-echo Clean possible temporary old files 
-echo Prepare the text to process
-echo "Hello world_1024. This is my first CAPI SNAP experience. It's real fun." > /tmp/t1
-
-echo Run the application + hardware action
-snap_helloworld_1024 -i /tmp/t1 -o /tmp/t2
-echo Display input file: && cat /tmp/t1
-echo Display output file from FPGA executed action -UPPER CASE expected-: && cat /tmp/t2
-```
-
- * check test passes ok
- * to generate the flash content run
+ * Run the proposed test and check it passes ok
+ * To generate the flash content run
  ```console
  make image
  ```
- This produces the project.mcs file to be loaded in memory of a OC cards plugged in a POWER9 server
- File is located at $OC-ROOT/hardware/build/Images/project.mcs
+ This produces the project.mcs file (it is the full description of the FPGA content) to be loaded in memory of a OC cards plugged in a POWER9 server
+ File is located at $OC-ROOT/hardware/build/Images/project.bin
  
 # Check on POWER9 OpenCAPI server
 * Card is new : need to use Xilinx vivado_lab and JTAG probe to load the fpga
-* Card is already programmed with a previous OC binary , use OpenCAPI Utils tools to load the .mcs file https://github.com/OpenCAPI/oc-utils.git
+* Card is already programmed with a previous OC binary , use OpenCAPI Utils tools to load the .mcs file
+   ```console
+   sudo git clone https://github.com/OpenCAPI/oc-accel.git
+   ```
+   * Follow https://github.com/OpenCAPI/oc-utils.git installation procedure.
+   * Flash the card memory
+   ```console
+   sudo oc-flash-script project.bin
+   ```
+* Install oc-accel on the POWER server   
+```console
+git clone https://github.com/OpenCAPI/oc-accel.git
+cd oc-accel
+make all
+## Run a default test when available
+./actions/the_example_you_choose/sw/test/hw_test.sh
+```
+Check results
 
 # Documentation
  <https://opencapi.github.io/oc-accel-doc/>
