@@ -3,7 +3,7 @@
 OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that helps you implement your FPGA acceleration solutions with OpenCAPI technology.
 
 # Dependencies 
- * on a X86 server:
+ * On a X86 server:
     * Install Xilinx tools (Vivado) with the desired fpga family (used by the card you want to test).
     * set XILINX_ROOT and XILINXD_LICENSE_FILE accordingly and source Xilinx setting shell: 
     ```console
@@ -11,8 +11,14 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
     export XILINXD_LICENSE_FILE=2100@xxxxx.com	# Vivado license
     . $XILINX_ROOT/Vivado/XXXX.Y/settings64.sh
     ```
+ * On a POWER9 server:
+   * Install lib-ocxl on server:
+     ```console
+     sudo apt-get install libocxl-dev ## for Ubuntu
+     sudo yum install libocxl-devel   ## for RHEL
+     ```
 
-# Quick Start
+# Quick Start, Step 1: Simulate and Build FPGA on x86:
  * Clone OpenCAPI Simulation Engine and OC-Accel framework
    ```console
    git clone https://github.com/OpenCAPI/ocse.git
@@ -38,13 +44,8 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
    ```
  This produces a .bin file (it is the full description of the FPGA content) to be loaded in memory of the chosen OC card plugged in a POWER9 server.
  File is located in ~/oc-accel/hardware/build/Images/
- 
-# Check on POWER9 OpenCAPI server
-* Install lib-ocxl on server:
-  ```console
-  sudo apt-get install libocxl-dev ## for Ubuntu
-  sudo yum install libocxl-devel   ## for RHEL
-  ```
+
+# Quick Start, Step 2: Program and Test on POWER9 server:
 * Card flash programming:
      * Card is new : Check card supplier procedure. Some allow PCIe flash programming, other require JTAG probe.
      * Card is already programmed with a previous OC binary:
