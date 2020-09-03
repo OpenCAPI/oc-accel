@@ -4,8 +4,13 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
 
 # Dependencies 
  * on a X86 server:
-    * Install Xilinx tools (Vivado) with desired part (used by the card you want to test)
-    * Run the Xilinx setup shell with proper license and path settings
+    * Install Xilinx tools (Vivado) with the desired fpga family (used by the card you want to test).
+    * set XILINX_ROOT and XILINXD_LICENSE_FILE accordingly and source Xilinx setting shell: 
+    ```console
+    export XILINX_ROOT=/opt/Xilinx/   # setup your xilinx tools install dir
+    export XILINXD_LICENSE_FILE=2100@xxxxx.com	# Vivado license
+    . $XILINX_ROOT/Vivado/XXXX.Y/settings64.sh
+    ```
 
 # Quick Start
  * Clone OpenCAPI Simulation Engine and OC-Accel framework
@@ -31,21 +36,28 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
  ```console
  make image
  ```
- This produces a .bin file (it is the full description of the FPGA content) to be loaded in memory of the chosen OC card plugged in a POWER9 server
+ This produces a .bin file (it is the full description of the FPGA content) to be loaded in memory of the chosen OC card plugged in a POWER9 server.
  File is located at $OC-ROOT/hardware/build/Images/oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
  
 # Check on POWER9 OpenCAPI server
-* Card is new : need to use Xilinx vivado_lab and JTAG probe to load the fpga (check card supplier procedure)
-* Card is already programmed with a previous OC binary , use OpenCAPI Utils tools to load the oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin file.
-   * Transfer the .bin file into the POWER server by any mean (scp, ftp, ...)
-   ```console
-   sudo git clone https://github.com/OpenCAPI/oc-accel.git
-   ```
-   * Follow https://github.com/OpenCAPI/oc-utils.git installation procedure.
-   * Flash the card memory.
-   ```console
-   sudo oc-flash-script oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
-   ```
+* Install lib-ocxl on server:
+  ```console
+  sudo apt-get install libocxl-dev ## for Ubuntu
+  sudo yum install libocxl-devel   ## for RHEL
+  ```
+* Card flash programming:
+     * Card is new : Check card supplier procedure. Some allow PCIe flash programming, other require JTAG probe.
+     * Card is already programmed with a previous OC binary:
+        * Transfer the .bin file into the POWER server by any mean (scp, ftp, ...)
+        * Use OpenCAPI Utils tools to load the oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin file.
+           ```console
+           sudo git clone https://github.ibm.com/OC-Enablement/oc-utils.git
+           sudo make install ## default installation
+           ```
+           * Flash the card memory.
+           ```console
+           sudo oc-flash-script oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
+           ```
 * Install oc-accel on the POWER server and compile code:
 ```console
 git clone https://github.com/OpenCAPI/oc-accel.git
@@ -56,7 +68,7 @@ make all
 ```console
 ./actions/hls_helloworld_1024/sw/test/hw_test.sh
 ```
-Check results
+* Check results
 
 # Documentation
  <https://opencapi.github.io/oc-accel-doc/>
