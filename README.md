@@ -14,30 +14,30 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
 
 # Quick Start
  * Clone OpenCAPI Simulation Engine and OC-Accel framework
- ```console
- git clone git@github.com:OpenCAPI/ocse
- git clone https://github.com/OpenCAPI/oc-accel.git
- cd oc-accel
- make snap_config  ## this uses an opensource Kconfig menu
- ```
+   ```console
+   git clone https://github.com/OpenCAPI/ocse.git
+   git clone https://github.com/OpenCAPI/oc-accel.git
+   cd oc-accel
+   make snap_config  ## this uses an opensource Kconfig menu
+   ```
  * In the menu: 
     * Select a card and an example (eg: hls_helloworld_1024) to test (use space bar)
     * Exit the menu
  * Now run a simulation on X86 with default xsim simulator
-  ```console
-  make sim     ## (or make sim_tmux if no xterm available)
-  ```
+   ```console
+   make sim     ## (or make sim_tmux if no xterm available)
+   ```
  * In the terminal run: 
- ```console
- snap_helloworld_1024 # the default help will propose the simulation example 
- ```
+   ```console
+   snap_helloworld_1024 # the default help will propose the simulation example 
+   ```
  * Run the proposed test and check it passes ok
  * To generate the flash content run:
- ```console
- make image
- ```
+   ```console
+   make image
+   ```
  This produces a .bin file (it is the full description of the FPGA content) to be loaded in memory of the chosen OC card plugged in a POWER9 server.
- File is located at $OC-ROOT/hardware/build/Images/oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
+ File is located in ~/oc-accel/hardware/build/Images/
  
 # Check on POWER9 OpenCAPI server
 * Install lib-ocxl on server:
@@ -59,15 +59,15 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
            sudo oc-flash-script oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin
            ```
 * Install oc-accel on the POWER server and compile code:
-```console
-git clone https://github.com/OpenCAPI/oc-accel.git
-cd oc-accel
-make all
-```
+  ```console
+  git clone https://github.com/OpenCAPI/oc-accel.git
+  cd oc-accel
+  make all
+  ```
 * Run the default test:
-```console
-./actions/hls_helloworld_1024/sw/test/hw_test.sh
-```
+  ```console
+  ./actions/hls_helloworld_1024/sw/test/hw_test.sh
+  ```
 * Check results
 
 # Documentation
