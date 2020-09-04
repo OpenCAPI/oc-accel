@@ -7,9 +7,9 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
     * Install Xilinx tools (tested with Vivado 2019.2) with the desired fpga family (used by the card you want to test).
     * set XILINX_ROOT and XILINXD_LICENSE_FILE accordingly and source Xilinx setting shell: 
     ```console
-    export XILINX_ROOT=/opt/Xilinx/   # setup your xilinx tools install dir
+    export XILINX_ROOT=/opt/Xilinx/xxxx.y   # setup your xilinx tools install dir. eg xxxx.y = 2019.2
     export XILINXD_LICENSE_FILE=2100@xxxxx.com	# Vivado license
-    . $XILINX_ROOT/Vivado/XXXX.Y/settings64.sh
+    . $XILINX_ROOT/settings64.sh
     ```
  * On a POWER9 server:
    * Install lib-ocxl on server:
