@@ -73,10 +73,10 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 if [ -z "$SNAP_CONFIG" ]; then
     echo "Get CARD VERSION"
-    oc_maint -C ${snap_card} -v || exit 1;
-    snap_peek -C ${snap_card} 0x0 || exit 1;
-    snap_peek -C ${snap_card} 0x8 || exit 1;
-    snap_peek 0x0030 |grep 30|cut -c22-23
+#    oc_maint -C ${snap_card} -v || exit 1;
+#    snap_peek -C ${snap_card} 0x0 || exit 1;
+#    snap_peek -C ${snap_card} 0x8 || exit 1;
+#    snap_peek 0x0030 |grep 30|cut -c22-23
     echo
 fi
 
@@ -121,7 +121,7 @@ touch snap_hbm_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
 
-    for (( size=64; size<=512; size*=2 )); do
+    for (( size=64; size<128; size*=2 )); do
     test_memcopy ${size}
     done
 fi
@@ -133,7 +133,7 @@ if [ "$duration" = "NORMAL" ]; then
 fi
 
 echo
-echo "Print time: (small size doesn't represent performance)"
+#echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_hbm_memcopy.log
 echo
 
@@ -166,7 +166,7 @@ function test_memcopy_with_hbm {
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failedi, check snap_memcopy_with_hbm.log"
+        echo "failed, check snap_memcopy_with_hbm.log"
         exit 1
     fi
 
@@ -179,7 +179,7 @@ function test_memcopy_with_hbm {
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failedi, check snap_memcopy_with_hbm.log"
+        echo "failed, check snap_memcopy_with_hbm.log"
         exit 1
     fi
     echo "ok"
@@ -201,9 +201,10 @@ rm -f snap_memcopy_with_hbm.log
 touch snap_memcopy_with_hbm.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<512; size*=2 )); do
-    test_memcopy_with_hbm ${size}
-    done
+#    for (( size=64; size<512; size*=2 )); do
+#    test_memcopy_with_hbm ${size}
+    echo "Test_memcopy_with_hbm test is not run in SHORT mode"
+#    done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
@@ -213,7 +214,7 @@ if [ "$duration" = "NORMAL" ]; then
 fi
 
 echo
-echo "Print time: (small size doesn't represent performance)"
+#echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy_with_hbm.log
 echo
 

@@ -74,7 +74,7 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 if [ -z "$SNAP_CONFIG" ]; then
     echo "Get CARD VERSION"
-    oc_maint -C ${snap_card} -v || exit 1;
+#    oc_maint -C ${snap_card} -v || exit 1;
 #    snap_peek -C ${snap_card} 0x0 || exit 1;
 #    snap_peek -C ${snap_card} 0x8 || exit 1;
     echo
@@ -120,8 +120,7 @@ rm -f snap_memcopy.log
 touch snap_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
-
-    for (( size=64; size<=256; size*=2 )); do
+    for (( size=64; size<128; size*=2 )); do
     test_memcopy ${size}
     done
 fi
@@ -139,7 +138,6 @@ if [ "$duration" = "LONG" ]; then
 fi
 
 echo
-echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy.log
 echo
 
@@ -194,9 +192,10 @@ rm -f snap_memcopy_with_ddr.log
 touch snap_memcopy_with_ddr.log
 
 if [ "$duration" = "SHORT" ]; then
-    for (( size=64; size<512; size*=2 )); do
-    test_memcopy_with_local_mem ${size}
-    done
+    echo "    Mem module test is not run in SHORT case"
+#    for (( size=64; size<128; size*=2 )); do
+#    test_memcopy_with_local_mem ${size}
+#    done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
@@ -212,7 +211,6 @@ if [ "$duration" = "LONG" ]; then
 fi
 
 echo
-echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy_with_ddr.log
 echo
 
