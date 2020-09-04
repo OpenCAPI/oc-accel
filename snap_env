@@ -284,7 +284,8 @@ while [ -z "$SETUP_DONE" ]; do
       SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with xsim is not supported, but you can build an image!"
   fi
   if [ "$SIM_IRUN" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
-      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues. It is recommended to use BRAM for simulation. (Keep however real HBM to use it in the hardware.)"
+      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues. It is recommended to use BRAM for simulation."
+      SETUP_INFO="$SETUP_INFO\n               (Keep however real HBM to use it in the hardware.)"
   fi
 
 

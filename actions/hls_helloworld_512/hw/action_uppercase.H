@@ -30,8 +30,8 @@
 typedef char word_t[BPERDW_512];
 //---------------------------------------------------------------------
 // This is generic. Just adapt names for a new action
-// CONTROL is defined and handled by SNAP 
-// helloworld_1024_job_t is user defined in hls_helloworld/include/action_change_case.h
+// CONTROL is defined and handled by OC-Accel 
+// helloworld_512_job_t is user defined in hls_helloworld_512/include/action_change_case.h
 typedef struct {
 	CONTROL Control;	/*  16 bytes */
 	helloworld_512_job_t Data;	/* up to 108 bytes */

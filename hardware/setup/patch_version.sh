@@ -72,16 +72,17 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
       #Here we use for the HBM the SDRAM_SIZE as the number of AXI interfaces
       SDRAM_SIZE_DEC=`find $ACTION_ROOT -name *.[cC]* | xargs grep "#define\s\+HBM_AXI_IF_NB" | awk '{print $NF}'`
       printf -v SDRAM_SIZE "%x" "$SDRAM_SIZE_DEC"
+      ACTION_NAME=`find $ACTION_ROOT -name *.[cC]* | xargs grep "#define\s\+HBM_AXI_IF_NB" | cut -d':' -f1 |awk -F"actions" '{print $2}'`
       if [ -z $SDRAM_SIZE_DEC ]; then
          echo "   -------------------------------------------------------------------------------------------------"
          echo "   -- WARNING : Impossible to check coherency of HBM AXI interfaces numbers between action and chip.           "
-         echo "   --           Please define the variable HBM_AXI_IF_NB in hls_youraction/hw/xxx.cpp file "
+         echo "   --           Please define the variable HBM_AXI_IF_NB in oc-accel/actions/hls_youraction/hw/xxx.cpp file "
          echo "   -------------------------------------------------------------------------------------------------"
       elif [ $SDRAM_SIZE_DEC != $HBM_AXI_IF_NUM ]; then
          echo "   ---------------------------------------------------------------------------------------------"
-         echo "   -- ERROR : HBM AXI interfaces defined in hls_youraction/hw/xxx.cpp is ($SDRAM_SIZE_DEC)                 --"
-         echo "   --         is different than the one specified in the Kconfig menu ($HBM_AXI_IF_NUM)!!                  --"
-         echo "   --         Please correct one or the other to keep coherency.                              --"
+         echo "   -- ERROR : HBM AXI interfaces defined in $ACTION_NAME (=$SDRAM_SIZE_DEC)"
+         echo "   --         is different than the one specified in the Kconfig menu (=$HBM_AXI_IF_NUM)!!"
+         echo "   --         Please correct one or the other to keep coherency."
          echo "   ---------------------------------------------------------------------------------------------"
          exit 1
       else

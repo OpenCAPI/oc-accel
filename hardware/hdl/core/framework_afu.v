@@ -2072,12 +2072,15 @@ module framework_afu (
   // Source 2: from VIO
   wire vio_reset_action;
   wire vio_reset_snap;
-  vio_soft_reset  mvio_soft_reset
-    (
-      .clk        ( clock_afu),
-      .probe_out0 ( vio_reset_snap),
-      .probe_out1 ( vio_reset_action)
-    );  
+  //vio_soft_reset  mvio_soft_reset
+  //  (
+  //    .clk        ( clock_afu),
+  //    .probe_out0 ( vio_reset_snap),
+  //    .probe_out1 ( vio_reset_action)
+  //  );  
+  // mvio_soft_reset replaced by the following 2 assignments
+  assign vio_reset_action = 1'b0; 
+  assign vio_reset_snap = 1'b0; 
 
   // Source 3: from MMIO_register
   wire soft_reset_action;
