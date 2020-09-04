@@ -19,6 +19,11 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
      ```
 
 # Quick Start, Step 1: Simulate and Build FPGA on x86:
+ * Step 1 Objectives: Allow user to quikly discover the principles by:
+     * Using hls_helloworld_1024 example
+     * Git cloning, setting up, simulating
+     * Generating the FPGA content.... let's go !
+               
  * Clone OpenCAPI Simulation Engine and OC-Accel framework
    ```console
    git clone https://github.com/OpenCAPI/ocse.git
@@ -46,6 +51,7 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
  File is located in ~/oc-accel/hardware/build/Images/
 
 # Quick Start, Step 2: Program and Test on POWER9 server:
+* Step 2 Objective:  Hopefully testing on POWER, .... let's go !
 * Card flash programming:
      * Card is new : Check card supplier procedure. Some allow PCIe flash programming, other require JTAG probe.
      * Card is already programmed with a previous OC binary:
