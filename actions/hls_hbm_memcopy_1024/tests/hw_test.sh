@@ -18,7 +18,7 @@
 
 verbose=0
 snap_card=0
-duration="NORMAL"
+duration="SHORT"
 size=10
 
 # Get path of this script
@@ -37,7 +37,7 @@ function usage() {
     echo "    [-C <card>] card to be used for the test"
     echo "    [-t <trace_level>]"
     echo "    [-N ] not use interrupt"
-    echo "    [-d SHORT/NORMAL/LONG] run tests (default is NORMAL, change to SHORT for simulation)"
+    echo "    [-d SHORT/NORMAL] run tests (default is SHORT, which is also good for simulation)"
     echo
 }
 
@@ -51,7 +51,6 @@ while getopts ":C:t:d:Nh" opt; do
     ;;
     d)
     duration=$OPTARG;
-    echo "test duration :    $duration"
     ;;
     N)
     noirq=" -N ";
@@ -77,6 +76,7 @@ if [ -z "$SNAP_CONFIG" ]; then
 #    oc_maint -C ${snap_card} -v || exit 1;
 #    snap_peek -C ${snap_card} 0x0 || exit 1;
 #    snap_peek -C ${snap_card} 0x8 || exit 1;
+#    snap_peek 0x0030 |grep 30|cut -c22-23
     echo
 fi
 
@@ -88,16 +88,16 @@ function test_memcopy {
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy ${size} bytes from host mem to host mem through FPGA buffer ... "
-    cmd="snap_memcopy -C${snap_card} ${noirq} -X -t 720   \
+    echo -n "Doing snap_hbm_memcopy ${size} bytes ... "
+    cmd="snap_hbm_memcopy -C${snap_card} ${noirq} -X    \
         -i ${size}_A.bin    \
         -o ${size}_A.out >>    \
-        snap_memcopy.log 2>&1"
-    echo ${cmd} >> snap_memcopy.log
+        snap_hbm_memcopy.log 2>&1"
+    echo ${cmd} >> snap_hbm_memcopy.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failed, please check snap_memcopy.log"
+        echo "failed, please check snap_hbm_memcopy.log"
         exit 1
     fi
     echo "ok"
@@ -116,10 +116,11 @@ function test_memcopy {
 
 
 ################  Test Begins #####################
-rm -f snap_memcopy.log
-touch snap_memcopy.log
+rm -f snap_hbm_memcopy.log
+touch snap_hbm_memcopy.log
 
 if [ "$duration" = "SHORT" ]; then
+
     for (( size=64; size<128; size*=2 )); do
     test_memcopy ${size}
     done
@@ -131,51 +132,59 @@ if [ "$duration" = "NORMAL" ]; then
     done
 fi
 
-if [ "$duration" = "LONG" ]; then
-    for (( size=64; size<268435457; size*=2 )); do
-    test_memcopy ${size}
-    done
-fi
-
 echo
-grep "memcopy of" snap_memcopy.log
+#echo "Print time: (small size doesn't represent performance)"
+grep "memcopy of" snap_hbm_memcopy.log
 echo
 
-#### MEMCOPY to and from CARD LOCAL MEMORY (DDR or HBM) #####
+#### MEMCOPY to and from HBM #############
 
-function test_memcopy_with_local_mem {
+function test_memcopy_with_hbm {
     local size=$1
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
-    echo -n "Doing snap_memcopy host mem to ddr (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card}  ${noirq}  -t 720 \
+    echo "Doing snap_hbm_memcopy to hbm_p0 (aligned) ${size} bytes ... "
+    cmd="snap_hbm_memcopy -C${snap_card}  ${noirq}  \
         -i ${size}_B.bin    \
-        -d 0x0 -D LCL_MEM0 >>  \
-        snap_memcopy_with_ddr.log 2>&1"
-    echo ${cmd} >> snap_memcopy_with_ddr.log
+        -d 0x0 -D HBM_P0 >>  \
+        snap_memcopy_with_hbm.log 2>&1"
+    echo ${cmd} >> snap_memcopy_with_hbm.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failed, check snap_memcopy_with_ddr.log"
+        echo "failed, check snap_memcopy_with_hbm.log"
         exit 1
     fi
     
-    echo -n "Doing snap_memcopy from ddr to host mem (aligned) ${size} bytes ... "
-    cmd="snap_memcopy -C${snap_card}   ${noirq} -t 720 \
-        -o ${size}_B.out    \
-        -a 0x0 -A LCL_MEM0 -s ${size} >>  \
-        snap_memcopy_with_ddr.log 2>&1"
-    echo ${cmd} >> snap_memcopy_with_ddr.log
+    echo "Doing snap_hbm_memcopy from hbm_p0 to hbm_p1 (aligned) ${size} bytes ... "
+    cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
+        -a 0x0 -A HBM_P0   \
+        -d 0x0 -D HBM_P1 -s ${size} >>  \
+        snap_memcopy_with_hbm.log 2>&1"
+    echo ${cmd} >> snap_memcopy_with_hbm.log
     eval ${cmd}
     if [ $? -ne 0 ]; then
         echo "cmd: ${cmd}"
-        echo "failedi, check snap_memcopy_with_ddr.log"
+        echo "failed, check snap_memcopy_with_hbm.log"
+        exit 1
+    fi
+
+    echo "Doing snap_hbm_memcopy from hbm_p1 (aligned) ${size} bytes ... "
+    cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
+        -o ${size}_B.out    \
+        -a 0x0 -A HBM_P1 -s ${size} >>  \
+        snap_memcopy_with_hbm.log 2>&1"
+    echo ${cmd} >> snap_memcopy_with_hbm.log
+    eval ${cmd}
+    if [ $? -ne 0 ]; then
+        echo "cmd: ${cmd}"
+        echo "failed, check snap_memcopy_with_hbm.log"
         exit 1
     fi
     echo "ok"
     
-    echo -n "Check results ... "
+    echo "Check results ... "
     diff ${size}_B.bin ${size}_B.out 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
         echo "failed"
@@ -188,29 +197,24 @@ function test_memcopy_with_local_mem {
 
 
 ################ TEST Begins ##################
-rm -f snap_memcopy_with_ddr.log
-touch snap_memcopy_with_ddr.log
+rm -f snap_memcopy_with_hbm.log
+touch snap_memcopy_with_hbm.log
 
 if [ "$duration" = "SHORT" ]; then
-    echo "    Mem module test is not run in SHORT case"
-#    for (( size=64; size<128; size*=2 )); do
-#    test_memcopy_with_local_mem ${size}
+#    for (( size=64; size<512; size*=2 )); do
+#    test_memcopy_with_hbm ${size}
+    echo "Test_memcopy_with_hbm test is not run in SHORT mode"
 #    done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
     for (( size=64; size<65536; size*=2 )); do
-    test_memcopy_with_local_mem ${size}
-    done
-fi
-
-if [ "$duration" = "LONG" ]; then
-    for (( size=64; size<268435457; size*=2 )); do
-    test_memcopy_with_local_mem ${size}
+    test_memcopy_with_hbm ${size}
     done
 fi
 
 echo
-grep "memcopy of" snap_memcopy_with_ddr.log
+#echo "Print time: (small size doesn't represent performance)"
+grep "memcopy of" snap_memcopy_with_hbm.log
 echo
 

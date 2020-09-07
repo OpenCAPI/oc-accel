@@ -138,12 +138,16 @@ while [ -z "$SETUP_DONE" ]; do
     AR='${SNAP_ROOT}/actions/hls_memcopy'
   elif [ -n "$HLS_MEMCOPY_1024" ]; then
     AR='${SNAP_ROOT}/actions/hls_memcopy_1024'
+  elif [ -n "$HLS_HBM_MEMCOPY_1024" ]; then
+    AR='${SNAP_ROOT}/actions/hls_hbm_memcopy_1024'
   elif [ -n "$HLS_SPONGE" ]; then
     AR='${SNAP_ROOT}/actions/hls_sponge'
   elif [ -n "$HLS_LATENCY_EVAL" ]; then
     AR='${SNAP_ROOT}/actions/hls_latency_eval'
   elif [ -n "$HLS_LATENCY_EVAL_1024" ]; then
     AR='${SNAP_ROOT}/actions/hls_latency_eval_1024'
+  elif [ -n "$HLS_RX100G" ]; then
+    AR='${SNAP_ROOT}/actions/hls_rx100G'
   elif [ -n "$HLS_HELLOWORLD_512" ]; then
     AR='${SNAP_ROOT}/actions/hls_helloworld_512'
   elif [ -n "$HLS_HELLOWORLD_1024" ]; then
@@ -268,6 +272,27 @@ while [ -z "$SETUP_DONE" ]; do
     else
       echo  "DENALI                  is set to: \"$DENALI\""
     fi
+  fi
+
+  # Note: HBM is defined via snap_config
+  if [ "$BRAM_USED" == "TRUE" ]; then
+    #echo "=====HBM setup========================================="
+      SETUP_INFO="$SETUP_INFO\n### INFO ### Actual setting of HBM/DDR is NOT implementing real HBM/DDR!"
+  fi
+
+  if [ "$SIM_XSIM" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
+      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with xsim is not supported, but you can build an image!"
+  fi
+  if [ "$SIM_IRUN" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
+      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues. It is recommended to use BRAM for simulation."
+      SETUP_INFO="$SETUP_INFO\n               (Keep however real HBM to use it in the hardware.)"
+  fi
+
+
+  # Note: ETHERNET_USED is defined via snap_config
+  if [ "$ETHERNET_USED" == "TRUE" ] && [ "$ETH_LOOP_BACK" == "TRUE" ]; then
+    #echo "=====Ethernet setup===================================="
+      SETUP_INFO="$SETUP_INFO\n### INFO ### Setting of ETHERNET is a loopback with NO MAC"
   fi
 
 

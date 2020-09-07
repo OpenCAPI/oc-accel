@@ -23,6 +23,7 @@ set fpga_card_lcase     [string tolower $::env(FPGACARD)]
 set root_dir            $::env(SNAP_HARDWARE_ROOT)
 set ip_dir              $root_dir/ip
 set hls_ip_dir          $ip_dir/hls_ip_project/hls_ip_project.srcs/sources_1/ip
+set hbm_ip_dir          $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip
 set action_dir          $::env(ACTION_ROOT)
 set action_hw_dir       $action_dir/hw
 set action_ip_dir       $action_dir/ip/action_ip_prj/action_ip_prj.srcs/sources_1/ip
@@ -46,6 +47,8 @@ set nvme_used           $::env(NVME_USED)
 set bram_used           $::env(BRAM_USED)
 set sdram_used          $::env(SDRAM_USED)
 set hbm_used            $::env(HBM_USED)
+set eth_used            $::env(ETHERNET_USED)
+set eth_loop_back       $::env(ETH_LOOP_BACK)
 set user_clock          $::env(USER_CLOCK)
 set ila_debug           [string toupper $::env(ILA_DEBUG)]
 set simulator           $::env(SIMULATOR)
@@ -102,6 +105,22 @@ if { ( $simulator == "irun" ) } {
   set_property target_simulator IES [current_project]
   set_property compxlib.ies_compiled_library_dir $::env(IES_LIBS) [current_project]
   set_property -name {ies.elaborate.ncelab.more_options} -value {-access +rwc} -objects [current_fileset -simset]
+
+  if { $hbm_used == TRUE } {
+    #NEW - 3 following lines to circumvent Xilinx bug when simulating HBM (PG276)
+    set_property -name {ies.simulate.ncsim.more_options} -value {+notimingchecks} -objects [get_filesets sim_1]
+    set_property -name {ies.elaborate.ncelab.more_options} -value {-access +rwc -notimingchecks} -objects [get_filesets sim_1]
+    set_property -name {ies.simulate.runtime} -value {1ms} -objects [get_filesets sim_1]
+  }
+} elseif { $simulator == "xcelium" } {
+  set_property target_simulator Xcelium [current_project]
+  set_property compxlib.ies_compiled_library_dir $::env(IES_LIBS) [current_project]
+  if { $hbm_used == TRUE } {
+    #NEW - 2 following lines to circumvent Xilinx bug when simulating HBM (PG276)
+    set_property -name {xcelium.simulate.xmsim.more_options} -value {-notimingcheck} -objects [get_filesets sim_1]
+    set_property -name {xcelium.simulate.runtime} -value {1ms} -objects [get_filesets sim_1]
+    set_property -name {xcelium.elaborate.xmelab.more_options} -value {-notimingchecks -relax} -objects [get_filesets sim_1]
+  }
 } elseif { $simulator == "xsim" } {
   set_property -name {xsim.elaborate.xelab.more_options} -value {-sv_lib libdpi -sv_root .} -objects [current_fileset -simset]
 }
@@ -228,6 +247,48 @@ foreach ip_xci [glob -nocomplain -dir $action_ip_dir */*.xci] {
   export_ip_user_files -of_objects  [get_files "$ip_xci"] -no_script -sync -force >> $log_file
 }
 
+# Add Ethernet IP
+if { $eth_used == TRUE } {
+  if { $eth_loop_back == TRUE } {
+    puts "                        adding Ethernet loop back  (no MAC)"
+  } else {
+    puts "                        adding Ethernet block design"
+    set_property  ip_repo_paths [concat [get_property ip_repo_paths [current_project]] $ip_dir] [current_project] >> $log_file
+    update_ip_catalog -rebuild -scan_changes >> $log_file
+
+    # Commented below line for make model, uncomment for make image
+    add_files -norecurse  $ip_dir/eth_100G/eth_100G.srcs/sources_1/bd/eth_100G/eth_100G.bd  >> $log_file
+    export_ip_user_files -of_objects  [get_files  $ip_dir/eth_100G/eth_100G.srcs/sources_1/bd/eth_100G/eth_100G.bd] -no_script -sync -force -quiet >> $log_file
+  }
+}
+
+# Add HBM
+if { $hbm_used == TRUE } {
+  add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
+  if { $bram_used == TRUE } {
+    puts "                        adding HBM-like block design (BRAM)"
+  } else {
+    # if BRAM model used replacing HBM do not add specific hbm init files
+    puts "                        adding HBM block design"
+    puts "                        adding HBM initialization files "
+    add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
+    add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+    update_ip_catalog  >> $log_file
+  }
+
+
+  add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd  >> $log_file
+  export_ip_user_files -of_objects  [get_files  $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
+
+  #puts "                        adding HBM initialization files "
+  # if BRAM model used to replace HBM then do not add specific hbm init files
+  if { $bram_used != TRUE } {
+    import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
+    import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+  }
+  update_compile_order -fileset sim_1 >> $log_file
+}
+
 # Add OpenCAPI board support package
 
 if { $unit_sim_used == "TRUE" } {
@@ -278,6 +339,14 @@ if { ($fpga_card == "AD9V3") || ($fpga_card == "BW250SOC") } {
   if { $sdram_used == "TRUE" } {
     add_files -fileset constrs_1 -norecurse $top_xdc_dir/snap_ddr4_b0pins.xdc 
     set_property used_in_synthesis false [get_files $top_xdc_dir/snap_ddr4_b0pins.xdc]
+  }
+}
+
+# ETHERNET XDCs
+if { $eth_used == "TRUE" } {
+  if { $eth_loop_back == "FALSE" } {
+    add_files -fileset constrs_1 -norecurse $top_xdc_dir/snap_ethernet_pins.xdc 
+    set_property used_in_synthesis false [get_files $top_xdc_dir/snap_ethernet_pins.xdc]
   }
 }
 

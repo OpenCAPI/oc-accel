@@ -71,6 +71,14 @@
 `define ENABLE_HBM
 #endif
 
+#if defined(CONFIG_ENABLE_ETHERNET)
+`define ENABLE_ETHERNET
+#endif
+
+#if defined(CONFIG_ENABLE_ETH_LOOP_BACK)
+`define ENABLE_ETH_LOOP_BACK
+#endif
+
 #if defined(CONFIG_ACTION_HALF_WIDTH)
 `define ACTION_HALF_WIDTH
 #endif
@@ -127,6 +135,11 @@
   `define AXI_CARD_MEM_DATA_WIDTH    512
   `define AXI_CARD_MEM_ADDR_WIDTH    33
   `define AXI_CARD_MEM_USER_WIDTH    1
+
+  `define AXI_CARD_HBM_ID_WIDTH      4
+  `define AXI_CARD_HBM_DATA_WIDTH    256
+  `define AXI_CARD_HBM_ADDR_WIDTH    34
+  `define AXI_CARD_HBM_USER_WIDTH    1
 
   `define INT_BITS    64
 /////////////////////////////////////////////////////////////////////
