@@ -65,10 +65,10 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 # [ -z "$STATE" ] && echo "Need to set STATE" && exit 1;
 
 if [ -z "$SNAP_CONFIG" ]; then
-	echo "Get CARD VERSION"
-        snap_maint -C ${snap_card} -v || exit 1;
-	snap_peek -C ${snap_card} 0x0 || exit 1;
-	snap_peek -C ${snap_card} 0x8 || exit 1;
+#	echo "Get CARD VERSION"
+#        snap_maint -C ${snap_card} -v || exit 1;
+#	snap_peek -C ${snap_card} 0x0 || exit 1;
+#	snap_peek -C ${snap_card} 0x8 || exit 1;
 	echo
 fi
 
@@ -99,9 +99,23 @@ rm -f hls_image_filter.log
 touch hls_image_filter.log
 
 if [ "$duration" = "SHORT" ]; then
-  test_image_filter ${ACTION_ROOT}/sw/tiger_small.bmp ${ACTION_ROOT}/sw/tiger_small_new.bmp
+  test_image_filter ${ACTION_ROOT}/sw/tiger_small.bmp ${ACTION_ROOT}/sw/tiger_small_filtered.bmp
+    diff  ${ACTION_ROOT}/sw/tiger_small_reference.bmp ${ACTION_ROOT}/sw/tiger_small_filtered.bmp
+    if [ $? -ne 0 ]; then
+       echo "test_image_filter failed"
+       echo "${ACTION_ROOT}/sw/tiger_small_filtered.bmp is not the expected image"
+       exit 1
+    fi  
+
 else
-  test_image_filter ${ACTION_ROOT}/sw/tiger.bmp ${ACTION_ROOT}/sw/tiger_new.bmp
+  test_image_filter ${ACTION_ROOT}/sw/tiger.bmp ${ACTION_ROOT}/sw/tiger_filtered.bmp
+    diff  ${ACTION_ROOT}/sw/tiger_reference.bmp ${ACTION_ROOT}/sw/tiger_filtered.bmp
+    if [ $? -ne 0 ]; then
+       echo "test_image_filter failed:"
+       echo "${ACTION_ROOT}/sw/tiger_filtered.bmp is not the expected image"
+       exit 1
+    fi
+
 fi
 
 rm -f *.bin *.bin *.out
