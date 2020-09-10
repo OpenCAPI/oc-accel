@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 International Business Machines
+ * Copyright 2020 International Business Machines
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,15 +65,6 @@ static void stop_chrono() {
 	fprintf(stderr, "elaps time %lld micro seconds.\n", duration);
 }
 
-// Extraction of the size and first pixel location from Header
-/*tatic	void read_header(uint8_t *ibuffer, uint32_t *bmp_size, uint8_t *relFirstPixelLoc, uint32_t *pixel_map_type)
-	{
-		*bmp_size=(ibuffer[2] | ibuffer[3]<<8 |  ibuffer[4]<<16 | ibuffer[5]<<24);
-		*relFirstPixelLoc=ibuffer[10];
-		*pixel_map_type =ibuffer[10];   // AC to be corrected
-	}
-	
-	*/
 // Function that fills the MMIO registers / data structure 
 // these are all data exchanged between the application and the action
 static void snap_prepare_image_filter(struct snap_job *cjob,
@@ -200,8 +191,8 @@ static int call_FPGA_Action( BMPImage *Image, int card_no )
 }	
 
 /* main program of the application for the hls_image_filter example        */
-/* This application will always be run on CPU and will call either       */
-/* a software action (CPU executed) or a hardware action (FPGA executed) */
+/* This application will always be run on CPU and will call                */
+/* the hardware action (FPGA executed)                                     */
 int main(int argc, char *argv[])
 {
 	// Init of all the default values used 

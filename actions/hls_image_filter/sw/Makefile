@@ -1,5 +1,5 @@
 #
-# Copyright 2017 International Business Machines
+# Copyright 2020 International Business Machines
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,9 +36,6 @@ $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 endif
 
-# This is solution specific. Check if we can replace this by generics too.
-
-#snap_image_filter: action_pixel_filtering.o params.o bmp.o
 snap_image_filter: params.o bmp.o
 #snap_image_filter_objs = action_pixel_filtering.o params.o bmp.o
 snap_image_filter_objs = params.o bmp.o
