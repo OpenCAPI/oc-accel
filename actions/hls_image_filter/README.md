@@ -1,6 +1,6 @@
 # HLS_IMAGE_FILTER EXAMPLE
 
-* Provides a simple base allowing to discover SNAP
+* Provides a simple base allowing to discover OC-ACCEL
 * C code is processing a image and change some colors
   * code can be executed on the CPU 
   * code can be simulated 

@@ -41,7 +41,7 @@ typedef unsigned char uint8_t;
 
 static void grayscale(pixel_t *pixel_in, pixel_t *pixel_out){
 
-//#pragma HLS INLINE
+#pragma HLS INLINE
 
 	uint8_t gray=(((pixel_in->red)   * RED_FACTOR)>> 8) + (((pixel_in->green) * GREEN_FACTOR)>> 8) + (((pixel_in->blue)  * BLUE_FACTOR)>> 8);
 	pixel_out->red   = gray;
@@ -53,7 +53,7 @@ static void grayscale(pixel_t *pixel_in, pixel_t *pixel_out){
 
 static void transformPixel(pixel_t *pixel_in_add, pixel_t *pixel_out_add) {
 
-//#pragma HLS INLINE
+#pragma HLS INLINE
 
   if (pixel_in_add->red < pixel_in_add->green || pixel_in_add->red < pixel_in_add->blue)
   {
