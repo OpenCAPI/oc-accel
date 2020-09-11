@@ -160,7 +160,7 @@ choice
 		  Also need to select the AXI data width to host is 512b or 1024b.
 
 	config HLS_HELLOWORLD_512
-		bool "HLS HelloWorld_512"
+		bool "HLS HelloWorld_512b (Action to Host I/F =512b)"
 		help
 		  This is the simplest example to start with:
 		  - Reading text from the server memory
@@ -175,7 +175,7 @@ choice
 		select DISABLE_ETHERNET
 
         config HLS_HELLOWORLD_1024
-                bool "HLS HelloWorld_1024"
+                bool "HLS HelloWorld_1024b (Action to Host I/F =1024b)"
                 help
                   This is the simplest example to start with:
                   - Reading text from the server memory
@@ -219,7 +219,7 @@ choice
                 select DISABLE_NVME
 
 	config HLS_MEMCOPY_1024
-		bool "HLS Memcopy 1024b"
+		bool "HLS Memcopy 1024b (Action to Host I/F =1024b)"
                 depends on ! (AD9H3 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
@@ -234,7 +234,7 @@ choice
 		select DISABLE_ETHERNET
 
 	config HLS_HBM_MEMCOPY_1024
-		bool "HLS HBM Memcopy 1024b"
+		bool "HLS HBM Memcopy 1024b (Action to Host I/F =1024b)"
                 depends on (AD9H3 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
@@ -248,7 +248,7 @@ choice
 		select DISABLE_ETHERNET
 
 	config HLS_RX100G
-		bool "HLS 100G receiver (512b)"
+		bool "HLS 100G receiver (Action to Host I/F =512b)""
                 depends on AD9H3
 		help
 		   This example is written in C and compiled with HLS
