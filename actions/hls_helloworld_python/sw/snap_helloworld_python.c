@@ -40,8 +40,6 @@
 
 int verbose_flag = 0;
 
-static const char *version = GIT_VERSION;
-
 static const char *mem_tab[] = { "HOST_DRAM", "CARD_DRAM", "TYPE_NVME" };
 
 // Function that fills the MMIO registers / data structure

@@ -1,0 +1,83 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# Kernel Configuration
+#
+AD9V3=y
+# AD9H3 is not set
+# AD9H7 is not set
+# BW250SOC is not set
+FPGACARD="AD9V3"
+FLASH_INTERFACE="SPIx8"
+FLASH_SIZE="64"
+FLASH_FACTORYADDR="0x00000000"
+FLASH_USERADDR="0x08000000"
+OPENCAPI30=y
+CAPI_VER="opencapi30"
+FPGACHIP="xcvu3p-ffvc1517-2-e"
+NUM_OF_ACTIONS=1
+# HDL_ACTION is not set
+# HDL_EXAMPLE is not set
+# HDL_SINGLE_ENGINE is not set
+# HLS_ACTION is not set
+# HLS_HELLOWORLD_512 is not set
+# HLS_HELLOWORLD_1024 is not set
+HLS_IMAGE_FILTER=y
+# HLS_HELLOWORLD_PYTHON is not set
+# HLS_MEMCOPY_1024 is not set
+ACTION_HALF_WIDTH=y
+HALF_WIDTH="TRUE"
+ENABLE_HLS_SUPPORT=y
+HLS_SUPPORT="TRUE"
+DISABLE_SDRAM_AND_BRAM=y
+# FORCE_SDRAM_OR_BRAM is not set
+SDRAM_USED="FALSE"
+DISABLE_HBM=y
+HBM_USED="FALSE"
+BRAM_USED="FALSE"
+DDR4_USED="FALSE"
+DDRI_USED="FALSE"
+DISABLE_NVME=y
+# FORCE_NVME is not set
+NVME_USED="FALSE"
+DISABLE_ETHERNET=y
+ETH_LOOP_BACK="FALSE"
+ETHERNET_USED="FALSE"
+USER_CLOCK="FALSE"
+# ACTION_USER_CLOCK is not set
+SIM_XSIM=y
+# SIM_IRUN is not set
+# SIM_XCELIUM is not set
+# SIM_MODELSIM is not set
+# SIM_QUESTA is not set
+# NO_SIM is not set
+SIMULATOR="xsim"
+DENALI_USED="FALSE"
+OCSE_PATH="../ocse"
+
+#
+# ================= Advanced Options: =================
+#
+SPEED_25G=y
+# SPEED_20G is not set
+PHY_SPEED="25.78125"
+AXI_ID_WIDTH=1
+# Action_clock_50MHz is not set
+# Action_clock_100MHz is not set
+# Action_clock_150MHz is not set
+Action_clock_200MHz=y
+# Action_clock_250MHz is not set
+# Action_clock_300MHz is not set
+# Action_clock_350MHz is not set
+# Action_clock_400MHz is not set
+USER_CLOCK_FREQ=200
+HLS_CLOCK_PERIOD_CONSTRAINT="4ns"
+# ENABLE_ILA is not set
+ILA_DEBUG="FALSE"
+CLOUD_USER_FLOW="FALSE"
+CLOUD_BUILD_BITFILE="FALSE"
+UNIT_SIM_USED="FALSE"
+ODMA_USED="FALSE"
+ODMA_ST_MODE_USED="FALSE"
+ODMA_512_USED="FALSE"
+ENABLE_FLASH=y
+FLASH_USED="TRUE"

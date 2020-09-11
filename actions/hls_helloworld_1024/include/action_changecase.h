@@ -43,11 +43,11 @@ extern "C" {
 // 1. Define them in header file (here), use HEX 32bits numbers
 // 2. They will be extracted by hardware/setup/patch_version.sh
 // 3. And put into snap_global_vars.v
-// 4. Used by hardware/hls/action_wrapper.v
+// 4. Used by hardware/hdl/hls/action_wrapper.v
 #define ACTION_TYPE               0x10143009
 #define RELEASE_LEVEL             0x00000010
-// For oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
-// Please modify ActionTypes.md file so oc_maint can recognize this action.
+// When using oc_maint, Action descriptions are decoded with the help of software/tools/snap_actions.h
+// Please modify this file so oc_maint can recognize this action.
 // ------------ MUST READ -----------
 
 
