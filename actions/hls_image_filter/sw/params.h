@@ -31,7 +31,6 @@
 #include <osnap_tools.h>
 #include <libosnap.h>
 #include <action_pixel_filtering.h>
-#include "../include/action_pixel_filtering.h"
 #include <osnap_hls_if.h>
 
 typedef struct { 

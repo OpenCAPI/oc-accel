@@ -1,3 +1,7 @@
+/* This example is provided as an example provided at :
+https://codereview.stackexchange.com/questions/196084/read-and-write-bmp-file-in-c
+*/
+
 /*
  * A program to read, write, and crop BMP image files.
  * 

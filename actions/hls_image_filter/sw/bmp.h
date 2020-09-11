@@ -1,3 +1,8 @@
+/* This example is provided as an example provided at :
+ https://codereview.stackexchange.com/questions/196084/read-and-write-bmp-file-in-c
+*/
+
+
 #ifndef _BMP_H_  // prevent recursive inclusion
 #define _BMP_H_
 
