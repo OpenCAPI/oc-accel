@@ -87,7 +87,7 @@ function test_all_actions() # $1 = card, $2 = accel
                 *"10143009") # HLS Hello World 1024 bits wide bus
                         cmd="./actions/hls_helloworld_1024/tests/hw_test.sh"
                 ;;
-		*"1014300D") # HLS Image Filter
+		*"1014300d") # HLS Image Filter
                         cmd="./actions/hls_image_filter/tests/hw_test.sh"
                 ;;
 		*)
