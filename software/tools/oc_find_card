@@ -275,7 +275,7 @@ while getopts ":vA:C:Vdht:" opt; do
 	case ${opt} in
 	v)
 		VERBOSE=1
-		echo oc_find_card version is $version
+		echo "oc_find_card version is ${version}"
 		;;
         d)
                 DEBUG=1
