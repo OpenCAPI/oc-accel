@@ -1,4 +1,4 @@
-# HLS_MEMCOPY_1024 EXAMPLE
+# HLS_MEMCOPY_512 EXAMPLE
 
 * Provides a simple base allowing to discover OC-ACCEL
 * C code allows copying to/from :
@@ -7,5 +7,5 @@
   * Block RAM memory (memory inside the FPGA itself)
 * The example code details the copy mechanism.
 
-:star: Please check the [actions/hls_memcopy/_1024doc](./doc/) directory for detailed information
+:star: Please check the [actions/hls_memcopy_512/doc](./doc/) directory for detailed information
 
