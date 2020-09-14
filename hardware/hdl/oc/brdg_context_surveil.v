@@ -90,6 +90,9 @@ module brdg_context_surveil
  reg  [019:0]        cmd_pasid_aligned    ;
  reg  [011:0]        cmd_actag            ;
 
+ parameter DEPTH = 2**6                   ;  // ADDR_WIDTH used here is 6
+ reg [DEPTH-1:0]     bit0                 ;
+
 //-----------------------------------------------------------------------------------------------------------
 // stage 0: read pasid<->actag mapping ram, use input pasid[5:0](actag) as address
 //-----------------------------------------------------------------------------------------------------------
@@ -112,6 +115,22 @@ module brdg_context_surveil
      .dob   (ram_data_o ));
 
  assign ram_rd_addr = tlx_i_cmd_actag[5:0]; 
+
+ // manage separately bit 0 to be able to reset it
+ always @(posedge clk) begin
+    if (~rst_n)
+      bit0 <= 0;
+    else begin
+      if (ram_wr_en) begin
+         if (ram_data_i[0:0])
+            bit0 <= bit0 | (1'b1 << ram_wr_addr);  //set 1 to the ram_wr_addr position
+         else
+            bit0 <= bit0 & ~(1'b1 << ram_wr_addr); //set 0 to the ram_wr_addr position
+      end
+      else
+         bit0 <= bit0;
+    end
+ end
 
 //-----------------------------------------------------------------------------------------------------------
 // stage 1: check if pasid<->actag mapping ram need to be updated. if need update, update this ram and 
@@ -153,7 +172,7 @@ module brdg_context_surveil
      end
  end
 
- assign entry_valid = ram_data_o[0];
+ assign entry_valid = bit0[ram_rd_addr]; //ram_data_o[0];
  assign pasid_stored_in_entry = ram_data_o[`CTXW-6:1]; 
  assign send_assign_actag = s1_cmd_valid && s2_ready && !(send_assign_actag_dly) && (!entry_valid || (pasid_stored_in_entry != s1_cmd_pasid[`CTXW-1:6]));
  assign ram_wr_en = send_assign_actag;
