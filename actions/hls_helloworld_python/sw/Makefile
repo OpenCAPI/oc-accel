@@ -70,7 +70,7 @@ endif
 
 PREREQ_EXECUTABLES = ld swig
 K := $(foreach exec,$(PREREQ_EXECUTABLES),\
-        $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
+        $(if $(shell which $(exec)),some string,$(info "No $(exec) in PATH")))
 
 # Steps to wrap wih swig:
 #
