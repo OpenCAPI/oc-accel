@@ -170,46 +170,18 @@ static void process_action(snap_membus_1024_t *din_gmem,
 	snapu32_t ReturnCode = SNAP_RETC_SUCCESS;
 	snapu64_t InputAddress;
 	snapu64_t OutputAddress;
-	//snapu64_t InputAddress_1024;
-	//snapu64_t OutputAddress_1024;
 	snapu64_t address_xfer_offset;
-	//snapu64_t address_xfer_offset_1024;
-	//snapu64_t InputAddress_512;
-	//snapu64_t OutputAddress_512;
-	//snapu64_t address_xfer_offset_512;
 	snap_membus_1024_t  buffer1024[MAX_NB_OF_WORDS_READ_1024];
 	snap_membus_512_t   buffer512[MAX_NB_OF_WORDS_READ_512];
-	// if 4096 bytes max => 64 words
 
-	// byte address received need to be aligned with port width
-	// -- shift depends on the size of the bus => do it later
-	//InputAddress_1024 = (act_reg->Data.in.addr)   >> ADDR_RIGHT_SHIFT_1024;
-	//OutputAddress_1024 = (act_reg->Data.out.addr) >> ADDR_RIGHT_SHIFT_1024;
-	//InputAddress_512 = (act_reg->Data.in.addr)    >> ADDR_RIGHT_SHIFT_512;
-	//OutputAddress_512 = (act_reg->Data.out.addr)  >> ADDR_RIGHT_SHIFT_512;
 	InputAddress = (act_reg->Data.in.addr);
 	OutputAddress = (act_reg->Data.out.addr);
 
 	address_xfer_offset = 0x0;
-	//address_xfer_offset_512 = 0x0;
-	//address_xfer_offset_1024 = 0x0;
 	// testing sizes to prevent from writing out of bounds
 	action_xfer_size = MIN(act_reg->Data.in.size,
 			       act_reg->Data.out.size);
 
-	// test done just on LCL_MEM0 - should be extended if there is any risk
-	// following test should be apply only for HBM since Data.in.size is too small to contain 4GB value
-/*	if ((act_reg->Data.in.type == SNAP_ADDRTYPE_LCL_MEM0) &&
-	    (act_reg->Data.in.size > LCL_MEM_MAX_SIZE)) {
-	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
-		return;
-        }
-	if ((act_reg->Data.out.type == SNAP_ADDRTYPE_LCL_MEM0) &&
-	    (act_reg->Data.out.size > LCL_MEM_MAX_SIZE)) {
-	        act_reg->Control.Retc = SNAP_RETC_FAILURE;
-		return;
-        }
-*/
 	// buffer size is hardware limited by MAX_NB_OF_BYTES_READ
 	if(action_xfer_size %MAX_NB_OF_BYTES_READ == 0)
 		nb_blocks_to_xfer = (action_xfer_size / MAX_NB_OF_BYTES_READ);
@@ -238,7 +210,7 @@ static void process_action(snap_membus_1024_t *din_gmem,
                         buffer512, xfer_size);
 		}
                 if (act_reg->Data.out.type == SNAP_ADDRTYPE_HOST_DRAM) {
-                    if (act_reg->Data.in.type >= SNAP_ADDRTYPE_LCL_MEM0)
+                    if (act_reg->Data.in.type == SNAP_ADDRTYPE_LCL_MEM0)
                         //convert buffer 512b to 1024b
                         LCLmem_to_membus(buffer512, buffer1024, xfer_size);
 
