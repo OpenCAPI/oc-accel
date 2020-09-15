@@ -75,7 +75,7 @@ function test_all_actions() # $1 = card, $2 = accel
 		*"10142002") # HDL Single Engine
 			cmd="./actions/hdl_single_engine/tests/hw_test.sh"
 		;;
-		*"1014300b") # HLS Memcopy
+		*"1014300b") # HLS Memcopy 1024
 			cmd="./actions/hls_memcopy_1024/tests/hw_test.sh"
 		;;
 		*"1014300c") # HLS HBM Memcopy
@@ -89,6 +89,9 @@ function test_all_actions() # $1 = card, $2 = accel
                 ;;
 		*"1014300d") # HLS Image Filter
                         cmd="./actions/hls_image_filter/tests/hw_test.sh"
+                ;;
+                *"1014300e") # HLS Memcopy 512
+                        cmd="./actions/hls_memcopy_512/tests/hw_test.sh"
                 ;;
 		*)
 			echo "Error: Action: $action is not valid !"
