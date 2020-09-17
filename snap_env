@@ -134,8 +134,8 @@ while [ -z "$SETUP_DONE" ]; do
   unset AR
   if [ -n "$HDL_EXAMPLE" ]; then
     AR='${SNAP_ROOT}/actions/hdl_example'
-  elif [ -n "$HLS_MEMCOPY" ]; then
-    AR='${SNAP_ROOT}/actions/hls_memcopy'
+  elif [ -n "$HLS_MEMCOPY_512" ]; then
+    AR='${SNAP_ROOT}/actions/hls_memcopy_512'
   elif [ -n "$HLS_MEMCOPY_1024" ]; then
     AR='${SNAP_ROOT}/actions/hls_memcopy_1024'
   elif [ -n "$HLS_HBM_MEMCOPY_1024" ]; then

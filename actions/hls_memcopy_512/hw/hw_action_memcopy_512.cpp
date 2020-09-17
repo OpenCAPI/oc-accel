@@ -18,56 +18,22 @@
 
 #include <string.h>
 #include "ap_int.h"
-#include "hw_action_memcopy_1024.H"
-
-//======================== convert buffers format ===================================//
-//Convert a 1024 bits buffer to a 512 bits buffer
-void membus_to_LCLmem( snap_membus_1024_t *buffer_1024, snap_membus_512_t *buffer_512, int size_in_words_1024)
-{
-        ap_int<MEMDW_512> mask_full = -1;
-        snap_membus_1024_t mask_512 = snap_membus_512_t(mask_full);
-
-        wb_gbuf2dbuf_loop: 
-        for (int k=0; k<size_in_words_1024; k++) {
-               for (int j=0; j<MEMDW_1024/MEMDW_512; j++) {
-#pragma HLS PIPELINE
-                  buffer_512[k*MEMDW_1024/MEMDW_512+j] = (snap_membus_512_t)((buffer_1024[k] >> j*MEMDW_512) & mask_512);
-               }
-        }
-	return;
-}
-
-//Convert a 512 bits buffer to a 1024 bits buffer
-void LCLmem_to_membus( snap_membus_512_t *buffer_512, snap_membus_1024_t *buffer_1024, int size_in_words_1024)
-{
-        snap_membus_1024_t data_entry_1024 = 0;
-	
-        wb_dbuf2gbuf_loop: 
-        for (int k=0; k<size_in_words_1024; k++) {
-               for (int j=0; j<MEMDW_1024/MEMDW_512; j++) {
-#pragma HLS PIPELINE
-                  data_entry_1024 |= ((snap_membus_1024_t)(buffer_512[k*MEMDW_1024/MEMDW_512+j])) << j*MEMDW_512;
-               }
-               buffer_1024[k] = data_entry_1024;
-               data_entry_1024 = 0;
-        }
-	return;
-}
+#include "hw_action_memcopy_512.H"
 
 
 // WRITE DATA TO MEMORY
-short write_burst_of_data_to_mem(snap_membus_1024_t *dout_gmem,
+short write_burst_of_data_to_mem(snap_membus_512_t *dout_gmem,
 				 snapu16_t memory_type,
-				 snapu64_t output_address_1024,
-				 snap_membus_1024_t *buffer1024,
+				 snapu64_t output_address_512,
+				 snap_membus_512_t *buffer512,
 				 snapu64_t size_in_bytes_to_transfer)
 {
         short rc;
 
         switch (memory_type) {
         case SNAP_ADDRTYPE_HOST_DRAM:
-               memcpy((snap_membus_1024_t  *) (dout_gmem + output_address_1024),
-                   buffer1024, size_in_bytes_to_transfer);
+               memcpy((snap_membus_512_t  *) (dout_gmem + output_address_512),
+                   buffer512, size_in_bytes_to_transfer);
                 rc =  0;
                 break;
         case SNAP_ADDRTYPE_UNUSED: /* no copy but with rc =0 */
@@ -102,10 +68,10 @@ short write_burst_of_data_to_LCL(snap_membus_512_t *lcl_mem0,
 }
 
 // READ DATA FROM MEMORY
-short read_burst_of_data_from_mem(snap_membus_1024_t *din_gmem,
+short read_burst_of_data_from_mem(snap_membus_512_t *din_gmem,
 				  snapu16_t memory_type,
-				  snapu64_t input_address_1024,
-				  snap_membus_1024_t *buffer1024,
+				  snapu64_t input_address_512,
+				  snap_membus_512_t *buffer512,
 				  snapu64_t size_in_bytes_to_transfer)
 {
         short rc;
@@ -113,7 +79,7 @@ short read_burst_of_data_from_mem(snap_membus_1024_t *din_gmem,
         switch (memory_type) {
 
         case SNAP_ADDRTYPE_HOST_DRAM:
-                memcpy(buffer1024, (snap_membus_1024_t  *) (din_gmem + input_address_1024),
+                memcpy(buffer512, (snap_membus_512_t  *) (din_gmem + input_address_512),
                      size_in_bytes_to_transfer);
                 rc =  0;
                 break;
@@ -156,8 +122,8 @@ short read_burst_of_data_from_LCL(snap_membus_512_t *lcl_mem0,
 //----------------------------------------------------------------------
 //--- MAIN PROGRAM -----------------------------------------------------
 //----------------------------------------------------------------------
-static void process_action(snap_membus_1024_t *din_gmem,
-                           snap_membus_1024_t *dout_gmem,
+static void process_action(snap_membus_512_t *din_gmem,
+                           snap_membus_512_t *dout_gmem,
                            snap_membus_512_t *lcl_mem0,
                            action_reg *act_reg)
 {
@@ -171,9 +137,9 @@ static void process_action(snap_membus_1024_t *din_gmem,
 	snapu64_t InputAddress;
 	snapu64_t OutputAddress;
 	snapu64_t address_xfer_offset;
-	snap_membus_1024_t  buffer1024[MAX_NB_OF_WORDS_READ_1024];
 	snap_membus_512_t   buffer512[MAX_NB_OF_WORDS_READ_512];
 
+	// byte address received need to be aligned with port width
 	InputAddress = (act_reg->Data.in.addr);
 	OutputAddress = (act_reg->Data.out.addr);
 
@@ -198,11 +164,8 @@ static void process_action(snap_membus_1024_t *din_gmem,
 
                 if (act_reg->Data.in.type == SNAP_ADDRTYPE_HOST_DRAM) {
                     read_burst_of_data_from_mem(din_gmem, act_reg->Data.in.type,
-                        (InputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_1024, buffer1024, xfer_size);
+                        (InputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_512, buffer512, xfer_size);
 
-                    if (act_reg->Data.out.type == SNAP_ADDRTYPE_LCL_MEM0)
-                        //convert buffer 1024 to 512b
-                        membus_to_LCLmem(buffer1024, buffer512, xfer_size);
                 } else {
 		    read_burst_of_data_from_LCL(lcl_mem0,
 			act_reg->Data.in.type,
@@ -210,12 +173,9 @@ static void process_action(snap_membus_1024_t *din_gmem,
                         buffer512, xfer_size);
 		}
                 if (act_reg->Data.out.type == SNAP_ADDRTYPE_HOST_DRAM) {
-                    if (act_reg->Data.in.type == SNAP_ADDRTYPE_LCL_MEM0)
-                        //convert buffer 512b to 1024b
-                        LCLmem_to_membus(buffer512, buffer1024, xfer_size);
 
                      write_burst_of_data_to_mem(dout_gmem, act_reg->Data.out.type,
-                        (OutputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_1024, buffer1024, xfer_size);
+                        (OutputAddress + address_xfer_offset) >> ADDR_RIGHT_SHIFT_512, buffer512, xfer_size);
                 } else {
 		     write_burst_of_data_to_LCL(lcl_mem0,
 			act_reg->Data.out.type,
@@ -235,9 +195,9 @@ static void process_action(snap_membus_1024_t *din_gmem,
 }
 
 //--- TOP LEVEL MODULE -------------------------------------------------
-// snap_membus_1024_t and snap_membus_512_t are defined in actions/include/hls_snap_1024.H
-void hls_action(snap_membus_1024_t *din_gmem,
-		snap_membus_1024_t *dout_gmem,
+// snap_membus_512_t is defined in actions/include/hls_snap_1024.H
+void hls_action(snap_membus_512_t *din_gmem,
+		snap_membus_512_t *dout_gmem,
 		snap_membus_512_t *lcl_mem0,
 		action_reg *act_reg)
 {
@@ -277,8 +237,8 @@ int main(void)
 #define MEMORY_LINES_1024 512  /* 64 KiB */
     int rc = 0;
     unsigned int i;
-    static snap_membus_1024_t  din_gmem[MEMORY_LINES_1024];
-    static snap_membus_1024_t  dout_gmem[MEMORY_LINES_1024];
+    static snap_membus_512_t  din_gmem[MEMORY_LINES_512];
+    static snap_membus_512_t  dout_gmem[MEMORY_LINES_512];
     static snap_membus_512_t   lcl_mem0[MEMORY_LINES_512];
 
     action_reg act_reg;

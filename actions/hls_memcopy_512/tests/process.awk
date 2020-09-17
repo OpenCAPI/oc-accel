@@ -36,7 +36,7 @@ BEGIN {
 END {
   i=1
   printf "+-------------------------------------------------------------------------------+\n"
-  printf "|            OC-Accel hls_memcopy_1024 Throughput (MBytes/s)                    |\n"
+  printf "|            OC-Accel hls_memcopy_512  Throughput (MBytes/s)                    |\n"
   printf "+-------------------------------------------------------------------------------+\n"
   printf "+------------LCL stands for DDR or HBM memory according to hardware-------------+\n"
   printf "%12s %16s %16s %16s %16s\n","bytes", "Host->FPGA_RAM", "FPGA_RAM->Host","FPGA(LCL->BRAM)", "FPGA(BRAM->LCL)" 
