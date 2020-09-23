@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-#define ACTION_TYPE         0x1014100F
+#define ACTION_TYPE         0x1014300F
 #define RELEASE_LEVEL       0x00000010
 
 typedef struct decimal_mult_job {
