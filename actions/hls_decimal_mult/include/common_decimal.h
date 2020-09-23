@@ -23,7 +23,8 @@
 extern "C" {
 #endif
 
-#define DECIMALMULT_ACTION_TYPE 0x1014100F
+#define ACTION_TYPE         0x1014100F
+#define RELEASE_LEVEL       0x00000010
 
 typedef struct decimal_mult_job {
 	struct snap_addr in;	/* input data */

@@ -108,8 +108,8 @@ int main(int argc, char *argv[])
 	FILE *fp_ref, *fp_action;
 	
 	// default is completion of the action by IRQ
-	// snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
-	snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ);
+	// snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ);
+        snap_action_flag_t action_irq = 0; // default to non IRQ
 
 	//mat_elmt_t is declared in common header file in include directory
 	// and can be a float or a double as user needs
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Allocate the action that will be used for the processing
-	action = snap_attach_action(card, DECIMALMULT_ACTION_TYPE, action_irq, 60);
+	action = snap_attach_action(card, ACTION_TYPE, action_irq, 60);
 	if (action == NULL) {
 		fprintf(stderr, "err: failed to attach action %u: %s\n",
 			card_no, strerror(errno));

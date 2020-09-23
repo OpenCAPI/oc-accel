@@ -24,8 +24,6 @@
 #include "hls_snap_1024.H"
 #include <common_decimal.h> /* DecimalMult Job definition */
 
-#define RELEASE_LEVEL		0x00000010
-
 #define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_DECIMAL_READ*sizeof(mat_elmt_t)/BPERDW_512) // =2 if double =1 if float
 #define MAX_NB_OF_DECIMAL_PERDW	(BPERDW_512/sizeof(mat_elmt_t)) // =8 if double =16 if float
 
