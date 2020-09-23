@@ -263,6 +263,18 @@ choice
 		select FORCE_SDRAM_OR_BRAM
 		select DISABLE_ETHERNET
 
+	config HLS_DECIMAL_MULT
+		bool "HLS_Decimal_Mult (Action to Host I/F =512b)"
+		help
+		  This an example of decimal objects multiplication
+		  This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select DISABLE_SDRAM_AND_BRAM
+		select DISABLE_NVME
+		select DISABLE_HBM
+		select ACTION_HALF_WIDTH
+		select DISABLE_ETHERNET
+
 	config HLS_RX100G
 		bool "HLS 100G receiver (Action to Host I/F =512b)""
                 depends on AD9H3
