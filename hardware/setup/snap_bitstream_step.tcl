@@ -131,4 +131,6 @@ exec echo "	\[bootloader\]$elfpath" >> $img_dir/output.bif
 exec echo "	\[destination_device = pl\]$bitpath" >> $img_dir/output.bif
 exec echo "}" >> $img_dir/output.bif
 exec bootgen -arch zynqmp -image $img_dir/output.bif -o $img_dir/${IMAGE_NAME}.bin
+#copy the elf file in Image directory so that user can pick it up with the bin file
+file copy -force $elfpath $img_dir/250_soc_fsbl.elf 
 }
