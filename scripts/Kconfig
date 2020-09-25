@@ -160,7 +160,7 @@ choice
 		  Also need to select the AXI data width to host is 512b or 1024b.
 
 	config HLS_HELLOWORLD_512
-		bool "HLS HelloWorld_512b (Action to Host I/F =512b)"
+		bool "HLS HelloWorld 512b    (Action to Host I/F = 512b)"
 		help
 		  This is the simplest example to start with:
 		  - Reading text from the server memory
@@ -175,7 +175,7 @@ choice
 		select DISABLE_ETHERNET
 
         config HLS_HELLOWORLD_1024
-                bool "HLS HelloWorld_1024b (Action to Host I/F =1024b)"
+                bool "HLS HelloWorld 1024b   (Action to Host I/F =1024b)"
                 help
                   This is the simplest example to start with:
                   - Reading text from the server memory
@@ -188,24 +188,8 @@ choice
 		select DISABLE_HBM
 		select DISABLE_ETHERNET
 
-        config HLS_IMAGE_FILTER
-                bool "HLS Image Filter"
-                help
-                  This example:
-                  - reads a bitmap image
-                  - checks pixel one by one in FPGA block memory 
-                  - modifies the pixel according to its color
-                  - Writes the modified image back to a server file
-                  This example is written in C and compiled with HLS 
-                select ENABLE_HLS_SUPPORT
-                select DISABLE_SDRAM_AND_BRAM
-                select DISABLE_NVME
-		select DISABLE_HBM
-                select ACTION_HALF_WIDTH
-		select DISABLE_ETHERNET
-
         config HLS_HELLOWORLD_PYTHON
-                bool "HLS Helloworld_python"
+                bool "HLS Helloworld Python  (Action to Host I/F =1024b)"
                 help
                   This is a basic example to start accessing data using python scripting:
                   - Reading text from the server memory
@@ -219,7 +203,7 @@ choice
                 select DISABLE_NVME
 
 	config HLS_MEMCOPY_512
-		bool "HLS Memcopy 512b (Action to Host I/F =512b)"
+		bool "HLS Memcopy 512b       (Action to Host I/F = 512b)"
                 depends on ! (AD9H3 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
@@ -235,7 +219,7 @@ choice
 		select ACTION_HALF_WIDTH
 
 	config HLS_MEMCOPY_1024
-		bool "HLS Memcopy 1024b (Action to Host I/F =1024b)"
+		bool "HLS Memcopy 1024b      (Action to Host I/F =1024b)"
                 depends on ! (AD9H3 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
@@ -250,7 +234,7 @@ choice
 		select DISABLE_ETHERNET
 
 	config HLS_HBM_MEMCOPY_1024
-		bool "HLS HBM Memcopy 1024b (Action to Host I/F =1024b)"
+		bool "HLS HBM Memcopy 1024b  (Action to Host I/F =1024b)"
                 depends on (AD9H3 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
@@ -263,8 +247,36 @@ choice
 		select FORCE_SDRAM_OR_BRAM
 		select DISABLE_ETHERNET
 
+        config HLS_IMAGE_FILTER
+                bool "HLS Image Filter       (Action to Host I/F = 512b)"
+                help
+                  This example:
+                  - reads a bitmap image
+                  - checks pixel one by one in FPGA block memory 
+                  - modifies the pixel according to its color
+                  - Writes the modified image back to a server file
+                  This example is written in C and compiled with HLS 
+                select ENABLE_HLS_SUPPORT
+                select DISABLE_SDRAM_AND_BRAM
+                select DISABLE_NVME
+		select DISABLE_HBM
+                select ACTION_HALF_WIDTH
+		select DISABLE_ETHERNET
+
+	config HLS_DECIMAL_MULT
+		bool "HLS_Decimal_Mult       (Action to Host I/F = 512b)"
+		help
+		  This an example of decimal objects multiplication
+		  This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select DISABLE_SDRAM_AND_BRAM
+		select DISABLE_NVME
+		select DISABLE_HBM
+		select ACTION_HALF_WIDTH
+		select DISABLE_ETHERNET
+
 	config HLS_RX100G
-		bool "HLS 100G receiver (Action to Host I/F =512b)""
+		bool "HLS 100G receiver      (Action to Host I/F = 512b)""
                 depends on AD9H3
 		help
 		   This example is written in C and compiled with HLS

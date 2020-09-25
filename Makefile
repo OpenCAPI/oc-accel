@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2018 International Business Machines
+# Copyright 2016-2020 International Business Machines
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -186,6 +186,7 @@ clean:
 	done
 	@find . -depth -name '*~'  -exec rm -rf '{}' \; -print
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
+	@$(RM) *.mif vivado*.jou vivado*.log
 
 clean_config: clean
 	@$(RM) snap_workflow*.log

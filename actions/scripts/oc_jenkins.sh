@@ -93,6 +93,9 @@ function test_all_actions() # $1 = card, $2 = accel
                 *"1014300e") # HLS Memcopy 512
                         cmd="./actions/hls_memcopy_512/tests/hw_test.sh"
                 ;;
+                *"1014300f") # HLS Decimal multiplication 512
+                        cmd="./actions/hls_decimal_mult/tests/hw_test.sh"
+                ;; 
 		*)
 			echo "Error: Action: $action is not valid !"
 			run_test=0

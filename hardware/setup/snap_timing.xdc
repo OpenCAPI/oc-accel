@@ -17,5 +17,9 @@
 #-----------------------------------------------------------
 #set false path between async clock area.
 #This file is only used when action clock frequency != 200MHz
+#for 9H7
+set_false_path -from [get_clocks oc0_clock_afu] -to [get_clocks clk_out1_user_clock_gen]
+set_false_path -from [get_clocks clk_out1_user_clock_gen] -to [get_clocks oc0_clock_afu]
+#for 9H3
 set_false_path -from [get_clocks clock_afu] -to [get_clocks clk_out1_user_clock_gen]
 set_false_path -from [get_clocks clk_out1_user_clock_gen] -to [get_clocks clock_afu]
