@@ -71,7 +71,11 @@ static int process_action(snap_membus_512_t *din_gmem,
 	int nb_of_words_to_process;
 	uint64_t i_idx, o_idx;
 
-	// snap_membus_1024_t=64Bytes => a word read contains 8 double of 8 bytes  or 16 float of 4 bytes
+	// snap_membus_512=64Bytes => a word read contains 8 double of 8 bytes  or 16 float of 4 bytes
+	// This example is pulled from snap framework and was so configured in 512b data exchange
+	// It could be interesting to improve this example by extending the bus from 512b to 1024b
+	// now that OC-Accel uses 1024b words. Don't forget to remove the ACTION_HALF_WIDTH in script/Kconfig
+	//
 	// Parameters are defined in header file
 	// For this example, we defined 16 doubles/floats to read and process
 	snap_membus_512_t buffer_in[MAX_NB_OF_WORDS_READ], buffer_out[MAX_NB_OF_WORDS_READ];
@@ -123,7 +127,6 @@ static int process_action(snap_membus_512_t *din_gmem,
 //--- TOP LEVEL MODULE -------------------------------------------------
 void hls_action(snap_membus_512_t *din_gmem,
 		snap_membus_512_t *dout_gmem,
-		/* snap_membus_1024_t *d_ddrmem, */ /* if unused => uncheck "Enable SDRAM" in menu */
 		action_reg *act_reg)
 {
 	// Host Memory AXI Interface
@@ -135,11 +138,6 @@ void hls_action(snap_membus_512_t *din_gmem,
   max_read_burst_length=64  max_write_burst_length=64
 #pragma HLS INTERFACE s_axilite port=dout_gmem bundle=ctrl_reg offset=0x040
 
-/*	// DDR memory Interface
- * #pragma HLS INTERFACE m_axi port=d_ddrmem bundle=card_mem0 offset=slave depth=512 \
- *   max_read_burst_length=64  max_write_burst_length=64
- * #pragma HLS INTERFACE s_axilite port=d_ddrmem bundle=ctrl_reg offset=0x050
- */
 	// Host Memory AXI Lite Master Interface
 
 #pragma HLS DATA_PACK variable=act_reg
@@ -167,7 +165,6 @@ int main(void)
     static snap_membus_512_t  din_gmem[MEMORY_LINES];
     static snap_membus_512_t  dout_gmem[MEMORY_LINES];
 
-    //snap_membus_1024_t  dout_gmem[2048];
     action_reg act_reg;
     
     /* Query ACTION_TYPE ... */
