@@ -138,7 +138,7 @@ function detect_snap_cards() {
 				image_loaded=`cat /sys/class/cxl/card${card}/image_loaded`
 				load_image_on_perst=`cat /sys/class/cxl/card${card}/load_image_on_perst`
 				pci=`ls -lhaF //sys/class/cxl/card${card}/device | awk -F"../../../" '{print $2}'`
-				slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
+				slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep -a ${pci::-9} | tail -1 | cut -d = -f 2`
 				pci_bis=`cd /sys/class/cxl/card${card}/device/pci*; ls -d *:*`
 
 				echo -e ""
@@ -186,7 +186,7 @@ function detect_snap_cards() {
 				load_image_on_perst="factory"
 
                                 pci=${allcards_array[$card]}
-#                                slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep ${pci::-9} | tail -1 | cut -d = -f 2`
+#                                slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep -a ${pci::-9} | tail -1 | cut -d = -f 2`
                                 echo -e ""
                                 echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
                                 psl_revision_hex=`printf '0x%x\n' ${psl_revision}`
@@ -279,9 +279,9 @@ while getopts ":vA:C:Vdht:" opt; do
 		;;
         d)
                 DEBUG=1
-                DistribLike=`{ [ -f /etc/os-release ] && grep '^ID=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`
-                if (echo $DistribLike | egrep -qi 'centos|fedora|rhel'); then DistribLike=fedora; PackageCmd="rpm -qva | grep -i"
-                elif (echo $DistribLike | egrep -qi 'ubuntu|debian'); then DistribLike=debian; PackageCmd="dpkg -l | grep -i"
+                DistribLike=`{ [ -f /etc/os-release ] && grep -a '^ID=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`
+                if (echo $DistribLike | egrep -a -qi 'centos|fedora|rhel'); then DistribLike=fedora; PackageCmd="rpm -qva | grep -a -i"
+                elif (echo $DistribLike | egrep -a -qi 'ubuntu|debian'); then DistribLike=debian; PackageCmd="dpkg -l | grep -a -i"
                 else DistribLike=unknown; PackageCmd="echo 'Unknown Distribution !'"
                 fi
 
@@ -310,8 +310,8 @@ while getopts ":vA:C:Vdht:" opt; do
                 echo "OS INFO:"
                 echo "--------"
                 echo
-                echo "LINUX distribution:            `{ [ -f /etc/os-release ] && grep PRETTY_NAME /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
-                echo "LINUX version:                 `{ [ -f /etc/os-release ] && grep '^VERSION=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
+                echo "LINUX distribution:            `{ [ -f /etc/os-release ] && grep -a PRETTY_NAME /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
+                echo "LINUX version:                 `{ [ -f /etc/os-release ] && grep -a '^VERSION=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
                 echo "OS KERNEL release:             `uname -r`"; echo
 
                 echo
@@ -324,11 +324,11 @@ while getopts ":vA:C:Vdht:" opt; do
                 echo "----------------------"
                 echo
                 echo "PCI cards detected (lspci):"
-                lspci -nn | grep -i accelerator
+                lspci -nn | grep -a -i accelerator
                 echo "(0632: CAPI card, 062b: OPENCAPI card)"
                 echo
                 echo "Card installed on non-CAPI PCI slot (dmesg):"
-                dmesg | grep incompatible
+                dmesg | grep -a incompatible
                 echo
                 echo "CAPI /dev/cxl directory:"
                 ls -la /dev/cxl
@@ -353,13 +353,13 @@ while getopts ":vA:C:Vdht:" opt; do
                 echo "------------"
                 echo
                 echo "Looking for 'degraded':"
-                grep -i degraded /sys/firmware/opal/msglog
+                grep -a -i degraded /sys/firmware/opal/msglog
                 echo
                 echo "Looking for 'OCAPI':"
-                grep OCAPI /sys/firmware/opal/msglog
+                grep -a OCAPI /sys/firmware/opal/msglog
                 echo
                 echo "OCAPI link information:"
-                grep OCAPI /sys/firmware/opal/msglog | grep link
+                grep -a OCAPI /sys/firmware/opal/msglog | grep -a link
 
                 echo
                 echo "==========================================================================================================="
