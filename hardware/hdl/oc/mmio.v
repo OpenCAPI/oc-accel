@@ -45,6 +45,9 @@ module mmio (
              output reg           soft_reset_brdg_odma       , // soft reset SNAP logic
              output reg           soft_reset_action          , // soft reset action logic
 
+             // Decouple control for PR
+             output reg           decouple                   ,
+             
              //---- MMIO side interface --------------------
              input                mmio_wr                    ,
              input                mmio_rd                    ,
@@ -328,7 +331,8 @@ module mmio (
    else
      begin
        REG_debug_clear <= 64'd0;
-       REG_command     <= 64'd0;
+       REG_command[0]  <= 1'd0; // change for decoupling
+       //REG_command     <= 64'd0;
 
        waddr_decode_error <= 1'b0;
      end
@@ -360,6 +364,7 @@ module mmio (
        REG_SNAP_BASE_ADDR :
           case(snap_offset_addr)
             REG_SNAP_OFFSET_ADDR_IVR             : mmio_dout <= REG_implementation_vertion;
+            REG_SNAP_OFFSET_ADDR_SCR             : mmio_dout <= REG_command;
             REG_SNAP_OFFSET_ADDR_BDR             : mmio_dout <= REG_build_date            ;
             REG_SNAP_OFFSET_ADDR_SSR             : mmio_dout <= REG_status                ;
             REG_SNAP_OFFSET_ADDR_CAP             : mmio_dout <= REG_capability            ;
@@ -432,6 +437,15 @@ module mmio (
      soft_reset_action <= 1'b0;
    else if(REG_command[0])
      soft_reset_action <= 1'b1;
+
+// Add decoupling signal
+// assign decouple = REG_command[1];
+   always@(posedge clk or negedge rst_n)
+     if(~rst_n)
+        decouple <= 1'b0;
+     else
+        decouple <= 1'b0;
+        //decouple <= REG_command[1];
 
  always@(posedge clk or negedge rst_n)
    if(~rst_n)

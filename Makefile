@@ -186,6 +186,7 @@ clean:
 	done
 	@find . -depth -name '*~'  -exec rm -rf '{}' \; -print
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
+	@$(RM) vivado*.log vivado*.jou
 
 clean_config: clean
 	@$(RM) snap_workflow*.log

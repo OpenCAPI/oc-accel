@@ -115,8 +115,10 @@ input [5:0]                             tlx_afu_resp_data_initial_credit ,
 //
 //ACTIONInterface
 //misc
-output                                  soft_reset_action                 ,
-//
+output                                  soft_reset_action                ,
+// PR decouple control
+output                                  decouple                         ,
+
 `ifndef ENABLE_ODMA
 //MMIOtoconverteroraction
 //xk_d_o:OUTXK_D_T;
@@ -767,6 +769,9 @@ wire brdg_odma_rst_n      ;
       // CONTROL
         .soft_reset_brdg_odma                        ( soft_reset_brdg_odma             ),
         .soft_reset_action                           ( soft_reset_action                ) ,
+      //
+      // PR decouple
+        .decouple                                    ( decouple                         ) ,
       //
       // TLX to AFU command
         .tlx_afu_cmd_valid                           ( tlx_afu_cmd_valid                ) ,
