@@ -879,7 +879,7 @@ if { $create_clkconv_lite == "TRUE" } {
 }
 
 if { $user_clock == "TRUE" } {
-  puts "                        generating clk_wiz ......"
+  puts "                        generating specific $user_clk_freq MHz clock for action ......"
   create_ip -name clk_wiz -vendor xilinx.com -library ip -version 6.0 -module_name user_clock_gen -dir $ip_dir  >> $log_file
   if { $user_clk_freq == "50" } {
     set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \

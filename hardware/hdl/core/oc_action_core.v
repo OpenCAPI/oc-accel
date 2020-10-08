@@ -15,7 +15,8 @@
  */
 `include "snap_global_vars.v"
 
-//(* black_box *) module oc_action_core (
+// To create the synthesis of the fixed partn you will need to add:
+// (* black_box *) in front of the word 'module' next line
  module oc_action_core (
    input                                 clock_afu       ,
    input                                 reset_action_d  ,
@@ -160,12 +161,6 @@
    `endif
    `endif
   );
-
-
-
-//=========================================================================
-//endmodule => XXXXXXXXXX
-//=========================================================================
 
 
   // // ******************************************************************************
@@ -1881,11 +1876,14 @@
   );  
   `endif
 
+
   wire clock_act;
   `ifdef ACTION_USER_CLOCK
     assign clock_act = clock_usr;
+    assign hbm_clk_ref = clock_usr;
   `else
     assign clock_act = clock_afu;
+    assign hbm_clk_ref = clock_afu;
   `endif
 
   wire clock_mem;
@@ -4523,6 +4521,7 @@ block_RAM block_ram_i1
       .s_axi_p0_HBM_arqos       ( act_axi_card_hbm_p0_arqos     ) ,
   `endif
       .s_axi_p0_HBM_awcache     ( act_axi_card_hbm_p0_awcache   ) ,
+      //.s_axi_p0_HBM_awid        ( 6'b0                          ) ,
       .s_axi_p0_HBM_awprot      ( act_axi_card_hbm_p0_awprot    ) ,
       .s_axi_p0_HBM_awvalid     ( act_axi_card_hbm_p0_awvalid   ) ,
       .s_axi_p0_HBM_awready     ( act_axi_card_hbm_p0_awready   ) ,
@@ -4534,15 +4533,18 @@ block_RAM block_ram_i1
       .s_axi_p0_HBM_bresp       ( act_axi_card_hbm_p0_bresp     ) ,
       .s_axi_p0_HBM_bvalid      ( act_axi_card_hbm_p0_bvalid    ) ,
       .s_axi_p0_HBM_bready      ( act_axi_card_hbm_p0_bready    ) ,
+      //.s_axi_p0_HBM_bid         (                               ) ,
       .s_axi_p0_HBM_araddr      ( act_axi_card_hbm_p0_araddr    ) ,
       .s_axi_p0_HBM_arlen       ( act_axi_card_hbm_p0_arlen     ) ,
       .s_axi_p0_HBM_arsize      ( act_axi_card_hbm_p0_arsize    ) ,
       .s_axi_p0_HBM_arburst     ( act_axi_card_hbm_p0_arburst   ) ,
       .s_axi_p0_HBM_arcache     ( act_axi_card_hbm_p0_arcache   ) ,
+      //.s_axi_p0_HBM_arid        ( 6'b0                         ) ,
       .s_axi_p0_HBM_arprot      ( act_axi_card_hbm_p0_arprot    ) ,
       .s_axi_p0_HBM_arvalid     ( act_axi_card_hbm_p0_arvalid   ) ,
       .s_axi_p0_HBM_arready     ( act_axi_card_hbm_p0_arready   ) ,
       .s_axi_p0_HBM_rdata       ( act_axi_card_hbm_p0_rdata     ) ,
+      //.s_axi_p0_HBM_rid         (                               ) ,
       .s_axi_p0_HBM_rresp       ( act_axi_card_hbm_p0_rresp     ) ,
       .s_axi_p0_HBM_rlast       ( act_axi_card_hbm_p0_rlast     ) ,
       .s_axi_p0_HBM_rvalid      ( act_axi_card_hbm_p0_rvalid    ) ,
@@ -5821,6 +5823,7 @@ block_RAM block_ram_i1
 
 //common signals
       .apb_complete             ( hbm_ctrl_apb_complete       ) ,
+      .ref_clk                  ( hbm_clk_ref                 ) ,
       .cresetn                  ( hbm_ctrl_reset_n            ) ,
       .aresetn                  ( ~reset_action_q             )
 ) ; 

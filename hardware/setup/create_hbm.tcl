@@ -92,7 +92,7 @@ set_property -dict [list CONFIG.CONST_WIDTH {32} CONFIG.CONST_VAL {0}] [get_bd_c
 
 
 #====================
-#create the clocks and the reset signals for the design
+#create the clock buffer divider for the apb_clk
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_bufg_apb_clk
 set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {2}] [get_bd_cells refclk_bufg_apb_clk]
 
@@ -104,6 +104,8 @@ connect_bd_net [get_bd_pins constant_1_one/dout] [get_bd_pins refclk_bufg_apb_cl
 set port [create_bd_port -dir I ARESETN]
 #CRESETN is used for converters reset 
 set port [create_bd_port -dir I CRESETN]
+#REF_CLK is used for HBM refclk
+set port [create_bd_port -dir I REF_CLK]
 
 #====================
 #Use the HBM RIGHT stack 0 only (16 modules of 256MB/2Gb = 4GB)
@@ -361,10 +363,11 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 #--------------------- end loop ------------------
 
 #This line need to be added after the loop since the S_AXI_p0_HBM_ACLK is not defined before
-connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_0] [get_bd_pins S_AXI_p0_HBM_ACLK]
 connect_bd_net [get_bd_ports S_AXI_p0_HBM_ACLK] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_I]
+connect_bd_net [get_bd_ports REF_CLK] [get_bd_pins hbm/HBM_REF_CLK_0]
+
 if { $hbm_axi_if_num > 15 } {
-  connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_1] [get_bd_pins S_AXI_p0_HBM_ACLK]
+  connect_bd_net [get_bd_ports REF_CLK] [get_bd_pins hbm/HBM_REF_CLK_1]
 }
 
 assign_bd_address >> $log_file
