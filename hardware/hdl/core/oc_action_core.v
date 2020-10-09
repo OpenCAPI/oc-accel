@@ -1878,6 +1878,7 @@
 
 
   wire clock_act;
+  wire hbm_clk_ref;
   `ifdef ACTION_USER_CLOCK
     assign clock_act = clock_usr;
     assign hbm_clk_ref = clock_usr;
