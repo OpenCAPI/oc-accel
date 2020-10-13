@@ -285,7 +285,7 @@ while getopts "D:A:F:f:C:h" opt; do
 		if [[ $accel != "OC-AD9V3"    ]] &&
 		   [[ $accel != "OC-AD9H3"    ]] &&
 		   [[ $accel != "OC-AD9H7"    ]] &&
-		   [[ $accel != "OC-BW250SOC" ]]; then
+		   [[ $accel != "OC-BW250SOC" ]] &&
 		   [[ $accel != "ALL"         ]]; then
 			echo "Error:  Option -A $OPTARG is not valid !" >&2
 			echo "Expect: [OC-AD9V3, OC-AD9H3, OC-AD9H7, OCBW250SOC or ALL]" >&2
