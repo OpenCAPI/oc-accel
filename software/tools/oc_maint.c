@@ -176,6 +176,7 @@ static uint32_t snap_read32 (void* handle, uint32_t addr)
 static void snap_version (void* handle)
 {
     uint64_t reg;
+    int up;
     unsigned long ioctl_data;
 
     VERBOSE2 ("[%s] Enter\n", __func__);
@@ -189,21 +190,12 @@ static void snap_version (void* handle)
     snap_card_ioctl (handle, GET_CARD_NAME, (unsigned long)&buffer);
     VERBOSE1 ("Name: OC-%s. ", buffer);
 
-    VERBOSE1 ("NVME ");
-    snap_card_ioctl (handle, GET_NVME_ENABLED, (unsigned long)&ioctl_data);
-
-    if (1 == ioctl_data) {
-        VERBOSE1 ("enabled");
-    } else {
-        VERBOSE1 ("disabled");
-    }
-
     /* if card is a 9H3 or 9H7 then display number of HBM AX interfaces */
     snap_card_ioctl (handle, GET_SDRAM_SIZE, (unsigned long)&ioctl_data);
     if ( !( strcmp(buffer, "AD9H3") && strcmp(buffer,"AD9H7") )) {
-        VERBOSE1 (", %d HBM AXI interfaces. ", (int)ioctl_data);
+        VERBOSE1 (" %d HBM AXI interfaces. ", (int)ioctl_data);
     } else {
-        VERBOSE1 (", %d MB DRAM available. ", (int)ioctl_data);
+        VERBOSE1 (" %d MB DRAM available. ", (int)ioctl_data);
     }
 
     snap_card_ioctl (handle, GET_DMA_ALIGN, (unsigned long)&ioctl_data);
@@ -227,6 +219,7 @@ static void snap_version (void* handle)
               (int) (reg >> 16) & 0xff,
               (int) (reg >> 8) & 0xff,
               (int) (reg) & 0xff);
+
 
     VERBOSE2 ("[%s] Exit\n", __func__);
     return;
