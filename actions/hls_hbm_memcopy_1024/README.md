@@ -7,5 +7,5 @@
   * Block RAM memory (memory inside the FPGA itself)
 * The example code details the copy mechanism.
 
-:star: Please check the [actions/hls_hbm_memcopy/doc](./doc/) directory for detailed information
+:star: * Detailed documentation is available at : <https://opencapi.github.io/oc-accel-doc/actions-doc/hls_hbm_memcopy_1024>
 
