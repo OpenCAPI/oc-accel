@@ -117,6 +117,15 @@ cp $config $snap_config
 cat $snap_config | sed 's/^\([^#].*\)/export \1/' | tr -d '"' > $snap_config_sh
 chmod +x $snap_config_sh
 cat $snap_config | tr -d '"' | sed 's/^\([^#].*\)/SNAP_CFLAGS += "-DCONFIG_\1"/' > $snap_config_cflags
+
+#add HBM interfaces management
+axi_if_num=`cat $config |grep -i "HBM_AXI_IF_NUM"|cut -d'=' -f2`
+echo "axi_if_num = $axi_if_num"
+for ((i=0; i<$axi_if_num; i++))
+do
+	echo "SNAP_CFLAGS += \"-DCONFIG_HBM_AXI_IF_P$i=TRUE\"" >> $snap_config_cflags
+done
+
 echo  "Generation of SNAP config files done."
 echo
 
