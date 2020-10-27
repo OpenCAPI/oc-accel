@@ -159,16 +159,17 @@ function test_memcopy_with_hbm {
     
     echo "Doing snap_hbm_memcopy from hbm_p0 to hbm_p1 (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
-        -a 0x0 -A HBM_P0   \
-        -d 0x0 -D HBM_P1 -s ${size} >>  \
-        snap_memcopy_with_hbm.log 2>&1"
-    echo ${cmd} >> snap_memcopy_with_hbm.log
-    eval ${cmd}
-    if [ $? -ne 0 ]; then
-        echo "cmd: ${cmd}"
-        echo "failed, check snap_memcopy_with_hbm.log"
-        exit 1
-    fi
+         -a 0x0 -A HBM_P0   \
+         -d 0x0 -D HBM_P1 -s ${size} >>  \
+          snap_memcopy_with_hbm.log 2>&1"
+     echo ${cmd} >> snap_memcopy_with_hbm.log
+     eval ${cmd}
+     if [ $? -ne 0 ]; then
+         echo "cmd: ${cmd}"
+         echo "failed, check snap_memcopy_with_hbm.log"
+         exit 1
+     fi
+
 
     echo "Doing snap_hbm_memcopy from hbm_p1 (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
@@ -201,10 +202,9 @@ rm -f snap_memcopy_with_hbm.log
 touch snap_memcopy_with_hbm.log
 
 if [ "$duration" = "SHORT" ]; then
-#    for (( size=64; size<512; size*=2 )); do
-#    test_memcopy_with_hbm ${size}
-    echo "Test_memcopy_with_hbm test is not run in SHORT mode"
-#    done
+    for (( size=64; size<512; size*=2 )); do
+    test_memcopy_with_hbm ${size}
+    done
 fi
 
 if [ "$duration" = "NORMAL" ]; then
