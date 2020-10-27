@@ -123,7 +123,8 @@ axi_if_num=`cat $config |grep -i "HBM_AXI_IF_NUM"|cut -d'=' -f2`
 echo "axi_if_num = $axi_if_num"
 for ((i=0; i<$axi_if_num; i++))
 do
-	echo "SNAP_CFLAGS += \"-DCONFIG_HBM_AXI_IF_P$i=TRUE\"" >> $snap_config_cflags
+   echo "export HBM_AXI_IF_P$i=TRUE" >> $snap_config_sh
+   echo "SNAP_CFLAGS += \"-DCONFIG_HBM_AXI_IF_P$i=TRUE\"" >> $snap_config_cflags
 done
 
 echo  "Generation of SNAP config files done."
