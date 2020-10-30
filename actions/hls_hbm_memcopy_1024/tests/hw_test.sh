@@ -178,7 +178,7 @@ function test_memcopy_with_hbm {
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
-    echo "Doing snap_hbm_memcopy from host memory to hbm_p0 (aligned) ${size} bytes ... "
+    echo "Doing snap_hbm_memcopy from HOST memory to hbm_p0 (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}  ${noirq}  \
         -i ${size}_B.bin    \
         -d 0x0 -D HBM_P0 >>  \
@@ -208,7 +208,7 @@ function test_memcopy_with_hbm {
     done
 
     last_hbm="$i"
-    echo "Doing snap_hbm_memcopy from hbm_p$last_hbm to host memory (aligned) ${size} bytes ... "
+    echo "Doing snap_hbm_memcopy from hbm_p$last_hbm to HOST memory (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
         -a 0x0 -A HBM_P$last_hbm -s ${size}  \
         -o ${size}_B.out   >> \
@@ -241,7 +241,6 @@ touch snap_memcopy_with_hbm.log
 if [ "$duration" = "SHORT" ]; then
     for (( size=64; size<512; size*=2 )); do
     test_memcopy_with_hbm ${size}
-    #echo "Test_memcopy_with_hbm test is not run in SHORT mode"
     done
 fi
 
