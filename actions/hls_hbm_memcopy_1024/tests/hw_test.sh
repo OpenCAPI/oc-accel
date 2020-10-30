@@ -78,8 +78,42 @@ if [ -z "$SNAP_CONFIG" ]; then
 #    snap_peek -C ${snap_card} 0x8 || exit 1;
 #    snap_peek 0x0030 |grep 30|cut -c22-23
     echo
+#Print build date and version
+echo
+echo -n "Git Version: "
+snap_peek -C ${snap_card} 0x0 || exit 1;
+echo -n "Build Date:  "
+snap_peek -C ${snap_card} 0x8 || exit 1;
+
+snap_peek -C ${snap_card} 0x30 || exit 1;
+echo -n "Type of the card: "
+card_type=`snap_peek -C ${snap_card} 0x30 |grep 30|cut -c26-27|| exit 1;`
+#echo $card_type
+if [ $card_type -eq "31" ]; then
+   echo "AD9V3 card"
+elif [ $card_type -eq "32" ]; then
+   echo "AD9H3 card"
+elif [ $card_type -eq "33" ]; then
+   echo "AD9H7 card"
+elif [ $card_type -eq "34" ]; then
+   echo "BW250SOC card"
+else
+   echo  $card_type " (unknown card number)"
 fi
 
+#for HBM cards
+if [ $card_type -eq "32" ] || [ $card_type -eq "33" ]; then
+  echo -n "Number of AXI HBM IF: "
+  hbm_if_num_hexa=`snap_peek -C ${snap_card} 0x30 |grep 30|cut -c22-23 || exit 1;`
+  hbm_if_num=$(printf '%#x' "0x$hbm_if_num_hexa")
+  printf "%d\n" $hbm_if_num
+  if [ $hbm_if_num == 0 ]; then
+     echo "ERROR: Almost 1 HBM is necessary for tests"
+     exit 1;
+  fi
+fi
+
+fi
 #### MEMCOPY ##########################################################
 
 function test_memcopy {
@@ -144,7 +178,7 @@ function test_memcopy_with_hbm {
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
-    echo "Doing snap_hbm_memcopy to hbm_p0 (aligned) ${size} bytes ... "
+    echo "Doing snap_hbm_memcopy from host memory to hbm_p0 (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}  ${noirq}  \
         -i ${size}_B.bin    \
         -d 0x0 -D HBM_P0 >>  \
@@ -156,25 +190,28 @@ function test_memcopy_with_hbm {
         echo "failed, check snap_memcopy_with_hbm.log"
         exit 1
     fi
-    
-    echo "Doing snap_hbm_memcopy from hbm_p0 to hbm_p1 (aligned) ${size} bytes ... "
-    cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
-         -a 0x0 -A HBM_P0   \
-         -d 0x0 -D HBM_P1 -s ${size} >>  \
-          snap_memcopy_with_hbm.log 2>&1"
-     echo ${cmd} >> snap_memcopy_with_hbm.log
-     eval ${cmd}
-     if [ $? -ne 0 ]; then
-         echo "cmd: ${cmd}"
-         echo "failed, check snap_memcopy_with_hbm.log"
-         exit 1
-     fi
 
+    for (( i=0, j=1; i < hbm_if_num-1; i++, j++ ))
+    do
+       echo "Doing snap_hbm_memcopy from hbm_p$i to hbm_p$j (aligned) ${size} bytes ... "
+       cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
+           -a 0x0 -A HBM_P$i   \
+           -d 0x0 -D HBM_P$j -s ${size} >>  \
+           snap_memcopy_with_hbm.log 2>&1"
+       echo ${cmd} >> snap_memcopy_with_hbm.log
+       eval ${cmd}
+       if [ $? -ne 0 ]; then
+           echo "cmd: ${cmd}"
+           echo "failed, check snap_memcopy_with_hbm.log"
+           exit 1
+       fi
+    done
 
-    echo "Doing snap_hbm_memcopy from hbm_p1 (aligned) ${size} bytes ... "
+    last_hbm="$i"
+    echo "Doing snap_hbm_memcopy from hbm_p$last_hbm to host memory (aligned) ${size} bytes ... "
     cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
-        -o ${size}_B.out    \
-        -a 0x0 -A HBM_P1 -s ${size} >>  \
+        -a 0x0 -A HBM_P$last_hbm -s ${size}  \
+        -o ${size}_B.out   >> \
         snap_memcopy_with_hbm.log 2>&1"
     echo ${cmd} >> snap_memcopy_with_hbm.log
     eval ${cmd}
@@ -184,7 +221,7 @@ function test_memcopy_with_hbm {
         exit 1
     fi
     echo "ok"
-    
+
     echo "Check results ... "
     diff ${size}_B.bin ${size}_B.out 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
@@ -204,6 +241,7 @@ touch snap_memcopy_with_hbm.log
 if [ "$duration" = "SHORT" ]; then
     for (( size=64; size<512; size*=2 )); do
     test_memcopy_with_hbm ${size}
+    #echo "Test_memcopy_with_hbm test is not run in SHORT mode"
     done
 fi
 
@@ -217,4 +255,3 @@ echo
 #echo "Print time: (small size doesn't represent performance)"
 grep "memcopy of" snap_memcopy_with_hbm.log
 echo
-
