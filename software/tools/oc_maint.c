@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 International Business Machines
+ * Copyright 2020 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 
 /*
- * SNAP Maintenance tool Written by Eberhard S. Amann esa@de.ibm.com.
+ * OC-ACCEL Maintenance tool
+ * Initial SNAP Maintenance tool Written by Eberhard S. Amann esa@de.ibm.com.
  */
 
 #include <stdio.h>
@@ -66,19 +67,21 @@ static FILE* fd_out;
     } while (0)
 
 struct mdev_ctx {
-    int loop;                /* Loop Counter */
-    int card;                /* Card no (0,1,2,3 */
-    void* handle;                /* The snap handle */
-    int dt;                        /* Delay time in sec (1 sec default) */
-    int count;                /* Number of loops to do, (-1) = forever */
-    bool daemon;                /* TRUE if forked */
-    uint64_t wed;                /* This is a dummy only for attach */
-    bool quiet;                /* False or true -q option */
+    int loop;           /* Loop Counter */
+    int card;           /* Card no (0,1,2,3 */
+    void* handle;       /* The snap handle */
+    int dt;             /* Delay time in sec (1 sec default) */
+    int count;          /* Number of loops to do, (-1) = forever */
+    bool daemon;        /* TRUE if forked */
+    uint64_t wed;	/* This is a dummy only for attach */
+    bool quiet;		/* False or true -q option */
     pid_t pid;
-    pid_t my_sid;                /* for sid */
-	int mode;		/* See below */
+    pid_t my_sid;       /* for sid */
+	int mode;	/* See below */
     uint64_t fir[SNAP_M_FIR_NUM];
 };
+
+    bool usercode;           /* used to report a code user has specified */
 
 static struct mdev_ctx        master_ctx;
 
@@ -177,13 +180,17 @@ static void snap_version (void* handle)
 {
     uint64_t reg;
     int up;
+    int sec;
+    int min;
+    int hour;
+    int day;
     unsigned long ioctl_data;
 
     VERBOSE2 ("[%s] Enter\n", __func__);
 
     /* Read Card Capabilities */
     snap_card_ioctl (handle, GET_CARD_TYPE, (unsigned long)&ioctl_data);
-    VERBOSE1 ("SNAP Card Id: 0x%x ", (int)ioctl_data);
+    VERBOSE1 ("OC-ACCEL Card Id: 0x%x ", (int)ioctl_data);
 
     /* Get Card name */
     char buffer[16];
@@ -205,7 +212,7 @@ static void snap_version (void* handle)
     VERBOSE1 ("Min_DMA: %d)\n", (int)ioctl_data);
 
     reg = snap_read64 (handle, SNAP_IVR);
-    VERBOSE1 ("SNAP FPGA Release: v%d.%d.%d Distance: %d GIT: 0x%8.8x\n",
+    VERBOSE1 ("OC-ACCEL FPGA Release:       v%d.%d.%d Distance: %d GIT: 0x%8.8x\n",
               (int) (reg >> 56),
               (int) (reg >> 48ll) & 0xff,
               (int) (reg >> 40ll) & 0xff,
@@ -213,7 +220,7 @@ static void snap_version (void* handle)
               (uint32_t)reg);
 
     reg = snap_read64 (handle, SNAP_BDR);
-    VERBOSE1 ("SNAP FPGA Build (Y/M/D): %04x/%02x/%02x Time (H:M): %02x:%02x\n",
+    VERBOSE1 ("OC-ACCEL FPGA Build (Y/M/D): %04x/%02x/%02x Time (H:M): %02x:%02x\n",
               (int) (reg >> 32ll) & 0xffff,
               (int) (reg >> 24ll) & 0xff,
               (int) (reg >> 16) & 0xff,
@@ -221,6 +228,19 @@ static void snap_version (void* handle)
               (int) (reg) & 0xff);
 
 
+    reg = snap_read64(handle, SNAP_FRT);
+    up = (int)(reg / (1000 * 1000 *250));
+    sec = up%60;
+    min = (up/60)%60;
+    hour = (up/3600)%24;
+    day = (up/3600/24);
+    VERBOSE1("OC-ACCEL FPGA Up Time:       %dsec : %dd %dh %dmn %dsec\n",up, day, hour, min, sec);
+
+    if (usercode == true)
+    {
+		reg = snap_read64(handle, SNAP_USR);
+		VERBOSE1("OC-ACCEL FPGA User Code:     %ld \n", reg);
+    }
     VERBOSE2 ("[%s] Exit\n", __func__);
     return;
 }
@@ -313,6 +333,7 @@ static void help (char* prog)
             "\t-V, --version        \tPrint Version number\n"
             "\t-h, --help                This help message\n"
             "\t-q, --quiet                No output at all\n"
+            "\t-u, --usercode             Provides usercode\n"
             "\t-v, --verbose        \tverbose mode, up to -vvv\n"
 	        "\t-m, --mode		Mode:\n"
 	        "\t	1 = Show Action number only\n"
@@ -367,7 +388,7 @@ int main (int argc, char* argv[])
 			{ "mode",	required_argument, NULL, 'm' },
             { 0,                0,                   NULL,  0  }
         };
-        ch = getopt_long (argc, argv, "C:c:i:m:Vqhvd",
+        ch = getopt_long (argc, argv, "C:c:i:m:Vqhvdu",
                           long_options, &option_index);
 
         if (-1 == ch) {
@@ -391,6 +412,10 @@ int main (int argc, char* argv[])
         case 'h':        /* --help */
             help (argv[0]);
             exit (EXIT_SUCCESS);
+            break;
+
+        case 'u':        /* --usercode */
+            usercode = true;
             break;
 
         case 'v':        /* --verbose */
