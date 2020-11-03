@@ -180,7 +180,8 @@ function detect_snap_cards() {
                 sub=`cat /sys/bus/pci/devices/${mycard}/subsystem_device`
                 if [ "$sub" = "$check_sub" ]; then
                         pci=${allcards_array[$card]}
-                        pci_slot=$(printf '%d' "${pci::-10}")
+                        #pci slot read is in hexa and will be displayed without the 0x
+                        pci_slot_hex=$(printf '%x' "0x${pci::-10}")
                         if [ $VERBOSE -eq 1 ] ; then
                                 #psl_revision=`cat /sys/class/cxl/card${card}/psl_revision`
 #                                image_loaded=`cat /var/ocxl/card${card}| awk {'print $8'}`
@@ -191,7 +192,7 @@ function detect_snap_cards() {
 #                                slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep -a ${pci::-9} | tail -1 | cut -d = -f 2`
                                 echo -e ""
                                 #echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
-                                echo -e "$card_name card has been detected in OPENCAPI card position: ${pci_slot}"
+                                echo -e "$card_name card has been detected in OPENCAPI card position: ${pci_slot_hex}"
                                 psl_revision_hex=`printf '0x%x\n' ${psl_revision}`
 #                                echo " PSL Revision is                                                : ${psl_revision_hex}"
                                 echo -e " Device ID    is                                                : ${check_dev}"
@@ -201,7 +202,7 @@ function detect_snap_cards() {
                                 echo -e " Virtual Card PCI location is                                   : ${pci::-2}"
                                 echo -e " Card PCI physical slot is                                      : Not Applicable"
                         else
-                                echo -n "${pci_slot} "
+                                echo -n "${pci_slot_hex} "
                         fi
                         rc=$((rc +1))
                 fi
@@ -251,8 +252,9 @@ function detect_oc_card_name()
         #allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
         #allcards_array=($allcards)
         #mycard=${allcards_array[$card]::-2}
-        #card argument is now the PCI slot number rather than the order number of the cards found
-        mycard=$(printf '%.4d:00:00.1' "${card}")
+
+        # card argument is now the PCI slot number in hexa rather than the order number of the cards found
+        mycard=$(printf '%.4x:00:00.1' "0x${card}")
 
 
         if [ -d /sys/bus/pci/devices/${mycard} ]; then
