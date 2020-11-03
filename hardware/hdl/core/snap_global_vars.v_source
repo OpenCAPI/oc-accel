@@ -191,6 +191,8 @@
   `define IMP_VERSION_DAT 64'h0
   `define BUILD_DATE_DAT 64'h0
   `define CARD_TYPE 8'h0
+  `define USERCODE 64'h0
+
 
 //   Don't touch, they will be replaced by patch_version.sh (only for HLS Action)
   `define HLS_ACTION_TYPE 32'h0

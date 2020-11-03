@@ -147,6 +147,13 @@ extern "C" {
  */
 #define SNAP_FRT               (CORE_BASE_ADDR + 0x40)
 
+/*
+ * Usercode  (USR)
+ * =======================
+ * 63..0  RO: stores a user defined code to help debug
+ */
+#define SNAP_USR               (CORE_BASE_ADDR + 0x50)
+
 //***************************************************************************
 //***************************************************************************
 /*
