@@ -186,9 +186,11 @@ function detect_snap_cards() {
 				load_image_on_perst="factory"
 
                                 pci=${allcards_array[$card]}
+                                pci_slot=$(printf '%d' "${pci::-10}")
 #                                slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep -a ${pci::-9} | tail -1 | cut -d = -f 2`
                                 echo -e ""
-                                echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
+                                #echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
+                                echo -e "$card_name card has been detected in OPENCAPI card position: ${pci_slot}"
                                 psl_revision_hex=`printf '0x%x\n' ${psl_revision}`
 #                                echo " PSL Revision is                                                : ${psl_revision_hex}"
                                 echo -e " Device ID    is                                                : ${check_dev}"
