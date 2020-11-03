@@ -61,7 +61,7 @@ function usage() {
         echo "     $PROGRAM -A OC-AD9V3"
         echo "        Prints a list of OC-AD9V3 OpenCAPI Cards found"
 	echo "     $PROGRAM -C 0"
-	echo "         Prints the Type of CAPI/OpenCAPI Card 0"
+	echo "         Prints the Type of CAPI/OpenCAPI Card in PCI slot 0"
 	echo "     $PROGRAM -C 0 -t 3"
 	echo "         Prints the Type of OpenCAPI-only Card 0"
 	echo "     $PROGRAM -v -A ALL"
@@ -246,11 +246,13 @@ function detect_oc_card_name()
         local name=$4
 
         wait_no_flash_oc
+
         # Find all OC cards in the system
         #allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
         #allcards_array=($allcards)
         #mycard=${allcards_array[$card]::-2}
-        mycard=`echo "000$card:00:00.1"`
+        #card argument is now the PCI slot number rather than the order number of the cards found
+        mycard=$(printf '%.4d:00:00.1' "${card}")
 
 
         if [ -d /sys/bus/pci/devices/${mycard} ]; then
@@ -408,11 +410,12 @@ shift $((OPTIND-1))
 if  [ $CardOption == 1 ]; then
   	rc=0
 
-	if [[ $card -gt 3 ]]; then
-		echo "Invalid option for -C -$OPTARG" >&2
-		usage
-		exit 0
-	fi
+#card argument is now the PCI slot number rather than the order number of the cards found
+#	if [[ $card -gt 3 ]]; then
+#		echo "Invalid option for -C -$OPTARG" >&2
+#		usage
+#		exit 0
+#	fi
 
 	if [[ $type -gt 3 ]]; then
 		echo "Invalid option for -t -$OPTARG" >&2
