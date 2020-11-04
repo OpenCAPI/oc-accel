@@ -234,7 +234,11 @@ static void snap_version (void* handle)
     min = (up/60)%60;
     hour = (up/3600)%24;
     day = (up/3600/24);
-    VERBOSE1("OC-ACCEL FPGA Up Time:       %dsec : %dd %dh %dmn %dsec\n",up, day, hour, min, sec);
+    if (up < 772532262) {
+        VERBOSE1("OC-ACCEL FPGA Up Time:       %dsec : %dd %dh %dmn %dsec\n",up, day, hour, min, sec);
+    } else { // max value reached if counter is not implemented in oc-accel logic
+        VERBOSE1("OC-ACCEL FPGA Up Time:       need latest oc-accel in your image\n");
+    }
 
     if (usercode == true)
     {
