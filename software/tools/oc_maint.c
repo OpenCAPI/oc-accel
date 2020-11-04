@@ -328,20 +328,20 @@ static void snap_show_cap(void *handle, int mode)
 
 static void help (char* prog)
 {
-    printf ("Print Information. Usage: %s [-CvhVd] [-f file] [-c count] [-i delay]\n"
-            "\t-C, --card <num>        Card to use (default 0)\n"
-            "\t-V, --version        \tPrint Version number\n"
-            "\t-h, --help                This help message\n"
-            "\t-q, --quiet                No output at all\n"
-            "\t-u, --usercode             Provides usercode\n"
-            "\t-v, --verbose        \tverbose mode, up to -vvv\n"
-	        "\t-m, --mode		Mode:\n"
-	        "\t	1 = Show Action number only\n"
-	        "\t	2 = Show NVME if enabled\n"
-	        "\t	3 = Show SDRAM Size in MB\n"
-	        "\t	4 = Show Card\n"
-	        "\t	5 = Show DMA Alignment\n"
-	        "\t	6 = Show DMA Minimum Transfer Size\n"
+    printf ("Print Information. Usage: %s [-CvhVd] [-f file] [-i delay]\n"
+            "\t-C, --card <num>       Card to use (default 0)\n"
+            "\t-V, --version          Print Version number\n"
+            "\t-h, --help             This help message\n"
+            "\t-q, --quiet            No output at all\n"
+            "\t-u, --usercode         Provides usercode\n"
+            "\t-v, --verbose          verbose mode, up to -vvv\n"
+            "\t-m, --mode         Mode:\n"
+            "\t\t 1 = Show Action number only\n"
+            "\t\t 2 = Show NVME if enabled\n"
+            "\t\t 3 = Show SDRAM Size in MB\n"
+            "\t\t 4 = Show Card\n"
+            "\t\t 5 = Show DMA Alignment\n"
+            "\t\t 6 = Show DMA Minimum Transfer Size\n"
             "\n"
             "\n", prog);
 }
@@ -365,7 +365,7 @@ int main (int argc, char* argv[])
     mctx->dt = 1;                /* Default, 1 sec delay time */
     mctx->count = -1;        /* Default, run forever */
     mctx->card = 0;                /* Default, Card 0 */
-	mctx->mode = 0;		    /* Default, nothing to watch */
+    mctx->mode = 0;		    /* Default, nothing to watch */
     mctx->daemon = false;        /* Not in Daemon mode */
 
     for (i = 0; i < SNAP_M_FIR_NUM; i++) {
@@ -377,18 +377,17 @@ int main (int argc, char* argv[])
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
-            { "card",        required_argument, NULL, 'C' },
-            { "version",        no_argument,           NULL, 'V' },
-            { "quiet",        no_argument,           NULL, 'q' },
-            { "help",        no_argument,           NULL, 'h' },
-            { "verbose",        no_argument,           NULL, 'v' },
-            { "count",        required_argument, NULL, 'c' },
-            { "interval",        required_argument, NULL, 'i' },
-            { "daemon",        no_argument,           NULL, 'd' },
-			{ "mode",	required_argument, NULL, 'm' },
-            { 0,                0,                   NULL,  0  }
+            { "card",      required_argument, NULL, 'C' },
+            { "version",   no_argument,           NULL, 'V' },
+            { "quiet",     no_argument,           NULL, 'q' },
+            { "help",      no_argument,           NULL, 'h' },
+            { "verbose",   no_argument,           NULL, 'v' },
+            { "interval",  required_argument,     NULL, 'i' },
+            { "daemon",    no_argument,           NULL, 'd' },
+            { "mode",      required_argument,     NULL, 'm' },
+            { 0,           0,                     NULL,  0  }
         };
-        ch = getopt_long (argc, argv, "C:c:i:m:Vqhvdu",
+        ch = getopt_long (argc, argv, "C:i:m:Vqhvdu",
                           long_options, &option_index);
 
         if (-1 == ch) {
@@ -422,15 +421,6 @@ int main (int argc, char* argv[])
             verbose++;
             break;
 
-        case 'c':        /* --count */
-            mctx->count = strtoul (optarg, NULL, 0);
-
-            if (0 == mctx->count) {
-                mctx->count = 1;
-            }
-
-            break;
-
         case 'i':        /* --interval */
             mctx->dt = strtoul (optarg, NULL, 0);
             break;
@@ -439,21 +429,21 @@ int main (int argc, char* argv[])
             mctx->daemon = true;
             break;
 
-		case 'm':	/* --mode */
-			mode = strtoul(optarg, NULL, 0);
-			switch (mode) {
-			case 1: mctx->mode |= MODE_SHOW_ACTION; break;
-			case 2: mctx->mode |= MODE_SHOW_NVME; break;
-			case 3: mctx->mode |= MODE_SHOW_SDRAM; break;
-			case 4: mctx->mode |= MODE_SHOW_CARD; break;
-			case 5: mctx->mode |= MODE_SHOW_DMA_ALIGN; break;
-			case 6: mctx->mode |= MODE_SHOW_DMA_MIN; break;
-			default:
-				fprintf(stderr, "Please provide correct "
-					"Mode Option (1..6)\n");
-				exit(EXIT_FAILURE);
-			}
-			break;
+        case 'm':	/* --mode */
+            mode = strtoul(optarg, NULL, 0);
+            switch (mode) {
+                 case 1: mctx->mode |= MODE_SHOW_ACTION; break;
+                 case 2: mctx->mode |= MODE_SHOW_NVME; break;
+                 case 3: mctx->mode |= MODE_SHOW_SDRAM; break;
+                 case 4: mctx->mode |= MODE_SHOW_CARD; break;
+                 case 5: mctx->mode |= MODE_SHOW_DMA_ALIGN; break;
+                 case 6: mctx->mode |= MODE_SHOW_DMA_MIN; break;
+                 default:
+                      fprintf(stderr, "Please provide correct "
+                      "Mode Option (1..6)\n");
+                      exit(EXIT_FAILURE);
+                 }
+            break;
 
         default:
             help (argv[0]);
