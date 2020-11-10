@@ -32,8 +32,9 @@ normal=$(tput sgr0)
 # v2.2 : modified March 19th 2020 adding -t (accel type) option; this is to prevent reporting 2 cards (1 CAPI2, 1 OpenCAPI) as only 1 card with 2 characteristics (both have $card ID=0)
 # v2.3 : modified April 17th 2020 adding -d (debug) option; Displays DEBUG additional info
 # v2.4 : add OC-BW250SOC card
+# v2.5 : use real slot number for OC cards
 
-version=2.4
+version=2.5
 accel=UNKNOWN
 VERBOSE=0
 
@@ -60,7 +61,7 @@ function usage() {
         echo "     $PROGRAM -A OC-AD9V3"
         echo "        Prints a list of OC-AD9V3 OpenCAPI Cards found"
 	echo "     $PROGRAM -C 0"
-	echo "         Prints the Type of CAPI/OpenCAPI Card 0"
+	echo "         Prints the Type of CAPI/OpenCAPI Card in PCI slot 0"
 	echo "     $PROGRAM -C 0 -t 3"
 	echo "         Prints the Type of OpenCAPI-only Card 0"
 	echo "     $PROGRAM -v -A ALL"
@@ -178,6 +179,9 @@ function detect_snap_cards() {
                 fi
                 sub=`cat /sys/bus/pci/devices/${mycard}/subsystem_device`
                 if [ "$sub" = "$check_sub" ]; then
+                        pci=${allcards_array[$card]}
+                        #pci slot read is in hexa and will be displayed without the 0x
+                        pci_slot_hex=$(printf '%x' "0x${pci::-10}")
                         if [ $VERBOSE -eq 1 ] ; then
                                 #psl_revision=`cat /sys/class/cxl/card${card}/psl_revision`
 #                                image_loaded=`cat /var/ocxl/card${card}| awk {'print $8'}`
@@ -185,10 +189,10 @@ function detect_snap_cards() {
                                 image_loaded="factory"
 				load_image_on_perst="factory"
 
-                                pci=${allcards_array[$card]}
 #                                slot=`cat /sys/firmware/opal/msglog | grep -a SLOT | grep -a ${pci::-9} | tail -1 | cut -d = -f 2`
                                 echo -e ""
-                                echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
+                                #echo -e "$card_name card has been detected in OPENCAPI card position: ${card}"
+                                echo -e "$card_name card has been detected in OPENCAPI card position: ${pci_slot_hex}"
                                 psl_revision_hex=`printf '0x%x\n' ${psl_revision}`
 #                                echo " PSL Revision is                                                : ${psl_revision_hex}"
                                 echo -e " Device ID    is                                                : ${check_dev}"
@@ -198,7 +202,7 @@ function detect_snap_cards() {
                                 echo -e " Virtual Card PCI location is                                   : ${pci::-2}"
                                 echo -e " Card PCI physical slot is                                      : Not Applicable"
                         else
-                                echo -n "${card} "
+                                echo -n "${pci_slot_hex} "
                         fi
                         rc=$((rc +1))
                 fi
@@ -243,10 +247,14 @@ function detect_oc_card_name()
         local name=$4
 
         wait_no_flash_oc
+
         # Find all OC cards in the system
-        allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
-        allcards_array=($allcards)
-        mycard=${allcards_array[$card]::-2}
+        #allcards=`ls -d /sys/class/ocxl/IBM* | awk -F"/sys/class/ocxl/" '{ print $2 }' |sort |sed s/IBM,AFP3./OPENCAPI-/g |sed s/IBM,oc-snap./OPENCAPI-/g | awk -F"-" '{print $2}'`
+        #allcards_array=($allcards)
+        #mycard=${allcards_array[$card]::-2}
+
+        # card argument is now the PCI slot number in hexa rather than the order number of the cards found
+        mycard=$(printf '%.4x:00:00.1' "0x${card}")
 
 
         if [ -d /sys/bus/pci/devices/${mycard} ]; then
@@ -404,11 +412,12 @@ shift $((OPTIND-1))
 if  [ $CardOption == 1 ]; then
   	rc=0
 
-	if [[ $card -gt 3 ]]; then
-		echo "Invalid option for -C -$OPTARG" >&2
-		usage
-		exit 0
-	fi
+#card argument is now the PCI slot number rather than the order number of the cards found
+#	if [[ $card -gt 3 ]]; then
+#		echo "Invalid option for -C -$OPTARG" >&2
+#		usage
+#		exit 0
+#	fi
 
 	if [[ $type -gt 3 ]]; then
 		echo "Invalid option for -t -$OPTARG" >&2
