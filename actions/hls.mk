@@ -102,6 +102,8 @@ check: $(syn_dir)
 		if [ $$? -eq 0 ]; then \
 		  echo "------------------------------------------------------------------ "; \
                   echo "TIMING ERROR: Please correct your action code before going further"!; \
+                  echo "-- Default HLS clk is 4ns while it could be set to 5ns in oc-accel --"!; \
+                  echo "-- Reason: default value in snap + constraining HLS clk often gives better results"!; \
 		  echo "------------------------------------------------------------------ "; exit -1; \
           	fi; \
 	  	echo "OK";                                                                    \

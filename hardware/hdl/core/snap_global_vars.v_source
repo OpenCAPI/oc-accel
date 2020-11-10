@@ -79,6 +79,10 @@
 `define ENABLE_ETH_LOOP_BACK
 #endif
 
+#if defined(CONFIG_ENABLE_EMAC_V3_1)
+`define ENABLE_EMAC_V3_1
+#endif
+
 #if defined(CONFIG_ACTION_HALF_WIDTH)
 `define ACTION_HALF_WIDTH
 #endif

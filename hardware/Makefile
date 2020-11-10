@@ -243,7 +243,11 @@ action_hw: prepare_logs
 	@echo -e "[CREATE ETHERNET IP..] start `date +"%T %a %b %d %Y"`";
 	@rm -rf $(SNAP_HARDWARE_ROOT)/ip/eth_100G
 	echo "Calling create_eth_100G TCL script" >> $(LOGS_DIR)/eth_100G_make.log; 
-	@echo -e "			generating 100G Ethernet IP";
+	@if [ "$(ENABLE_EMAC_V3_1)" == "TRUE" ]; then \
+		echo -e "			generating 100G Ethernet IP V3.1"; \
+	else \
+		echo -e "			generating 100G Ethernet IP V3.0"; \
+	fi
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_eth_100G_ip.tcl -notrace -log $(LOGS_DIR)/eth_100G_make.log -journal $(LOGS_DIR)/eth_100G_make.jou >> $(LOGS_DIR)/eth_100G_make.log; 
 	@echo -e "[CREATE ETHERNET IP..] done `date +"%T %a %b %d %Y"`";
 	@touch .create_ethernet_done
