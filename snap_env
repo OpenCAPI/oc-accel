@@ -337,11 +337,9 @@ done
 if [ -z "$snap_env_info" ]; then
   if [ "$0" == "bash" ]; then
     # return value in case that this file was sourced
-    echo " case 1"
     return $RC
   else
     # otherwise set an exit state
-    echo " case 2"
     exit $RC
   fi
 fi
