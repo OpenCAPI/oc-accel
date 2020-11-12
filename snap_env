@@ -289,8 +289,8 @@ while [ -z "$SETUP_DONE" ]; do
       SETUP_INFO="$SETUP_INFO\n To simulate a design with HBM, it is recommended to use xcelium simulator (license needed) or use BRAM."
   fi
   if [ "$SIM_IRUN" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
-      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues. It is recommended to use xcelium simulator (license needed) or BRAM for simulation."
-      SETUP_INFO="$SETUP_INFO\n               (Keep however real HBM to use it in the hardware.)"
+      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues."
+      SETUP_INFO="$SETUP_INFO\n To simulate a design with HBM, it is recommended to use xcelium simulator (license needed) or use BRAM."
   fi
 
 
@@ -326,15 +326,22 @@ while [ -z "$SETUP_DONE" ]; do
   fi
   echo 
 
+  #if no warning then display message
+  if [ -z "$SETUP_WARNING" ]; then
+    echo "  Suggested next step: to run a simulation,      execute: make sim"
+    echo "                    or to build the FPGA binary, execute: make image"
+  fi
   SETUP_DONE="1"
 done
 
 if [ -z "$snap_env_info" ]; then
   if [ "$0" == "bash" ]; then
     # return value in case that this file was sourced
+    echo " case 1"
     return $RC
   else
     # otherwise set an exit state
+    echo " case 2"
     exit $RC
   fi
 fi
