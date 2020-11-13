@@ -499,8 +499,8 @@ choice
 	bool "Simulator"
 	default SIM_XSIM
 	help
-	  Supported simulators are Xilinx' xsim, Cadence's irun and xcelium.
-	  If NVMe support is enabled it is only possible to use irun
+	  Supported simulators are Xilinx' xsim, Cadence's ies and xcelium.
+	  If NVMe support is enabled it is only possible to use ies
 	  or to set the simulator to "nosim" to disable model build
 	  and simulation.
 
@@ -510,9 +510,9 @@ choice
 		  Default Xilinx simulator
 
 	config SIM_IRUN
-		bool "irun"
+		bool "ies/irun"
 		help
-		  Cadence irun simulator (requires a specific license)
+		  Cadence ies simulator (requires a specific license)
 		  depends on ! ENABLE_PRFLOW
 
 	config SIM_XCELIUM

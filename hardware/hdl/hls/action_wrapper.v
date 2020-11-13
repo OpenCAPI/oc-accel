@@ -39,7 +39,7 @@ module action_wrapper (
    output                                  s_axi_ctrl_reg_rvalid    ,
    input [ `AXI_LITE_DW-1 : 0]             s_axi_ctrl_reg_wdata     ,
    output                                  s_axi_ctrl_reg_wready    ,
-   input [(`AXI_LITE_DW/8)-1 : 0]           s_axi_ctrl_reg_wstrb     ,
+   input [(`AXI_LITE_DW/8)-1 : 0]          s_axi_ctrl_reg_wstrb     ,
    input                                   s_axi_ctrl_reg_wvalid    ,
 `ifdef ENABLE_AXI_CARD_MEM
 `ifndef ENABLE_HBM
