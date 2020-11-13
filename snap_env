@@ -24,7 +24,6 @@ PATH=$snapdir:$PATH
 
 snap_env_sh=$snapdir/snap_env.sh
 
-unset PSL_DCP
 unset ACTION_ROOT
 unset OCSE_ROOT
 unset TIMING_LABLIMIT
@@ -96,15 +95,6 @@ while [ -z "$SETUP_DONE" ]; do
   ####### checking path to OCSE (only if simulation is enabled)
   # Note: SIMULATOR is defined via snap_config
   if [ "$SIMULATOR" != "nosim" ]; then
-    echo "=====Simulation setup: Setting up OCSE version=========="
-#    if [ "$CAPI10" == "y" ]; then
-#      PSLVER="8"
-#    else
-#      PSLVER="9"
-#    fi
-#    echo "Setting PSLVER                 to: \"$PSLVER\""
-#    sed -i '/export[ ^]*PSLVER[ ^]*=/ d' $snap_env_sh
-#    sed -i '1s/^/export PSLVER='$PSLVER'\n/' $snap_env_sh
     echo "=====Simulation setup: Checking path to OCSE=========="
     echo "OCSE_ROOT              is set to: \"$OCSE_ROOT\""
     RESP=`grep OCSE_ROOT $snap_env_sh`
@@ -167,14 +157,19 @@ while [ -z "$SETUP_DONE" ]; do
   fi
   if [ -z "$AR" ] && [ -n "$ACTION_ROOT" ]; then
     AR=$ACTION_ROOT
-    echo  "ACTION_ROOT             is set to: \"$ACTION_ROOT\""
+    echo  "ACTION_ROOT    is kept and set to: \"$ACTION_ROOT\""
+    ACTION_NAME=$(basename $AR)
+    echo  "ACTION_NAME    is kept and set to: \"$ACTION_NAME\""
     SETUP_INFO="$SETUP_INFO\n### INFO ### Kept ACTION_ROOT from previous configuration."
   else
     echo  "Setting ACTION_ROOT            to: \"$AR\""
+    ACTION_NAME=$(basename $AR)
+    echo  "Setting ACTION_NAME            to: \"$ACTION_NAME\""
     sed -i '/export[ ^]*ACTION_ROOT[ ^]*=/ d' $snap_env_sh
-    { echo  "export ACTION_ROOT=$AR"; cat $snap_env_sh; } > $snap_env_sh.tmp && mv $snap_env_sh.tmp $snap_env_sh
-  fi
 
+    { echo  "export ACTION_ROOT=$AR"; echo  "export ACTION_NAME=$ACTION_NAME"; cat $snap_env_sh; } > $snap_env_sh.tmp && mv $snap_env_sh.tmp $snap_env_sh
+  fi
+  
   if [ -z "$AR" ] && [ "$ignore_action_root" != "y" ]; then
     SETUP_EMPTY="$SETUP_EMPTY\n  ACTION_ROOT"
   else
@@ -213,7 +208,8 @@ while [ -z "$SETUP_DONE" ]; do
     echo  "=====PR flow setup====================================="
     RESP=`grep DCP_ROOT $snap_env_sh`
     if [ -z "$RESP" ]; then
-      echo  "export DCP_ROOT=" >> $snap_env_sh
+      echo  "export DCP_ROOT=${SNAP_ROOT}/hardware/DCP" >> $snap_env_sh
+      DCP_ROOT=${SNAP_ROOT}/hardware/DCP
     fi
     echo  "DCP_ROOT                is set to: \"$DCP_ROOT\""
     if [ -z "$DCP_ROOT" ]; then

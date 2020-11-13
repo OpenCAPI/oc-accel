@@ -683,15 +683,15 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
 	  The HLS clock period constraint in "ns" used when C code is compiled to rtl, 
 	  By constraining differently HLS tool, packing logic may be different and give you better results.
 
-#config ENABLE_PRFLOW
-#	bool "Cloud build (enabling Partial Reconfiguration)"
-#	help
-#	  Used for Cloud environment using specific PSL images
-#
-#config USE_PRFLOW
-#	string
-#	default "TRUE" if ENABLE_PRFLOW
-#	default "FALSE" if ! ENABLE_PRFLOW
+config ENABLE_PRFLOW
+	bool "Enabling Partial Reconfiguration)"
+	help
+	  Used for Future or Cloud environment using pre-routed static images
+
+config USE_PRFLOW
+	string
+	default "TRUE" if ENABLE_PRFLOW
+	default "FALSE" if ! ENABLE_PRFLOW
 
 config ENABLE_ILA
 	bool "Enable ILA Debug"
