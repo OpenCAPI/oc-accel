@@ -275,9 +275,21 @@ choice
 		select ACTION_HALF_WIDTH
 		select DISABLE_ETHERNET
 
+	config HLS_UDP
+		bool "HLS UDP 100G CMAC      (Action to Host I/F = 512b)"
+                depends on (AD9H3 || AD9H7)
+		help
+		   This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select ENABLE_ETHERNET
+		select ENABLE_SIMU_WO_ETH
+		select FORCE_SDRAM_OR_BRAM
+		select DISABLE_HBM
+		select ACTION_HALF_WIDTH
+	
 	config HLS_RX100G
-		bool "HLS 100G receiver      (Action to Host I/F = 512b)"
-                depends on AD9H3
+		bool "HLS 100G RECEIVER      (Action to Host I/F = 512b)"
+                depends on (AD9H3 || AD9H7)
 		help
 		   This example is written in C and compiled with HLS
 		select ENABLE_HLS_SUPPORT
