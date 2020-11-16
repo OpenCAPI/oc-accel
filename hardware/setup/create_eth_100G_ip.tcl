@@ -126,6 +126,7 @@ update_ip_catalog -rebuild -scan_changes
   }
   set_property -dict [ list \
    CONFIG.CMAC_CAUI4_MODE {1} \
+   CONFIG.CMAC_CORE_SELECT {CMACE4_X0Y1} \
    CONFIG.GT_GROUP_SELECT {X0Y8~X0Y11} \
    CONFIG.GT_REF_CLK_FREQ {161.1328125} \
    CONFIG.INCLUDE_RS_FEC {1} \
