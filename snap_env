@@ -158,16 +158,22 @@ while [ -z "$SETUP_DONE" ]; do
   if [ -z "$AR" ] && [ -n "$ACTION_ROOT" ]; then
     AR=$ACTION_ROOT
     echo  "ACTION_ROOT    is kept and set to: \"$ACTION_ROOT\""
-    ACTION_NAME=$(basename $AR)
-    echo  "ACTION_NAME    is kept and set to: \"$ACTION_NAME\""
     SETUP_INFO="$SETUP_INFO\n### INFO ### Kept ACTION_ROOT from previous configuration."
   else
     echo  "Setting ACTION_ROOT            to: \"$AR\""
+    sed -i '/export[ ^]*ACTION_ROOT[ ^]*=/ d' $snap_env_sh
+    { echo  "export ACTION_ROOT=$AR"; cat $snap_env_sh; } > $snap_env_sh.tmp && mv $snap_env_sh.tmp $snap_env_sh
+  fi
+  
+  if [ -z "$AR" ] && [ -n "$ACTION_NAME" ]; then
+    ACTION_NAME=$(basename $AR)
+    echo  "ACTION_NAME    is kept and set to: \"$ACTION_NAME\""
+    SETUP_INFO="$SETUP_INFO\n### INFO ### Kept ACTION_NAME from previous configuration."
+  else
     ACTION_NAME=$(basename $AR)
     echo  "Setting ACTION_NAME            to: \"$ACTION_NAME\""
-    sed -i '/export[ ^]*ACTION_ROOT[ ^]*=/ d' $snap_env_sh
-
-    { echo  "export ACTION_ROOT=$AR"; echo  "export ACTION_NAME=$ACTION_NAME"; cat $snap_env_sh; } > $snap_env_sh.tmp && mv $snap_env_sh.tmp $snap_env_sh
+    sed -i '/export[ ^]*ACTION_NAME[ ^]*=/ d' $snap_env_sh
+    { echo  "export ACTION_NAME=$ACTION_NAME"; cat $snap_env_sh; } > $snap_env_sh.tmp && mv $snap_env_sh.tmp $snap_env_sh
   fi
   
   if [ -z "$AR" ] && [ "$ignore_action_root" != "y" ]; then
