@@ -39,6 +39,9 @@ if { [info exists ::env(DCP_ROOT)] == 1 } {
 }
 set ::env(DCP_DIR) $dcp_dir
 
+#Checkpoint file
+set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
+
 #Report directory
 set rpt_dir        $root_dir/build/Reports
 set ::env(RPT_DIR) $rpt_dir
@@ -72,8 +75,8 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "DCP directory is $dcp
 
 ##
 ## open oc-accel project
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening $dcp_dir/oc_${action_name}_routed.dcp" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-open_checkpoint  $dcp_dir/oc_${action_name}_routed.dcp  >> $logfile
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening $dcp_dir/$oc_action_name_routed_dcp" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+open_checkpoint  $dcp_dir/$oc_action_name_routed_dcp  >> $logfile
 write_bitstream -force -bin_file $img_dir/${action_name}
 # write_bitstream -force $img_dir/{action_name}
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 8 [current_design]
@@ -83,5 +86,10 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Generating  $img_dir/
 write_cfgmem -force -format BIN -interface SPIx8 -size 256 -loadbit "up 0 $img_dir/${action_name}.bit" $img_dir/${action_name}
 
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Closing project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+
+#exec rm -rf $img_dir/.bit
+exec rm -rf $img_dir/\*_partial.bin
+exec rm -rf $img_dir/${action_name}.bin
+
 close_project  >> $logfile
 

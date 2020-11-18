@@ -39,6 +39,14 @@ if { [info exists ::env(DCP_ROOT)] == 1 } {
 }
 set ::env(DCP_DIR) $dcp_dir
 
+#Checkpoint file => input files
+set oc_fpga_static_synth         "oc_${fpgacard}_static_synth"
+set oc_fpga_static_synth_dcp     "${oc_fpga_static_synth}.dcp"
+set oc_action_name_synth_dcp  "oc_${fpgacard}_${action_name}_synth.dcp"
+#Checkpoint file => output files
+set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
+set oc_fpga_static_routed_dcp "oc_${fpgacard}_static_routed.dcp"
+
 #Report directory
 set rpt_dir        $root_dir/build/Reports
 set ::env(RPT_DIR) $rpt_dir
@@ -72,20 +80,41 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "DCP directory is $dcp
 
 ##
 ## open oc-accel project
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening oc_fpga_top_synth.dcp" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-open_checkpoint  $dcp_dir/oc_fpga_top_synth.dcp  >> $logfile
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening $oc_fpga_static_synth_dcp" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+open_checkpoint  $dcp_dir/$oc_fpga_static_synth_dcp  >> $logfile
 
 
 # Disable EMCCLK for startup primitive
-set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN DISABLE [get_designs checkpoint_oc_fpga_top_synth]
-set_property BITSTREAM.CONFIG.CONFIGRATE 51.0 [get_designs checkpoint_oc_fpga_top_synth]
-set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i]
+set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN DISABLE [get_designs checkpoint_$oc_fpga_static_synth]
+set_property BITSTREAM.CONFIG.CONFIGRATE 51.0 [get_designs checkpoint_$oc_fpga_static_synth]
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening $dcp_dir/oc_${action_name}_synth.dcp" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $dcp_dir/oc_${action_name}_synth.dcp
-create_pblock hls_action_0_pblock_1
-add_cells_to_pblock [get_pblocks hls_action_0_pblock_1] [get_cells [list oc_func/fw_afu/action_core_i]]
-resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X0Y2:CLOCKREGION_X5Y4
+if { $fpgacard == "AD9H7" } {
+   set_property HD.RECONFIGURABLE true [get_cells oc_func0/fw_afu/action_core_i]
+
+   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening $dcp_dir/${oc_action_name_synth_dcp}" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+   read_checkpoint -cell [get_cells oc_func0/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp}
+
+   create_pblock hls_action_0_pblock_1
+   add_cells_to_pblock [get_pblocks hls_action_0_pblock_1] [get_cells [list oc_func0/fw_afu/action_core_i]]
+   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X4Y4:CLOCKREGION_X7Y11
+   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X0Y6:CLOCKREGION_X3Y11
+   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X5Y0:CLOCKREGION_X6Y3
+#HBM in dynamic area
+   #resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X0Y0:CLOCKREGION_X7Y0
+#HBM in static area
+   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X5Y0:CLOCKREGION_X7Y0
+
+} elseif { $fpgacard == "AD9V3" } {
+   set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i]
+
+   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening $dcp_dir/${oc_action_name_synth_dcp}" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+   read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp}
+
+   create_pblock hls_action_0_pblock_1
+   add_cells_to_pblock [get_pblocks hls_action_0_pblock_1] [get_cells [list oc_func/fw_afu/action_core_i]]
+   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X0Y2:CLOCKREGION_X5Y4
+}
+
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opt design ..." $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 opt_design -directive Explore
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "place design" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
@@ -95,16 +124,20 @@ phys_opt_design -directive Explore
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "route design " $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
 route_design -directive Explore
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Writing $dcp_dir/oc_${action_name}_routed.dcp" $widthCol4 "" ]
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening oc_fpga_top_synth.dcp" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-write_checkpoint -force $dcp_dir/oc_${action_name}_routed.dcp
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Writing $dcp_dir/${oc_action_name_routed_dcp}" $widthCol4 "" ]
+write_checkpoint -force $dcp_dir/${oc_action_name_routed_dcp}
+
 
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Removing reference action from complete routed chip" $widthCol4 "" ]
-update_design -cell [get_cells oc_func/fw_afu/action_core_i] -black_box
+if { $fpgacard == "AD9H7" } {
+   update_design -cell [get_cells oc_func0/fw_afu/action_core_i] -black_box
+} else {
+   update_design -cell [get_cells oc_func/fw_afu/action_core_i] -black_box
+}
 lock_design -level routing
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Writing $dcp_dir/oc_routed_static.dcp" $widthCol4 "" ]
-write_checkpoint -force $dcp_dir/oc_routed_static.dcp >> $logfile
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Writing $dcp_dir/${oc_fpga_static_routed_dcp}" $widthCol4 "" ]
+write_checkpoint -force $dcp_dir/$oc_fpga_static_routed_dcp
 
 close_project  >> $logfile
 

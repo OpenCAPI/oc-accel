@@ -120,15 +120,15 @@ if { $factory_image == "TRUE" } {
  }
 
 if { $fpgacard == "BW250SOC" } {
-set elfpath $root_dir/oc-bip/board_support_packages/bw250soc/ip/250_soc_fsbl.elf
-set bitpath $img_dir/$IMAGE_NAME.bit
-#exec cat $root_dir/oc-bip/board_support_packages/bw250soc/ip/output.bif | sed 's/250_soc_fsbl/$elfpath/g' | sed 's/oc_fpga_top/$bitpath/g' > $img_dir/output.bif
-exec echo "//arch = zynqmp; split = false; format = BIN" > $img_dir/output.bif
-exec echo "the_ROM_image:" >> $img_dir/output.bif
-exec echo "{" >> $img_dir/output.bif
-exec echo "	\[fsbl_config\]a53_x64" >> $img_dir/output.bif
-exec echo "	\[bootloader\]$elfpath" >> $img_dir/output.bif
-exec echo "	\[destination_device = pl\]$bitpath" >> $img_dir/output.bif
-exec echo "}" >> $img_dir/output.bif
-exec bootgen -arch zynqmp -image $img_dir/output.bif -o $img_dir/${IMAGE_NAME}.bin
+  set elfpath $root_dir/oc-bip/board_support_packages/bw250soc/ip/250_soc_fsbl.elf
+  set bitpath $img_dir/$IMAGE_NAME.bit
+  #exec cat $root_dir/oc-bip/board_support_packages/bw250soc/ip/output.bif | sed 's/250_soc_fsbl/$elfpath/g' | sed 's/oc_fpga_top/$bitpath/g' > $img_dir/output.bif
+  exec echo "//arch = zynqmp; split = false; format = BIN" > $img_dir/output.bif
+  exec echo "the_ROM_image:" >> $img_dir/output.bif
+  exec echo "{" >> $img_dir/output.bif
+  exec echo "	\[fsbl_config\]a53_x64" >> $img_dir/output.bif
+  exec echo "	\[bootloader\]$elfpath" >> $img_dir/output.bif
+  exec echo "	\[destination_device = pl\]$bitpath" >> $img_dir/output.bif
+  exec echo "}" >> $img_dir/output.bif
+  exec bootgen -arch zynqmp -image $img_dir/output.bif -o $img_dir/${IMAGE_NAME}.bin
 }

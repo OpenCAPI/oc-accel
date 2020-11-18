@@ -22,6 +22,7 @@ set root_dir          $::env(SNAP_HARDWARE_ROOT)
 set logs_dir          $::env(LOGS_DIR)
 set logfile           $logs_dir/snap_cloud_build.log
 set fpgacard          $::env(FPGACARD)
+set fpga_part         $::env(FPGACHIP)
 set action_root       $::env(ACTION_ROOT)
 set action_name       $::env(ACTION_NAME) 
 set sdram_used        $::env(SDRAM_USED)
@@ -38,6 +39,9 @@ if { [info exists ::env(DCP_ROOT)] == 1 } {
     exit 42
 }
 set ::env(DCP_DIR) $dcp_dir
+
+#Checkpoint file => output file
+set oc_action_synth_dcp "oc_${fpgacard}_${action_name}_synth.dcp"
 
 #Report directory
 set rpt_dir        $root_dir/build/Reports
@@ -72,11 +76,10 @@ set ::env(WIDTHCOL4) $widthCol4
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open framework pjt and prep ${action_name} synth" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 open_project $root_dir/viv_project/framework.xpr >> $logfile
 
-synth_design -directive Default -fanout_limit 400 -fsm_extraction one_hot -resource_sharing off -shreg_min_size 5 -flatten_hierarchy rebuilt -keep_equivalent_registers -no_lc -top oc_action_core -part xcvu3p-ffvc1517-2-e -mode out_of_context
+synth_design -directive Default -fanout_limit 400 -fsm_extraction one_hot -resource_sharing off -shreg_min_size 5 -flatten_hierarchy rebuilt -keep_equivalent_registers -no_lc -top oc_action_core -part $fpga_part -mode out_of_context
 
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Writing $dcp_dir/oc_${action_name}_synth.dcp" $widthCol4 "" ]
-write_checkpoint -force $dcp_dir/oc_${action_name}_synth.dcp >> $logfile
-
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Writing $dcp_dir/$oc_action_synth_dcp" $widthCol4 "" ]
+write_checkpoint -force $dcp_dir/$oc_action_synth_dcp >> $logfile
 close_project  >> $logfile
 
