@@ -392,13 +392,16 @@ $(SNAP_BASE_DCP):
 
 pr_synth_static: .hw_project_done
 	@echo -e "[ACTION in BLACKBOX..] start `date +"%T %a %b %d %Y"`"
-	#remove any black_box word if the previous run failed before being able to remove it
+	# remove any "(* black_box *) module oc_action_core" sequence if 
+	# the previous run failed before being able to remove it
 	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
+	# add "(* black_box *)"
 	@sed -i "s/module oc_action_core/(\* black_box \*) module oc_action_core/g" hdl/core/oc_action_core.v
 	@echo -e "[PR SYNTH STATIC ....] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_static.log
 	@echo -e "[PR SYNTH STATIC ....] done  `date +"%T %a %b %d %Y"`"
 	@echo -e "[ACTION not BLACKBOX.] start `date +"%T %a %b %d %Y"`"
+	# remove "(* black_box *)"
 	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
 	@echo "  Suggested next step: To synthesize the action: make pr_synth_action"
 
