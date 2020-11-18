@@ -39,8 +39,10 @@ if { [info exists ::env(DCP_ROOT)] == 1 } {
 }
 set ::env(DCP_DIR) $dcp_dir
 
-#Checkpoint file
+#Checkpoint file => input file
 set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
+#Image file => output file
+set oc_action_name_image "oc_pr_${fpgacard}_${action_name}"
 
 #Report directory
 set rpt_dir        $root_dir/build/Reports
@@ -77,19 +79,20 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "DCP directory is $dcp
 ## open oc-accel project
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "opening $dcp_dir/$oc_action_name_routed_dcp" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 open_checkpoint  $dcp_dir/$oc_action_name_routed_dcp  >> $logfile
-write_bitstream -force -bin_file $img_dir/${action_name}
-# write_bitstream -force $img_dir/{action_name}
+# generates from the dcp file the bin + bit + partial.bon + partial.bit
+write_bitstream -force -bin_file $img_dir/$oc_action_name_image
+
+# generates from the bit file the primary.bin and secondary.bin
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 8 [current_design]
-set_property CONFIG_MODE SPIx8 [current_design
-]
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Generating  $img_dir/oc_${action_name}.bin" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-write_cfgmem -force -format BIN -interface SPIx8 -size 256 -loadbit "up 0 $img_dir/${action_name}.bit" $img_dir/${action_name}
+set_property CONFIG_MODE SPIx8 [current_design]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Generating  $img_dir/${oc_action_name_image}.bin" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+write_cfgmem -force -format BIN -interface SPIx8 -size 256 -loadbit "up 0 $img_dir/${oc_action_name_image}.bit" $img_dir/${oc_action_name_image}
 
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Closing project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
 #exec rm -rf $img_dir/.bit
-exec rm -rf $img_dir/\*_partial.bin
-exec rm -rf $img_dir/${action_name}.bin
-
+exec rm -rf $img_dir/${oc_action_name_image}.bin
+exec mv $img_dir/${oc_action_name_image}_hls_action_0_pblock_1_partial.bit $img_dir/${oc_action_name_image}_partial.bit
+exec rm -rf $img_dir/${oc_action_name_image}_hls_action_0_pblock_1_partial.bin
 close_project  >> $logfile
 

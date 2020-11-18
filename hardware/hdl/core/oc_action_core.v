@@ -15,7 +15,6 @@
  */
 `include "snap_global_vars.v"
 
-//(* black_box *) module oc_action_core (
  module oc_action_core (
    input                                 clock_afu       ,
    input                                 reset_action_d  ,

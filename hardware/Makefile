@@ -92,7 +92,7 @@ SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
 
 ifeq ($(PLATFORM),x86_64)
 
-.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_enable cloud_base cloud_action cloud_merge ocse software app model xsim irun nosim sim clean pr_synth_static pr_synth_action pr_route_static pr_merge pr_image
+.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_enable cloud_base cloud_action cloud_merge ocse software app model xsim irun nosim sim clean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image
 
 all: model image
 
@@ -414,7 +414,8 @@ pr_synth_action: .hw_project_done
 	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
 	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_action.log
 	@echo -e "[PR SYNTH ACTION ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To route the top design : make pr_route_static"
+	@echo "  Suggested next step: To route the   top  design : make pr_route_static"
+	@echo "  Suggested next step: To route the action design : make pr_route_action"
 
 # pr_route_static prepares a complete refence routing of the FPGA, including both sttic and dynamic parts with 
 # a hls_helloworld_1024 reference action. From this complete routed design we substract the reference dynamic part
@@ -426,6 +427,15 @@ pr_route_static: snap_preprocess_start
 	@echo -e "[PR ROUTING STATIC ....] done  `date +"%T %a %b %d %Y"`"
 	@echo "  Suggested next step: To build the bin files : make pr_image"
 
+# pr_route_action prepares a routing of the action. 
+# You need to have run almost once the pr_route_static to have the right dcp file.
+
+pr_route_action: snap_preprocess_start
+	@echo -e "[PR ROUTING ACTION ..] start `date +"%T %a %b %d %Y"`"
+	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_action.log
+	@echo -e "[PR ROUTING ACTION ....] done  `date +"%T %a %b %d %Y"`"
+	@echo "  Suggested next step: To build the bin files : make pr_image"
+
 
 #pr_merge will assembly static base and user dynamic part
 pr_merge:
@@ -433,9 +443,9 @@ pr_merge:
 # hopefully pr_image will build the complete image with static base and dynamic user part
 
 pr_image: snap_preprocess_start
-	@echo -e "[Merging  ...........] start `date +"%T %a %b %d %Y"`"
+	@echo -e "[Building image files] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_image.tcl -notrace -log $(LOGS_DIR)/oc_pr_image.log -journal $(LO    GS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_image.log
-	@echo -e "[Merging ............] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "[Building image files] done  `date +"%T %a %b %d %Y"`"
 
 
 # End of partial reconfiguration recipes

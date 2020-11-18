@@ -34,7 +34,7 @@ snap_env_sh = snap_env.sh
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean pr_synth_static pr_synth_action pr_route_static pr_merge pr_image
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image
 
 
 help:
@@ -55,6 +55,7 @@ help:
 	@echo "* pr_synth_static synthesize the top/static";
 	@echo "* pr_synth_action synthesize the action/dynamic";
 	@echo "* pr_route_static route the top/static";
+	@echo "* pr_route_action route the action/dynamic";
 	@echo "* pr_image        build the bin files";
 	@echo;
 	@echo "The hardware related targets 'model', 'image', 'hardware', 'hw_project' and 'sim'";
@@ -114,7 +115,7 @@ $(hardware_subdirs): $(snap_env_sh)
 hardware: $(hardware_subdirs)
 
 # Model build and config
-hw_project model sim image cloud_enable cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_merge pr_image sim_tmux: $(snap_env_sh)
+hw_project model sim image cloud_enable cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image sim_tmux: $(snap_env_sh)
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
@@ -135,7 +136,7 @@ else #noteq ($(PLATFORM),x86_64)
 wrong_platform:
 	@echo; echo "\nSNAP hardware builds and simulation are possible on x86 platform only\n"; echo;
 
-$(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_merge pr_image cloud_merge: wrong_platform
+$(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image cloud_merge: wrong_platform
 endif
 
 # SNAP Config
