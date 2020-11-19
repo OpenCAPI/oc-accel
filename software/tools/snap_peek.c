@@ -52,10 +52,12 @@ static void usage (const char* prog)
             "  <addr>\n"
             "Note: Use -w32 to access snap action starting at offset 0x10000\n"
             "Example:\n"
-            "  $ snap_peek 0x0000\n"
-            "  [00000000] 0008002f0bc0ed99\nor\n"
+            "Read OC global BDR register (Build date register):\n"
             "  $ snap_peek 0x0008\n"
-            "  [00000000] 0000201703222151\n\n",
+            "  [00000008]  0000202011181128\n\n",
+            "Read OC action ATR register (Action ID):\n"
+            "  $ snap_peek -w32 0x0010\n"
+            "  [00000010] 10143009\n\n",
             prog);
 }
 
