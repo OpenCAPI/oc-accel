@@ -131,7 +131,6 @@ check_snap_settings:
 	@echo "                        =============================="
 	@echo "                        hardware/Makefile called with:"
 	@echo "                        ACTION_ROOT     = $(ACTION_ROOT)"
-	@echo "                        ACTION_NAME     = $(ACTION_NAME)"
 	@echo "                        FPGACARD        = $(FPGACARD)"
 	@echo "                        FPGACHIP        = $(FPGACHIP)"
 	@echo "                        PHY_SPEED       = $(PHY_SPEED)"
