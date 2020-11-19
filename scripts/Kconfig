@@ -325,6 +325,24 @@ choice
 #		select ACTION_HALF_WIDTH
 endchoice
 
+
+config ACTION_NAME
+	string
+	default "HDL_ACTION"             if HDL_ACTION
+	default "HDL_EXAMPLE"            if HDL_EXAMPLE
+	default "HDL_SINGLE_ENGINE"      if HDL_SINGLE_ENGINE
+	default "HLS_ACTION"             if HLS_ACTION
+	default "HLS_HELLOWORLD_512"     if HLS_HELLOWORLD_512
+	default "HLS_HELLOWORLD_1024"    if HLS_HELLOWORLD_1024
+	default "HLS_HELLOWORLD_PYTHON"  if HLS_HELLOWORLD_PYTHON
+	default "HLS_IMAGE_FILTER"       if HLS_IMAGE_FILTER
+	default "HLS_DECIMAL_MULT"       if HLS_DECIMAL_MULT
+	default "HLS_MEMCOPY_512"        if HLS_MEMCOPY_512
+	default "HLS_MEMCOPY_1024"       if HLS_MEMCOPY_1024
+	default "HLS_HBM_MEMCOPY_1024"   if HLS_HBM_MEMCOPY_1024
+	default "HLS_UDP"                if HLS_UDP
+	default "HLS_RX100G"             if HLS_RX100G
+
 # ACTION_HALF_WIDTH can be set to limit the width of the host data bus to 512b
 config ACTION_HALF_WIDTH
 	bool
