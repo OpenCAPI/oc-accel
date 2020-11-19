@@ -139,9 +139,7 @@ static int call_FPGA_Action( BMPImage *Image, int card_no )
 	if (card == NULL) {
 		fprintf(stderr, "err: failed to open card %u: %s\n",
 			card_no, strerror(errno));
-                fprintf(stderr, "Default mode is FPGA mode.\n");
-                fprintf(stderr, "Did you want to run CPU mode ? => add SNAP_CONFIG=CPU before your command.\n");
-                fprintf(stderr, "Otherwise make sure you ran snap_find_card and snap_maint for your selected card.\n");
+                fprintf(stderr, "\n==> Did you consider running this command using sudo? <==\n");
         snap_card_free(card);
         __free(actionBuff);
     	exit(0);

@@ -208,8 +208,10 @@ choice
                   It does the minimum exchanges between host mem and the FPGA
                   and is aimed at being called by a python script
                 select ENABLE_HLS_SUPPORT
-                select DISABLE_SDRAM_OR_BRAM
-                select DISABLE_NVME
+                select DISABLE_SDRAM_AND_BRAM
+        	select DISABLE_NVME
+        	select DISABLE_HBM
+		select DISABLE_ETHERNET
 
 	config HLS_MEMCOPY_512
 		bool "HLS Memcopy 512b       (Action to Host I/F = 512b)"
@@ -467,7 +469,7 @@ config NVME_USED
 config ENABLE_ETHERNET
         bool "Enable Ethernet support"
         default N
-	depends on ((AD9V3 || AD9H3 || AD9H335 || AD9H7) && ! (DISABLE_ETHERNET))
+	depends on ((AD9V3 || AD9H3 || AD9H335 ) && ! (DISABLE_ETHERNET))
         help
           This option controls the instantiation of an Ethernet IP
           together with the AXI interfaces for MMIO control and action access.
