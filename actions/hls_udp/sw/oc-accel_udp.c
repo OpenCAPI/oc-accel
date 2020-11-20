@@ -100,7 +100,8 @@ int main(int argc, char *argv[])
 	int exit_code = EXIT_SUCCESS;
 
 	// default is interrupt mode enabled (vs polling)
-	snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
+	//snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
+	snap_action_flag_t action_irq = SNAP_ACTION_DONE_IRQ;
 
 	/* Allocate in host memory the place to put the text processed */
 	obuff = snap_malloc(size); //64Bytes aligned malloc
@@ -166,6 +167,8 @@ int main(int argc, char *argv[])
 
 	// Attach the action that will be used on the allocated card
 	action = snap_attach_action(card, ACTION_TYPE, action_irq, 60);
+	if(action_irq)
+		snap_action_assign_irq(action, ACTION_IRQ_SRC_LO);
 	if (action == NULL) {
 		fprintf(stderr, "err: failed to attach action %u: %s\n",
 			card_no, strerror(errno));

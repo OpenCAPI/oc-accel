@@ -294,7 +294,7 @@ choice
 		select ENABLE_HLS_SUPPORT
 		select ENABLE_ETHERNET
 		select ENABLE_SIMU_WO_ETH
-		select FORCE_SDRAM_OR_BRAM
+                select DISABLE_SDRAM_AND_BRAM
 		select DISABLE_HBM
 		select ACTION_HALF_WIDTH
 	
