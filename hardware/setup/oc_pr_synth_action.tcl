@@ -24,7 +24,7 @@ set logfile           $logs_dir/snap_cloud_build.log
 set fpgacard          $::env(FPGACARD)
 set fpga_part         $::env(FPGACHIP)
 set action_root       $::env(ACTION_ROOT)
-set action_name       $::env(ACTION_NAME) 
+set action_name       [string tolower $::env(ACTION_NAME)]
 set sdram_used        $::env(SDRAM_USED)
 set nvme_used         $::env(NVME_USED)
 set bram_used         $::env(BRAM_USED)

@@ -22,7 +22,7 @@ set root_dir          $::env(SNAP_HARDWARE_ROOT)
 set logs_dir          $::env(LOGS_DIR)
 set logfile           $logs_dir/snap_cloud_build.log
 set action_root       $::env(ACTION_ROOT)
-set action_name       [exec basename $action_root]
+set action_name       [string tolower $::env(ACTION_NAME)]
 set fpgacard          $::env(FPGACARD)
 set sdram_used        $::env(SDRAM_USED)
 set nvme_used         $::env(NVME_USED)
@@ -90,9 +90,9 @@ write_cfgmem -force -format BIN -interface SPIx8 -size 256 -loadbit "up 0 $img_d
 
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Closing project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-#exec rm -rf $img_dir/.bit
 exec rm -rf $img_dir/${oc_action_name_image}.bin
 exec mv $img_dir/${oc_action_name_image}_hls_action_0_pblock_1_partial.bit $img_dir/${oc_action_name_image}_partial.bit
 exec rm -rf $img_dir/${oc_action_name_image}_hls_action_0_pblock_1_partial.bin
+
 close_project  >> $logfile
 
