@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include "osnap_hls_if.h"
 
-#include "../tests/action_test.h"
+//#include "../tests/action_test.h"
 
 void process_frames(AXI_STREAM &din_eth, eth_settings_t eth_settings, eth_stat_t &eth_stat, snap_membus_512_t *dout_gmem, size_t out_frame_buffer_addr) {
 	#pragma HLS DATAFLOW
@@ -35,7 +35,7 @@ void process_frames(AXI_STREAM &din_eth, eth_settings_t eth_settings, eth_stat_t
 void make_packet(AXI_STREAM &stream, uint64_t frame_number, uint32_t eth_packet, uint16_t *data) {
 
 	static char buff[130*64];
-	RAW_JFUDP_Packet *packet = (RAW_JFUDP_Packet *)buff;
+//	RAW_JFUDP_Packet *packet = (RAW_JFUDP_Packet *)buff;
 
 	packet->dest_mac[0] = 0xAA;
 	packet->dest_mac[1] = 0xBB;
