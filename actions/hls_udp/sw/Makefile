@@ -52,11 +52,9 @@ endif
 
 #oc-accel_udp_objs = sw_action_udp.o
 oc-accel_udp: ${oc-accel_udp_objs}
-oc-accel_udp_libs = -lm
 
-projs += snap_memcopy
+projs += snap_udp
 
- 
 
 # If you have the host code outside of the default snap directory structure, 
 # change to /path/to/snap/actions/software.mk

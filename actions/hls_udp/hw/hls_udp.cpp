@@ -22,7 +22,7 @@
 
 #include "../tests/action_test.h"
 
-void process_frames(AXI_STREAM &din_eth, eth_settings_t eth_settings, eth_stat_t &eth_stat, snap_membus_512_t *dout_gmem, size_t out_frame_buffer_addr) {
+void process_frames(AXI_STREAM &din_eth, eth_settings_t eth_settings, eth_stat_t &eth_stat, snap_membus_512_t *dout_gmem, uint64_t out_frame_buffer_addr) {
 	#pragma HLS DATAFLOW
 	DATA_STREAM raw;
 	#pragma HLS STREAM variable=raw depth=2048
@@ -89,7 +89,8 @@ static int process_action(snap_membus_512_t *din_gmem,
 	// set code in the first 512 bytes for test check
 	data[20] = 0x31; data[21] = 0x39; data[22] = 0x36; data[23]= 0x36;
 
-	size_t out_frame_buffer_addr = act_reg->Data.out_frame_buffer.addr >> ADDR_RIGHT_SHIFT_1024;
+	uint64_t  out_frame_buffer_addr;
+	out_frame_buffer_addr = act_reg->Data.out_frame_buffer.addr >> ADDR_RIGHT_SHIFT_512;
 
 	uint64_t bytes_written = 0;
 

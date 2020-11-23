@@ -21,7 +21,7 @@
 #include "osnap_hls_if.h"
 #include <iostream>
 
-void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_buffer_addr) {
+void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, uint64_t out_frame_buffer_addr) {
 	data_packet_t packet_in;
 	in.read(packet_in);
 
@@ -40,7 +40,7 @@ void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, size_t out_frame_
 							packet_in.module * (MODULE_COLS * MODULE_LINES/32) +
 							packet_in.eth_packet * (4096/32);*/
 
-			size_t out_frame_addr = out_frame_buffer_addr;
+			uint64_t out_frame_addr = out_frame_buffer_addr;
 			bool frame_ok = true;
 
 			ap_uint<512> buffer[128];

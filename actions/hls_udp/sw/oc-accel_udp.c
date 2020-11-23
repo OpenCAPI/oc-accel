@@ -114,10 +114,11 @@ int main(int argc, char *argv[])
 		int option_index = 0;
 		static struct option long_options[] = {
 			{ "card",	 required_argument, NULL, 'C' },
+			{ "no-irq",	 no_argument,	    NULL, 'N' },
 			{ "help",	 no_argument, NULL, 'h' },
 		};
 
-		ch = getopt_long(argc, argv, "C:h", long_options, &option_index);
+		ch = getopt_long(argc, argv, "C:Nh", long_options, &option_index);
 		if (ch == -1)
 			break;
 		switch (ch) {
@@ -127,6 +128,9 @@ int main(int argc, char *argv[])
 			case 'h':
 				usage(argv[0]);
 				exit(EXIT_SUCCESS);
+				break;
+			case 'N':
+				action_irq = 0;
 				break;
 			default:
 				usage(argv[0]);
@@ -140,13 +144,13 @@ int main(int argc, char *argv[])
 
 
 	printf("HLS_UDP program\n");
-	printf("     this program is an example of use of udp in snap\n\n");
+	printf("     this program is an example of use of udp in oc-accel\n\n");
 
 	/* Display the parameters that will be used for the example */
 	printf("PARAMETERS:\n"
 	       "  type_out:    %x %s\n"
 	       "  addr_out:    %016llx\n"
-	       "  size_in/out: %08lx\n",
+	       "  size_out:    %08lx\n",
 	       type_out, mem_tab[type_out], (long long)addr_out,
 	       size);
 
