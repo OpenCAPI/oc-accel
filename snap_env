@@ -151,7 +151,7 @@ while [ -z "$SETUP_DONE" ]; do
   elif [ -n "$HLS_RX100G" ]; then
     AR='${SNAP_ROOT}/actions/hls_rx100G'
   elif [ -n "$HLS_UDP" ]; then
-    AR='${SNAP_ROOT}/actions/hls_udp'
+    AR='${SNAP_ROOT}/actions/hls_udp_512'
   elif [ -n "$HLS_HELLOWORLD_512" ]; then
     AR='${SNAP_ROOT}/actions/hls_helloworld_512'
   elif [ -n "$HLS_HELLOWORLD_1024" ]; then
