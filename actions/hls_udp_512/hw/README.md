@@ -9,8 +9,3 @@
 ## Input and output
 * Action register
 * Memory regions
-
-## Internal memory
-* HBM2
-* UltraRAM buffer
-

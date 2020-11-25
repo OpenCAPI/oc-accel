@@ -6578,7 +6578,7 @@ eth_100G eth_100G_0
       .m_axis_rx_tlast             ( eth1_rx_tlast                 ),
       .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
       .m_axis_rx_tuser             ( eth1_rx_tuser                 ),
-      .m_axis_rx_tready            ( eth1_rx_tuser                 ),
+      .m_axis_rx_tready            ( eth1_rx_tready                ),
       .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
       .s_axis_tx_tkeep             ( eth1_tx_tkeep                 ),
       .s_axis_tx_tlast             ( eth1_tx_tlast                 ),
