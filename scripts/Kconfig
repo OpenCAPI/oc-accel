@@ -27,6 +27,13 @@ choice
 		help
 		  AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU33P.
 
+	config AD9H335
+		bool "OpenCAPI3.0: AlphaData 9H3 (VU35P with HBM) (under development)"
+		select OPENCAPI30
+		select DISABLE_NVME
+		help
+		  AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU35P.
+
 	config AD9H7
 		bool "OpenCAPI3.0: AlphaData 9H7 (VU37P with HBM)"
 		select OPENCAPI30
@@ -50,17 +57,18 @@ config FPGACARD
 	default "AD9V3"  if AD9V3
 	default "BW250SOC"  if BW250SOC
 	default "AD9H3"  if AD9H3
+	default "AD9H335"  if AD9H335
 	default "AD9H7"  if AD9H7
 
 config FLASH_INTERFACE
 	string
-	default "SPIx8"  if  AD9V3 || AD9H3 || AD9H7 || BW250SOC
+	default "SPIx8"  if  AD9V3 || AD9H3 || AD9H335 || AD9H7 || BW250SOC
 
 #FLASH_SIZE: in MB
 config FLASH_SIZE
 	string
-	default 128 if AD9H7
-	default 64 if AD9V3 || AD9H3 || BW250SOC
+	default 128 if AD9H7 || AD9H335
+	default 64  if AD9V3 || AD9H3 || BW250SOC
 
 #FLASH_FACTORYADDR: For all cards, factory address is 0x0
 config FLASH_FACTORYADDR
@@ -70,7 +78,7 @@ config FLASH_FACTORYADDR
 #FLASH_USERADDR: For SPI, it is byte address.
 config FLASH_USERADDR
 	string
-	default 0x08000000 if AD9V3 || AD9H3 || AD9H7 || BW250SOC
+	default 0x08000000 if AD9V3 || AD9H3 || AD9H335 || AD9H7 || BW250SOC
 
 config OPENCAPI30
 	bool
@@ -85,6 +93,7 @@ config FPGACHIP
 	default "xcvu3p-ffvc1517-2-e" if AD9V3
 	default "xczu19eg-ffvd1760-2-i" if BW250SOC
 	default "xcvu33p-fsvh2104-2-e" if AD9H3
+	default "xcvu35p-fsvh2104-2-e" if AD9H335
 	default "xcvu37p-fsvh2892-2-e" if AD9H7
 
 config NUM_OF_ACTIONS
@@ -199,12 +208,14 @@ choice
                   It does the minimum exchanges between host mem and the FPGA
                   and is aimed at being called by a python script
                 select ENABLE_HLS_SUPPORT
-                select DISABLE_SDRAM_OR_BRAM
-                select DISABLE_NVME
+                select DISABLE_SDRAM_AND_BRAM
+        	select DISABLE_NVME
+        	select DISABLE_HBM
+		select DISABLE_ETHERNET
 
 	config HLS_MEMCOPY_512
 		bool "HLS Memcopy 512b       (Action to Host I/F = 512b)"
-                depends on ! (AD9H3 || AD9H7)
+                depends on ! (AD9H3 || AD9H335 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
 		  - Read data from the server memory or from the card DDR
@@ -220,7 +231,7 @@ choice
 
 	config HLS_MEMCOPY_1024
 		bool "HLS Memcopy 1024b      (Action to Host I/F =1024b)"
-                depends on ! (AD9H3 || AD9H7)
+                depends on ! (AD9H3 || AD9H335 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
 		  - Read data from the server memory or from the card DDR
@@ -235,7 +246,7 @@ choice
 
 	config HLS_HBM_MEMCOPY_1024
 		bool "HLS HBM Memcopy 1024b  (Action to Host I/F =1024b)"
-                depends on (AD9H3 || AD9H7)
+                depends on (AD9H3 || AD9H335 || AD9H7)
 		help
 		  This is a basic example to start accessing data:
 		  - Read data from the server memory or from the FPGA HBM 
@@ -275,9 +286,21 @@ choice
 		select ACTION_HALF_WIDTH
 		select DISABLE_ETHERNET
 
+	config HLS_UDP
+		bool "HLS UDP 100G CMAC      (Action to Host I/F = 512b)"
+                depends on (AD9H3 || AD9H335 || AD9H7)
+		help
+		   This example is written in C and compiled with HLS
+		select ENABLE_HLS_SUPPORT
+		select ENABLE_ETHERNET
+		select ENABLE_SIMU_WO_ETH
+                select DISABLE_SDRAM_AND_BRAM
+		select DISABLE_HBM
+		select ACTION_HALF_WIDTH
+	
 	config HLS_RX100G
-		bool "HLS 100G receiver      (Action to Host I/F = 512b)"
-                depends on AD9H3
+		bool "HLS 100G RECEIVER      (Action to Host I/F = 512b)"
+                depends on (AD9H3 || AD9H335 || AD9H7)
 		help
 		   This example is written in C and compiled with HLS
 		select ENABLE_HLS_SUPPORT
@@ -301,6 +324,7 @@ choice
 #		select DISABLE_NVME
 #		select ACTION_HALF_WIDTH
 endchoice
+
 
 # ACTION_HALF_WIDTH can be set to limit the width of the host data bus to 512b
 config ACTION_HALF_WIDTH
@@ -362,15 +386,15 @@ config DISABLE_HBM
 config FORCE_HBM
 	bool
 	default y
-	#ddepends on ((AD9H3 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
+	#ddepends on ((AD9H3 || AD9H335 || AD9H7) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
+	depends on (AD9H3 || AD9H335 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
 	select ENABLE_HBM
 
 config ENABLE_HBM
 	bool
 	prompt "Enable HBM"
-	#ddepends on ((AD9H3 || AD9H7)  && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	depends on (AD9H3 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
+	#ddepends on ((AD9H3 || AD9H335 || AD9H7)  && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
+	depends on (AD9H3 || AD9H335 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
 	help
 	  This option enables the on-card HBM.
 
@@ -446,7 +470,7 @@ config NVME_USED
 config ENABLE_ETHERNET
         bool "Enable Ethernet support"
         default N
-	depends on ((AD9V3 || AD9H3 || AD9H7) && ! (DISABLE_ETHERNET))
+	depends on ((AD9V3 || AD9H3 || AD9H335 ) && ! (DISABLE_ETHERNET))
         help
           This option controls the instantiation of an Ethernet IP
           together with the AXI interfaces for MMIO control and action access.
@@ -459,7 +483,7 @@ config ENABLE_ETH_LOOP_BACK
          bool ">> Ethernet loopback in the action wrapper (no 100G MAC IP)"
          default "TRUE"  if  ENABLE_SIMU_WO_ETH
          default "FALSE" if !ENABLE_SIMU_WO_ETH
-         depends on (AD9H3 && ENABLE_ETHERNET)
+         depends on ((AD9H3 || AD9H335) && ENABLE_ETHERNET)
          help
            This option prevent the instantiation of an Ethernet IP
            Instead it shortens the action ethernet AXI out interface to ethernet input interface.
@@ -499,8 +523,8 @@ choice
 	bool "Simulator"
 	default SIM_XSIM
 	help
-	  Supported simulators are Xilinx' xsim and Cadence's irun.
-	  If NVMe support is enabled it is only possible to use irun
+	  Supported simulators are Xilinx' xsim, Cadence's ies and xcelium.
+	  If NVMe support is enabled it is only possible to use ies
 	  or to set the simulator to "nosim" to disable model build
 	  and simulation.
 
@@ -510,9 +534,9 @@ choice
 		  Default Xilinx simulator
 
 	config SIM_IRUN
-		bool "irun"
+		bool "ies/irun"
 		help
-		  Cadence irun simulator (requires a specific license)
+		  Cadence ies simulator (requires a specific license)
 		  depends on ! ENABLE_PRFLOW
 
 	config SIM_XCELIUM

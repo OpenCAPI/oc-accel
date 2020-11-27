@@ -20,7 +20,7 @@
 #   xcku115-flva1517-2-e
 #FPGACHIP    ?= xcku060-ffva1156-2-e
 CONFIG_FILE = $(SNAP_ROOT)/.snap_config
-HLS_ACTION_CLOCK_DEFAULT = 4
+HLS_ACTION_CLOCK_DEFAULT = 5
 ifneq ("$(wildcard $(CONFIG_FILE))","")
   FPGACHIP = $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
   HLS_ACTION_CLOCK = $(shell grep HLS_CLOCK_PERIOD_CONSTRAINT $(CONFIG_FILE) | cut -d = -f 2 | tr -d 'ns"')
@@ -102,12 +102,16 @@ check: $(syn_dir)
 		if [ $$? -eq 0 ]; then \
 		  echo "------------------------------------------------------------------ "; \
                   echo "TIMING ERROR: Please correct your action code before going further"!; \
+                  echo "-- By experience, if HLS find a timing issue, further steps may fail."!; \
+                  echo "-- In most case, you may need to recode your action in a different way."!; \
+                  echo "-- You can modify in the menu the HLS clock period to over constraint HLS tool. "!; \
 		  echo "------------------------------------------------------------------ "; exit -1; \
           	fi; \
 	  	echo "OK";                                                                    \
 	else \
 		echo "   --------------------------------------------------------------------------- ";    \
-		echo "   By defining HLS_CLOCK_PERIOD_CONSTRAINT in snap_env.sh, automatic critical timing checking is disabled"; \
+		echo "   By defining a HLS clock different than the default 5ns, the automatic checking"; \
+		echo "   of the critical timings is disabled. You need to manually check them."; \
 		echo "   FYI action was compiled with following HLS clock:"; \
 		grep "Setting up clock" vivado_hls.log ; \
 		echo "   --------------------------------------------------------------------------- ";    \

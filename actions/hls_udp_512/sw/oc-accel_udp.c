@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 International Business Machines
+ * Copyright 2020 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,13 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-/**
- * SNAP HelloWorld Example
- *
- * Demonstration how to get data into the FPGA, process it using a SNAP
- * action and move the data out of the FPGA back to host-DRAM.
  */
 
 #include <fcntl.h>
@@ -35,138 +28,131 @@
 
 #include <osnap_tools.h>
 #include <libosnap.h>
-#include <action_changecase_python.h>
+#include <action_udp.H>
 #include <osnap_hls_if.h>
+#include <inttypes.h>
 
-int verbose_flag = 0;
+#define NPACKETS 1
+
+//int verbose_flag = 0;
+
+//static const char *version = GIT_VERSION;
 
 static const char *mem_tab[] = { "HOST_DRAM", "CARD_DRAM", "TYPE_NVME" };
 
-// Function that fills the MMIO registers / data structure
+// Function that fills the MMIO registers / data structure 
 // these are all data exchanged between the application and the action
-static void snap_prepare_helloworld(struct snap_job *cjob,
-				 struct helloworldp_job *mjob,
-				 void *addr_in,
-				 uint32_t size_in,
-				 uint8_t type_in,
+static void snap_prepare_rx100G(struct snap_job *cjob,
+				 struct rx100G_job *mjob,                               
 				 void *addr_out,
 				 uint32_t size_out,
 				 uint8_t type_out)
 {
-	fprintf(stderr, "  prepare helloworldp job of %ld bytes size\n", sizeof(*mjob));
+	fprintf(stderr, "  prepare rx100G job of %ld bytes size\n", sizeof(*mjob));
 
 	assert(sizeof(*mjob) <= SNAP_JOBSIZE);
 	memset(mjob, 0, sizeof(*mjob));
 
-	// Setting input params : where text is located in host memory
-	snap_addr_set(&mjob->in, addr_in, size_in, type_in,
-		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_SRC);
 	// Setting output params : where result will be written in host memory
-	snap_addr_set(&mjob->out, addr_out, size_out, type_out,
+	snap_addr_set(&mjob->out_frame_buffer, addr_out, size_out, type_out,
 		      SNAP_ADDRFLAG_ADDR | SNAP_ADDRFLAG_DST |
 		      SNAP_ADDRFLAG_END);
 
+	mjob->packets_to_read = NPACKETS;
+	mjob->fpga_mac_addr = 0xAABBCCDDEEF1;
+	mjob->fpga_ipv4_addr = 0x0A013205;
 	snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-/* main program of the application for the hls_helloworld example        */
+/**
+ * @brief	prints valid command line options
+ *
+ * @param prog	current program's name
+ */
+static void usage(const char *prog)
+{
+	printf("Usage: %s -C, --card <cardno>       can be (0...3)\n", prog);
+}
+
+/* main program of the application for the hls_udp example        */
 /* This application will always be run on CPU and will call either       */
 /* a software action (CPU executed) or a hardware action (FPGA executed) */
-#ifdef PY_WRAP
-int uppercase(char *input_str, char *output_str)
-{
-#else
+/* ==> This code was extracted from hls_rx100G action written by PSI with their kind authorization <== */
 int main(int argc, char *argv[])
 {
-	char *input_str  = argv[1];
-	char *output_str = argv[2];
-	assert(argc == 3);
-#endif
-	// Init of all the default values used
-	int rc = 0;
+	// Init of all the default values used 
+	int ch, rc = 0;
 	int card_no = 0;
 	struct snap_card *card = NULL;
 	struct snap_action *action = NULL;
 	char device[128];
 	struct snap_job cjob;
-	struct helloworldp_job mjob;
+	struct rx100G_job mjob;
 	unsigned long timeout = 600;
 	struct timeval etime, stime;
-	ssize_t size = 1024 * 1024;
-	uint8_t *ibuff = NULL, *obuff = NULL;
-	uint8_t type_in = SNAP_ADDRTYPE_HOST_DRAM;
-	uint64_t addr_in = 0x0ull;
+	//ssize_t size = NPACKETS * 400 * 64;
+	ssize_t size = NPACKETS * 130 * 64;
+	uint8_t *obuff = NULL;
 	uint8_t type_out = SNAP_ADDRTYPE_HOST_DRAM;
+
 	uint64_t addr_out = 0x0ull;
-	int verify = 0;
+
 	int exit_code = EXIT_SUCCESS;
-	uint8_t trailing_zeros[1024] = { 0, };
+
 	// default is interrupt mode enabled (vs polling)
 	//snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
 	snap_action_flag_t action_irq = SNAP_ACTION_DONE_IRQ;
 
-
-
-	/* if input string is defined, use that as input */
-	if (input_str != NULL) {
-
-		int input_str_len;
-		for (input_str_len = 0; input_str[input_str_len] != '\0'; ++input_str_len);
-
-		printf("Length of the input string: %d\n", input_str_len);
-
-		size = input_str_len * 2; //FIXME: its not that
-		if (size < 0)
-			goto out_error;
-
-		/* Allocate in host memory the place to put the text to process */
-		ibuff = snap_malloc(size); //64Bytes aligned malloc
-		if (ibuff == NULL)
-			goto out_error;
-		memset(ibuff, 0, size);
-
-		fprintf(stdout, "reading input data %d bytes from input string: %s\n",
-			(int)size, input_str);
-
-		// copy text from string to host memory FIXME: we don't need copy
-
-		memcpy (ibuff, input_str, size);
-
-		// prepare params to be written in MMIO registers for action
-		type_in = SNAP_ADDRTYPE_HOST_DRAM;
-		addr_in = (unsigned long)ibuff;
-		//addr_in = (unsigned long)input_str;
-	}
-
-	/* if output string is defined, use that as output */
-
-	size_t set_size = size + (verify ? sizeof(trailing_zeros) : 0);
-
 	/* Allocate in host memory the place to put the text processed */
-	obuff = snap_malloc(set_size); //64Bytes aligned malloc
-	if (obuff == NULL)
-		goto out_error;
-	memset(obuff, 0x0, set_size);
+	obuff = snap_malloc(size); //64Bytes aligned malloc
+	if (obuff == NULL) goto out_error;
+	memset(obuff, 0x0, size);
+
+	
+	// collecting the command line arguments
+	while (1) {
+		int option_index = 0;
+		static struct option long_options[] = {
+			{ "card",	 required_argument, NULL, 'C' },
+			{ "no-irq",	 no_argument,	    NULL, 'N' },
+			{ "help",	 no_argument, NULL, 'h' },
+		};
+
+		ch = getopt_long(argc, argv, "C:Nh", long_options, &option_index);
+		if (ch == -1)
+			break;
+		switch (ch) {
+			case 'C':
+				card_no = strtol(optarg, (char **)NULL, 0);
+				break;
+			case 'h':
+				usage(argv[0]);
+				exit(EXIT_SUCCESS);
+				break;
+			case 'N':
+				action_irq = 0;
+				break;
+			default:
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+		}
+	}
 
 	// prepare params to be written in MMIO registers for action
 	type_out = SNAP_ADDRTYPE_HOST_DRAM;
 	addr_out = (unsigned long)obuff;
 
 
+	printf("HLS_UDP program\n");
+	printf("     this program is an example of use of udp in oc-accel\n\n");
+
 	/* Display the parameters that will be used for the example */
 	printf("PARAMETERS:\n"
-	       "  input_str:   %s\n"
-	       "  output_str:  %s\n"
-	       "  type_in:     %x %s\n"
-	       "  addr_in:     %016llx\n"
 	       "  type_out:    %x %s\n"
 	       "  addr_out:    %016llx\n"
-	       "  size_in/out: %08lx\n",
-	       input_str  ? input_str  : "unknown", output_str ? output_str : "unknown",
-	       type_in,  mem_tab[type_in],  (long long)addr_in,
+	       "  size_out:    %08lx\n",
 	       type_out, mem_tab[type_out], (long long)addr_out,
 	       size);
-
 
 	// Allocate the card that will be used
         if(card_no == 0)
@@ -192,24 +178,30 @@ int main(int argc, char *argv[])
 			card_no, strerror(errno));
 		goto out_error1;
 	}
-
+ 
 	// Fill the stucture of data exchanged with the action
-	snap_prepare_helloworld(&cjob, &mjob,
-			     (void *)addr_in,  size, type_in,
+	snap_prepare_rx100G(&cjob, &mjob,
 			     (void *)addr_out, size, type_out);
+	printf("  mac :    %08llx\n"
+	       "  ip  :    %08llx\n",
+		   (long long)mjob.fpga_mac_addr, (long long)mjob.fpga_ipv4_addr);
+
+
 
 	// uncomment to dump the job structure
-	//__hexdump(stderr, &mjob, sizeof(mjob));
+	printf("\n Dump of the job structure\n");
+	__hexdump(stderr, &mjob, sizeof(mjob));
 
 
 	// Collect the timestamp BEFORE the call of the action
 	gettimeofday(&stime, NULL);
 
 	// Call the action will:
-	//    write all the registers to the action (MMIO)
-	//  + start the action
+	//    write all the registers to the action (MMIO) 
+	//  + start the action 
 	//  + wait for completion
-	//  + read all the registers from the action (MMIO)
+	//  + read all the registers from the action (MMIO) 
+	printf("\ncall snap_action\n");
 	rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
 	// Collect the timestamp AFTER the call of the action
@@ -219,16 +211,14 @@ int main(int argc, char *argv[])
 			strerror(errno));
 		goto out_error2;
 	}
+	printf("\nDump of the output buff ( onlythe first 512 bytes )\n");
+    	__hexdump(stdout, obuff, 512);
 
-	/* If the output buffer is in host DRAM we can write it to a file */
 
-	fprintf(stdout, "writing output data %p %d bytes to output_str\n",
-		obuff, (int)size);
 
-	memcpy (output_str, obuff, size);
-
-	fprintf(stdout, "output_str is %s\n", output_str);
-
+	printf(" Good packets %ld\n", mjob.good_packets);
+	printf(" Bad packets %ld\n", mjob.bad_packets);
+	printf(" Ignored Packets %ld\n", mjob.ignored_packets);
 
 	// test return code
 	(cjob.retc == SNAP_RETC_SUCCESS) ? fprintf(stdout, "SUCCESS\n") : fprintf(stdout, "FAILED\n");
@@ -237,28 +227,8 @@ int main(int argc, char *argv[])
 		goto out_error2;
 	}
 
-	// Compare the input and output if verify option -X is enabled
-	if (verify) {
-		if ((type_in  == SNAP_ADDRTYPE_HOST_DRAM) &&
-		    (type_out == SNAP_ADDRTYPE_HOST_DRAM)) {
-			rc = memcmp(ibuff, obuff, size);
-			if (rc != 0)
-				exit_code = EX_ERR_VERIFY;
-
-			rc = memcmp(obuff + size, trailing_zeros, 1024);
-			if (rc != 0) {
-				fprintf(stderr, "err: trailing zero "
-					"verification failed!\n");
-				__hexdump(stderr, obuff + size, 1024);
-				exit_code = EX_ERR_VERIFY;
-			}
-
-		} else
-			fprintf(stderr, "warn: Verification works currently "
-				"only with HOST_DRAM\n");
-	}
 	// Display the time of the action call (MMIO registers filled + execution)
-	fprintf(stdout, "SNAP helloworld_python took %lld usec\n",
+	fprintf(stdout, "HLS UDP took %lld usec\n",
 		(long long)timediff_usec(&etime, &stime));
 
 	// Detach action + disallocate the card
@@ -266,13 +236,7 @@ int main(int argc, char *argv[])
 	snap_card_free(card);
 
 	__free(obuff);
-	__free(ibuff);
-
-#ifdef PY_WRAP
-	return(exit_code);
-#else
 	exit(exit_code);
-#endif
 
  out_error2:
 	snap_detach_action(action);
@@ -280,6 +244,5 @@ int main(int argc, char *argv[])
 	snap_card_free(card);
  out_error:
 	__free(obuff);
-	__free(ibuff);
 	exit(EXIT_FAILURE);
 }

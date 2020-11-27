@@ -119,13 +119,21 @@ chmod +x $snap_config_sh
 cat $snap_config | tr -d '"' | sed 's/^\([^#].*\)/SNAP_CFLAGS += "-DCONFIG_\1"/' > $snap_config_cflags
 
 #add HBM interfaces management
-axi_if_num=`cat $config |grep -i "HBM_AXI_IF_NUM"|cut -d'=' -f2`
-echo "axi_if_num = $axi_if_num"
-for ((i=0; i<$axi_if_num; i++))
+hbm_axi_if_num=`cat $config |grep -i "HBM_AXI_IF_NUM"|cut -d'=' -f2`
+for ((i=0; i<$hbm_axi_if_num; i++))
 do
    echo "export HBM_AXI_IF_P$i=TRUE" >> $snap_config_sh
    echo "SNAP_CFLAGS += \"-DCONFIG_HBM_AXI_IF_P$i=TRUE\"" >> $snap_config_cflags
 done
+
+#Add Vivado release
+#Starting with Vivado 2020.1 ethernet emac IP has a different pinout
+ethernet_used=`grep ETHERNET_USED $snap_config|grep TRUE`
+Vivado_Major_release=`vivado -version |grep Vivado| cut -d'.' -f1|tr -d "Vivado "`
+if [ $Vivado_Major_release -gt 2019 ] && [ $ethernet_used != "" ]; then
+      echo "export ENABLE_EMAC_V3_1=TRUE" >> $snap_config_sh
+      echo "SNAP_CFLAGS += \"-DCONFIG_ENABLE_EMAC_V3_1=TRUE\"" >> $snap_config_cflags
+fi
 
 echo  "Generation of SNAP config files done."
 echo

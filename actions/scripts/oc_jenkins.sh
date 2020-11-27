@@ -90,6 +90,9 @@ function test_all_actions() # $1 = card, $2 = accel
 		*"1014300d") # HLS Image Filter
                         cmd="./actions/hls_image_filter/tests/hw_test.sh"
                 ;;
+	 	*"10143010") # HLS UDP
+                        cmd="./actions/hls_udp_512/tests/hw_test.sh"
+                ;;
                 *"1014300e") # HLS Memcopy 512
                         cmd="./actions/hls_memcopy_512/tests/hw_test.sh"
                 ;;

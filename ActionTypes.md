@@ -16,7 +16,8 @@ IBM | 10.14.30.0C | 10.14.30.0C | HLS HBM Memcopy  (1024b)
 IBM | 10.14.30.0D | 10.14.30.0D | HLS Image_Filter  (512b)
 IBM | 10.14.30.0E | 10.14.30.0E | HLS Memcopy_512   (512b)
 IBM | 10.14.30.0F | 10.14.30.0F | HLS Decimal Mult  (512b)
-IBM | 10.14.30.10 | 10.14.FF.FF | Reserved for HLS IBM Actions
+IBM | 10.14.30.10 | 10.14.30.10 | HLS UDP           (512b)
+IBM | 10.14.30.11 | 10.14.FF.FF | Reserved for HLS IBM Actions
 PSI | 52.32.00.01 | 52.32.00.FF | X-ray Detector Data Acquisition and Analysis
 Reserved | FF.FF.00.00 | FF.FF.FF.FF | Reserved
 

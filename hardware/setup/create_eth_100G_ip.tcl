@@ -19,10 +19,17 @@
 #############################################################################
 #############################################################################
 
+set vivadoVer    [version -short]
 set root_dir        $::env(SNAP_HARDWARE_ROOT)
 set fpga_part       $::env(FPGACHIP)
 set ip_dir          $root_dir/ip
 #set action_root     $::env(ACTION_ROOT)
+
+if { [info exists ::env(ENABLE_EMAC_V3_1)] == 1 } {
+  set emac_v3_1 [string toupper $::env(ENABLE_EMAC_V3_1)]
+} else {
+  set emac_v3_1 "FALSE"
+}
 
 # user can set a specific value for the Action clock lower than the 200MHz nominal clock
 set action_clock_freq "200MHz"
@@ -45,12 +52,9 @@ update_ip_catalog -rebuild -scan_changes
    CONFIG.FREQ_HZ {161132812} \
    ] $i_gt_ref
 
-  set i_gt_rx [ create_bd_intf_port -mode Slave -vlnv xilinx.com:display_cmac_usplus:gt_ports:2.0 i_gt_rx ]
 
   set m_axis_rx [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 m_axis_rx ]
   set_property -dict [ list CONFIG.FREQ_HZ {200000000} ] $m_axis_rx
-
-  set o_gt_tx [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_cmac_usplus:gt_ports:2.0 o_gt_tx ]
 
   set s_axis_tx [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_tx ]
   set_property -dict [ list \
@@ -114,9 +118,15 @@ update_ip_catalog -rebuild -scan_changes
  ] $axis_data_fifo_1
 
   # Create instance: cmac_usplus_0, and set properties
-  set cmac_usplus_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:cmac_usplus:3.0 cmac_usplus_0 ]
+  # This variable ENABLE_EMAC_V3_1 is set in scripts/snap_cfg and depends on vivado release
+  if { $emac_v3_1 == "TRUE" } {
+     set cmac_usplus_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:cmac_usplus:3.1 cmac_usplus_0 ]
+  } else {
+     set cmac_usplus_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:cmac_usplus:3.0 cmac_usplus_0 ]
+  }
   set_property -dict [ list \
    CONFIG.CMAC_CAUI4_MODE {1} \
+   CONFIG.CMAC_CORE_SELECT {CMACE4_X0Y1} \
    CONFIG.GT_GROUP_SELECT {X0Y8~X0Y11} \
    CONFIG.GT_REF_CLK_FREQ {161.1328125} \
    CONFIG.INCLUDE_RS_FEC {1} \
@@ -170,9 +180,20 @@ update_ip_catalog -rebuild -scan_changes
   connect_bd_intf_net -intf_net axis_clock_converter_tx_0_M_AXIS [get_bd_intf_pins axis_clock_converter_tx_0/M_AXIS] [get_bd_intf_pins cmac_usplus_0/axis_tx]
   connect_bd_intf_net -intf_net axis_data_fifo_1_M_AXIS [get_bd_intf_ports m_axis_rx] [get_bd_intf_pins axis_data_fifo_1/M_AXIS]
   connect_bd_intf_net -intf_net cmac_usplus_0_axis_rx [get_bd_intf_pins axis_clock_converter_0/S_AXIS] [get_bd_intf_pins cmac_usplus_0/axis_rx]
-  connect_bd_intf_net -intf_net cmac_usplus_0_gt_tx [get_bd_intf_ports o_gt_tx] [get_bd_intf_pins cmac_usplus_0/gt_tx]
+
+  # With Vivado 2020.1, new type of connections for the emac interface
+  if { $emac_v3_1 == "TRUE" } {
+     create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gt_rtl:1.0 gt
+     connect_bd_intf_net [get_bd_intf_pins cmac_usplus_0/gt_serial_port] [get_bd_intf_ports gt]
+  } else {
+     set i_gt_rx [ create_bd_intf_port -mode Slave -vlnv xilinx.com:display_cmac_usplus:gt_ports:2.0 i_gt_rx ]
+     set o_gt_tx [ create_bd_intf_port -mode Master -vlnv xilinx.com:display_cmac_usplus:gt_ports:2.0 o_gt_tx ]
+
+     connect_bd_intf_net -intf_net cmac_usplus_0_gt_tx [get_bd_intf_ports o_gt_tx] [get_bd_intf_pins cmac_usplus_0/gt_tx]
+     connect_bd_intf_net -intf_net i_gt_rx_1 [get_bd_intf_ports i_gt_rx] [get_bd_intf_pins cmac_usplus_0/gt_rx]
+  }
+
   connect_bd_intf_net -intf_net i_gt_ref_1 [get_bd_intf_ports i_gt_ref] [get_bd_intf_pins cmac_usplus_0/gt_ref_clk]
-  connect_bd_intf_net -intf_net i_gt_rx_1 [get_bd_intf_ports i_gt_rx] [get_bd_intf_pins cmac_usplus_0/gt_rx]
   connect_bd_intf_net -intf_net s_axis_tx_1 [get_bd_intf_ports s_axis_tx] [get_bd_intf_pins axis_clock_converter_tx_0/S_AXIS]
 
   # Create port connections

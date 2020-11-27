@@ -268,6 +268,12 @@ module framework_afu (
   // // wires
   // // ******************************************************************************
 
+    `ifdef ENABLE_EMAC_V3_1
+  wire [3:0]                 gt_grxn  ;
+  wire [3:0]                 gt_grxp  ;
+  wire [3:0]                 gt_gtxn  ;
+  wire [3:0]                 gt_gtxp  ;
+    `endif
 
   // // Interface between snap_core to (clock/dwidth) converter
 `ifndef ENABLE_ODMA
@@ -6515,11 +6521,39 @@ assign hbm_ctrl_reset_n = hbm_ctrl_apb_complete & ~reset_action_q;
 
 `ifdef ENABLE_ETHERNET 
   `ifndef ENABLE_ETH_LOOP_BACK
+    // following flag depends on vivado release and is set in scripts/snap_config
+    `ifdef ENABLE_EMAC_V3_1
+assign  gt_grxn[0] = gt_rx_gt_port_0_n;
+assign  gt_grxn[1] = gt_rx_gt_port_1_n;
+assign  gt_grxn[2] = gt_rx_gt_port_2_n;
+assign  gt_grxn[3] = gt_rx_gt_port_3_n;
+assign  gt_grxp[0] = gt_rx_gt_port_0_p;
+assign  gt_grxp[1] = gt_rx_gt_port_1_p;
+assign  gt_grxp[2] = gt_rx_gt_port_2_p;
+assign  gt_grxp[3] = gt_rx_gt_port_3_p;
+
+assign  gt_tx_gt_port_0_n = gt_gtxn[0];
+assign  gt_tx_gt_port_1_n = gt_gtxn[1];
+assign  gt_tx_gt_port_2_n = gt_gtxn[2];
+assign  gt_tx_gt_port_3_n = gt_gtxn[3];
+assign  gt_tx_gt_port_0_p = gt_gtxp[0];
+assign  gt_tx_gt_port_1_p = gt_gtxp[1];
+assign  gt_tx_gt_port_2_p = gt_gtxp[2];
+assign  gt_tx_gt_port_3_p = gt_gtxp[3];
+    `endif
 eth_100G eth_100G_0
 (
       .i_gt_ref_clk_n              ( gt_ref_clk_n                  ),
       .i_gt_ref_clk_p              ( gt_ref_clk_p                  ),
 
+    `ifdef ENABLE_EMAC_V3_1
+      //Vivado 2020.1 and later
+      .gt_grx_n                    ( gt_grxn                       ),
+      .gt_grx_p                    ( gt_grxp                       ),
+      .gt_gtx_n                    ( gt_gtxn                       ),
+      .gt_gtx_p                    ( gt_gtxp                       ),
+    `else
+      //Vivado 2019.2 and earlier
       .i_gt_rx_gt_port_0_n         ( gt_rx_gt_port_0_n             ),
       .i_gt_rx_gt_port_0_p         ( gt_rx_gt_port_0_p             ),
       .i_gt_rx_gt_port_1_n         ( gt_rx_gt_port_1_n             ),
@@ -6537,6 +6571,7 @@ eth_100G eth_100G_0
       .o_gt_tx_gt_port_2_p         ( gt_tx_gt_port_2_p             ),
       .o_gt_tx_gt_port_3_n         ( gt_tx_gt_port_3_n             ),
       .o_gt_tx_gt_port_3_p         ( gt_tx_gt_port_3_p             ),
+    `endif
 
       .m_axis_rx_tdata             ( eth1_rx_tdata                 ),
       .m_axis_rx_tkeep             ( eth1_rx_tkeep                 ),
