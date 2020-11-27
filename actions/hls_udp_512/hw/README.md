@@ -1,11 +1,1 @@
-# Hardware (FPGA) Design Description
-
-## General description ##
-* Heart of the action is collect_data routine with DATAFLOW region, composed of three tasks: 
-    * Decode Ethernet packets
-    * Apply corrections
-    * Write to memory
-
-## Input and output
-* Action register
-* Memory regions
+:star: * Detailed documentation is available at : <https://opencapi.github.io/oc-accel-doc/actions-doc/hls_udp_512>
