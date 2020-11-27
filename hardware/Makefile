@@ -40,6 +40,7 @@ snap_env_sh        = $(SNAP_ROOT)/snap_env.sh
 -include $(snap_env_sh)
 
 SIMULATOR ?= nosim
+VIVADO_MAJOR_RELEASE = $(shell vivado -version | grep Vivado | cut -d '.' -f1 | tr -d "Vivado ")
 
 #small case -- not used
 #FPGA_CARD := $(shell echo $(FPGACARD) | tr '[:upper:]' '[:lower:]')
@@ -83,6 +84,7 @@ SNAP_TMP_FILES =  $(SIM_DIR)/README.txt
 
 SNAP_ACTION_DCP=$(DCP_ROOT)/user_action_synth.dcp
 SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
+
 
 #
 # FIXME Targets in this Makefile are to be build in the correct order.
@@ -244,9 +246,21 @@ action_hw: prepare_logs
 	@rm -rf $(SNAP_HARDWARE_ROOT)/ip/eth_100G
 	echo "Calling create_eth_100G TCL script" >> $(LOGS_DIR)/eth_100G_make.log; 
 	@if [ "$(ENABLE_EMAC_V3_1)" == "TRUE" ]; then \
-		echo -e "			generating 100G Ethernet IP V3.1"; \
+		if [ $(VIVADO_MAJOR_RELEASE) -gt "2019" ]; then \
+			echo -e "			generating 100G Ethernet IP V3.1"; \
+		else \
+			echo -e "##ERROR: Vivado $(VIVADO_MAJOR_RELEASE) is incompatible with  100G Ethernet IP V3.1"; \
+			echo -e "    Please rerun 'make snap_config' to set correctly the variables"; \
+			exit -1; \
+		fi; \
 	else \
-		echo -e "			generating 100G Ethernet IP V3.0"; \
+		if [ $(VIVADO_MAJOR_RELEASE) -gt "2019" ]; then \
+			echo -e "##ERROR: Vivado $(VIVADO_MAJOR_RELEASE) is incompatible with  100G Ethernet IP V3.0"; \
+			echo -e "    Please rerun 'make snap_config' to set correctly the variables"; \
+			exit -1; \
+		else \
+			echo -e "			generating 100G Ethernet IP V3.0"; \
+		fi; \
 	fi
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_eth_100G_ip.tcl -notrace -log $(LOGS_DIR)/eth_100G_make.log -journal $(LOGS_DIR)/eth_100G_make.jou >> $(LOGS_DIR)/eth_100G_make.log; 
 	@echo -e "[CREATE ETHERNET IP..] done `date +"%T %a %b %d %Y"`";
