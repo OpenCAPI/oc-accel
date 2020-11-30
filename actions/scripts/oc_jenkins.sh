@@ -394,6 +394,8 @@ if [[ $accel != "ALL" ]]; then
 		echo "`date` Image Test on Accel: $accel was executed $test_done time(s)"
 		exit 0
 	fi
+
+	# at this level no binary file has been provided, still in the -ALL case
 	# Run Software Test on one Type of Card
 	echo "Test Software on: $accel Card: $CARD"
 	if [ $CARD -eq "-1" ]; then
@@ -421,11 +423,7 @@ if [[ $accel != "ALL" ]]; then
                 echo "accel       =$accel"
                 echo "CARD        =$CARD"
 		if [ "$accel_to_use" == "$accel" ]; then
-		    if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H3" ]]; then
-			    test_hard $accel $CARD $BINFILE
-		    else
-			    test_hard $accel $CARD $BINFILE $BINFILE2
-					fi
+			test_soft $accel $CARD
 			if [ $? -ne 0 ]; then
 				exit 1
 			fi
@@ -445,7 +443,10 @@ if [[ $accel != "ALL" ]]; then
 	exit 0
 fi
 
+# At this level we should have a ALL cards  test case
 # Run Software Test on ALL Cards
+
+# if we ask for ALL cards, this is not compatible with providing a BIN file
 if [[ $BINFILE != "" ]]; then
 	# Error: I can not use the same BINFILE for ALL cards
 	echo "Error: Option -A $accel and -F $BINFILE is not valid"
