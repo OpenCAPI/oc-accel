@@ -416,7 +416,7 @@ if [[ $accel != "ALL" ]]; then
 		# -C Option was set:
 		# Make sure i did get the correct values for Card and Accel (-C and -A)
 		# -t3 for detecting only OPENCAPI (CAPI3.0) card result
-		accel_to_use=`./software/tools/oc_find_card -C $CARD` -t3
+		accel_to_use=`./software/tools/oc_find_card -C $CARD -t3`
                 echo "accel_to_use=$accel_to_use"
                 echo "accel       =$accel"
                 echo "CARD        =$CARD"
@@ -460,7 +460,7 @@ if [ $? -eq 0 ]; then
 fi
 echo "Found Accel#: [$MY_CARDS]"
 for card in $MY_CARDS ; do
-	accel=`./software/tools/oc_find_card -C $card` -t3
+	accel=`./software/tools/oc_find_card -C $card -t3`
 	if [ $? -eq 0 ]; then
 		echo "Can not find valid Accelerator for Card# $card"
 		continue
