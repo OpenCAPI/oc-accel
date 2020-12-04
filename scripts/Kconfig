@@ -497,6 +497,12 @@ config ETHERNET_USED
         default "TRUE"  if  ENABLE_ETHERNET
         default "FALSE" if !ENABLE_ETHERNET
 
+config ETHERNET_RX_FIFO_SIZE
+        int
+        prompt "Size of receiving FIFO for Ethernet 100G MAC in 512-bit packates (must be power of 2)"
+        depends on ENABLE_ETHERNET
+        default 8192
+
 config USER_CLOCK
 	string
 	default "TRUE"  if ACTION_USER_CLOCK
