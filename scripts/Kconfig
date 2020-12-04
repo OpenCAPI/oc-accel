@@ -308,7 +308,6 @@ choice
 		select ENABLE_SIMU_WO_ETH
 		select FORCE_SDRAM_OR_BRAM
 		select FORCE_HBM
-		select ACTION_HALF_WIDTH
 
 #	config HLS_SPONGE
 #		bool "HLS Sponge"
