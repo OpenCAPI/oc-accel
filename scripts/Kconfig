@@ -497,11 +497,17 @@ config ETHERNET_USED
         default "TRUE"  if  ENABLE_ETHERNET
         default "FALSE" if !ENABLE_ETHERNET
 
-config ETHERNET_RX_FIFO_SIZE
+config ETHERNET_RX_FIFO_DEPTH
         int
-        prompt "Size of receiving FIFO for Ethernet 100G MAC in 512-bit packates (must be power of 2)"
+        prompt "Depth of receiving FIFO for Ethernet 100G MAC in 512-bit packates (must be power of 2)"
         depends on ENABLE_ETHERNET
         default 8192
+
+config ETHERNET_RX_FIFO_URAM
+	bool
+        prompt "Force implementation of receiving FIFO for Ethernet 100G MAC in UltraRAM"
+        depends on ENABLE_ETHERNET
+        default n
 
 config USER_CLOCK
 	string

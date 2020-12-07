@@ -24,6 +24,7 @@ set root_dir        $::env(SNAP_HARDWARE_ROOT)
 set fpga_part       $::env(FPGACHIP)
 set ip_dir          $root_dir/ip
 #set action_root     [expr int($::env(ACTION_ROOT))]
+set rx_fifo_depth   $::env(ETHERNET_RX_FIFO_DEPTH)
 
 if { [info exists ::env(ENABLE_EMAC_V3_1)] == 1 } {
   set emac_v3_1 [string toupper $::env(ENABLE_EMAC_V3_1)]
@@ -35,10 +36,6 @@ if { [info exists ::env(ENABLE_EMAC_V3_1)] == 1 } {
 set action_clock_freq "200MHz"
 #overide default value if variable exist
 #set action_clock_freq $::env(FPGA_ACTION_CLK)
-
-set rx_fifo_size $::env(ETHERNET_RX_FIFO_SIZE)
-
-puts $rx_fifo_size
 
 set project_name "eth_100G"
 set project_dir [file dirname [file dirname [file normalize [info script]]]]
@@ -117,8 +114,14 @@ update_ip_catalog -rebuild -scan_changes
   # Create instance: axis_data_fifo_1, and set properties
   set axis_data_fifo_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_1 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH $rx_fifo_size \
+   CONFIG.FIFO_DEPTH $rx_fifo_depth \
  ] $axis_data_fifo_1
+
+  if  { [info exists ::env(ETHERNET_RX_FIFO_URAM)] == 1 } {
+     set_property -dict [ list \
+        CONFIG.FIFO_MEMORY_TYPE {ultra} \
+     ] $axis_data_fifo_1
+  }
 
   # Create instance: cmac_usplus_0, and set properties
   # This variable ENABLE_EMAC_V3_1 is set in scripts/snap_cfg and depends on vivado release
