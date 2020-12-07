@@ -80,7 +80,7 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
          echo "   -------------------------------------------------------------------------------------------------"
       elif [ $SDRAM_SIZE_DEC != $HBM_AXI_IF_NUM ]; then
          echo "   ---------------------------------------------------------------------------------------------"
-         echo "   -- ERROR : HBM AXI interfaces defined in $ACTION_NAME (=$SDRAM_SIZE_DEC)"
+         echo "   -- ERROR : HBM AXI interfaces defined in ~/actions/$ACTION_NAME (=$SDRAM_SIZE_DEC)"
          echo "   --         is different than the one specified in the Kconfig menu (=$HBM_AXI_IF_NUM)!!"
          echo "   --         Please correct one or the other to keep coherency."
          echo "   ---------------------------------------------------------------------------------------------"

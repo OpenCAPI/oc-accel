@@ -21,7 +21,6 @@
 set root_dir      $::env(SNAP_HARDWARE_ROOT)
 set logs_dir      $::env(LOGS_DIR)
 set logfile       $logs_dir/snap_build.log
-set capi_ver      $::env(CAPI_VER)
 set fpgacard      $::env(FPGACARD)
 set ila_debug     [string toupper $::env(ILA_DEBUG)]
 set vivadoVer     [version -short]

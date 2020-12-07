@@ -270,9 +270,11 @@ if { $hbm_used == TRUE } {
   } else {
     # if BRAM model used replacing HBM do not add specific hbm init files
     puts "                        adding HBM block design"
-    puts "                        adding HBM initialization files "
-    add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
-    add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+    puts "                        adding HBM initialization files (NOT useful?)"
+    #add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
+    #add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+    #add_files -norecurse $ip_dir/hbm_ctrl/hdl/rtl/xpm_internal_config_file_1.mem
+    #add_files -norecurse $ip_dir/hbm_ctrl/hdl/rtl/xpm_internal_config_file_0.mem
     update_ip_catalog  >> $log_file
   }
 
@@ -283,8 +285,10 @@ if { $hbm_used == TRUE } {
   #puts "                        adding HBM initialization files "
   # if BRAM model used to replace HBM then do not add specific hbm init files
   if { $bram_used != TRUE } {
-    import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
-    import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+    #import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
+    #import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+    import_files -fileset sim_1 -norecurse $ip_dir/hbm_ctrl/hdl/rtl/xpm_internal_config_file_sim_1.mem
+    import_files -fileset sim_1 -norecurse $ip_dir/hbm_ctrl/hdl/rtl/xpm_internal_config_file_sim_0.mem
   }
   update_compile_order -fileset sim_1 >> $log_file
 }
