@@ -49,11 +49,12 @@ FPGACARD_LOWER = $(shell echo $(FPGACARD) | tr A-Z a-z)
 #OPENCAPI_BSP_IP_DONE=$(SNAP_HARDWAR_ROOT)/oc-bip/build/.create_ip_done
 #OPENCAPI_BSP_IP_UNIT_SIM_DONE=$(SNAP_HARDWAR_ROOT)/oc-bip/build/.create_ip_unit_sim_done
 
-export DCP_ROOT ?= $(SNAP_ROOT)/dcp
+export DCP_ROOT_REL ?= /hardware/DCP
+export DCP_ROOT ?= $(SNAP_ROOT)$(DCP_ROOT_REL)
 
 # luyong says: Remove it again when PRFLOW enabled again.
 # It should come from Kconfig
-USE_PRFLOW ?= FALSE
+#USE_PRFLOW ?= FALSE
 export IGNORE_CHECK_PSL ?= $(USE_PRFLOW)
 
 ## variables just for this Makefile
@@ -92,7 +93,7 @@ SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
 
 ifeq ($(PLATFORM),x86_64)
 
-.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_enable cloud_base cloud_action cloud_merge ocse software app model xsim irun nosim sim clean
+.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_enable cloud_base cloud_action cloud_merge ocse software app model xsim irun nosim sim clean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image
 
 all: model image
 
@@ -162,7 +163,7 @@ check_snap_settings:
 	@echo "                        USE_PRFLOW      = $(USE_PRFLOW)"
 	@if [ `echo "$(USE_PRFLOW)" | tr a-z A-Z` == "TRUE" ]; then \
 		echo "                        CLOUD_USER_FLOW = $(CLOUD_USER_FLOW)"; \
-		echo "                        DCP_ROOT        = $(DCP_ROOT)"; \
+		echo "                        DCP_ROOT        = ~$(DCP_ROOT_REL)"; \
 	fi
 	@echo "                        =============================="
 
@@ -216,7 +217,7 @@ snap_preprocess: snap_preprocess_start
 	@$(MAKE) -s snap_preprocess_execute
 
 patch_version:
-	@echo -e "                        patching SNAP version and build date registers"; \
+	@echo -e "                        patching OC-Accel version and build date registers"; \
 	$(SNAP_HARDWARE_ROOT)/setup/patch_version.sh $(SNAP_HDL_CORE) snap_global_vars.v
 
 
@@ -369,7 +370,6 @@ cloud_enable: allow_cloud_action
 
 cloud_base: allow_cloud_base .hw_project_done
 	@echo -e "[BUILD CLOUD BASE....] start `date +"%T %a %b %d %Y"`"
-	@$(MAKE) -s patch_version
 	@cd $(BUILD_DIR) && env CLOUD_RUN=BASE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[BUILD CLOUD BASE....] done  `date +"%T %a %b %d %Y"`"
 
@@ -395,6 +395,78 @@ cloud_merge: allow_cloud_merge $(SNAP_BASE_DCP) $(SNAP_ACTION_DCP)
 	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_merge.tcl -notrace -log $(LOGS_DIR)/snap_cloud_merge.log -journal $(LOGS_DIR)/snap_cloud_merge.jou
 	@echo -e "[CLOUD MERGE ........] done  `date +"%T %a %b %d %Y"`"
 
+
+#---------------------------------
+# Partial reconfiguration recipes
+#
+#
+#pr_synth_static prepares the synthesized dcp containing mainly TLx/DLx and all static objects that
+# will remain in the FPGA
+
+pr_synth_static: .hw_project_done
+	@echo -e "[ACTION in BLACKBOX..] start `date +"%T %a %b %d %Y"`"
+	# remove any "(* black_box *) module oc_action_core" sequence if 
+	# the previous run failed before being able to remove it
+	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
+	# add "(* black_box *)"
+	@sed -i "s/module oc_action_core/(\* black_box \*) module oc_action_core/g" hdl/core/oc_action_core.v
+	@echo -e "[PR SYNTH STATIC ....] start `date +"%T %a %b %d %Y"`"
+	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_static.log
+	@echo -e "[PR SYNTH STATIC ....] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "[ACTION not BLACKBOX.] start `date +"%T %a %b %d %Y"`"
+	# remove "(* black_box *)"
+	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
+	@echo "  Suggested next step: To synthesize the action: make pr_synth_action"
+
+# pr_synth_action prepares the synthesis of the dynamic part of the FPGA, mainly the action and all required hardware drivers
+# This part is the one that can be replaced on the fly
+
+pr_synth_action: .hw_project_done
+	@echo -e "[PR SYNTH ACTION ....] start `date +"%T %a %b %d %Y"`"
+	#remove any black_box word if pr_synth_static run failed before being able to remove it
+	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
+	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_action.log
+	@echo -e "[PR SYNTH ACTION ....] done  `date +"%T %a %b %d %Y"`"
+	@echo "  Suggested next step: To route the   top  design : make pr_route_static"
+	@echo "  Suggested next step: To route the action design : make pr_route_action"
+
+# pr_route_static prepares a complete refence routing of the FPGA, including both sttic and dynamic parts with 
+# a hls_helloworld_1024 reference action. From this complete routed design we substract the reference dynamic part
+# to obtain the static_routed static. This is the base of any future user designs.
+
+pr_route_static: snap_preprocess_start
+	@echo -e "[PR ROUTING STATIC ..] start `date +"%T %a %b %d %Y"`"
+	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_static.log
+	@echo -e "[PR ROUTING STATIC ....] done  `date +"%T %a %b %d %Y"`"
+	@echo "  Suggested next step: To build the bin files : make pr_image"
+
+# pr_route_action prepares a routing of the action. 
+# You need to have run almost once the pr_route_static to have the right dcp file.
+
+pr_route_action: snap_preprocess_start
+	@echo -e "[PR ROUTING ACTION ..] start `date +"%T %a %b %d %Y"`"
+	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_action.log
+	@echo -e "[PR ROUTING ACTION ....] done  `date +"%T %a %b %d %Y"`"
+	@echo "  Suggested next step: To build the bin files : make pr_image"
+
+
+#pr_merge will assembly static base and user dynamic part
+pr_merge:
+
+# hopefully pr_image will build the complete image with static base and dynamic user part
+
+pr_image: snap_preprocess_start
+	@echo -e "[Building image files] start `date +"%T %a %b %d %Y"`"
+	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_image.tcl -notrace -log $(LOGS_DIR)/oc_pr_image.log -journal $(LO    GS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_image.log
+	@echo -e "[Building image files] done  `date +"%T %a %b %d %Y"`"
+
+
+# End of partial reconfiguration recipes
+#---------------------------------------
+
+
+
+  
 ocse: prepare_logs
 	@echo -e "[COMPILE OCSE .......] start `date +"%T %a %b %d %Y"`"
 	@$(SNAP_ROOT)/check_ocse.sh > $(LOGS_DIR)/compile_ocse.log 2>&1
