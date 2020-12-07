@@ -89,7 +89,7 @@ module action_wrapper (
    output                                  m_axi_card_mem0_wvalid   ,
 
 `else
-   /* copy / paste the 45 following lines for a new interface */
+   `ifdef HBM_AXI_IF_P0
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p0_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p0_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p0_arcache  ,
@@ -134,8 +134,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p0_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p0_wuser    ,
    output                                  m_axi_card_hbm_p0_wvalid   ,
-`ifdef HBM_AXI_IF_NUM
-       if (`HBM_AXI_IF_NUM > 1) begin
+   `endif
+
+   `ifdef HBM_AXI_IF_P1
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p1_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p1_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p1_arcache  ,
@@ -180,8 +181,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p1_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p1_wuser    ,
    output                                  m_axi_card_hbm_p1_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 2) begin
+   `endif
+
+   `ifdef HBM_AXI_IF_P2
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p2_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p2_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p2_arcache  ,
@@ -226,9 +228,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p2_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p2_wuser    ,
    output                                  m_axi_card_hbm_p2_wvalid   ,
+   `endif
 
-       end
-       if (`HBM_AXI_IF_NUM > 3) begin
+   `ifdef HBM_AXI_IF_P3
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p3_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p3_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p3_arcache  ,
@@ -273,9 +275,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p3_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p3_wuser    ,
    output                                  m_axi_card_hbm_p3_wvalid   ,
+   `endif
 
-       end
-       if (`HBM_AXI_IF_NUM > 4) begin
+   `ifdef HBM_AXI_IF_P4
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p4_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p4_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p4_arcache  ,
@@ -320,9 +322,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p4_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p4_wuser    ,
    output                                  m_axi_card_hbm_p4_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 5) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P5
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p5_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p5_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p5_arcache  ,
@@ -367,9 +369,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p5_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p5_wuser    ,
    output                                  m_axi_card_hbm_p5_wvalid   ,
+   `endif
 
-       end
-       if (`HBM_AXI_IF_NUM > 6) begin
+   `ifdef HBM_AXI_IF_P6
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p6_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p6_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p6_arcache  ,
@@ -414,9 +416,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p6_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p6_wuser    ,
    output                                  m_axi_card_hbm_p6_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 7) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P7
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p7_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p7_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p7_arcache  ,
@@ -461,9 +463,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p7_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p7_wuser    ,
    output                                  m_axi_card_hbm_p7_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 8) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P8
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p8_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p8_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p8_arcache  ,
@@ -508,9 +510,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p8_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p8_wuser    ,
    output                                  m_axi_card_hbm_p8_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 9) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P9
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p9_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p9_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p9_arcache  ,
@@ -555,9 +557,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p9_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p9_wuser    ,
    output                                  m_axi_card_hbm_p9_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 10) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P10
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p10_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p10_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p10_arcache  ,
@@ -602,9 +604,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p10_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p10_wuser    ,
    output                                  m_axi_card_hbm_p10_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 11) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P11
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p11_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p11_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p11_arcache  ,
@@ -649,9 +651,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p11_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p11_wuser    ,
    output                                  m_axi_card_hbm_p11_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 12) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P12
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p12_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p12_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p12_arcache  ,
@@ -696,9 +698,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p12_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p12_wuser    ,
    output                                  m_axi_card_hbm_p12_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 13) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P13
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p13_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p13_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p13_arcache  ,
@@ -743,9 +745,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p13_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p13_wuser    ,
    output                                  m_axi_card_hbm_p13_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 14) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P14
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p14_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p14_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p14_arcache  ,
@@ -790,9 +792,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p14_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p14_wuser    ,
    output                                  m_axi_card_hbm_p14_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 15) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P15
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p15_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p15_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p15_arcache  ,
@@ -837,9 +839,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p15_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p15_wuser    ,
    output                                  m_axi_card_hbm_p15_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 16) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P16
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p16_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p16_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p16_arcache  ,
@@ -884,9 +886,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p16_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p16_wuser    ,
    output                                  m_axi_card_hbm_p16_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 17) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P17
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p17_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p17_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p17_arcache  ,
@@ -931,9 +933,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p17_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p17_wuser    ,
    output                                  m_axi_card_hbm_p17_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 18) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P18
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p18_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p18_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p18_arcache  ,
@@ -978,9 +980,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p18_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p18_wuser    ,
    output                                  m_axi_card_hbm_p18_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 19) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P19
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p19_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p19_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p19_arcache  ,
@@ -1025,9 +1027,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p19_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p19_wuser    ,
    output                                  m_axi_card_hbm_p19_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 20) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P20
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p20_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p20_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p20_arcache  ,
@@ -1072,9 +1074,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p20_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p20_wuser    ,
    output                                  m_axi_card_hbm_p20_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 21) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P21
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p21_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p21_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p21_arcache  ,
@@ -1119,9 +1121,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p21_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p21_wuser    ,
    output                                  m_axi_card_hbm_p21_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 22) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P22
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p22_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p22_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p22_arcache  ,
@@ -1166,9 +1168,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p22_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p22_wuser    ,
    output                                  m_axi_card_hbm_p22_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 23) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P23
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p23_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p23_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p23_arcache  ,
@@ -1213,9 +1215,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p23_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p23_wuser    ,
    output                                  m_axi_card_hbm_p23_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 24) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P24
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p24_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p24_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p24_arcache  ,
@@ -1260,9 +1262,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p24_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p24_wuser    ,
    output                                  m_axi_card_hbm_p24_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 25) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P25
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p25_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p25_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p25_arcache  ,
@@ -1307,9 +1309,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p25_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p25_wuser    ,
    output                                  m_axi_card_hbm_p25_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 26) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P26
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p26_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p26_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p26_arcache  ,
@@ -1354,9 +1356,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p26_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p26_wuser    ,
    output                                  m_axi_card_hbm_p26_wvalid   ,
+   `endif
 
-       end
-       if (`HBM_AXI_IF_NUM > 27) begin
+   `ifdef HBM_AXI_IF_P27
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p27_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p27_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p27_arcache  ,
@@ -1401,9 +1403,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p27_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p27_wuser    ,
    output                                  m_axi_card_hbm_p27_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 28) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P28
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p28_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p28_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p28_arcache  ,
@@ -1448,9 +1450,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p28_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p28_wuser    ,
    output                                  m_axi_card_hbm_p28_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 29) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P29
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p29_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p29_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p29_arcache  ,
@@ -1495,9 +1497,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p29_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p29_wuser    ,
    output                                  m_axi_card_hbm_p29_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 30) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P30
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p30_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p30_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p30_arcache  ,
@@ -1542,9 +1544,9 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p30_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p30_wuser    ,
    output                                  m_axi_card_hbm_p30_wvalid   ,
-       end
-       if (`HBM_AXI_IF_NUM > 31) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P31
    output [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0]  m_axi_card_hbm_p31_araddr   ,
    output [ 1 : 0]                         m_axi_card_hbm_p31_arburst  ,
    output [ 3 : 0]                         m_axi_card_hbm_p31_arcache  ,
@@ -1589,8 +1591,7 @@ module action_wrapper (
    output [(`AXI_CARD_HBM_DATA_WIDTH/8)-1 : 0] m_axi_card_hbm_p31_wstrb  ,
    output [`AXI_CARD_HBM_USER_WIDTH-1 : 0] m_axi_card_hbm_p31_wuser    ,
    output                                  m_axi_card_hbm_p31_wvalid   ,
-      end
-`endif
+   `endif
 `endif
 `endif
     //
@@ -1677,134 +1678,134 @@ reg hls_rst_n_q;
 wire interrupt_i;
 wire [63:0] temp_card_mem0_araddr;
 wire [63:0] temp_card_mem0_awaddr;
+   `ifdef HBM_AXI_IF_P0
 wire [63:0] temp_card_hbm_p0_araddr;
 wire [63:0] temp_card_hbm_p0_awaddr;
-`ifdef HBM_AXI_IF_NUM
-       if (`HBM_AXI_IF_NUM > 1) begin
+   `endif
+   `ifdef HBM_AXI_IF_P1
 wire [63:0] temp_card_hbm_p1_araddr;
 wire [63:0] temp_card_hbm_p1_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 2) begin
+   `endif
+   `ifdef HBM_AXI_IF_P2
 wire [63:0] temp_card_hbm_p2_araddr;
 wire [63:0] temp_card_hbm_p2_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 3) begin
+   `endif
+   `ifdef HBM_AXI_IF_P3
 wire [63:0] temp_card_hbm_p3_araddr;
 wire [63:0] temp_card_hbm_p3_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 4) begin
+   `endif
+   `ifdef HBM_AXI_IF_P4
 wire [63:0] temp_card_hbm_p4_araddr;
 wire [63:0] temp_card_hbm_p4_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 5) begin
+   `endif
+   `ifdef HBM_AXI_IF_P5
 wire [63:0] temp_card_hbm_p5_araddr;
 wire [63:0] temp_card_hbm_p5_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 6) begin
+   `endif
+   `ifdef HBM_AXI_IF_P6
 wire [63:0] temp_card_hbm_p6_araddr;
 wire [63:0] temp_card_hbm_p6_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 7) begin
+   `endif
+   `ifdef HBM_AXI_IF_P7
 wire [63:0] temp_card_hbm_p7_araddr;
 wire [63:0] temp_card_hbm_p7_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 8) begin
+   `endif
+   `ifdef HBM_AXI_IF_P8
 wire [63:0] temp_card_hbm_p8_araddr;
 wire [63:0] temp_card_hbm_p8_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 9) begin
+   `endif
+   `ifdef HBM_AXI_IF_P9
 wire [63:0] temp_card_hbm_p9_araddr;
 wire [63:0] temp_card_hbm_p9_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 10) begin
+   `endif
+   `ifdef HBM_AXI_IF_P10
 wire [63:0] temp_card_hbm_p10_araddr;
 wire [63:0] temp_card_hbm_p10_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 11) begin
+   `endif
+   `ifdef HBM_AXI_IF_P11
 wire [63:0] temp_card_hbm_p11_araddr;
 wire [63:0] temp_card_hbm_p11_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 12) begin
+   `endif
+   `ifdef HBM_AXI_IF_P12
 wire [63:0] temp_card_hbm_p12_araddr;
 wire [63:0] temp_card_hbm_p12_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 13) begin
+   `endif
+   `ifdef HBM_AXI_IF_P13
 wire [63:0] temp_card_hbm_p13_araddr;
 wire [63:0] temp_card_hbm_p13_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 14) begin
+   `endif
+   `ifdef HBM_AXI_IF_P14
 wire [63:0] temp_card_hbm_p14_araddr;
 wire [63:0] temp_card_hbm_p14_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 15) begin
+   `endif
+   `ifdef HBM_AXI_IF_P15
 wire [63:0] temp_card_hbm_p15_araddr;
 wire [63:0] temp_card_hbm_p15_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 16) begin
+   `endif
+   `ifdef HBM_AXI_IF_P16
 wire [63:0] temp_card_hbm_p16_araddr;
 wire [63:0] temp_card_hbm_p16_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 17) begin
+   `endif
+   `ifdef HBM_AXI_IF_P17
 wire [63:0] temp_card_hbm_p17_araddr;
 wire [63:0] temp_card_hbm_p17_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 18) begin
+   `endif
+   `ifdef HBM_AXI_IF_P18
 wire [63:0] temp_card_hbm_p18_araddr;
 wire [63:0] temp_card_hbm_p18_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 19) begin
+   `endif
+   `ifdef HBM_AXI_IF_P19
 wire [63:0] temp_card_hbm_p19_araddr;
 wire [63:0] temp_card_hbm_p19_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 20) begin
+   `endif
+   `ifdef HBM_AXI_IF_P20
 wire [63:0] temp_card_hbm_p20_araddr;
 wire [63:0] temp_card_hbm_p20_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 21) begin
+   `endif
+   `ifdef HBM_AXI_IF_P21
 wire [63:0] temp_card_hbm_p21_araddr;
 wire [63:0] temp_card_hbm_p21_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 22) begin
+   `endif
+   `ifdef HBM_AXI_IF_P22
 wire [63:0] temp_card_hbm_p22_araddr;
 wire [63:0] temp_card_hbm_p22_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 23) begin
+   `endif
+   `ifdef HBM_AXI_IF_P23
 wire [63:0] temp_card_hbm_p23_araddr;
 wire [63:0] temp_card_hbm_p23_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 24) begin
+   `endif
+   `ifdef HBM_AXI_IF_P24
 wire [63:0] temp_card_hbm_p24_araddr;
 wire [63:0] temp_card_hbm_p24_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 25) begin
+   `endif
+   `ifdef HBM_AXI_IF_P25
 wire [63:0] temp_card_hbm_p25_araddr;
 wire [63:0] temp_card_hbm_p25_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 26) begin
+   `endif
+   `ifdef HBM_AXI_IF_P26
 wire [63:0] temp_card_hbm_p26_araddr;
 wire [63:0] temp_card_hbm_p26_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 27) begin
+   `endif
+   `ifdef HBM_AXI_IF_P27
 wire [63:0] temp_card_hbm_p27_araddr;
 wire [63:0] temp_card_hbm_p27_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 28) begin
+   `endif
+   `ifdef HBM_AXI_IF_P28
 wire [63:0] temp_card_hbm_p28_araddr;
 wire [63:0] temp_card_hbm_p28_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 29) begin
+   `endif
+   `ifdef HBM_AXI_IF_P29
 wire [63:0] temp_card_hbm_p29_araddr;
 wire [63:0] temp_card_hbm_p29_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 30) begin
+   `endif
+   `ifdef HBM_AXI_IF_P30
 wire [63:0] temp_card_hbm_p30_araddr;
 wire [63:0] temp_card_hbm_p30_awaddr;
-       end
-       if (`HBM_AXI_IF_NUM > 31) begin
+   `endif
+   `ifdef HBM_AXI_IF_P31
 wire [63:0] temp_card_hbm_p31_araddr;
 wire [63:0] temp_card_hbm_p31_awaddr;
-       end
-      `endif 
+   `endif
 
     // ETHERNET interface
     // we define the ethernet wrap signals only if ethernet loop back
@@ -1875,7 +1876,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_mem0_wuser        (m_axi_card_mem0_wuser    ) ,
     .m_axi_card_mem0_wvalid       (m_axi_card_mem0_wvalid   ) ,
 `else
-    /* copy / paste the 46 folloing lines to have a new HBM interface */
+   `ifdef HBM_AXI_IF_P0
     .m_axi_card_hbm_p0_araddr       (temp_card_hbm_p0_araddr    ) ,
     .m_axi_card_hbm_p0_arburst      (m_axi_card_hbm_p0_arburst  ) ,
     .m_axi_card_hbm_p0_arcache      (m_axi_card_hbm_p0_arcache  ) ,
@@ -1921,9 +1922,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p0_wstrb        (m_axi_card_hbm_p0_wstrb    ) ,
     .m_axi_card_hbm_p0_wuser        (m_axi_card_hbm_p0_wuser    ) ,
     .m_axi_card_hbm_p0_wvalid       (m_axi_card_hbm_p0_wvalid   ) ,
+   `endif
 
-    `ifdef HBM_AXI_IF_NUM 
-       if (`HBM_AXI_IF_NUM > 1) begin
+   `ifdef HBM_AXI_IF_P1
     .m_axi_card_hbm_p1_araddr       (temp_card_hbm_p1_araddr    ) ,
     .m_axi_card_hbm_p1_arburst      (m_axi_card_hbm_p1_arburst  ) ,
     .m_axi_card_hbm_p1_arcache      (m_axi_card_hbm_p1_arcache  ) ,
@@ -1969,9 +1970,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p1_wstrb        (m_axi_card_hbm_p1_wstrb    ) ,
     .m_axi_card_hbm_p1_wuser        (m_axi_card_hbm_p1_wuser    ) ,
     .m_axi_card_hbm_p1_wvalid       (m_axi_card_hbm_p1_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 2) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P2
     .m_axi_card_hbm_p2_araddr       (temp_card_hbm_p2_araddr    ) ,
     .m_axi_card_hbm_p2_arburst      (m_axi_card_hbm_p2_arburst  ) ,
     .m_axi_card_hbm_p2_arcache      (m_axi_card_hbm_p2_arcache  ) ,
@@ -2017,9 +2018,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p2_wstrb        (m_axi_card_hbm_p2_wstrb    ) ,
     .m_axi_card_hbm_p2_wuser        (m_axi_card_hbm_p2_wuser    ) ,
     .m_axi_card_hbm_p2_wvalid       (m_axi_card_hbm_p2_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 3) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P3
     .m_axi_card_hbm_p3_araddr       (temp_card_hbm_p3_araddr    ) ,
     .m_axi_card_hbm_p3_arburst      (m_axi_card_hbm_p3_arburst  ) ,
     .m_axi_card_hbm_p3_arcache      (m_axi_card_hbm_p3_arcache  ) ,
@@ -2065,9 +2066,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p3_wstrb        (m_axi_card_hbm_p3_wstrb    ) ,
     .m_axi_card_hbm_p3_wuser        (m_axi_card_hbm_p3_wuser    ) ,
     .m_axi_card_hbm_p3_wvalid       (m_axi_card_hbm_p3_wvalid   ) ,
+   `endif
 
-       end
-       if (`HBM_AXI_IF_NUM > 4) begin
+   `ifdef HBM_AXI_IF_P4
     .m_axi_card_hbm_p4_araddr       (temp_card_hbm_p4_araddr    ) ,
     .m_axi_card_hbm_p4_arburst      (m_axi_card_hbm_p4_arburst  ) ,
     .m_axi_card_hbm_p4_arcache      (m_axi_card_hbm_p4_arcache  ) ,
@@ -2113,9 +2114,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p4_wstrb        (m_axi_card_hbm_p4_wstrb    ) ,
     .m_axi_card_hbm_p4_wuser        (m_axi_card_hbm_p4_wuser    ) ,
     .m_axi_card_hbm_p4_wvalid       (m_axi_card_hbm_p4_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 5) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P5
     .m_axi_card_hbm_p5_araddr       (temp_card_hbm_p5_araddr    ) ,
     .m_axi_card_hbm_p5_arburst      (m_axi_card_hbm_p5_arburst  ) ,
     .m_axi_card_hbm_p5_arcache      (m_axi_card_hbm_p5_arcache  ) ,
@@ -2161,9 +2162,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p5_wstrb        (m_axi_card_hbm_p5_wstrb    ) ,
     .m_axi_card_hbm_p5_wuser        (m_axi_card_hbm_p5_wuser    ) ,
     .m_axi_card_hbm_p5_wvalid       (m_axi_card_hbm_p5_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 6) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P6
     .m_axi_card_hbm_p6_araddr       (temp_card_hbm_p6_araddr    ) ,
     .m_axi_card_hbm_p6_arburst      (m_axi_card_hbm_p6_arburst  ) ,
     .m_axi_card_hbm_p6_arcache      (m_axi_card_hbm_p6_arcache  ) ,
@@ -2209,9 +2210,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p6_wstrb        (m_axi_card_hbm_p6_wstrb    ) ,
     .m_axi_card_hbm_p6_wuser        (m_axi_card_hbm_p6_wuser    ) ,
     .m_axi_card_hbm_p6_wvalid       (m_axi_card_hbm_p6_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 7) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P7
     .m_axi_card_hbm_p7_araddr       (temp_card_hbm_p7_araddr    ) ,
     .m_axi_card_hbm_p7_arburst      (m_axi_card_hbm_p7_arburst  ) ,
     .m_axi_card_hbm_p7_arcache      (m_axi_card_hbm_p7_arcache  ) ,
@@ -2257,9 +2258,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p7_wstrb        (m_axi_card_hbm_p7_wstrb    ) ,
     .m_axi_card_hbm_p7_wuser        (m_axi_card_hbm_p7_wuser    ) ,
     .m_axi_card_hbm_p7_wvalid       (m_axi_card_hbm_p7_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 8) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P8
     .m_axi_card_hbm_p8_araddr       (temp_card_hbm_p8_araddr    ) ,
     .m_axi_card_hbm_p8_arburst      (m_axi_card_hbm_p8_arburst  ) ,
     .m_axi_card_hbm_p8_arcache      (m_axi_card_hbm_p8_arcache  ) ,
@@ -2305,9 +2306,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p8_wstrb        (m_axi_card_hbm_p8_wstrb    ) ,
     .m_axi_card_hbm_p8_wuser        (m_axi_card_hbm_p8_wuser    ) ,
     .m_axi_card_hbm_p8_wvalid       (m_axi_card_hbm_p8_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 9) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P9
     .m_axi_card_hbm_p9_araddr       (temp_card_hbm_p9_araddr    ) ,
     .m_axi_card_hbm_p9_arburst      (m_axi_card_hbm_p9_arburst  ) ,
     .m_axi_card_hbm_p9_arcache      (m_axi_card_hbm_p9_arcache  ) ,
@@ -2353,9 +2354,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p9_wstrb        (m_axi_card_hbm_p9_wstrb    ) ,
     .m_axi_card_hbm_p9_wuser        (m_axi_card_hbm_p9_wuser    ) ,
     .m_axi_card_hbm_p9_wvalid       (m_axi_card_hbm_p9_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 10) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P10
     .m_axi_card_hbm_p10_araddr       (temp_card_hbm_p10_araddr    ) ,
     .m_axi_card_hbm_p10_arburst      (m_axi_card_hbm_p10_arburst  ) ,
     .m_axi_card_hbm_p10_arcache      (m_axi_card_hbm_p10_arcache  ) ,
@@ -2401,9 +2402,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p10_wstrb        (m_axi_card_hbm_p10_wstrb    ) ,
     .m_axi_card_hbm_p10_wuser        (m_axi_card_hbm_p10_wuser    ) ,
     .m_axi_card_hbm_p10_wvalid       (m_axi_card_hbm_p10_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 11) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P11
     .m_axi_card_hbm_p11_araddr       (temp_card_hbm_p11_araddr    ) ,
     .m_axi_card_hbm_p11_arburst      (m_axi_card_hbm_p11_arburst  ) ,
     .m_axi_card_hbm_p11_arcache      (m_axi_card_hbm_p11_arcache  ) ,
@@ -2449,9 +2450,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p11_wstrb        (m_axi_card_hbm_p11_wstrb    ) ,
     .m_axi_card_hbm_p11_wuser        (m_axi_card_hbm_p11_wuser    ) ,
     .m_axi_card_hbm_p11_wvalid       (m_axi_card_hbm_p11_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 12) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P12
     .m_axi_card_hbm_p12_araddr       (temp_card_hbm_p12_araddr    ) ,
     .m_axi_card_hbm_p12_arburst      (m_axi_card_hbm_p12_arburst  ) ,
     .m_axi_card_hbm_p12_arcache      (m_axi_card_hbm_p12_arcache  ) ,
@@ -2497,9 +2498,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p12_wstrb        (m_axi_card_hbm_p12_wstrb    ) ,
     .m_axi_card_hbm_p12_wuser        (m_axi_card_hbm_p12_wuser    ) ,
     .m_axi_card_hbm_p12_wvalid       (m_axi_card_hbm_p12_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 13) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P13
     .m_axi_card_hbm_p13_araddr       (temp_card_hbm_p13_araddr    ) ,
     .m_axi_card_hbm_p13_arburst      (m_axi_card_hbm_p13_arburst  ) ,
     .m_axi_card_hbm_p13_arcache      (m_axi_card_hbm_p13_arcache  ) ,
@@ -2545,9 +2546,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p13_wstrb        (m_axi_card_hbm_p13_wstrb    ) ,
     .m_axi_card_hbm_p13_wuser        (m_axi_card_hbm_p13_wuser    ) ,
     .m_axi_card_hbm_p13_wvalid       (m_axi_card_hbm_p13_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 14) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P14
     .m_axi_card_hbm_p14_araddr       (temp_card_hbm_p14_araddr    ) ,
     .m_axi_card_hbm_p14_arburst      (m_axi_card_hbm_p14_arburst  ) ,
     .m_axi_card_hbm_p14_arcache      (m_axi_card_hbm_p14_arcache  ) ,
@@ -2593,9 +2594,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p14_wstrb        (m_axi_card_hbm_p14_wstrb    ) ,
     .m_axi_card_hbm_p14_wuser        (m_axi_card_hbm_p14_wuser    ) ,
     .m_axi_card_hbm_p14_wvalid       (m_axi_card_hbm_p14_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 15) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P15
     .m_axi_card_hbm_p15_araddr       (temp_card_hbm_p15_araddr    ) ,
     .m_axi_card_hbm_p15_arburst      (m_axi_card_hbm_p15_arburst  ) ,
     .m_axi_card_hbm_p15_arcache      (m_axi_card_hbm_p15_arcache  ) ,
@@ -2641,9 +2642,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p15_wstrb        (m_axi_card_hbm_p15_wstrb    ) ,
     .m_axi_card_hbm_p15_wuser        (m_axi_card_hbm_p15_wuser    ) ,
     .m_axi_card_hbm_p15_wvalid       (m_axi_card_hbm_p15_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 16) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P16
     .m_axi_card_hbm_p16_araddr       (temp_card_hbm_p16_araddr    ) ,
     .m_axi_card_hbm_p16_arburst      (m_axi_card_hbm_p16_arburst  ) ,
     .m_axi_card_hbm_p16_arcache      (m_axi_card_hbm_p16_arcache  ) ,
@@ -2689,9 +2690,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p16_wstrb        (m_axi_card_hbm_p16_wstrb    ) ,
     .m_axi_card_hbm_p16_wuser        (m_axi_card_hbm_p16_wuser    ) ,
     .m_axi_card_hbm_p16_wvalid       (m_axi_card_hbm_p16_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 17) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P17
     .m_axi_card_hbm_p17_araddr       (temp_card_hbm_p17_araddr    ) ,
     .m_axi_card_hbm_p17_arburst      (m_axi_card_hbm_p17_arburst  ) ,
     .m_axi_card_hbm_p17_arcache      (m_axi_card_hbm_p17_arcache  ) ,
@@ -2737,9 +2738,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p17_wstrb        (m_axi_card_hbm_p17_wstrb    ) ,
     .m_axi_card_hbm_p17_wuser        (m_axi_card_hbm_p17_wuser    ) ,
     .m_axi_card_hbm_p17_wvalid       (m_axi_card_hbm_p17_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 18) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P18
     .m_axi_card_hbm_p18_araddr       (temp_card_hbm_p18_araddr    ) ,
     .m_axi_card_hbm_p18_arburst      (m_axi_card_hbm_p18_arburst  ) ,
     .m_axi_card_hbm_p18_arcache      (m_axi_card_hbm_p18_arcache  ) ,
@@ -2785,9 +2786,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p18_wstrb        (m_axi_card_hbm_p18_wstrb    ) ,
     .m_axi_card_hbm_p18_wuser        (m_axi_card_hbm_p18_wuser    ) ,
     .m_axi_card_hbm_p18_wvalid       (m_axi_card_hbm_p18_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 19) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P19
     .m_axi_card_hbm_p19_araddr       (temp_card_hbm_p19_araddr    ) ,
     .m_axi_card_hbm_p19_arburst      (m_axi_card_hbm_p19_arburst  ) ,
     .m_axi_card_hbm_p19_arcache      (m_axi_card_hbm_p19_arcache  ) ,
@@ -2833,9 +2834,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p19_wstrb        (m_axi_card_hbm_p19_wstrb    ) ,
     .m_axi_card_hbm_p19_wuser        (m_axi_card_hbm_p19_wuser    ) ,
     .m_axi_card_hbm_p19_wvalid       (m_axi_card_hbm_p19_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 20) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P20
     .m_axi_card_hbm_p20_araddr       (temp_card_hbm_p20_araddr    ) ,
     .m_axi_card_hbm_p20_arburst      (m_axi_card_hbm_p20_arburst  ) ,
     .m_axi_card_hbm_p20_arcache      (m_axi_card_hbm_p20_arcache  ) ,
@@ -2881,9 +2882,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p20_wstrb        (m_axi_card_hbm_p20_wstrb    ) ,
     .m_axi_card_hbm_p20_wuser        (m_axi_card_hbm_p20_wuser    ) ,
     .m_axi_card_hbm_p20_wvalid       (m_axi_card_hbm_p20_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 21) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P21
     .m_axi_card_hbm_p21_araddr       (temp_card_hbm_p21_araddr    ) ,
     .m_axi_card_hbm_p21_arburst      (m_axi_card_hbm_p21_arburst  ) ,
     .m_axi_card_hbm_p21_arcache      (m_axi_card_hbm_p21_arcache  ) ,
@@ -2929,9 +2930,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p21_wstrb        (m_axi_card_hbm_p21_wstrb    ) ,
     .m_axi_card_hbm_p21_wuser        (m_axi_card_hbm_p21_wuser    ) ,
     .m_axi_card_hbm_p21_wvalid       (m_axi_card_hbm_p21_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 22) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P22
     .m_axi_card_hbm_p22_araddr       (temp_card_hbm_p22_araddr    ) ,
     .m_axi_card_hbm_p22_arburst      (m_axi_card_hbm_p22_arburst  ) ,
     .m_axi_card_hbm_p22_arcache      (m_axi_card_hbm_p22_arcache  ) ,
@@ -2977,9 +2978,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p22_wstrb        (m_axi_card_hbm_p22_wstrb    ) ,
     .m_axi_card_hbm_p22_wuser        (m_axi_card_hbm_p22_wuser    ) ,
     .m_axi_card_hbm_p22_wvalid       (m_axi_card_hbm_p22_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 23) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P23
     .m_axi_card_hbm_p23_araddr       (temp_card_hbm_p23_araddr    ) ,
     .m_axi_card_hbm_p23_arburst      (m_axi_card_hbm_p23_arburst  ) ,
     .m_axi_card_hbm_p23_arcache      (m_axi_card_hbm_p23_arcache  ) ,
@@ -3025,9 +3026,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p23_wstrb        (m_axi_card_hbm_p23_wstrb    ) ,
     .m_axi_card_hbm_p23_wuser        (m_axi_card_hbm_p23_wuser    ) ,
     .m_axi_card_hbm_p23_wvalid       (m_axi_card_hbm_p23_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 24) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P24
     .m_axi_card_hbm_p24_araddr       (temp_card_hbm_p24_araddr    ) ,
     .m_axi_card_hbm_p24_arburst      (m_axi_card_hbm_p24_arburst  ) ,
     .m_axi_card_hbm_p24_arcache      (m_axi_card_hbm_p24_arcache  ) ,
@@ -3073,9 +3074,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p24_wstrb        (m_axi_card_hbm_p24_wstrb    ) ,
     .m_axi_card_hbm_p24_wuser        (m_axi_card_hbm_p24_wuser    ) ,
     .m_axi_card_hbm_p24_wvalid       (m_axi_card_hbm_p24_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 25) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P25
     .m_axi_card_hbm_p25_araddr       (temp_card_hbm_p25_araddr    ) ,
     .m_axi_card_hbm_p25_arburst      (m_axi_card_hbm_p25_arburst  ) ,
     .m_axi_card_hbm_p25_arcache      (m_axi_card_hbm_p25_arcache  ) ,
@@ -3121,9 +3122,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p25_wstrb        (m_axi_card_hbm_p25_wstrb    ) ,
     .m_axi_card_hbm_p25_wuser        (m_axi_card_hbm_p25_wuser    ) ,
     .m_axi_card_hbm_p25_wvalid       (m_axi_card_hbm_p25_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 26) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P26
     .m_axi_card_hbm_p26_araddr       (temp_card_hbm_p26_araddr    ) ,
     .m_axi_card_hbm_p26_arburst      (m_axi_card_hbm_p26_arburst  ) ,
     .m_axi_card_hbm_p26_arcache      (m_axi_card_hbm_p26_arcache  ) ,
@@ -3169,9 +3170,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p26_wstrb        (m_axi_card_hbm_p26_wstrb    ) ,
     .m_axi_card_hbm_p26_wuser        (m_axi_card_hbm_p26_wuser    ) ,
     .m_axi_card_hbm_p26_wvalid       (m_axi_card_hbm_p26_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 27) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P27
     .m_axi_card_hbm_p27_araddr       (temp_card_hbm_p27_araddr    ) ,
     .m_axi_card_hbm_p27_arburst      (m_axi_card_hbm_p27_arburst  ) ,
     .m_axi_card_hbm_p27_arcache      (m_axi_card_hbm_p27_arcache  ) ,
@@ -3217,9 +3218,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p27_wstrb        (m_axi_card_hbm_p27_wstrb    ) ,
     .m_axi_card_hbm_p27_wuser        (m_axi_card_hbm_p27_wuser    ) ,
     .m_axi_card_hbm_p27_wvalid       (m_axi_card_hbm_p27_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 28) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P28
     .m_axi_card_hbm_p28_araddr       (temp_card_hbm_p28_araddr    ) ,
     .m_axi_card_hbm_p28_arburst      (m_axi_card_hbm_p28_arburst  ) ,
     .m_axi_card_hbm_p28_arcache      (m_axi_card_hbm_p28_arcache  ) ,
@@ -3265,9 +3266,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p28_wstrb        (m_axi_card_hbm_p28_wstrb    ) ,
     .m_axi_card_hbm_p28_wuser        (m_axi_card_hbm_p28_wuser    ) ,
     .m_axi_card_hbm_p28_wvalid       (m_axi_card_hbm_p28_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 29) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P29
     .m_axi_card_hbm_p29_araddr       (temp_card_hbm_p29_araddr    ) ,
     .m_axi_card_hbm_p29_arburst      (m_axi_card_hbm_p29_arburst  ) ,
     .m_axi_card_hbm_p29_arcache      (m_axi_card_hbm_p29_arcache  ) ,
@@ -3313,9 +3314,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p29_wstrb        (m_axi_card_hbm_p29_wstrb    ) ,
     .m_axi_card_hbm_p29_wuser        (m_axi_card_hbm_p29_wuser    ) ,
     .m_axi_card_hbm_p29_wvalid       (m_axi_card_hbm_p29_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 30) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P30
     .m_axi_card_hbm_p30_araddr       (temp_card_hbm_p30_araddr    ) ,
     .m_axi_card_hbm_p30_arburst      (m_axi_card_hbm_p30_arburst  ) ,
     .m_axi_card_hbm_p30_arcache      (m_axi_card_hbm_p30_arcache  ) ,
@@ -3361,9 +3362,9 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p30_wstrb        (m_axi_card_hbm_p30_wstrb    ) ,
     .m_axi_card_hbm_p30_wuser        (m_axi_card_hbm_p30_wuser    ) ,
     .m_axi_card_hbm_p30_wvalid       (m_axi_card_hbm_p30_wvalid   ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 31) begin
+   `endif
 
+   `ifdef HBM_AXI_IF_P31
     .m_axi_card_hbm_p31_araddr       (temp_card_hbm_p31_araddr    ) ,
     .m_axi_card_hbm_p31_arburst      (m_axi_card_hbm_p31_arburst  ) ,
     .m_axi_card_hbm_p31_arcache      (m_axi_card_hbm_p31_arcache  ) ,
@@ -3409,8 +3410,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_hbm_p31_wstrb        (m_axi_card_hbm_p31_wstrb    ) ,
     .m_axi_card_hbm_p31_wuser        (m_axi_card_hbm_p31_wuser    ) ,
     .m_axi_card_hbm_p31_wvalid       (m_axi_card_hbm_p31_wvalid   ) ,
-     end
-`endif
+   `endif
 `endif
 `endif
     // ETHERNET interface
@@ -3610,135 +3610,133 @@ endgenerate
 
 // if HBM
 `else
+   `ifdef HBM_AXI_IF_P0
 assign m_axi_card_hbm_p0_araddr = temp_card_hbm_p0_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p0_awaddr = temp_card_hbm_p0_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-   `ifdef HBM_AXI_IF_NUM
-       if (`HBM_AXI_IF_NUM > 1) begin
+   `endif
+   `ifdef HBM_AXI_IF_P1
 assign m_axi_card_hbm_p1_araddr = temp_card_hbm_p1_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p1_awaddr = temp_card_hbm_p1_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 2) begin
-
+   `endif
+   `ifdef HBM_AXI_IF_P2
 assign m_axi_card_hbm_p2_araddr = temp_card_hbm_p2_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p2_awaddr = temp_card_hbm_p2_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 3) begin
+   `endif
+   `ifdef HBM_AXI_IF_P3
 assign m_axi_card_hbm_p3_araddr = temp_card_hbm_p3_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p3_awaddr = temp_card_hbm_p3_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 4) begin
+   `endif
+   `ifdef HBM_AXI_IF_P4
 assign m_axi_card_hbm_p4_araddr = temp_card_hbm_p4_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p4_awaddr = temp_card_hbm_p4_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 5) begin
+   `endif
+   `ifdef HBM_AXI_IF_P5
 assign m_axi_card_hbm_p5_araddr = temp_card_hbm_p5_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p5_awaddr = temp_card_hbm_p5_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 6) begin
+   `endif
+   `ifdef HBM_AXI_IF_P6
 assign m_axi_card_hbm_p6_araddr = temp_card_hbm_p6_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p6_awaddr = temp_card_hbm_p6_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 7) begin
+   `endif
+   `ifdef HBM_AXI_IF_P7
 assign m_axi_card_hbm_p7_araddr = temp_card_hbm_p7_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p7_awaddr = temp_card_hbm_p7_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 8) begin
-
+   `endif
+   `ifdef HBM_AXI_IF_P8
 assign m_axi_card_hbm_p8_araddr = temp_card_hbm_p8_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p8_awaddr = temp_card_hbm_p8_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 9) begin
+   `endif
+   `ifdef HBM_AXI_IF_P9
 assign m_axi_card_hbm_p9_araddr = temp_card_hbm_p9_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p9_awaddr = temp_card_hbm_p9_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 10) begin
+   `endif
+   `ifdef HBM_AXI_IF_P10
 assign m_axi_card_hbm_p10_araddr = temp_card_hbm_p10_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p10_awaddr = temp_card_hbm_p10_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 11) begin
+   `endif
+   `ifdef HBM_AXI_IF_P11
 assign m_axi_card_hbm_p11_araddr = temp_card_hbm_p11_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p11_awaddr = temp_card_hbm_p11_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 12) begin
+   `endif
+   `ifdef HBM_AXI_IF_P12
 assign m_axi_card_hbm_p12_araddr = temp_card_hbm_p12_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p12_awaddr = temp_card_hbm_p12_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 13) begin
+   `endif
+   `ifdef HBM_AXI_IF_P13
 assign m_axi_card_hbm_p13_araddr = temp_card_hbm_p13_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p13_awaddr = temp_card_hbm_p13_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 14) begin
+   `endif
+   `ifdef HBM_AXI_IF_P14
 assign m_axi_card_hbm_p14_araddr = temp_card_hbm_p14_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p14_awaddr = temp_card_hbm_p14_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 15) begin
+   `endif
+   `ifdef HBM_AXI_IF_P15
 assign m_axi_card_hbm_p15_araddr = temp_card_hbm_p15_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p15_awaddr = temp_card_hbm_p15_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 16) begin
+   `endif
+   `ifdef HBM_AXI_IF_P16
 assign m_axi_card_hbm_p16_araddr = temp_card_hbm_p16_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p16_awaddr = temp_card_hbm_p16_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 17) begin
+   `endif
+   `ifdef HBM_AXI_IF_P17
 assign m_axi_card_hbm_p17_araddr = temp_card_hbm_p17_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p17_awaddr = temp_card_hbm_p17_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 18) begin
+   `endif
+   `ifdef HBM_AXI_IF_P18
 assign m_axi_card_hbm_p18_araddr = temp_card_hbm_p18_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p18_awaddr = temp_card_hbm_p18_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 19) begin
+   `endif
+   `ifdef HBM_AXI_IF_P19
 assign m_axi_card_hbm_p19_araddr = temp_card_hbm_p19_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p19_awaddr = temp_card_hbm_p19_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 20) begin
+   `endif
+   `ifdef HBM_AXI_IF_P20
 assign m_axi_card_hbm_p20_araddr = temp_card_hbm_p20_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p20_awaddr = temp_card_hbm_p20_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 21) begin
+   `endif
+   `ifdef HBM_AXI_IF_P21
 assign m_axi_card_hbm_p21_araddr = temp_card_hbm_p21_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p21_awaddr = temp_card_hbm_p21_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 22) begin
+   `endif
+   `ifdef HBM_AXI_IF_P22
 assign m_axi_card_hbm_p22_araddr = temp_card_hbm_p22_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p22_awaddr = temp_card_hbm_p22_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 23) begin
+   `endif
+   `ifdef HBM_AXI_IF_P23
 assign m_axi_card_hbm_p23_araddr = temp_card_hbm_p23_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p23_awaddr = temp_card_hbm_p23_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 24) begin
+   `endif
+   `ifdef HBM_AXI_IF_P24
 assign m_axi_card_hbm_p24_araddr = temp_card_hbm_p24_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p24_awaddr = temp_card_hbm_p24_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 25) begin
+   `endif
+   `ifdef HBM_AXI_IF_P25
 assign m_axi_card_hbm_p25_araddr = temp_card_hbm_p25_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p25_awaddr = temp_card_hbm_p25_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 26) begin
+   `endif
+   `ifdef HBM_AXI_IF_P26
 assign m_axi_card_hbm_p26_araddr = temp_card_hbm_p26_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p26_awaddr = temp_card_hbm_p26_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 27) begin
+   `endif
+   `ifdef HBM_AXI_IF_P27
 assign m_axi_card_hbm_p27_araddr = temp_card_hbm_p27_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p27_awaddr = temp_card_hbm_p27_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 28) begin
+   `endif
+   `ifdef HBM_AXI_IF_P28
 assign m_axi_card_hbm_p28_araddr = temp_card_hbm_p28_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p28_awaddr = temp_card_hbm_p28_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 29) begin
+   `endif
+   `ifdef HBM_AXI_IF_P29
 assign m_axi_card_hbm_p29_araddr = temp_card_hbm_p29_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p29_awaddr = temp_card_hbm_p29_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 30) begin
+   `endif
+   `ifdef HBM_AXI_IF_P30
 assign m_axi_card_hbm_p30_araddr = temp_card_hbm_p30_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p30_awaddr = temp_card_hbm_p30_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
-       if (`HBM_AXI_IF_NUM > 31) begin
+   `endif
+   `ifdef HBM_AXI_IF_P31
 assign m_axi_card_hbm_p31_araddr = temp_card_hbm_p31_araddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
 assign m_axi_card_hbm_p31_awaddr = temp_card_hbm_p31_awaddr[`AXI_CARD_HBM_ADDR_WIDTH-1:0];
-      end
    `endif
 
 `endif

@@ -444,8 +444,7 @@ module mmio (
      if(~rst_n)
         decouple <= 1'b0;
      else
-        decouple <= 1'b0;
-        //decouple <= REG_command[1];
+        decouple <= REG_command[1];
 
  always@(posedge clk or negedge rst_n)
    if(~rst_n)

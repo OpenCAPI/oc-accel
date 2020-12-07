@@ -29,6 +29,9 @@ module framework_afu (
     input                 clock_tlx
   , input                 clock_afu
   , input                 reset
+  , output                decouple
+  , input                 oc0_ocde
+  , output                oc0_ocde_for_bsp
 
   // // AFU Index
   , input           [5:0] afu_index                            // // This AFU's Index within the Function
@@ -271,7 +274,7 @@ module framework_afu (
 
   // // Interface between snap_core to (clock/dwidth) converter
 `ifndef ENABLE_ODMA
-  wire                       decouple               ; // decoupling
+  //wire                       decouple               ; // decoupling
   wire [`AXI_LITE_AW-1:0]     lite_snap2conv_awaddr  ;
   wire [2:0]                 lite_snap2conv_awprot  ;
   wire                       lite_snap2conv_awvalid ;
@@ -470,6 +473,50 @@ module framework_afu (
   wire                       a_m_axi_bready  ;
 `endif
 
+  `ifdef ENABLE_HBM
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]  act_axi_card_mem0_awaddr    ;
+  wire [ 7 : 0 ]                          act_axi_card_mem0_awlen     ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_awsize    ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_awburst   ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_awlock    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_awcache   ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_awprot    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_awregion  ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_awqos     ;
+  wire                                    act_axi_card_mem0_awvalid   ;
+  wire                                    act_axi_card_mem0_awready   ;
+  wire [ `AXI_CARD_MEM_DATA_WIDTH-1 : 0 ]  act_axi_card_mem0_wdata     ;
+  wire [(`AXI_CARD_MEM_DATA_WIDTH/8)-1 : 0] act_axi_card_mem0_wstrb     ;
+  wire                                    act_axi_card_mem0_wlast     ;
+  wire                                    act_axi_card_mem0_wvalid    ;
+  wire                                    act_axi_card_mem0_wready    ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_bresp     ;
+  wire                                    act_axi_card_mem0_bvalid    ;
+  wire                                    act_axi_card_mem0_bready    ;
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]  act_axi_card_mem0_araddr    ;
+  wire [ 7 : 0 ]                          act_axi_card_mem0_arlen     ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_arsize    ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_arburst   ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_arlock    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_arcache   ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_arprot    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_arregion  ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_arqos     ;
+  wire                                    act_axi_card_mem0_arvalid   ;
+  wire                                    act_axi_card_mem0_arready   ;
+  wire [ `AXI_CARD_MEM_DATA_WIDTH-1 : 0 ]  act_axi_card_mem0_rdata     ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_rresp     ;
+  wire                                    act_axi_card_mem0_rlast     ;
+  wire                                    act_axi_card_mem0_rvalid    ;
+  wire                                    act_axi_card_mem0_rready    ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_arid      ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_awid      ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_bid       ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_rid       ;
+
+  wire                                      clock_hbm_ref               ;
+  wire                                      act_axi_card_mem0_apb_pclk               ;
+  `endif
 
 // if DDR on AD9V3 (No BRAM)
 `ifdef ENABLE_DDR
@@ -573,7 +620,8 @@ module framework_afu (
  // To action_wrapper (sampled by clock_act)
   wire reset_action_d;
   assign reset_action_d = input_reset_q || vio_reset_action || soft_reset_action;
-  //wire reset_action_q;
+
+
 
   // To mem controllers (sampled by clock_afu)
   // To Action attached converters
@@ -944,6 +992,8 @@ module framework_afu (
   oc_action_core action_core_i ( 
       .clock_afu       ( clock_afu              ) ,
       .reset_action_d  ( reset_action_d         ) ,
+      .oc0_ocde        ( oc0_ocde               ),
+      .oc0_ocde_for_bsp ( oc0_ocde_for_bsp      ),
       .int_req_ack     ( int_req_ack            ),
       .int_req         ( int_req                ),
       .int_src         ( int_src                ),
@@ -1080,7 +1130,10 @@ module framework_afu (
       .m_aximm_wlast                        ( mm_conv2snap_wlast    ) ,
       .m_aximm_wready                       ( mm_snap2conv_wready_i   ) ,
       .m_aximm_wstrb                        ( mm_conv2snap_wstrb    ) ,
-      .m_aximm_wvalid                       ( mm_conv2snap_wvalid_i   )
+      .m_aximm_wvalid                       ( mm_conv2snap_wvalid_i   ),
+//HBM
+      .clock_hbm_ref                        (clock_act),
+      .act_axi_card_mem0_apb_pclk           (act_axi_card_mem0_apb_pclk)
  ) ;
 
   // // ******************************************************************************
@@ -1131,6 +1184,35 @@ module framework_afu (
   // // Ethernet controllers
   // //
   // // ******************************************************************************
+`ifdef ENABLE_HBM
+  //
+//act2hbm
+//assign  hbm_ctrl_awid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_mem0_awid;
+//assign  hbm_ctrl_awid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
+//assign  hbm_ctrl_arid[`AXI_CARD_MEM_ID_WIDTH-1 : 0] = act_axi_card_mem0_arid;
+//assign  hbm_ctrl_arid[5 : `AXI_CARD_MEM_ID_WIDTH]   = 'b0;
+//assign  act_axi_card_mem0_bid = hbm_ctrl_bid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+//assign  act_axi_card_mem0_rid = hbm_ctrl_rid[`AXI_CARD_MEM_ID_WIDTH-1 : 0];
+
+//assign hbm_ctrl_reset_n = hbm_ctrl_apb_complete;
+
+// BUFG for HBM REF CLK and APB CLK
+//BUFG u_HBM_REF_CLK_BUFG  (
+  //.I (clock_act),
+  //.O (clock_hbm_ref)
+//);
+
+BUFGCE_DIV #(
+      .BUFGCE_DIVIDE(2)
+   )
+    u_APB_CLK_BUFG  (
+  .I (clock_act),
+  .CE (1'b1),
+  .CLR (1'b0),
+  .O (act_axi_card_mem0_apb_pclk)
+);
+
+`endif
 
 endmodule
 

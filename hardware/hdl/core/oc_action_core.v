@@ -15,15 +15,15 @@
  */
 `include "snap_global_vars.v"
 
-// To create the synthesis of the fixed partn you will need to add:
-// (* black_box *) in front of the word 'module' next line
  module oc_action_core (
    input                                 clock_afu       ,
    input                                 reset_action_d  ,
-   output                                  int_req       ,
-   output [`INT_BITS-1:0]                  int_src       ,
-   output [`CTXW-1:0]                      int_ctx       ,
-   input                                   int_req_ack   ,
+   input                                 oc0_ocde        ,
+   output                                oc0_ocde_for_bsp,
+   output                                int_req       ,
+   output [`INT_BITS-1:0]                int_src       ,
+   output [`CTXW-1:0]                    int_ctx       ,
+   input                                 int_req_ack   ,
     // AXI Control Register interface connected to snap_core
    input [ `AXI_LITE_AW-1 : 0]           s_axil_awaddr   ,
    input                                 s_axil_awprot   ,
@@ -84,7 +84,10 @@
    input [ 1 : 0]                        m_aximm_rresp       ,
    input                                 m_aximm_rlast       ,
    input                                 m_aximm_rvalid      ,
-   output                                m_aximm_rready
+   output                                m_aximm_rready      ,
+
+   input                                 clock_hbm_ref       ,
+   input                                 act_axi_card_mem0_apb_pclk
 
    , input  [`AXI_BUSER-1:0]               m_aximm_buser
    , input  [`AXI_RUSER-1:0]               m_aximm_ruser
@@ -161,6 +164,14 @@
    `endif
    `endif
   );
+
+
+// IO Buffer used to move the ocde input IO to the dynamic part of PR  
+   IBUF #(
+   ) IBUF_inst (
+      .O(oc0_ocde_for_bsp),     // Buffer output
+      .I(oc0_ocde)      // Buffer input (connect directly to top-level port)
+   );
 
 
   // // ******************************************************************************
@@ -388,10 +399,109 @@
   wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_bid       ;
   wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_rid       ;
 
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]   hbm_ctrl_awaddr             ;
+  wire [ 7 : 0 ]                            hbm_ctrl_awlen              ;
+  wire [ 2 : 0 ]                            hbm_ctrl_awsize             ;
+  wire [ 1 : 0 ]                            hbm_ctrl_awburst            ;
+  wire                                      hbm_ctrl_awlock             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_awcache            ;
+  wire [ 2 : 0 ]                            hbm_ctrl_awprot             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_awregion           ;
+  wire [ 3 : 0 ]                            hbm_ctrl_awqos              ;
+  wire                                      hbm_ctrl_awvalid            ;
+  wire                                      hbm_ctrl_awready            ;
+  wire [255: 0 ]                            hbm_ctrl_wdata              ;
+  wire [31 : 0 ]                            hbm_ctrl_wstrb              ;
+  wire                                      hbm_ctrl_wlast              ;
+  wire                                      hbm_ctrl_wvalid             ;
+  wire                                      hbm_ctrl_wready             ;
+  wire [ 1 : 0 ]                            hbm_ctrl_bresp              ;
+  wire                                      hbm_ctrl_bvalid             ;
+  wire                                      hbm_ctrl_bready             ;
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]   hbm_ctrl_araddr             ;
+  wire [ 7 : 0 ]                            hbm_ctrl_arlen              ;
+  wire [ 2 : 0 ]                            hbm_ctrl_arsize             ;
+  wire [ 1 : 0 ]                            hbm_ctrl_arburst            ;
+  wire                                      hbm_ctrl_arlock             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_arcache            ;
+  wire [ 2 : 0 ]                            hbm_ctrl_arprot             ;
+  wire [ 3 : 0 ]                            hbm_ctrl_arregion           ;
+  wire [ 3 : 0 ]                            hbm_ctrl_arqos              ;
+  wire                                      hbm_ctrl_arvalid            ;
+  wire                                      hbm_ctrl_arready            ;
+  wire [255: 0 ]                            hbm_ctrl_rdata              ;
+  wire [ 1 : 0 ]                            hbm_ctrl_rresp              ;
+  wire                                      hbm_ctrl_rlast              ;
+  wire                                      hbm_ctrl_rvalid             ;
+  wire                                      hbm_ctrl_rready             ;
+  wire                                      hbm_ctrl_reset_n            ;
+
+  wire [ 5 : 0 ]                            hbm_ctrl_arid               ;
+  wire [ 5 : 0 ]                            hbm_ctrl_awid               ;
+  wire [ 5 : 0 ]                            hbm_ctrl_bid                ;
+  wire [ 5 : 0 ]                            hbm_ctrl_rid                ;
+  wire [31 :  0]                            hbm_ctrl_wdata_parity       ;
+  wire [31 :  0]                            hbm_ctrl_rdata_parity       ;
+  wire [21 :  0]                            hbm_ctrl_apb_paddr          ;
+  wire [31 :  0]                            hbm_ctrl_apb_pwdata         ;
+  wire [31 :  0]                            hbm_ctrl_apb_prdata         ;
+  wire                                      hbm_ctrl_apb_penable        ;
+  wire                                      hbm_ctrl_apb_pready         ;
+  wire                                      hbm_ctrl_apb_psel           ;
+  wire                                      hbm_ctrl_apb_pslverr        ;
+  wire                                      hbm_ctrl_apb_pwrite         ;
+  wire                                      hbm_ctrl_apb_pclk           ;
+  wire                                      hbm_ctrl_apb_preset_n       ;
+  wire                                      hbm_ctrl_apb_complete       ;
+  wire                                      hbm_ctrl_dram_stat_cattrip  ;
+  wire [ 6 : 0 ]                            hbm_ctrl_dram_stat_temp     ;
+
   `else
 // ifdef ENABLE_HBM => HBM
-  wire                                    hbm_ctrl_apb_complete ;
+  wire clock_hbm_ref_bufg;
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]  act_axi_card_mem0_awaddr    ;
+  wire [ 7 : 0 ]                          act_axi_card_mem0_awlen     ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_awsize    ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_awburst   ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_awlock    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_awcache   ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_awprot    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_awregion  ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_awqos     ;
+  wire                                    act_axi_card_mem0_awvalid   ;
+  wire                                    act_axi_card_mem0_awready   ;
+  wire [ `AXI_CARD_MEM_DATA_WIDTH-1 : 0 ]  act_axi_card_mem0_wdata     ;
+  wire [(`AXI_CARD_MEM_DATA_WIDTH/8)-1 : 0] act_axi_card_mem0_wstrb     ;
+  wire                                    act_axi_card_mem0_wlast     ;
+  wire                                    act_axi_card_mem0_wvalid    ;
+  wire                                    act_axi_card_mem0_wready    ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_bresp     ;
+  wire                                    act_axi_card_mem0_bvalid    ;
+  wire                                    act_axi_card_mem0_bready    ;
+  wire [ `AXI_CARD_MEM_ADDR_WIDTH-1 : 0 ]  act_axi_card_mem0_araddr    ;
+  wire [ 7 : 0 ]                          act_axi_card_mem0_arlen     ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_arsize    ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_arburst   ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_arlock    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_arcache   ;
+  wire [ 2 : 0 ]                          act_axi_card_mem0_arprot    ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_arregion  ;
+  wire [ 3 : 0 ]                          act_axi_card_mem0_arqos     ;
+  wire                                    act_axi_card_mem0_arvalid   ;
+  wire                                    act_axi_card_mem0_arready   ;
+  wire [ `AXI_CARD_MEM_DATA_WIDTH-1 : 0 ]  act_axi_card_mem0_rdata     ;
+  wire [ 1 : 0 ]                          act_axi_card_mem0_rresp     ;
+  wire                                    act_axi_card_mem0_rlast     ;
+  wire                                    act_axi_card_mem0_rvalid    ;
+  wire                                    act_axi_card_mem0_rready    ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_arid      ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_awid      ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_bid       ;
+  wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_rid       ;
 
+
+  wire                                    hbm_ctrl_apb_complete ;
+ `ifdef HBM_AXI_IF_P0
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p0_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p0_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p0_awsize    ;
@@ -431,9 +541,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p0_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p0_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p0_rid       ;
+  `endif
 
-`ifdef HBM_AXI_IF_NUM
-       if (`HBM_AXI_IF_NUM > 1) begin
+  `ifdef HBM_AXI_IF_P1
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p1_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p1_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p1_awsize    ;
@@ -473,8 +583,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p1_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p1_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p1_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 2) begin
+  `endif
+
+  `ifdef HBM_AXI_IF_P2
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p2_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p2_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p2_awsize    ;
@@ -514,8 +625,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p2_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p2_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p2_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 3) begin
+  `endif
+
+  `ifdef HBM_AXI_IF_P3
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p3_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p3_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p3_awsize    ;
@@ -555,9 +667,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p3_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p3_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p3_rid       ;
+  `endif
 
-       end 
-       if (`HBM_AXI_IF_NUM > 4) begin
+  `ifdef HBM_AXI_IF_P4
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p4_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p4_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p4_awsize    ;
@@ -597,9 +709,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p4_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p4_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p4_rid       ;
+  `endif
 
-       end 
-       if (`HBM_AXI_IF_NUM > 5) begin
+  `ifdef HBM_AXI_IF_P5
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p5_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p5_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p5_awsize    ;
@@ -639,9 +751,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p5_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p5_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p5_rid       ;
+  `endif
 
-       end 
-       if (`HBM_AXI_IF_NUM > 6) begin
+  `ifdef HBM_AXI_IF_P6
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p6_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p6_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p6_awsize    ;
@@ -681,9 +793,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p6_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p6_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p6_rid       ;
+  `endif
 
-       end 
-       if (`HBM_AXI_IF_NUM > 7) begin
+  `ifdef HBM_AXI_IF_P7
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p7_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p7_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p7_awsize    ;
@@ -723,9 +835,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p7_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p7_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p7_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 8) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P8
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p8_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p8_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p8_awsize    ;
@@ -765,9 +877,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p8_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p8_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p8_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 9) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P9
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p9_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p9_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p9_awsize    ;
@@ -807,9 +919,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p9_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p9_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p9_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 10) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P10
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p10_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p10_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p10_awsize    ;
@@ -849,9 +961,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p10_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p10_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p10_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 11) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P11
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p11_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p11_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p11_awsize    ;
@@ -891,9 +1003,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p11_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p11_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p11_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 12) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P12
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p12_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p12_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p12_awsize    ;
@@ -933,9 +1045,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p12_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p12_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p12_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 13) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P13
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p13_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p13_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p13_awsize    ;
@@ -975,9 +1087,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p13_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p13_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p13_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 14) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P14
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p14_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p14_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p14_awsize    ;
@@ -1017,9 +1129,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p14_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p14_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p14_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 15) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P15
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p15_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p15_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p15_awsize    ;
@@ -1059,9 +1171,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p15_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p15_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p15_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 16) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P16
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p16_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p16_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p16_awsize    ;
@@ -1101,9 +1213,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p16_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p16_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p16_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 17) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P17
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p17_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p17_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p17_awsize    ;
@@ -1143,9 +1255,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p17_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p17_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p17_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 18) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P18
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p18_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p18_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p18_awsize    ;
@@ -1185,9 +1297,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p18_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p18_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p18_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 19) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P19
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p19_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p19_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p19_awsize    ;
@@ -1227,9 +1339,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p19_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p19_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p19_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 20) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P20
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p20_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p20_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p20_awsize    ;
@@ -1269,9 +1381,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p20_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p20_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p20_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 21) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P21
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p21_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p21_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p21_awsize    ;
@@ -1311,9 +1423,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p21_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p21_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p21_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 22) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P22
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p22_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p22_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p22_awsize    ;
@@ -1353,9 +1465,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p22_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p22_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p22_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 23) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P23
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p23_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p23_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p23_awsize    ;
@@ -1395,9 +1507,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p23_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p23_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p23_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 24) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P24
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p24_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p24_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p24_awsize    ;
@@ -1437,9 +1549,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p24_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p24_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p24_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 25) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P25
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p25_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p25_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p25_awsize    ;
@@ -1479,9 +1591,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p25_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p25_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p25_rid       ;
+  `endif
 
-       end 
-       if (`HBM_AXI_IF_NUM > 26) begin
+  `ifdef HBM_AXI_IF_P26
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p26_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p26_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p26_awsize    ;
@@ -1521,9 +1633,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p26_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p26_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p26_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 27) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P27
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p27_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p27_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p27_awsize    ;
@@ -1563,9 +1675,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p27_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p27_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p27_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 28) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P28
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p28_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p28_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p28_awsize    ;
@@ -1605,9 +1717,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p28_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p28_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p28_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 29) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P29
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p29_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p29_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p29_awsize    ;
@@ -1647,9 +1759,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p29_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p29_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p29_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 30) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P30
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p30_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p30_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p30_awsize    ;
@@ -1689,9 +1801,9 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p30_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p30_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p30_rid       ;
-       end 
-       if (`HBM_AXI_IF_NUM > 31) begin
+  `endif
 
+  `ifdef HBM_AXI_IF_P31
   wire [ `AXI_CARD_HBM_ADDR_WIDTH-1 : 0 ]  act_axi_card_hbm_p31_awaddr    ;
   wire [ 7 : 0 ]                          act_axi_card_hbm_p31_awlen     ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p31_awsize    ;
@@ -1731,9 +1843,7 @@
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p31_awid      ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p31_bid       ;
   wire [ `AXI_CARD_HBM_ID_WIDTH-1 : 0 ]    act_axi_card_hbm_p31_rid       ;
-       end
-`endif
-
+  `endif
   `endif
 
   `ifndef ENABLE_HBM
@@ -1802,16 +1912,16 @@
 
 // if DDR on AD9V3 (No BRAM)
 `ifdef ENABLE_DDR
-`ifdef AD9V3
+  `ifdef AD9V3
   wire            ddr4_dbg_clk                   ;
   wire [511 : 0]  ddr4_dbg_bus                   ;
   wire            memctl0_ui_clk_sync_rst        ; //reset generated from DDR MIG
-`endif
-`ifdef BW250SOC
+  `endif
+  `ifdef BW250SOC
   wire            ddr4_dbg_clk                   ;
   wire [511 : 0]  ddr4_dbg_bus                   ;
   wire            memctl0_ui_clk_sync_rst        ; //reset generated from DDR MIG
-`endif
+  `endif
 
 `endif
 
@@ -1878,14 +1988,26 @@
 
 
   wire clock_act;
-  wire hbm_clk_ref;
+  wire hbm_ref_clk;
   `ifdef ACTION_USER_CLOCK
     assign clock_act = clock_usr;
-    assign hbm_clk_ref = clock_usr;
+    assign hbm_ref_clk = clock_usr;
+    assign hbm_ref_clk = clock_usr;
   `else
     assign clock_act = clock_afu;
-    assign hbm_clk_ref = clock_afu;
+    assign hbm_ref_clk = clock_afu;
   `endif
+
+  `ifdef ENABLE_HBM
+   wire apb_pclk;
+   BUFGCE_DIV bufg_apb_clk (
+      .CE          ( 1'b1),
+      .CLR         ( 1'b0),
+      .I           (hbm_ref_clk),
+      .O           (apb_pclk)
+   );
+  `endif
+
 
   wire clock_mem;
   `ifdef ENABLE_DDR
@@ -2406,6 +2528,7 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
 // If HBM
       //
       // AXI HBM memory Interface
+      `ifdef HBM_AXI_IF_P0
       .m_axi_card_hbm_p0_araddr             ( act_axi_card_hbm_p0_araddr   ) ,
       .m_axi_card_hbm_p0_arburst            ( act_axi_card_hbm_p0_arburst  ) ,
       .m_axi_card_hbm_p0_arcache            ( act_axi_card_hbm_p0_arcache  ) ,
@@ -2450,9 +2573,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p0_wstrb              ( act_axi_card_hbm_p0_wstrb    ) ,
       .m_axi_card_hbm_p0_wuser              (                            ) ,
       .m_axi_card_hbm_p0_wvalid             ( act_axi_card_hbm_p0_wvalid   ) ,
+      `endif
 
-`ifdef HBM_AXI_IF_NUM
-       if (`HBM_AXI_IF_NUM > 1) begin
+      `ifdef HBM_AXI_IF_P1
       .m_axi_card_hbm_p1_araddr             ( act_axi_card_hbm_p1_araddr   ) ,
       .m_axi_card_hbm_p1_arburst            ( act_axi_card_hbm_p1_arburst  ) ,
       .m_axi_card_hbm_p1_arcache            ( act_axi_card_hbm_p1_arcache  ) ,
@@ -2497,9 +2620,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p1_wstrb              ( act_axi_card_hbm_p1_wstrb    ) ,
       .m_axi_card_hbm_p1_wuser              (                            ) ,
       .m_axi_card_hbm_p1_wvalid             ( act_axi_card_hbm_p1_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 2) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P2
       .m_axi_card_hbm_p2_araddr             ( act_axi_card_hbm_p2_araddr   ) ,
       .m_axi_card_hbm_p2_arburst            ( act_axi_card_hbm_p2_arburst  ) ,
       .m_axi_card_hbm_p2_arcache            ( act_axi_card_hbm_p2_arcache  ) ,
@@ -2544,9 +2667,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p2_wstrb              ( act_axi_card_hbm_p2_wstrb    ) ,
       .m_axi_card_hbm_p2_wuser              (                            ) ,
       .m_axi_card_hbm_p2_wvalid             ( act_axi_card_hbm_p2_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 3) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P3
       .m_axi_card_hbm_p3_araddr             ( act_axi_card_hbm_p3_araddr   ) ,
       .m_axi_card_hbm_p3_arburst            ( act_axi_card_hbm_p3_arburst  ) ,
       .m_axi_card_hbm_p3_arcache            ( act_axi_card_hbm_p3_arcache  ) ,
@@ -2591,9 +2714,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p3_wstrb              ( act_axi_card_hbm_p3_wstrb    ) ,
       .m_axi_card_hbm_p3_wuser              (                            ) ,
       .m_axi_card_hbm_p3_wvalid             ( act_axi_card_hbm_p3_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 4) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P4
       .m_axi_card_hbm_p4_araddr             ( act_axi_card_hbm_p4_araddr   ) ,
       .m_axi_card_hbm_p4_arburst            ( act_axi_card_hbm_p4_arburst  ) ,
       .m_axi_card_hbm_p4_arcache            ( act_axi_card_hbm_p4_arcache  ) ,
@@ -2638,9 +2761,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p4_wstrb              ( act_axi_card_hbm_p4_wstrb    ) ,
       .m_axi_card_hbm_p4_wuser              (                            ) ,
       .m_axi_card_hbm_p4_wvalid             ( act_axi_card_hbm_p4_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 5) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P5
       .m_axi_card_hbm_p5_araddr             ( act_axi_card_hbm_p5_araddr   ) ,
       .m_axi_card_hbm_p5_arburst            ( act_axi_card_hbm_p5_arburst  ) ,
       .m_axi_card_hbm_p5_arcache            ( act_axi_card_hbm_p5_arcache  ) ,
@@ -2685,9 +2808,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p5_wstrb              ( act_axi_card_hbm_p5_wstrb    ) ,
       .m_axi_card_hbm_p5_wuser              (                            ) ,
       .m_axi_card_hbm_p5_wvalid             ( act_axi_card_hbm_p5_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 6) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P6
       .m_axi_card_hbm_p6_araddr             ( act_axi_card_hbm_p6_araddr   ) ,
       .m_axi_card_hbm_p6_arburst            ( act_axi_card_hbm_p6_arburst  ) ,
       .m_axi_card_hbm_p6_arcache            ( act_axi_card_hbm_p6_arcache  ) ,
@@ -2732,9 +2855,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p6_wstrb              ( act_axi_card_hbm_p6_wstrb    ) ,
       .m_axi_card_hbm_p6_wuser              (                            ) ,
       .m_axi_card_hbm_p6_wvalid             ( act_axi_card_hbm_p6_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 7) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P7
       .m_axi_card_hbm_p7_araddr             ( act_axi_card_hbm_p7_araddr   ) ,
       .m_axi_card_hbm_p7_arburst            ( act_axi_card_hbm_p7_arburst  ) ,
       .m_axi_card_hbm_p7_arcache            ( act_axi_card_hbm_p7_arcache  ) ,
@@ -2779,9 +2902,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p7_wstrb              ( act_axi_card_hbm_p7_wstrb    ) ,
       .m_axi_card_hbm_p7_wuser              (                            ) ,
       .m_axi_card_hbm_p7_wvalid             ( act_axi_card_hbm_p7_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 8) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P8
       .m_axi_card_hbm_p8_araddr             ( act_axi_card_hbm_p8_araddr   ) ,
       .m_axi_card_hbm_p8_arburst            ( act_axi_card_hbm_p8_arburst  ) ,
       .m_axi_card_hbm_p8_arcache            ( act_axi_card_hbm_p8_arcache  ) ,
@@ -2826,9 +2949,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p8_wstrb              ( act_axi_card_hbm_p8_wstrb    ) ,
       .m_axi_card_hbm_p8_wuser              (                            ) ,
       .m_axi_card_hbm_p8_wvalid             ( act_axi_card_hbm_p8_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 9) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P9
       .m_axi_card_hbm_p9_araddr             ( act_axi_card_hbm_p9_araddr   ) ,
       .m_axi_card_hbm_p9_arburst            ( act_axi_card_hbm_p9_arburst  ) ,
       .m_axi_card_hbm_p9_arcache            ( act_axi_card_hbm_p9_arcache  ) ,
@@ -2873,9 +2996,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p9_wstrb              ( act_axi_card_hbm_p9_wstrb    ) ,
       .m_axi_card_hbm_p9_wuser              (                            ) ,
       .m_axi_card_hbm_p9_wvalid             ( act_axi_card_hbm_p9_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 10) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P10
       .m_axi_card_hbm_p10_araddr             ( act_axi_card_hbm_p10_araddr   ) ,
       .m_axi_card_hbm_p10_arburst            ( act_axi_card_hbm_p10_arburst  ) ,
       .m_axi_card_hbm_p10_arcache            ( act_axi_card_hbm_p10_arcache  ) ,
@@ -2920,9 +3043,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p10_wstrb              ( act_axi_card_hbm_p10_wstrb    ) ,
       .m_axi_card_hbm_p10_wuser              (                            ) ,
       .m_axi_card_hbm_p10_wvalid             ( act_axi_card_hbm_p10_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 11) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P11
       .m_axi_card_hbm_p11_araddr             ( act_axi_card_hbm_p11_araddr   ) ,
       .m_axi_card_hbm_p11_arburst            ( act_axi_card_hbm_p11_arburst  ) ,
       .m_axi_card_hbm_p11_arcache            ( act_axi_card_hbm_p11_arcache  ) ,
@@ -2967,10 +3090,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p11_wstrb              ( act_axi_card_hbm_p11_wstrb    ) ,
       .m_axi_card_hbm_p11_wuser              (                            ) ,
       .m_axi_card_hbm_p11_wvalid             ( act_axi_card_hbm_p11_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 12) begin
+      `endif
 
-
+      `ifdef HBM_AXI_IF_P12
       .m_axi_card_hbm_p12_araddr             ( act_axi_card_hbm_p12_araddr   ) ,
       .m_axi_card_hbm_p12_arburst            ( act_axi_card_hbm_p12_arburst  ) ,
       .m_axi_card_hbm_p12_arcache            ( act_axi_card_hbm_p12_arcache  ) ,
@@ -3015,9 +3137,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p12_wstrb              ( act_axi_card_hbm_p12_wstrb    ) ,
       .m_axi_card_hbm_p12_wuser              (                            ) ,
       .m_axi_card_hbm_p12_wvalid             ( act_axi_card_hbm_p12_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 13) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P13
       .m_axi_card_hbm_p13_araddr             ( act_axi_card_hbm_p13_araddr   ) ,
       .m_axi_card_hbm_p13_arburst            ( act_axi_card_hbm_p13_arburst  ) ,
       .m_axi_card_hbm_p13_arcache            ( act_axi_card_hbm_p13_arcache  ) ,
@@ -3062,9 +3184,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p13_wstrb              ( act_axi_card_hbm_p13_wstrb    ) ,
       .m_axi_card_hbm_p13_wuser              (                            ) ,
       .m_axi_card_hbm_p13_wvalid             ( act_axi_card_hbm_p13_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 14) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P14
       .m_axi_card_hbm_p14_araddr             ( act_axi_card_hbm_p14_araddr   ) ,
       .m_axi_card_hbm_p14_arburst            ( act_axi_card_hbm_p14_arburst  ) ,
       .m_axi_card_hbm_p14_arcache            ( act_axi_card_hbm_p14_arcache  ) ,
@@ -3109,9 +3231,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p14_wstrb              ( act_axi_card_hbm_p14_wstrb    ) ,
       .m_axi_card_hbm_p14_wuser              (                            ) ,
       .m_axi_card_hbm_p14_wvalid             ( act_axi_card_hbm_p14_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 15) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P15
       .m_axi_card_hbm_p15_araddr             ( act_axi_card_hbm_p15_araddr   ) ,
       .m_axi_card_hbm_p15_arburst            ( act_axi_card_hbm_p15_arburst  ) ,
       .m_axi_card_hbm_p15_arcache            ( act_axi_card_hbm_p15_arcache  ) ,
@@ -3156,9 +3278,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p15_wstrb              ( act_axi_card_hbm_p15_wstrb    ) ,
       .m_axi_card_hbm_p15_wuser              (                            ) ,
       .m_axi_card_hbm_p15_wvalid             ( act_axi_card_hbm_p15_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 16) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P16
       .m_axi_card_hbm_p16_araddr             ( act_axi_card_hbm_p16_araddr   ) ,
       .m_axi_card_hbm_p16_arburst            ( act_axi_card_hbm_p16_arburst  ) ,
       .m_axi_card_hbm_p16_arcache            ( act_axi_card_hbm_p16_arcache  ) ,
@@ -3203,9 +3325,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p16_wstrb              ( act_axi_card_hbm_p16_wstrb    ) ,
       .m_axi_card_hbm_p16_wuser              (                            ) ,
       .m_axi_card_hbm_p16_wvalid             ( act_axi_card_hbm_p16_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 17) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P17
       .m_axi_card_hbm_p17_araddr             ( act_axi_card_hbm_p17_araddr   ) ,
       .m_axi_card_hbm_p17_arburst            ( act_axi_card_hbm_p17_arburst  ) ,
       .m_axi_card_hbm_p17_arcache            ( act_axi_card_hbm_p17_arcache  ) ,
@@ -3250,9 +3372,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p17_wstrb              ( act_axi_card_hbm_p17_wstrb    ) ,
       .m_axi_card_hbm_p17_wuser              (                            ) ,
       .m_axi_card_hbm_p17_wvalid             ( act_axi_card_hbm_p17_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 18) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P18
       .m_axi_card_hbm_p18_araddr             ( act_axi_card_hbm_p18_araddr   ) ,
       .m_axi_card_hbm_p18_arburst            ( act_axi_card_hbm_p18_arburst  ) ,
       .m_axi_card_hbm_p18_arcache            ( act_axi_card_hbm_p18_arcache  ) ,
@@ -3297,9 +3419,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p18_wstrb              ( act_axi_card_hbm_p18_wstrb    ) ,
       .m_axi_card_hbm_p18_wuser              (                            ) ,
       .m_axi_card_hbm_p18_wvalid             ( act_axi_card_hbm_p18_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 19) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P19
       .m_axi_card_hbm_p19_araddr             ( act_axi_card_hbm_p19_araddr   ) ,
       .m_axi_card_hbm_p19_arburst            ( act_axi_card_hbm_p19_arburst  ) ,
       .m_axi_card_hbm_p19_arcache            ( act_axi_card_hbm_p19_arcache  ) ,
@@ -3344,9 +3466,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p19_wstrb              ( act_axi_card_hbm_p19_wstrb    ) ,
       .m_axi_card_hbm_p19_wuser              (                            ) ,
       .m_axi_card_hbm_p19_wvalid             ( act_axi_card_hbm_p19_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 20) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P20
       .m_axi_card_hbm_p20_araddr             ( act_axi_card_hbm_p20_araddr   ) ,
       .m_axi_card_hbm_p20_arburst            ( act_axi_card_hbm_p20_arburst  ) ,
       .m_axi_card_hbm_p20_arcache            ( act_axi_card_hbm_p20_arcache  ) ,
@@ -3391,9 +3513,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p20_wstrb              ( act_axi_card_hbm_p20_wstrb    ) ,
       .m_axi_card_hbm_p20_wuser              (                            ) ,
       .m_axi_card_hbm_p20_wvalid             ( act_axi_card_hbm_p20_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 21) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P21
       .m_axi_card_hbm_p21_araddr             ( act_axi_card_hbm_p21_araddr   ) ,
       .m_axi_card_hbm_p21_arburst            ( act_axi_card_hbm_p21_arburst  ) ,
       .m_axi_card_hbm_p21_arcache            ( act_axi_card_hbm_p21_arcache  ) ,
@@ -3438,9 +3560,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p21_wstrb              ( act_axi_card_hbm_p21_wstrb    ) ,
       .m_axi_card_hbm_p21_wuser              (                            ) ,
       .m_axi_card_hbm_p21_wvalid             ( act_axi_card_hbm_p21_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 22) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P22
       .m_axi_card_hbm_p22_araddr             ( act_axi_card_hbm_p22_araddr   ) ,
       .m_axi_card_hbm_p22_arburst            ( act_axi_card_hbm_p22_arburst  ) ,
       .m_axi_card_hbm_p22_arcache            ( act_axi_card_hbm_p22_arcache  ) ,
@@ -3485,9 +3607,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p22_wstrb              ( act_axi_card_hbm_p22_wstrb    ) ,
       .m_axi_card_hbm_p22_wuser              (                            ) ,
       .m_axi_card_hbm_p22_wvalid             ( act_axi_card_hbm_p22_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 23) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P23
       .m_axi_card_hbm_p23_araddr             ( act_axi_card_hbm_p23_araddr   ) ,
       .m_axi_card_hbm_p23_arburst            ( act_axi_card_hbm_p23_arburst  ) ,
       .m_axi_card_hbm_p23_arcache            ( act_axi_card_hbm_p23_arcache  ) ,
@@ -3532,9 +3654,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p23_wstrb              ( act_axi_card_hbm_p23_wstrb    ) ,
       .m_axi_card_hbm_p23_wuser              (                            ) ,
       .m_axi_card_hbm_p23_wvalid             ( act_axi_card_hbm_p23_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 24) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P24
       .m_axi_card_hbm_p24_araddr             ( act_axi_card_hbm_p24_araddr   ) ,
       .m_axi_card_hbm_p24_arburst            ( act_axi_card_hbm_p24_arburst  ) ,
       .m_axi_card_hbm_p24_arcache            ( act_axi_card_hbm_p24_arcache  ) ,
@@ -3579,9 +3701,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p24_wstrb              ( act_axi_card_hbm_p24_wstrb    ) ,
       .m_axi_card_hbm_p24_wuser              (                            ) ,
       .m_axi_card_hbm_p24_wvalid             ( act_axi_card_hbm_p24_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 25) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P25
       .m_axi_card_hbm_p25_araddr             ( act_axi_card_hbm_p25_araddr   ) ,
       .m_axi_card_hbm_p25_arburst            ( act_axi_card_hbm_p25_arburst  ) ,
       .m_axi_card_hbm_p25_arcache            ( act_axi_card_hbm_p25_arcache  ) ,
@@ -3626,9 +3748,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p25_wstrb              ( act_axi_card_hbm_p25_wstrb    ) ,
       .m_axi_card_hbm_p25_wuser              (                            ) ,
       .m_axi_card_hbm_p25_wvalid             ( act_axi_card_hbm_p25_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 26) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P26
       .m_axi_card_hbm_p26_araddr             ( act_axi_card_hbm_p26_araddr   ) ,
       .m_axi_card_hbm_p26_arburst            ( act_axi_card_hbm_p26_arburst  ) ,
       .m_axi_card_hbm_p26_arcache            ( act_axi_card_hbm_p26_arcache  ) ,
@@ -3673,9 +3795,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p26_wstrb              ( act_axi_card_hbm_p26_wstrb    ) ,
       .m_axi_card_hbm_p26_wuser              (                            ) ,
       .m_axi_card_hbm_p26_wvalid             ( act_axi_card_hbm_p26_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 27) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P27
       .m_axi_card_hbm_p27_araddr             ( act_axi_card_hbm_p27_araddr   ) ,
       .m_axi_card_hbm_p27_arburst            ( act_axi_card_hbm_p27_arburst  ) ,
       .m_axi_card_hbm_p27_arcache            ( act_axi_card_hbm_p27_arcache  ) ,
@@ -3720,9 +3842,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p27_wstrb              ( act_axi_card_hbm_p27_wstrb    ) ,
       .m_axi_card_hbm_p27_wuser              (                            ) ,
       .m_axi_card_hbm_p27_wvalid             ( act_axi_card_hbm_p27_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 28) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P28
       .m_axi_card_hbm_p28_araddr             ( act_axi_card_hbm_p28_araddr   ) ,
       .m_axi_card_hbm_p28_arburst            ( act_axi_card_hbm_p28_arburst  ) ,
       .m_axi_card_hbm_p28_arcache            ( act_axi_card_hbm_p28_arcache  ) ,
@@ -3767,9 +3889,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p28_wstrb              ( act_axi_card_hbm_p28_wstrb    ) ,
       .m_axi_card_hbm_p28_wuser              (                            ) ,
       .m_axi_card_hbm_p28_wvalid             ( act_axi_card_hbm_p28_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 29) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P29
       .m_axi_card_hbm_p29_araddr             ( act_axi_card_hbm_p29_araddr   ) ,
       .m_axi_card_hbm_p29_arburst            ( act_axi_card_hbm_p29_arburst  ) ,
       .m_axi_card_hbm_p29_arcache            ( act_axi_card_hbm_p29_arcache  ) ,
@@ -3814,9 +3936,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p29_wstrb              ( act_axi_card_hbm_p29_wstrb    ) ,
       .m_axi_card_hbm_p29_wuser              (                            ) ,
       .m_axi_card_hbm_p29_wvalid             ( act_axi_card_hbm_p29_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 30) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P30
       .m_axi_card_hbm_p30_araddr             ( act_axi_card_hbm_p30_araddr   ) ,
       .m_axi_card_hbm_p30_arburst            ( act_axi_card_hbm_p30_arburst  ) ,
       .m_axi_card_hbm_p30_arcache            ( act_axi_card_hbm_p30_arcache  ) ,
@@ -3861,9 +3983,9 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p30_wstrb              ( act_axi_card_hbm_p30_wstrb    ) ,
       .m_axi_card_hbm_p30_wuser              (                            ) ,
       .m_axi_card_hbm_p30_wvalid             ( act_axi_card_hbm_p30_wvalid   ) ,
-       end 
-       if (`HBM_AXI_IF_NUM > 31) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P31
       .m_axi_card_hbm_p31_araddr             ( act_axi_card_hbm_p31_araddr   ) ,
       .m_axi_card_hbm_p31_arburst            ( act_axi_card_hbm_p31_arburst  ) ,
       .m_axi_card_hbm_p31_arcache            ( act_axi_card_hbm_p31_arcache  ) ,
@@ -3908,8 +4030,7 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .m_axi_card_hbm_p31_wstrb              ( act_axi_card_hbm_p31_wstrb    ) ,
       .m_axi_card_hbm_p31_wuser              (                            ) ,
       .m_axi_card_hbm_p31_wvalid             ( act_axi_card_hbm_p31_wvalid   ) ,
-      end
-`endif
+      `endif
 `endif
 `endif
 
@@ -4089,6 +4210,7 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .a_s_axi_bvalid                        ( a_m_axi_bvalid          ) ,
       .a_s_axi_bresp                         ( a_m_axi_bresp           ) ,
       .a_s_axi_bready                        ( a_m_axi_bready          ) ,
+
       .a_m_axi_arvalid                       ( a_s_axi_arvalid         ) ,
       .a_m_axi_araddr                        ( a_s_axi_araddr          ) ,
       .a_m_axi_arready                       ( a_s_axi_arready         ) ,
@@ -4108,19 +4230,6 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .a_m_axi_bready                        ( a_s_axi_bready          )
 ) ;  // action_w: action_wrapper
 `endif
-
-  // // ******************************************************************************
-  // // Convertors for AXI lite path
-  // // ******************************************************************************
-
-  // // ******************************************************************************
-  // // IO AXI-Lite Decoupling Logic
-  // // ******************************************************************************
-  
-  // // ******************************************************************************
-  // // IO AXI-MM Decoupling Logic
-  // // ******************************************************************************
-
 
   // // ******************************************************************************
   // // Convertor for Action to Card mem controller
@@ -4508,6 +4617,7 @@ block_RAM block_ram_i1
 
  hbm_top_wrapper hbm_top_wrapper_i (
 	// following depends on number of independent HBM
+      `ifdef HBM_AXI_IF_P0
       .s_axi_p0_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p0_HBM_awaddr      ( act_axi_card_hbm_p0_awaddr    ) ,
       .s_axi_p0_HBM_awlen       ( act_axi_card_hbm_p0_awlen     ) ,
@@ -4522,7 +4632,6 @@ block_RAM block_ram_i1
       .s_axi_p0_HBM_arqos       ( act_axi_card_hbm_p0_arqos     ) ,
   `endif
       .s_axi_p0_HBM_awcache     ( act_axi_card_hbm_p0_awcache   ) ,
-      //.s_axi_p0_HBM_awid        ( 6'b0                          ) ,
       .s_axi_p0_HBM_awprot      ( act_axi_card_hbm_p0_awprot    ) ,
       .s_axi_p0_HBM_awvalid     ( act_axi_card_hbm_p0_awvalid   ) ,
       .s_axi_p0_HBM_awready     ( act_axi_card_hbm_p0_awready   ) ,
@@ -4534,25 +4643,64 @@ block_RAM block_ram_i1
       .s_axi_p0_HBM_bresp       ( act_axi_card_hbm_p0_bresp     ) ,
       .s_axi_p0_HBM_bvalid      ( act_axi_card_hbm_p0_bvalid    ) ,
       .s_axi_p0_HBM_bready      ( act_axi_card_hbm_p0_bready    ) ,
-      //.s_axi_p0_HBM_bid         (                               ) ,
       .s_axi_p0_HBM_araddr      ( act_axi_card_hbm_p0_araddr    ) ,
       .s_axi_p0_HBM_arlen       ( act_axi_card_hbm_p0_arlen     ) ,
       .s_axi_p0_HBM_arsize      ( act_axi_card_hbm_p0_arsize    ) ,
       .s_axi_p0_HBM_arburst     ( act_axi_card_hbm_p0_arburst   ) ,
       .s_axi_p0_HBM_arcache     ( act_axi_card_hbm_p0_arcache   ) ,
-      //.s_axi_p0_HBM_arid        ( 6'b0                         ) ,
       .s_axi_p0_HBM_arprot      ( act_axi_card_hbm_p0_arprot    ) ,
       .s_axi_p0_HBM_arvalid     ( act_axi_card_hbm_p0_arvalid   ) ,
       .s_axi_p0_HBM_arready     ( act_axi_card_hbm_p0_arready   ) ,
       .s_axi_p0_HBM_rdata       ( act_axi_card_hbm_p0_rdata     ) ,
-      //.s_axi_p0_HBM_rid         (                               ) ,
       .s_axi_p0_HBM_rresp       ( act_axi_card_hbm_p0_rresp     ) ,
       .s_axi_p0_HBM_rlast       ( act_axi_card_hbm_p0_rlast     ) ,
       .s_axi_p0_HBM_rvalid      ( act_axi_card_hbm_p0_rvalid    ) ,
       .s_axi_p0_HBM_rready      ( act_axi_card_hbm_p0_rready    ) ,
 
-      `ifdef HBM_AXI_IF_NUM 
-       if (`HBM_AXI_IF_NUM > 1) begin
+      .m_axi_p0_HBM_awaddr      ( act_axi_card_mem0_awaddr    ) ,
+      .m_axi_p0_HBM_awlen       ( act_axi_card_mem0_awlen     ) ,
+      .m_axi_p0_HBM_awsize      ( act_axi_card_mem0_awsize    ) ,
+      .m_axi_p0_HBM_awburst     ( act_axi_card_mem0_awburst   ) ,
+      .m_axi_p0_HBM_awlock      ( act_axi_card_mem0_awlock[0] ) ,
+      .m_axi_p0_HBM_arlock      ( act_axi_card_mem0_arlock[0] ) ,
+  `ifndef ENABLE_BRAM
+      //.m_axi_p0_HBM_awregion    ( act_axi_card_mem0_ m_axi_awregion  ) ,
+      .m_axi_p0_HBM_awqos       ( act_axi_card_mem0_awqos     ) ,
+      //.m_axi_p0_HBM_arregion    ( act_axi_card_mem0_arregion  ) ,
+      .m_axi_p0_HBM_arqos       ( act_axi_card_mem0_arqos     ) ,
+  `endif
+      .m_axi_p0_HBM_awcache     ( act_axi_card_mem0_awcache   ) ,
+      //.s_axi_p0_HBM_awid        ( 6'b0                          ) ,
+      .m_axi_p0_HBM_awprot      ( act_axi_card_mem0_awprot    ) ,
+      .m_axi_p0_HBM_awvalid     ( act_axi_card_mem0_awvalid   ) ,
+      .m_axi_p0_HBM_awready     ( act_axi_card_mem0_awready   ) ,
+      .m_axi_p0_HBM_wdata       ( act_axi_card_mem0_wdata     ) ,
+      .m_axi_p0_HBM_wstrb       ( act_axi_card_mem0_wstrb     ) ,
+      .m_axi_p0_HBM_wlast       ( act_axi_card_mem0_wlast     ) ,
+      .m_axi_p0_HBM_wvalid      ( act_axi_card_mem0_wvalid    ) ,
+      .m_axi_p0_HBM_wready      ( act_axi_card_mem0_wready    ) ,
+      .m_axi_p0_HBM_bresp       ( act_axi_card_mem0_bresp     ) ,
+      .m_axi_p0_HBM_bvalid      ( act_axi_card_mem0_bvalid    ) ,
+      .m_axi_p0_HBM_bready      ( act_axi_card_mem0_bready    ) ,
+      //.s_axi_p0_HBM_bid         (                               ) ,
+      .m_axi_p0_HBM_araddr      ( act_axi_card_mem0_araddr    ) ,
+      .m_axi_p0_HBM_arlen       ( act_axi_card_mem0_arlen     ) ,
+      .m_axi_p0_HBM_arsize      ( act_axi_card_mem0_arsize    ) ,
+      .m_axi_p0_HBM_arburst     ( act_axi_card_mem0_arburst   ) ,
+      .m_axi_p0_HBM_arcache     ( act_axi_card_mem0_arcache   ) ,
+      //.s_axi_p0_HBM_arid        ( 6'b0                         ) ,
+      .m_axi_p0_HBM_arprot      ( act_axi_card_mem0_arprot    ) ,
+      .m_axi_p0_HBM_arvalid     ( act_axi_card_mem0_arvalid   ) ,
+      .m_axi_p0_HBM_arready     ( act_axi_card_mem0_arready   ) ,
+      .m_axi_p0_HBM_rdata       ( act_axi_card_mem0_rdata     ) ,
+      //.s_axi_p0_HBM_rid         (                               ) ,
+      .m_axi_p0_HBM_rresp       ( act_axi_card_mem0_rresp     ) ,
+      .m_axi_p0_HBM_rlast       ( act_axi_card_mem0_rlast     ) ,
+      .m_axi_p0_HBM_rvalid      ( act_axi_card_mem0_rvalid    ) ,
+      .m_axi_p0_HBM_rready      ( act_axi_card_mem0_rready    ) ,
+      `endif
+
+      `ifdef HBM_AXI_IF_P1 
       .s_axi_p1_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p1_HBM_awaddr      ( act_axi_card_hbm_p1_awaddr    ) ,
       .s_axi_p1_HBM_awlen       ( act_axi_card_hbm_p1_awlen     ) ,
@@ -4591,8 +4739,9 @@ block_RAM block_ram_i1
       .s_axi_p1_HBM_rlast       ( act_axi_card_hbm_p1_rlast     ) ,
       .s_axi_p1_HBM_rvalid      ( act_axi_card_hbm_p1_rvalid    ) ,
       .s_axi_p1_HBM_rready      ( act_axi_card_hbm_p1_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 2) begin
+      `endif
+
+      `ifdef HBM_AXI_IF_P2
       .s_axi_p2_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p2_HBM_awaddr      ( act_axi_card_hbm_p2_awaddr    ) ,
       .s_axi_p2_HBM_awlen       ( act_axi_card_hbm_p2_awlen     ) ,
@@ -4631,9 +4780,9 @@ block_RAM block_ram_i1
       .s_axi_p2_HBM_rlast       ( act_axi_card_hbm_p2_rlast     ) ,
       .s_axi_p2_HBM_rvalid      ( act_axi_card_hbm_p2_rvalid    ) ,
       .s_axi_p2_HBM_rready      ( act_axi_card_hbm_p2_rready    ) ,
+      `endif
 
-       end
-       if (`HBM_AXI_IF_NUM > 3) begin
+      `ifdef HBM_AXI_IF_P3
       .s_axi_p3_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p3_HBM_awaddr      ( act_axi_card_hbm_p3_awaddr    ) ,
       .s_axi_p3_HBM_awlen       ( act_axi_card_hbm_p3_awlen     ) ,
@@ -4672,9 +4821,9 @@ block_RAM block_ram_i1
       .s_axi_p3_HBM_rlast       ( act_axi_card_hbm_p3_rlast     ) ,
       .s_axi_p3_HBM_rvalid      ( act_axi_card_hbm_p3_rvalid    ) ,
       .s_axi_p3_HBM_rready      ( act_axi_card_hbm_p3_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 4) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P4
       .s_axi_p4_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p4_HBM_awaddr      ( act_axi_card_hbm_p4_awaddr    ) ,
       .s_axi_p4_HBM_awlen       ( act_axi_card_hbm_p4_awlen     ) ,
@@ -4713,9 +4862,9 @@ block_RAM block_ram_i1
       .s_axi_p4_HBM_rlast       ( act_axi_card_hbm_p4_rlast     ) ,
       .s_axi_p4_HBM_rvalid      ( act_axi_card_hbm_p4_rvalid    ) ,
       .s_axi_p4_HBM_rready      ( act_axi_card_hbm_p4_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 5) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P5
       .s_axi_p5_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p5_HBM_awaddr      ( act_axi_card_hbm_p5_awaddr    ) ,
       .s_axi_p5_HBM_awlen       ( act_axi_card_hbm_p5_awlen     ) ,
@@ -4754,9 +4903,9 @@ block_RAM block_ram_i1
       .s_axi_p5_HBM_rlast       ( act_axi_card_hbm_p5_rlast     ) ,
       .s_axi_p5_HBM_rvalid      ( act_axi_card_hbm_p5_rvalid    ) ,
       .s_axi_p5_HBM_rready      ( act_axi_card_hbm_p5_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 6) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P6
       .s_axi_p6_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p6_HBM_awaddr      ( act_axi_card_hbm_p6_awaddr    ) ,
       .s_axi_p6_HBM_awlen       ( act_axi_card_hbm_p6_awlen     ) ,
@@ -4795,9 +4944,9 @@ block_RAM block_ram_i1
       .s_axi_p6_HBM_rlast       ( act_axi_card_hbm_p6_rlast     ) ,
       .s_axi_p6_HBM_rvalid      ( act_axi_card_hbm_p6_rvalid    ) ,
       .s_axi_p6_HBM_rready      ( act_axi_card_hbm_p6_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 7) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P7
       .s_axi_p7_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p7_HBM_awaddr      ( act_axi_card_hbm_p7_awaddr    ) ,
       .s_axi_p7_HBM_awlen       ( act_axi_card_hbm_p7_awlen     ) ,
@@ -4836,9 +4985,9 @@ block_RAM block_ram_i1
       .s_axi_p7_HBM_rlast       ( act_axi_card_hbm_p7_rlast     ) ,
       .s_axi_p7_HBM_rvalid      ( act_axi_card_hbm_p7_rvalid    ) ,
       .s_axi_p7_HBM_rready      ( act_axi_card_hbm_p7_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 8) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P8
       .s_axi_p8_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p8_HBM_awaddr      ( act_axi_card_hbm_p8_awaddr    ) ,
       .s_axi_p8_HBM_awlen       ( act_axi_card_hbm_p8_awlen     ) ,
@@ -4877,9 +5026,9 @@ block_RAM block_ram_i1
       .s_axi_p8_HBM_rlast       ( act_axi_card_hbm_p8_rlast     ) ,
       .s_axi_p8_HBM_rvalid      ( act_axi_card_hbm_p8_rvalid    ) ,
       .s_axi_p8_HBM_rready      ( act_axi_card_hbm_p8_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 9) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P9
       .s_axi_p9_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p9_HBM_awaddr      ( act_axi_card_hbm_p9_awaddr    ) ,
       .s_axi_p9_HBM_awlen       ( act_axi_card_hbm_p9_awlen     ) ,
@@ -4918,9 +5067,9 @@ block_RAM block_ram_i1
       .s_axi_p9_HBM_rlast       ( act_axi_card_hbm_p9_rlast     ) ,
       .s_axi_p9_HBM_rvalid      ( act_axi_card_hbm_p9_rvalid    ) ,
       .s_axi_p9_HBM_rready      ( act_axi_card_hbm_p9_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 10) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P10
       .s_axi_p10_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p10_HBM_awaddr      ( act_axi_card_hbm_p10_awaddr    ) ,
       .s_axi_p10_HBM_awlen       ( act_axi_card_hbm_p10_awlen     ) ,
@@ -4959,9 +5108,9 @@ block_RAM block_ram_i1
       .s_axi_p10_HBM_rlast       ( act_axi_card_hbm_p10_rlast     ) ,
       .s_axi_p10_HBM_rvalid      ( act_axi_card_hbm_p10_rvalid    ) ,
       .s_axi_p10_HBM_rready      ( act_axi_card_hbm_p10_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 11) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P11
       .s_axi_p11_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p11_HBM_awaddr      ( act_axi_card_hbm_p11_awaddr    ) ,
       .s_axi_p11_HBM_awlen       ( act_axi_card_hbm_p11_awlen     ) ,
@@ -5000,8 +5149,9 @@ block_RAM block_ram_i1
       .s_axi_p11_HBM_rlast       ( act_axi_card_hbm_p11_rlast     ) ,
       .s_axi_p11_HBM_rvalid      ( act_axi_card_hbm_p11_rvalid    ) ,
       .s_axi_p11_HBM_rready      ( act_axi_card_hbm_p11_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 12) begin
+      `endif
+
+      `ifdef HBM_AXI_IF_P12
       .s_axi_p12_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p12_HBM_awaddr      ( act_axi_card_hbm_p12_awaddr    ) ,
       .s_axi_p12_HBM_awlen       ( act_axi_card_hbm_p12_awlen     ) ,
@@ -5040,9 +5190,9 @@ block_RAM block_ram_i1
       .s_axi_p12_HBM_rlast       ( act_axi_card_hbm_p12_rlast     ) ,
       .s_axi_p12_HBM_rvalid      ( act_axi_card_hbm_p12_rvalid    ) ,
       .s_axi_p12_HBM_rready      ( act_axi_card_hbm_p12_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 13) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P13
       .s_axi_p13_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p13_HBM_awaddr      ( act_axi_card_hbm_p13_awaddr    ) ,
       .s_axi_p13_HBM_awlen       ( act_axi_card_hbm_p13_awlen     ) ,
@@ -5081,9 +5231,9 @@ block_RAM block_ram_i1
       .s_axi_p13_HBM_rlast       ( act_axi_card_hbm_p13_rlast     ) ,
       .s_axi_p13_HBM_rvalid      ( act_axi_card_hbm_p13_rvalid    ) ,
       .s_axi_p13_HBM_rready      ( act_axi_card_hbm_p13_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 14) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P14
       .s_axi_p14_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p14_HBM_awaddr      ( act_axi_card_hbm_p14_awaddr    ) ,
       .s_axi_p14_HBM_awlen       ( act_axi_card_hbm_p14_awlen     ) ,
@@ -5122,9 +5272,9 @@ block_RAM block_ram_i1
       .s_axi_p14_HBM_rlast       ( act_axi_card_hbm_p14_rlast     ) ,
       .s_axi_p14_HBM_rvalid      ( act_axi_card_hbm_p14_rvalid    ) ,
       .s_axi_p14_HBM_rready      ( act_axi_card_hbm_p14_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 15) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P15
       .s_axi_p15_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p15_HBM_awaddr      ( act_axi_card_hbm_p15_awaddr    ) ,
       .s_axi_p15_HBM_awlen       ( act_axi_card_hbm_p15_awlen     ) ,
@@ -5163,9 +5313,9 @@ block_RAM block_ram_i1
       .s_axi_p15_HBM_rlast       ( act_axi_card_hbm_p15_rlast     ) ,
       .s_axi_p15_HBM_rvalid      ( act_axi_card_hbm_p15_rvalid    ) ,
       .s_axi_p15_HBM_rready      ( act_axi_card_hbm_p15_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 16) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P16
       .s_axi_p16_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p16_HBM_awaddr      ( act_axi_card_hbm_p16_awaddr    ) ,
       .s_axi_p16_HBM_awlen       ( act_axi_card_hbm_p16_awlen     ) ,
@@ -5204,9 +5354,9 @@ block_RAM block_ram_i1
       .s_axi_p16_HBM_rlast       ( act_axi_card_hbm_p16_rlast     ) ,
       .s_axi_p16_HBM_rvalid      ( act_axi_card_hbm_p16_rvalid    ) ,
       .s_axi_p16_HBM_rready      ( act_axi_card_hbm_p16_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 17) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P17
       .s_axi_p17_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p17_HBM_awaddr      ( act_axi_card_hbm_p17_awaddr    ) ,
       .s_axi_p17_HBM_awlen       ( act_axi_card_hbm_p17_awlen     ) ,
@@ -5245,9 +5395,9 @@ block_RAM block_ram_i1
       .s_axi_p17_HBM_rlast       ( act_axi_card_hbm_p17_rlast     ) ,
       .s_axi_p17_HBM_rvalid      ( act_axi_card_hbm_p17_rvalid    ) ,
       .s_axi_p17_HBM_rready      ( act_axi_card_hbm_p17_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 18) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P18
       .s_axi_p18_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p18_HBM_awaddr      ( act_axi_card_hbm_p18_awaddr    ) ,
       .s_axi_p18_HBM_awlen       ( act_axi_card_hbm_p18_awlen     ) ,
@@ -5286,9 +5436,9 @@ block_RAM block_ram_i1
       .s_axi_p18_HBM_rlast       ( act_axi_card_hbm_p18_rlast     ) ,
       .s_axi_p18_HBM_rvalid      ( act_axi_card_hbm_p18_rvalid    ) ,
       .s_axi_p18_HBM_rready      ( act_axi_card_hbm_p18_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 19) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P19
       .s_axi_p19_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p19_HBM_awaddr      ( act_axi_card_hbm_p19_awaddr    ) ,
       .s_axi_p19_HBM_awlen       ( act_axi_card_hbm_p19_awlen     ) ,
@@ -5327,9 +5477,9 @@ block_RAM block_ram_i1
       .s_axi_p19_HBM_rlast       ( act_axi_card_hbm_p19_rlast     ) ,
       .s_axi_p19_HBM_rvalid      ( act_axi_card_hbm_p19_rvalid    ) ,
       .s_axi_p19_HBM_rready      ( act_axi_card_hbm_p19_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 20) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P20
       .s_axi_p20_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p20_HBM_awaddr      ( act_axi_card_hbm_p20_awaddr    ) ,
       .s_axi_p20_HBM_awlen       ( act_axi_card_hbm_p20_awlen     ) ,
@@ -5368,9 +5518,9 @@ block_RAM block_ram_i1
       .s_axi_p20_HBM_rlast       ( act_axi_card_hbm_p20_rlast     ) ,
       .s_axi_p20_HBM_rvalid      ( act_axi_card_hbm_p20_rvalid    ) ,
       .s_axi_p20_HBM_rready      ( act_axi_card_hbm_p20_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 21) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P21
       .s_axi_p21_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p21_HBM_awaddr      ( act_axi_card_hbm_p21_awaddr    ) ,
       .s_axi_p21_HBM_awlen       ( act_axi_card_hbm_p21_awlen     ) ,
@@ -5409,9 +5559,9 @@ block_RAM block_ram_i1
       .s_axi_p21_HBM_rlast       ( act_axi_card_hbm_p21_rlast     ) ,
       .s_axi_p21_HBM_rvalid      ( act_axi_card_hbm_p21_rvalid    ) ,
       .s_axi_p21_HBM_rready      ( act_axi_card_hbm_p21_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 22) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P22
       .s_axi_p22_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p22_HBM_awaddr      ( act_axi_card_hbm_p22_awaddr    ) ,
       .s_axi_p22_HBM_awlen       ( act_axi_card_hbm_p22_awlen     ) ,
@@ -5450,9 +5600,9 @@ block_RAM block_ram_i1
       .s_axi_p22_HBM_rlast       ( act_axi_card_hbm_p22_rlast     ) ,
       .s_axi_p22_HBM_rvalid      ( act_axi_card_hbm_p22_rvalid    ) ,
       .s_axi_p22_HBM_rready      ( act_axi_card_hbm_p22_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 23) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P23
       .s_axi_p23_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p23_HBM_awaddr      ( act_axi_card_hbm_p23_awaddr    ) ,
       .s_axi_p23_HBM_awlen       ( act_axi_card_hbm_p23_awlen     ) ,
@@ -5491,9 +5641,9 @@ block_RAM block_ram_i1
       .s_axi_p23_HBM_rlast       ( act_axi_card_hbm_p23_rlast     ) ,
       .s_axi_p23_HBM_rvalid      ( act_axi_card_hbm_p23_rvalid    ) ,
       .s_axi_p23_HBM_rready      ( act_axi_card_hbm_p23_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 24) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P24
       .s_axi_p24_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p24_HBM_awaddr      ( act_axi_card_hbm_p24_awaddr    ) ,
       .s_axi_p24_HBM_awlen       ( act_axi_card_hbm_p24_awlen     ) ,
@@ -5532,9 +5682,9 @@ block_RAM block_ram_i1
       .s_axi_p24_HBM_rlast       ( act_axi_card_hbm_p24_rlast     ) ,
       .s_axi_p24_HBM_rvalid      ( act_axi_card_hbm_p24_rvalid    ) ,
       .s_axi_p24_HBM_rready      ( act_axi_card_hbm_p24_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 25) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P25
       .s_axi_p25_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p25_HBM_awaddr      ( act_axi_card_hbm_p25_awaddr    ) ,
       .s_axi_p25_HBM_awlen       ( act_axi_card_hbm_p25_awlen     ) ,
@@ -5573,9 +5723,9 @@ block_RAM block_ram_i1
       .s_axi_p25_HBM_rlast       ( act_axi_card_hbm_p25_rlast     ) ,
       .s_axi_p25_HBM_rvalid      ( act_axi_card_hbm_p25_rvalid    ) ,
       .s_axi_p25_HBM_rready      ( act_axi_card_hbm_p25_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 26) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P26
       .s_axi_p26_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p26_HBM_awaddr      ( act_axi_card_hbm_p26_awaddr    ) ,
       .s_axi_p26_HBM_awlen       ( act_axi_card_hbm_p26_awlen     ) ,
@@ -5614,9 +5764,9 @@ block_RAM block_ram_i1
       .s_axi_p26_HBM_rlast       ( act_axi_card_hbm_p26_rlast     ) ,
       .s_axi_p26_HBM_rvalid      ( act_axi_card_hbm_p26_rvalid    ) ,
       .s_axi_p26_HBM_rready      ( act_axi_card_hbm_p26_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 27) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P27
       .s_axi_p27_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p27_HBM_awaddr      ( act_axi_card_hbm_p27_awaddr    ) ,
       .s_axi_p27_HBM_awlen       ( act_axi_card_hbm_p27_awlen     ) ,
@@ -5655,9 +5805,9 @@ block_RAM block_ram_i1
       .s_axi_p27_HBM_rlast       ( act_axi_card_hbm_p27_rlast     ) ,
       .s_axi_p27_HBM_rvalid      ( act_axi_card_hbm_p27_rvalid    ) ,
       .s_axi_p27_HBM_rready      ( act_axi_card_hbm_p27_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 28) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P28
       .s_axi_p28_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p28_HBM_awaddr      ( act_axi_card_hbm_p28_awaddr    ) ,
       .s_axi_p28_HBM_awlen       ( act_axi_card_hbm_p28_awlen     ) ,
@@ -5696,9 +5846,9 @@ block_RAM block_ram_i1
       .s_axi_p28_HBM_rlast       ( act_axi_card_hbm_p28_rlast     ) ,
       .s_axi_p28_HBM_rvalid      ( act_axi_card_hbm_p28_rvalid    ) ,
       .s_axi_p28_HBM_rready      ( act_axi_card_hbm_p28_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 29) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P29
       .s_axi_p29_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p29_HBM_awaddr      ( act_axi_card_hbm_p29_awaddr    ) ,
       .s_axi_p29_HBM_awlen       ( act_axi_card_hbm_p29_awlen     ) ,
@@ -5737,9 +5887,9 @@ block_RAM block_ram_i1
       .s_axi_p29_HBM_rlast       ( act_axi_card_hbm_p29_rlast     ) ,
       .s_axi_p29_HBM_rvalid      ( act_axi_card_hbm_p29_rvalid    ) ,
       .s_axi_p29_HBM_rready      ( act_axi_card_hbm_p29_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 30) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P30
       .s_axi_p30_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p30_HBM_awaddr      ( act_axi_card_hbm_p30_awaddr    ) ,
       .s_axi_p30_HBM_awlen       ( act_axi_card_hbm_p30_awlen     ) ,
@@ -5778,9 +5928,9 @@ block_RAM block_ram_i1
       .s_axi_p30_HBM_rlast       ( act_axi_card_hbm_p30_rlast     ) ,
       .s_axi_p30_HBM_rvalid      ( act_axi_card_hbm_p30_rvalid    ) ,
       .s_axi_p30_HBM_rready      ( act_axi_card_hbm_p30_rready    ) ,
-       end
-       if (`HBM_AXI_IF_NUM > 31) begin
+      `endif
 
+      `ifdef HBM_AXI_IF_P31
       .s_axi_p31_HBM_aclk        ( clock_act                   ) ,
       .s_axi_p31_HBM_awaddr      ( act_axi_card_hbm_p31_awaddr    ) ,
       .s_axi_p31_HBM_awlen       ( act_axi_card_hbm_p31_awlen     ) ,
@@ -5819,150 +5969,223 @@ block_RAM block_ram_i1
       .s_axi_p31_HBM_rlast       ( act_axi_card_hbm_p31_rlast     ) ,
       .s_axi_p31_HBM_rvalid      ( act_axi_card_hbm_p31_rvalid    ) ,
       .s_axi_p31_HBM_rready      ( act_axi_card_hbm_p31_rready    ) ,
-      end
-`endif
+      `endif
 
 //common signals
-      .apb_complete             ( hbm_ctrl_apb_complete       ) ,
-      .ref_clk                  ( hbm_clk_ref                 ) ,
-      .cresetn                  ( hbm_ctrl_reset_n            ) ,
-      .aresetn                  ( ~reset_action_q             )
+      //.apb_complete             ( hbm_ctrl_apb_complete       ) ,
+      //.ref_clk                  ( hbm_ref_clk                 ) ,
+      //.apb_clk                  ( apb_pclk                    ) ,
+      //.aresetn                  ( ~reset_action_q             ) ,
+      .cresetn                  ( ~reset_action_q            )
 ) ; 
+
+// BUFG for HBM REF CLK and APB CLK
+BUFG u_HBM_REF_CLK_BUFG  (
+.I (clock_hbm_ref),
+.O (clock_hbm_ref_bufg)
+);
+hbm_ctrl hbm_0 ( 
+      .HBM_REF_CLK_0               ( clock_hbm_ref_bufg            ),
+      .AXI_00_ACLK                 ( clock_act                     ),  
+      .AXI_00_ARESET_N             ( act_axi_card_mem0_reset_n              ),  
+      .AXI_00_ARADDR               ( act_axi_card_mem0_araddr               ),  
+      .AXI_00_ARBURST              ( act_axi_card_mem0_arburst              ),  
+      .AXI_00_ARID                 ( act_axi_card_mem0_arid                 ),  
+      .AXI_00_ARLEN                ( act_axi_card_mem0_arlen[3:0]           ),  
+      .AXI_00_ARSIZE               ( act_axi_card_mem0_arsize               ),
+      .AXI_00_ARVALID              ( act_axi_card_mem0_arvalid              ),             
+      .AXI_00_ARREADY              ( act_axi_card_mem0_arready              ),
+      .AXI_00_AWADDR               ( act_axi_card_mem0_awaddr               ),             
+      .AXI_00_AWBURST              ( act_axi_card_mem0_awburst              ),             
+      .AXI_00_AWID                 ( act_axi_card_mem0_awid                 ),             
+      .AXI_00_AWLEN                ( act_axi_card_mem0_awlen[3:0]           ),
+      .AXI_00_AWSIZE               ( act_axi_card_mem0_awsize               ),
+      .AXI_00_AWVALID              ( act_axi_card_mem0_awvalid              ),
+      .AXI_00_AWREADY              ( act_axi_card_mem0_awready              ),
+      .AXI_00_WREADY               ( act_axi_card_mem0_wready               ),
+      .AXI_00_WDATA                ( act_axi_card_mem0_wdata                ),  
+      .AXI_00_WDATA_PARITY         ( act_axi_card_mem0_wdata_parity         ),  
+      .AXI_00_WLAST                ( act_axi_card_mem0_wlast                ),  
+      .AXI_00_WSTRB                ( act_axi_card_mem0_wstrb                ),
+      .AXI_00_WVALID               ( act_axi_card_mem0_wvalid               ),
+      .AXI_00_RREADY               ( act_axi_card_mem0_rready               ),
+      .AXI_00_RDATA                ( act_axi_card_mem0_rdata                ),
+      .AXI_00_RDATA_PARITY         ( act_axi_card_mem0_rdata_parity         ),
+      .AXI_00_RID                  ( act_axi_card_mem0_rid                  ),
+      .AXI_00_RLAST                ( act_axi_card_mem0_rlast                ),
+      .AXI_00_RRESP                ( act_axi_card_mem0_rresp                ),
+      .AXI_00_RVALID               ( act_axi_card_mem0_rvalid               ),
+      .AXI_00_BID                  ( act_axi_card_mem0_bid                  ),
+      .AXI_00_BRESP                ( act_axi_card_mem0_bresp                ),
+      .AXI_00_BVALID               ( act_axi_card_mem0_bvalid               ),
+      .AXI_00_BREADY               ( act_axi_card_mem0_bready               ),
+      .APB_0_PWDATA                ( act_axi_card_mem0_apb_pwdata           ),
+      .APB_0_PADDR                 ( act_axi_card_mem0_apb_paddr            ),
+      .APB_0_PCLK                  ( act_axi_card_mem0_apb_pclk             ),
+      .APB_0_PENABLE               ( act_axi_card_mem0_apb_penable          ),
+      .APB_0_PRESET_N              ( act_axi_card_mem0_apb_preset_n         ),
+      .APB_0_PSEL                  ( act_axi_card_mem0_apb_psel             ),
+      .APB_0_PWRITE                ( act_axi_card_mem0_apb_pwrite           ),
+      .APB_0_PRDATA                ( act_axi_card_mem0_apb_prdata           ),
+      .APB_0_PREADY                ( act_axi_card_mem0_apb_pready           ),
+      .APB_0_PSLVERR               ( act_axi_card_mem0_apb_pslverr          ),
+      .apb_complete_0              ( act_axi_card_mem0_apb_complete         ),
+      .DRAM_0_STAT_CATTRIP         ( act_axi_card_mem0_dram_stat_cattrip    ),
+      .DRAM_0_STAT_TEMP            ( act_axi_card_mem0_dram_stat_temp       )
+);
+
+assign act_axi_card_mem0_apb_preset_n = act_axi_card_mem0_reset_n;
+assign act_axi_card_mem0_apb_paddr    = 22'b0;
+assign act_axi_card_mem0_apb_penable  = 1'b0;
+assign act_axi_card_mem0_apb_psel     = 1'b0;
+assign act_axi_card_mem0_apb_pwrite   = 1'b0;
+assign act_axi_card_mem0_apb_pwdata   = 32'b0;
+
+
+// Calculating Write Data Parity
+assign act_axi_card_mem0_wdata_parity = {{^(act_axi_card_mem0_wdata[255:248])},{^(act_axi_card_mem0_wdata[247:240])},{^(act_axi_card_mem0_wdata[239:232])},{^(act_axi_card_mem0_wdata[231:224])},
+                                {^(act_axi_card_mem0_wdata[223:216])},{^(act_axi_card_mem0_wdata[215:208])},{^(act_axi_card_mem0_wdata[207:200])},{^(act_axi_card_mem0_wdata[199:192])},
+                                {^(act_axi_card_mem0_wdata[191:184])},{^(act_axi_card_mem0_wdata[183:176])},{^(act_axi_card_mem0_wdata[175:168])},{^(act_axi_card_mem0_wdata[167:160])},
+                                {^(act_axi_card_mem0_wdata[159:152])},{^(act_axi_card_mem0_wdata[151:144])},{^(act_axi_card_mem0_wdata[143:136])},{^(act_axi_card_mem0_wdata[135:128])},
+                                {^(act_axi_card_mem0_wdata[127:120])},{^(act_axi_card_mem0_wdata[119:112])},{^(act_axi_card_mem0_wdata[111:104])},{^(act_axi_card_mem0_wdata[103:96])},
+                                {^(act_axi_card_mem0_wdata[95:88])},  {^(act_axi_card_mem0_wdata[87:80])},  {^(act_axi_card_mem0_wdata[79:72])},  {^(act_axi_card_mem0_wdata[71:64])},
+                                {^(act_axi_card_mem0_wdata[63:56])},  {^(act_axi_card_mem0_wdata[55:48])},  {^(act_axi_card_mem0_wdata[47:40])},  {^(act_axi_card_mem0_wdata[39:32])},
+                                {^(act_axi_card_mem0_wdata[31:24])},  {^(act_axi_card_mem0_wdata[23:16])},  {^(act_axi_card_mem0_wdata[15:8])},   {^(act_axi_card_mem0_wdata[7:0])}};
+
 
 //assign  hbm_ctrl_awid[`AXI_CARD_HBM_ID_WIDTH-1 : 0] = act_axi_card_hbm_p0_awid;
 //assign  hbm_ctrl_awid[5 : `AXI_CARD_HBM_ID_WIDTH]   = 'b0;
 //assign  hbm_ctrl_arid[`AXI_CARD_HBM_ID_WIDTH-1 : 0] = act_axi_card_hbm_p0_arid;
 //assign  hbm_ctrl_arid[5 : `AXI_CARD_HBM_ID_WIDTH]   = 'b0;
+
+      `ifdef HBM_AXI_IF_P0
 assign  act_axi_card_hbm_p0_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p0_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-`ifdef HBM_AXI_IF_NUM
-       if (`HBM_AXI_IF_NUM > 1) begin
+      `endif
+      `ifdef HBM_AXI_IF_P1
 assign  act_axi_card_hbm_p1_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p1_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 2) begin
-
+      `endif
+      `ifdef HBM_AXI_IF_P2
 assign  act_axi_card_hbm_p2_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p2_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 3) begin
+      `endif
+      `ifdef HBM_AXI_IF_P3
 assign  act_axi_card_hbm_p3_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p3_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 4) begin
+      `endif
+      `ifdef HBM_AXI_IF_P4
 assign  act_axi_card_hbm_p4_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p4_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 5) begin
+      `endif
+      `ifdef HBM_AXI_IF_P5
 assign  act_axi_card_hbm_p5_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p5_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 6) begin
+      `endif
+      `ifdef HBM_AXI_IF_P6
 assign  act_axi_card_hbm_p6_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p6_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 7) begin
+      `endif
+      `ifdef HBM_AXI_IF_P7
 assign  act_axi_card_hbm_p7_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p7_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 8) begin
+      `endif
+      `ifdef HBM_AXI_IF_P8
 assign  act_axi_card_hbm_p8_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p8_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 9) begin
+      `endif
+      `ifdef HBM_AXI_IF_P9
 assign  act_axi_card_hbm_p9_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p9_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 10) begin
+      `endif
+      `ifdef HBM_AXI_IF_P10
 assign  act_axi_card_hbm_p10_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p10_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 11) begin
+      `endif
+      `ifdef HBM_AXI_IF_P11
 assign  act_axi_card_hbm_p11_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p11_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 12) begin
+      `endif
+      `ifdef HBM_AXI_IF_P12
 assign  act_axi_card_hbm_p12_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p12_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 13) begin
+      `endif
+      `ifdef HBM_AXI_IF_P13
 assign  act_axi_card_hbm_p13_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p13_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 14) begin
+      `endif
+      `ifdef HBM_AXI_IF_P14
 assign  act_axi_card_hbm_p14_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p14_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 15) begin
+      `endif
+      `ifdef HBM_AXI_IF_P15
 assign  act_axi_card_hbm_p15_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p15_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 16) begin
+      `endif
+      `ifdef HBM_AXI_IF_P16
 assign  act_axi_card_hbm_p16_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p16_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 17) begin
+      `endif
+      `ifdef HBM_AXI_IF_P17
 assign  act_axi_card_hbm_p17_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p17_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 18) begin
+      `endif
+      `ifdef HBM_AXI_IF_P18
 assign  act_axi_card_hbm_p18_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p18_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 19) begin
+      `endif
+      `ifdef HBM_AXI_IF_P19
 assign  act_axi_card_hbm_p19_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p19_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 20) begin
+      `endif
+      `ifdef HBM_AXI_IF_P20
 assign  act_axi_card_hbm_p20_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p20_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 21) begin
+      `endif
+      `ifdef HBM_AXI_IF_P21
 assign  act_axi_card_hbm_p21_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p21_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 22) begin
+      `endif
+      `ifdef HBM_AXI_IF_P22
 assign  act_axi_card_hbm_p22_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p22_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 23) begin
+      `endif
+      `ifdef HBM_AXI_IF_P23
 assign  act_axi_card_hbm_p23_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p23_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 24) begin
+      `endif
+      `ifdef HBM_AXI_IF_P24
 assign  act_axi_card_hbm_p24_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p24_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 25) begin
+      `endif
+      `ifdef HBM_AXI_IF_P25
 assign  act_axi_card_hbm_p25_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p25_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 26) begin
+      `endif
+      `ifdef HBM_AXI_IF_P26
 assign  act_axi_card_hbm_p26_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p26_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 27) begin
+      `endif
+      `ifdef HBM_AXI_IF_P27
 assign  act_axi_card_hbm_p27_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p27_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 28) begin
+      `endif
+      `ifdef HBM_AXI_IF_P28
 assign  act_axi_card_hbm_p28_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p28_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 29) begin
+      `endif
+      `ifdef HBM_AXI_IF_P29
 assign  act_axi_card_hbm_p29_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p29_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 20) begin
+      `endif
+      `ifdef HBM_AXI_IF_P30
 assign  act_axi_card_hbm_p30_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p30_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-       if (`HBM_AXI_IF_NUM > 31) begin
+      `endif
+      `ifdef HBM_AXI_IF_P31
 assign  act_axi_card_hbm_p31_bid = 'b0; //hbm_ctrl_bid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
 assign  act_axi_card_hbm_p31_rid = 'b0; //hbm_ctrl_rid[`AXI_CARD_HBM_ID_WIDTH-1 : 0];
-       end
-`endif
-
+      `endif
 
 // if HBM + (AD9H3 or AD9H7) : resets the logic before HBM
 assign hbm_ctrl_reset_n = hbm_ctrl_apb_complete & ~reset_action_q;
