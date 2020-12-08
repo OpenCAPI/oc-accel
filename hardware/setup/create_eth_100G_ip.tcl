@@ -23,7 +23,7 @@ set vivadoVer    [version -short]
 set root_dir        $::env(SNAP_HARDWARE_ROOT)
 set fpga_part       $::env(FPGACHIP)
 set ip_dir          $root_dir/ip
-#set action_root     [expr int($::env(ACTION_ROOT))]
+#set action_root    $::env(ACTION_ROOT)
 set rx_fifo_depth   $::env(ETHERNET_RX_FIFO_DEPTH)
 
 if { [info exists ::env(ENABLE_EMAC_V3_1)] == 1 } {
