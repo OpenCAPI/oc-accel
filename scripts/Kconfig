@@ -21,14 +21,14 @@ choice
 		  AlphaData 9V3 has ethernet and 16GB DDR4 SDRAM. Uses Xilinx FPGA VU3P.
 
 	config AD9H3
-		bool "OpenCAPI3.0: AlphaData 9H3 (VU33P with HBM)"
+		bool "OpenCAPI3.0: AlphaData 9H3 (incl. VU33P with HBM)"
 		select OPENCAPI30
 		select DISABLE_NVME
 		help
 		  AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU33P.
 
 	config AD9H335
-		bool "OpenCAPI3.0: AlphaData 9H3 (VU35P with HBM) (under development)"
+		bool "OpenCAPI3.0: AlphaData 9H3-35 (incl. VU35P with HBM) (under development)"
 		select OPENCAPI30
 		select DISABLE_NVME
 		help

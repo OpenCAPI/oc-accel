@@ -55,7 +55,7 @@ elif [ "$FPGACARD" == "AD9H3" ]; then
   CARD_TYPE="32"
   SDRAM_SIZE="0"
 elif [ "$FPGACARD" == "AD9H335" ]; then
-  CARD_TYPE="32"
+  CARD_TYPE="35"
   SDRAM_SIZE="0"
 elif [ "$FPGACARD" == "AD9H7" ]; then
   CARD_TYPE="33"
