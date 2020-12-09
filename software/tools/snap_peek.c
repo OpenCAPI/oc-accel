@@ -54,7 +54,7 @@ static void usage (const char* prog)
             "Example:\n"
             "Read OC global BDR register (Build date register):\n"
             "  $ snap_peek 0x0008\n"
-            "  [00000008]  0000202011181128\n\n",
+            "  [00000008]  0000202011181128\n\n"
             "Read OC action ATR register (Action ID):\n"
             "  $ snap_peek -w32 0x0010\n"
             "  [00000010] 10143009\n\n",
