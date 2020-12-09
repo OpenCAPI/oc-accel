@@ -192,7 +192,7 @@ if [ "$duration" = "INCR" ]; then
   # -lt 32 means 2GB
   # -lt 33 means 4GB
   # -lt 34 means 8GB
-    while [ $exp -lt 29 ]
+    while [ $exp -lt 31 ]
     do
         test_memcopy ${size}
         exp=$(($exp + 1))
