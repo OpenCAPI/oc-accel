@@ -363,6 +363,7 @@ while getopts ":vA:C:Vdht:" opt; do
 		cp /sys/firmware/opal/msglog "./msglog$time"
 		chmod 666 "./msglog$time"
 		chown $(who am i | awk '{print $1}') "./msglog$time"
+		chgrp $(who am i | awk '{print $1}') "./msglog$time"
                 echo
                 echo "Looking for 'degraded':"
                 grep -a -i degraded /sys/firmware/opal/msglog
