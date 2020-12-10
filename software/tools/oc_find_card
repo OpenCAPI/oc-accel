@@ -357,15 +357,25 @@ while getopts ":vA:C:Vdht:" opt; do
 
                 echo
                 echo "==========================================================================================================="
-                echo "OPAL MSGLOG:"
-                echo "------------"
+		echo "OPAL MSGLOG (from /sys/firmware/opal/msglog file):"
+                echo "--------------------------------------------------"
+		time=$(date +%F%H%M%S)
+		cp /sys/firmware/opal/msglog "./msglog$time"
+		chmod 666 "./msglog$time"
+		chown $(who am i | awk '{print $1}') "./msglog$time"
                 echo
                 echo "Looking for 'degraded':"
                 grep -a -i degraded /sys/firmware/opal/msglog
                 echo
+		echo
                 echo "Looking for 'OCAPI':"
                 grep -a OCAPI /sys/firmware/opal/msglog
                 echo
+		echo
+                echo "Looking for 'HMI':"
+                grep -a HMI /sys/firmware/opal/msglog
+                echo
+		echo
                 echo "OCAPI link information:"
                 grep -a OCAPI /sys/firmware/opal/msglog | grep -a link
 
