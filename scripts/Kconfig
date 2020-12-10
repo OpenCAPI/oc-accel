@@ -21,14 +21,14 @@ choice
 		  AlphaData 9V3 has ethernet and 16GB DDR4 SDRAM. Uses Xilinx FPGA VU3P.
 
 	config AD9H3
-		bool "OpenCAPI3.0: AlphaData 9H3 (VU33P with HBM)"
+		bool "OpenCAPI3.0: AlphaData 9H3 (incl. VU33P with HBM)"
 		select OPENCAPI30
 		select DISABLE_NVME
 		help
 		  AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU33P.
 
 	config AD9H335
-		bool "OpenCAPI3.0: AlphaData 9H3 (VU35P with HBM) (under development)"
+		bool "OpenCAPI3.0: AlphaData 9H3-35 (incl. VU35P with HBM) (under development)"
 		select OPENCAPI30
 		select DISABLE_NVME
 		help
@@ -308,7 +308,6 @@ choice
 		select ENABLE_SIMU_WO_ETH
 		select FORCE_SDRAM_OR_BRAM
 		select FORCE_HBM
-		select ACTION_HALF_WIDTH
 
 #	config HLS_SPONGE
 #		bool "HLS Sponge"
@@ -497,6 +496,18 @@ config ETHERNET_USED
         string
         default "TRUE"  if  ENABLE_ETHERNET
         default "FALSE" if !ENABLE_ETHERNET
+
+config ETHERNET_RX_FIFO_DEPTH
+        int
+        prompt "Depth of receiving FIFO for Ethernet 100G MAC in 512-bit packates (must be power of 2)"
+        depends on ENABLE_ETHERNET
+        default 8192
+
+config ETHERNET_RX_FIFO_URAM
+	bool
+        prompt "Force implementation of receiving FIFO for Ethernet 100G MAC in UltraRAM"
+        depends on ENABLE_ETHERNET
+        default n
 
 config USER_CLOCK
 	string

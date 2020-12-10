@@ -121,6 +121,7 @@ set_part ${part_number}
 create_clock -period ${clock_period} -name default
 config_interface -m_axi_addr64=true
 #config_rtl -reset all -reset_level low
+config_schedule -enable_dsp_full_reg=true
 
 csynth_design
 #export_design -format ip_catalog -rtl vhdl

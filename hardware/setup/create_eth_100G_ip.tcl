@@ -23,7 +23,8 @@ set vivadoVer    [version -short]
 set root_dir        $::env(SNAP_HARDWARE_ROOT)
 set fpga_part       $::env(FPGACHIP)
 set ip_dir          $root_dir/ip
-#set action_root     $::env(ACTION_ROOT)
+#set action_root    $::env(ACTION_ROOT)
+set rx_fifo_depth   $::env(ETHERNET_RX_FIFO_DEPTH)
 
 if { [info exists ::env(ENABLE_EMAC_V3_1)] == 1 } {
   set emac_v3_1 [string toupper $::env(ENABLE_EMAC_V3_1)]
@@ -113,9 +114,14 @@ update_ip_catalog -rebuild -scan_changes
   # Create instance: axis_data_fifo_1, and set properties
   set axis_data_fifo_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_1 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {32768} \
-   CONFIG.FIFO_MEMORY_TYPE {ultra} \
+   CONFIG.FIFO_DEPTH $rx_fifo_depth \
  ] $axis_data_fifo_1
+
+  if  { [info exists ::env(ETHERNET_RX_FIFO_URAM)] == 1 } {
+     set_property -dict [ list \
+        CONFIG.FIFO_MEMORY_TYPE {ultra} \
+     ] $axis_data_fifo_1
+  }
 
   # Create instance: cmac_usplus_0, and set properties
   # This variable ENABLE_EMAC_V3_1 is set in scripts/snap_cfg and depends on vivado release

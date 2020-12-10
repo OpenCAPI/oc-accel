@@ -18,7 +18,8 @@ IBM | 10.14.30.0E | 10.14.30.0E | HLS Memcopy_512   (512b)
 IBM | 10.14.30.0F | 10.14.30.0F | HLS Decimal Mult  (512b)
 IBM | 10.14.30.10 | 10.14.30.10 | HLS UDP           (512b)
 IBM | 10.14.30.11 | 10.14.FF.FF | Reserved for HLS IBM Actions
-PSI | 52.32.00.01 | 52.32.00.FF | X-ray Detector Data Acquisition and Analysis
+PSI | 52.32.01.00 | 52.32.01.00 | JUNGFRAU X-ray Detector Data Acquisition and Analysis
+PSI | 52.32.01.01 | 52.32.01.FF | X-ray Detector Data Acquisition and Analysis
 Reserved | FF.FF.00.00 | FF.FF.FF.FF | Reserved
 
 ### How to apply for a new Action Type
