@@ -33,8 +33,9 @@ normal=$(tput sgr0)
 # v2.3 : modified April 17th 2020 adding -d (debug) option; Displays DEBUG additional info
 # v2.4 : add OC-BW250SOC card
 # v2.5 : use real slot number for OC cards
+# v2.6 : add generation of report tar.gzip archive in debug mode
 
-version=2.5
+version=2.6
 accel=UNKNOWN
 VERBOSE=0
 
@@ -274,6 +275,17 @@ function detect_oc_card_name()
         return 0
 }
 
+function debug_output()
+{
+	local cmd=$1
+
+	echo; echo "#############################################################################################################"
+	echo "$cmd"
+	echo "------------------------------------------"
+	echo
+	eval $cmd
+}
+
 # Main Start here
 # Parse any options given on the command line
 PROGRAM=$0
@@ -288,13 +300,36 @@ while getopts ":vA:C:Vdht:" opt; do
         d)
                 DEBUG=1
                 DistribLike=`{ [ -f /etc/os-release ] && grep -a '^ID=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`
-                if (echo $DistribLike | egrep -a -qi 'centos|fedora|rhel'); then DistribLike=fedora; PackageCmd="rpm -qva | grep -a -i"
-                elif (echo $DistribLike | egrep -a -qi 'ubuntu|debian'); then DistribLike=debian; PackageCmd="dpkg -l | grep -a -i"
+                if (echo $DistribLike | egrep -a -qi 'centos|fedora|rhel'); then DistribLike=fedora; PackageCmd="rpm -qva"
+                elif (echo $DistribLike | egrep -a -qi 'ubuntu|debian'); then DistribLike=debian; PackageCmd="dpkg -l"
                 else DistribLike=unknown; PackageCmd="echo 'Unknown Distribution !'"
                 fi
+		MyName=$(who am i | awk '{print $1}')
+		Time=$(date +%F-%H%M%S)
+		OutputDir=./OCFindCard_Debug_$Time
+		DebugResultTarFile=./OCFindCard_Debug_$Time.tar.gz
+		mkdir $OutputDir
+		SystemInfo=$OutputDir/System_INFO.txt
+		> $SystemInfo
+		OutputFile=$OutputDir/oc_find_card_OUTPUT.txt
+		> $OutputFile
 
+		{
                 echo;echo "###########################################################################################################"
                 echo;echo "( ͡° ͜ʖ ͡°) DEBUG INFO (more info if run as root)"
+
+                echo
+                echo "==========================================================================================================="
+                echo "COLLECTING SYSTEM INFO:"
+                echo "-----------------------"
+                echo
+		echo "hostname, installed packages, etc... Please have a look at $SystemInfo file"
+		debug_output "hostname" >> $SystemInfo
+		debug_output "cat /etc/os-release" >> $SystemInfo
+		debug_output "uname -a" >> $SystemInfo
+		debug_output "$PackageCmd" >> $SystemInfo
+		debug_output "dmesg" >> $SystemInfo
+
                 echo
                 echo "==========================================================================================================="
                 echo "FIRMWARE INFO:"
@@ -324,7 +359,7 @@ while getopts ":vA:C:Vdht:" opt; do
 
                 echo
                 echo "CXL / OCXL installed packages:"
-                eval $PackageCmd cxl
+                eval $PackageCmd | grep -a -i cxl
 
                 echo
                 echo "==========================================================================================================="
@@ -359,11 +394,9 @@ while getopts ":vA:C:Vdht:" opt; do
                 echo "==========================================================================================================="
 		echo "OPAL MSGLOG (from /sys/firmware/opal/msglog file):"
                 echo "--------------------------------------------------"
-		time=$(date +%F-%H%M%S)
-		cp /sys/firmware/opal/msglog ./msglog$time
-		chmod 666 ./msglog$time
-		myname=$(who am i | awk '{print $1}')
-		chown $myname:$myname ./msglog$time
+		mkdir -p $OutputDir/sys/firmware/opal
+		cp /sys/firmware/opal/msglog $OutputDir/sys/firmware/opal/msglog
+		chmod 666 $OutputDir/sys/firmware/opal/msglog
                 echo
                 echo "Looking for 'degraded':"
                 grep -a -i degraded /sys/firmware/opal/msglog
@@ -387,6 +420,19 @@ while getopts ":vA:C:Vdht:" opt; do
                 echo
                 echo "( ͡° ͜ʖ ͡°) END OF DEBUG INFO"
                 echo;echo "###########################################################################################################"
+		} | tee $OutputFile
+
+                echo
+                echo "==========================================================================================================="
+		echo "GENERATING $DebugResultTarFile report file:"
+                echo "-------------------------------------------"
+		chown -Rh $MyName:$MyName $OutputDir
+		tar cvzf $DebugResultTarFile $OutputDir
+		rm -rf $OutputDir
+		echo
+		echo "$DebugResultTarFile gzip tar archive generated"
+                echo;echo "###########################################################################################################"
+		echo
                 ;;
 	A)
 		accel=${OPTARG};
