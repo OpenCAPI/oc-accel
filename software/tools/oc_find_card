@@ -428,6 +428,7 @@ while getopts ":vA:C:Vdht:" opt; do
                 echo "-------------------------------------------"
 		chown -Rh $MyName:$MyName $OutputDir
 		tar cvzf $DebugResultTarFile $OutputDir
+		chown $MyName:$MyName $DebugResultTarFile
 		rm -rf $OutputDir
 		echo
 		echo "$DebugResultTarFile gzip tar archive generated"
