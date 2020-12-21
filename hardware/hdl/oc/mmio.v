@@ -118,6 +118,8 @@ module mmio (
  reg [63:00] REG_command               ;
  reg [63:00] REG_status                ;
  reg [63:00] REG_capability            ;
+ reg [63:00] REG_freeruntime           ;
+ reg [63:00] REG_usercode              ;
 
 //------------ REG_DEBUG_BASE_ADDR --------------
  reg [63:00] REG_debug_clear            ; // clear out all debug registers
@@ -149,8 +151,8 @@ module mmio (
                 REG_SNAP_OFFSET_ADDR_SCR            = 8'h10, //WO
                 REG_SNAP_OFFSET_ADDR_SSR            = 8'h18, //RO
                 REG_SNAP_OFFSET_ADDR_CAP            = 8'h30, //RO
-
                 REG_SNAP_OFFSET_ADDR_FRT            = 8'h40, //RO
+                REG_SNAP_OFFSET_ADDR_USR            = 8'h50, //RO
 
            REG_DEBUG_BASE_ADDR  = 13'h01A0,
                 REG_DEBUG_OFFSET_ADDR_DBG_CLR       = 8'h00, //WO, self-clear
@@ -238,7 +240,7 @@ module mmio (
                   (snap_rd_ack && ~raddr_decode_error);
 
 
-//---- READ ONLY resigers configuration ----
+//---- READ ONLY registers configuration ----
  always@(posedge clk or negedge rst_n)
    if(~rst_n)
      begin
@@ -247,6 +249,8 @@ module mmio (
        REG_build_date              <= 64'd0;
        REG_status                  <= 64'd0;
        REG_capability              <= 64'd0;
+       REG_freeruntime             <= 64'd0;
+       REG_usercode                <= 64'd0;
 
        // REG_DEBUG_BASE_ADDR
        REG_debug_tlx_cnt_cmd       <= 64'd0; 
@@ -276,6 +280,9 @@ module mmio (
        REG_capability [31:16]      <= `SDRAM_SIZE;
        REG_capability [8]          <= NVME_ENABLED;
        REG_capability [7:0]        <= `CARD_TYPE;
+       REG_freeruntime             <= REG_freeruntime+1;
+       REG_usercode                <= `USERCODE;
+
 
 
        // REG_DEBUG_BASE_ADDR
@@ -368,6 +375,8 @@ module mmio (
             REG_SNAP_OFFSET_ADDR_BDR             : mmio_dout <= REG_build_date            ;
             REG_SNAP_OFFSET_ADDR_SSR             : mmio_dout <= REG_status                ;
             REG_SNAP_OFFSET_ADDR_CAP             : mmio_dout <= REG_capability            ;
+            REG_SNAP_OFFSET_ADDR_FRT             : mmio_dout <= REG_freeruntime           ;
+            REG_SNAP_OFFSET_ADDR_USR             : mmio_dout <= REG_usercode              ;
             default                              : raddr_decode_error <= 1'b1;
           endcase
 

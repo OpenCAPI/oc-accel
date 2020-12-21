@@ -197,7 +197,7 @@ module framework_afu (
   , input                 cfg_errvec_valid
 
   `ifdef ENABLE_DDR 
-  `ifdef AD9V3
+    `ifdef AD9V3
   
    // DDR4 SDRAM Interface
  // , output [511:0]       dbg_bus //Unused
@@ -217,8 +217,8 @@ module framework_afu (
     , output                 c0_ddr4_act_n
     , output  [0 : 0]        c0_ddr4_ck_c
     , output  [0 : 0]        c0_ddr4_ck_t
-   `endif
-  `ifdef BW250SOC
+     `endif
+     `ifdef BW250SOC
   
    // DDR4 SDRAM Interface
  // , output [511:0]       dbg_bus //Unused
@@ -238,13 +238,12 @@ module framework_afu (
     , output                 c0_ddr4_act_n
     , output  [0 : 0]        c0_ddr4_ck_c
     , output  [0 : 0]        c0_ddr4_ck_t
-   `endif
-
+      `endif
    `endif
 
 // ETHERNET
   `ifdef ENABLE_ETHERNET 
-  `ifndef ENABLE_ETH_LOOP_BACK
+     `ifndef ENABLE_ETH_LOOP_BACK
     , input                  gt_ref_clk_n
     , input                  gt_ref_clk_p
     , input                  gt_rx_gt_port_0_n
@@ -263,7 +262,7 @@ module framework_afu (
     , output                 gt_tx_gt_port_2_p
     , output                 gt_tx_gt_port_3_n
     , output                 gt_tx_gt_port_3_p
-   `endif
+      `endif
    `endif
   );
 
@@ -271,6 +270,12 @@ module framework_afu (
   // // wires
   // // ******************************************************************************
 
+ `ifdef ENABLE_EMAC_V3_1
+  wire [3:0]                 gt_grxn  ;
+  wire [3:0]                 gt_grxp  ;
+  wire [3:0]                 gt_gtxn  ;
+  wire [3:0]                 gt_gtxp  ;
+ `endif
 
   // // Interface between snap_core to (clock/dwidth) converter
 `ifndef ENABLE_ODMA
@@ -520,16 +525,16 @@ module framework_afu (
 
 // if DDR on AD9V3 (No BRAM)
 `ifdef ENABLE_DDR
-`ifdef AD9V3
+  `ifdef AD9V3
   wire            ddr4_dbg_clk                   ;
   wire [511 : 0]  ddr4_dbg_bus                   ;
   wire            memctl0_ui_clk_sync_rst        ; //reset generated from DDR MIG
-`endif
-`ifdef BW250SOC
+  `endif
+  `ifdef BW250SOC
   wire            ddr4_dbg_clk                   ;
   wire [511 : 0]  ddr4_dbg_bus                   ;
   wire            memctl0_ui_clk_sync_rst        ; //reset generated from DDR MIG
-`endif
+  `endif
 
 `endif
 
@@ -1000,7 +1005,7 @@ module framework_afu (
       .int_ctx         ( int_ctx                ),  
       
   `ifdef ENABLE_DDR 
-  `ifdef AD9V3
+    `ifdef AD9V3
   
    // DDR4 SDRAM Interface
       .c0_sys_clk_p     ( c0_sys_clk_p     ) ,
@@ -1019,8 +1024,8 @@ module framework_afu (
       .c0_ddr4_act_n    ( c0_ddr4_act_n    ) ,
       .c0_ddr4_ck_c     ( c0_ddr4_ck_c     ) ,
       .c0_ddr4_ck_t     ( c0_ddr4_ck_t     ) ,
-   `endif
-   `ifdef BW250SOC
+     `endif
+     `ifdef BW250SOC
   
    // DDR4 SDRAM Interface
       .c0_sys_clk_p     ( c0_sys_clk_p     ) ,
@@ -1039,9 +1044,30 @@ module framework_afu (
       .c0_ddr4_act_n    ( c0_ddr4_act_n    ) ,
       .c0_ddr4_ck_c     ( c0_ddr4_ck_c     ) ,
       .c0_ddr4_ck_t     ( c0_ddr4_ck_t     ) ,
+     `endif
    `endif
 
-   `endif
+    // ETHERNET interface
+`ifdef ENABLE_ETHERNET
+`ifndef ENABLE_ETH_LOOP_BACK
+      //ethernet enabled without loopback
+      .din_eth_TDATA                      ( eth1_rx_tdata              ) ,
+      .din_eth_TVALID                     ( eth1_rx_tvalid             ) ,
+      .din_eth_TREADY                     ( eth1_rx_tready             ) ,
+      .din_eth_TKEEP                      ( eth1_rx_tkeep              ) ,
+      .din_eth_TUSER                      ( eth1_rx_tuser              ) ,
+      .din_eth_TLAST                      ( eth1_rx_tlast              ) ,
+      //Enable for ethernet TX
+      .dout_eth_TDATA                     ( eth1_tx_tdata             ) ,
+      .dout_eth_TVALID                    ( eth1_tx_tvalid            ) ,
+      .dout_eth_TREADY                    ( eth1_tx_tready            ) ,
+      .dout_eth_TKEEP                     ( eth1_tx_tkeep             ) ,
+      .dout_eth_TUSER                     ( eth1_tx_tuser             ) ,
+      .dout_eth_TLAST                     ( eth1_tx_tlast             ) ,
+      .eth_reset                          ( eth_m_axis_rx_rst         ) ,
+`endif
+`endif
+
   `ifdef ENABLE_ETHERNET
   `ifndef ENABLE_ETH_LOOP_BACK
       .gt_ref_clk_n      ( gt_ref_clk_n       ),
@@ -1211,8 +1237,87 @@ BUFGCE_DIV #(
   .CLR (1'b0),
   .O (act_axi_card_mem0_apb_pclk)
 );
-
 `endif
 
-endmodule
+`ifdef ENABLE_ETHERNET 
+  `ifndef ENABLE_ETH_LOOP_BACK
+    // following flag depends on vivado release and is set in scripts/snap_config
+    `ifdef ENABLE_EMAC_V3_1
+assign  gt_grxn[0] = gt_rx_gt_port_0_n;
+assign  gt_grxn[1] = gt_rx_gt_port_1_n;
+assign  gt_grxn[2] = gt_rx_gt_port_2_n;
+assign  gt_grxn[3] = gt_rx_gt_port_3_n;
+assign  gt_grxp[0] = gt_rx_gt_port_0_p;
+assign  gt_grxp[1] = gt_rx_gt_port_1_p;
+assign  gt_grxp[2] = gt_rx_gt_port_2_p;
+assign  gt_grxp[3] = gt_rx_gt_port_3_p;
 
+assign  gt_tx_gt_port_0_n = gt_gtxn[0];
+assign  gt_tx_gt_port_1_n = gt_gtxn[1];
+assign  gt_tx_gt_port_2_n = gt_gtxn[2];
+assign  gt_tx_gt_port_3_n = gt_gtxn[3];
+assign  gt_tx_gt_port_0_p = gt_gtxp[0];
+assign  gt_tx_gt_port_1_p = gt_gtxp[1];
+assign  gt_tx_gt_port_2_p = gt_gtxp[2];
+assign  gt_tx_gt_port_3_p = gt_gtxp[3];
+    `endif
+eth_100G eth_100G_0
+(
+      .i_gt_ref_clk_n              ( gt_ref_clk_n                  ),
+      .i_gt_ref_clk_p              ( gt_ref_clk_p                  ),
+
+    `ifdef ENABLE_EMAC_V3_1
+      //Vivado 2020.1 and later
+      .gt_grx_n                    ( gt_grxn                       ),
+      .gt_grx_p                    ( gt_grxp                       ),
+      .gt_gtx_n                    ( gt_gtxn                       ),
+      .gt_gtx_p                    ( gt_gtxp                       ),
+    `else
+      //Vivado 2019.2 and earlier
+      .i_gt_rx_gt_port_0_n         ( gt_rx_gt_port_0_n             ),
+      .i_gt_rx_gt_port_0_p         ( gt_rx_gt_port_0_p             ),
+      .i_gt_rx_gt_port_1_n         ( gt_rx_gt_port_1_n             ),
+      .i_gt_rx_gt_port_1_p         ( gt_rx_gt_port_1_p             ),
+      .i_gt_rx_gt_port_2_n         ( gt_rx_gt_port_2_n             ),
+      .i_gt_rx_gt_port_2_p         ( gt_rx_gt_port_2_p             ),
+      .i_gt_rx_gt_port_3_n         ( gt_rx_gt_port_3_n             ),
+      .i_gt_rx_gt_port_3_p         ( gt_rx_gt_port_3_p             ),
+
+      .o_gt_tx_gt_port_0_n         ( gt_tx_gt_port_0_n             ),
+      .o_gt_tx_gt_port_0_p         ( gt_tx_gt_port_0_p             ),
+      .o_gt_tx_gt_port_1_n         ( gt_tx_gt_port_1_n             ),
+      .o_gt_tx_gt_port_1_p         ( gt_tx_gt_port_1_p             ),
+      .o_gt_tx_gt_port_2_n         ( gt_tx_gt_port_2_n             ),
+      .o_gt_tx_gt_port_2_p         ( gt_tx_gt_port_2_p             ),
+      .o_gt_tx_gt_port_3_n         ( gt_tx_gt_port_3_n             ),
+      .o_gt_tx_gt_port_3_p         ( gt_tx_gt_port_3_p             ),
+    `endif
+
+      .m_axis_rx_tdata             ( eth1_rx_tdata                 ),
+      .m_axis_rx_tkeep             ( eth1_rx_tkeep                 ),
+      .m_axis_rx_tlast             ( eth1_rx_tlast                 ),
+      .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
+      .m_axis_rx_tuser             ( eth1_rx_tuser                 ),
+      .m_axis_rx_tready            ( eth1_rx_tready                ),
+      .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
+      .s_axis_tx_tkeep             ( eth1_tx_tkeep                 ),
+      .s_axis_tx_tlast             ( eth1_tx_tlast                 ),
+      .s_axis_tx_tvalid            ( eth1_tx_tvalid                ),
+      .s_axis_tx_tuser             ( eth1_tx_tuser                 ),
+      .s_axis_tx_tready            ( eth1_tx_tready                ),
+
+      .i_sys_reset                 ( eth_rst                       ),
+      .i_core_rx_reset             ( 1'b0                          ),
+      .i_core_tx_reset             ( 1'b0                          ),
+      .m_axis_rx_reset             ( eth_m_axis_rx_rst             ),
+      .i_capi_clk                  ( clock_afu                     ),
+
+      .i_ctl_rx_enable             ( 1'b1                          ),
+      .i_ctl_rx_rsfec_enable       ( 1'b1                          ),
+      .i_ctl_tx_enable             ( 1'b1                          ),
+      .i_ctl_tx_rsfec_enable       ( 1'b1                          )
+);
+
+`endif
+`endif
+endmodule

@@ -168,7 +168,7 @@ if { [catch "$command > $logfile" errMsg] } {
 
 ## generating reports
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-report_utilization    -quiet -pblocks [get_pblocks hls_action_0_pblock_1]  -file  ${rpt_dir}/utilization_route_design.rpt
+report_utilization    -quiet -pblocks [get_pblocks pblock_dynamic_PR]  -file  ${rpt_dir}/utilization_route_design.rpt
 report_utilization    -quiet -file  ${rpt_dir}/utilization_route_design.rpt
 report_route_status   -quiet -file  ${rpt_dir}/route_status.rpt
 report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt

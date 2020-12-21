@@ -53,6 +53,7 @@ help:
 	@echo "* clean_config   As target 'clean' plus reset of the configuration";
 	@echo "* help           Print this message";
 	@echo "* cloud_base      synthesize the top/static";
+	@echo "* cloud_action    synthesize the action/dynamic";
 	@echo "* pr_synth_static synthesize the top/static";
 	@echo "* pr_synth_action synthesize the action/dynamic";
 	@echo "* pr_route_static route the top/static";
@@ -193,7 +194,7 @@ clean:
 	done
 	@find . -depth -name '*~'  -exec rm -rf '{}' \; -print
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
-	@$(RM) vivado*.log vivado*.jou
+	@$(RM) *.mif vivado*.jou vivado*.log
 
 clean_config: clean
 	@$(RM) snap_workflow*.log

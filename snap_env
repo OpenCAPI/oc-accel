@@ -134,10 +134,14 @@ while [ -z "$SETUP_DONE" ]; do
     AR='${SNAP_ROOT}/actions/hls_sponge'
   elif [ -n "$HLS_LATENCY_EVAL" ]; then
     AR='${SNAP_ROOT}/actions/hls_latency_eval'
+  elif [ -n "$HLS_DECIMAL_MULT" ]; then
+    AR='${SNAP_ROOT}/actions/hls_decimal_mult'
   elif [ -n "$HLS_LATENCY_EVAL_1024" ]; then
     AR='${SNAP_ROOT}/actions/hls_latency_eval_1024'
   elif [ -n "$HLS_RX100G" ]; then
     AR='${SNAP_ROOT}/actions/hls_rx100G'
+  elif [ -n "$HLS_UDP" ]; then
+    AR='${SNAP_ROOT}/actions/hls_udp_512'
   elif [ -n "$HLS_HELLOWORLD_512" ]; then
     AR='${SNAP_ROOT}/actions/hls_helloworld_512'
   elif [ -n "$HLS_HELLOWORLD_1024" ]; then
@@ -274,7 +278,7 @@ while [ -z "$SETUP_DONE" ]; do
   fi
 
   if [ "$SIM_XSIM" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
-      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with xsim is not supported, but you can build an image!"
+      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with xsim is not supported by Xilinx, but you can build an image!"
       SETUP_INFO="$SETUP_INFO\n To simulate a design with HBM, it is recommended to use xcelium simulator (license needed) or use BRAM / URAM option."
   fi
   if [ "$SIM_IRUN" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
@@ -287,6 +291,11 @@ while [ -z "$SETUP_DONE" ]; do
   if [ "$ETHERNET_USED" == "TRUE" ] && [ "$ETH_LOOP_BACK" == "TRUE" ]; then
     #echo "=====Ethernet setup===================================="
       SETUP_INFO="$SETUP_INFO\n### INFO ### Setting of ETHERNET is a loopback with NO MAC"
+  fi
+  if [ "$SIM_XSIM" == "y" ] && [ "$ETHERNET_USED" == "TRUE" ] && [ "$ETH_LOOP_BACK" != "TRUE" ]; then
+    #echo "=====Ethernet setup===================================="
+      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating EMAC with xsim is not supported by Xilinx, but you can build an image!"
+      SETUP_INFO="$SETUP_INFO\n To simulate a design with EMAC, it is recommended to use xcelium simulator (license needed) or use the Ethernet Loop-back option."
   fi
 
 
@@ -317,8 +326,13 @@ while [ -z "$SETUP_DONE" ]; do
 
   #if no warning then display message
   if [ -z "$SETUP_WARNING" ]; then
-    echo "  Suggested next step: to run a simulation,      execute: make sim"
-    echo "                    or to build the FPGA binary, execute: make image"
+    if [ "$USE_PRFLOW" == "TRUE" ]; then
+      echo "  Suggested next step: to run a simulation,      execute: make sim"
+      echo "                    or to build the FPGA binary, execute: make cloud_base or make cloud_action"
+    else
+      echo "  Suggested next step: to run a simulation,      execute: make sim"
+      echo "                    or to build the FPGA binary, execute: make image"
+    fi
   fi
   SETUP_DONE="1"
 done

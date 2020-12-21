@@ -108,8 +108,10 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     closing project"
 
 #Remove unncessary files which will not been used
 #exec rm -rf $img_dir/${oc_action_name_image}.bin
-exec mv $img_dir/${IMAGE_NAME}_hls_action_0_pblock_1_partial.bit $img_dir/${IMAGE_NAME}_partial.bit
-exec rm -rf $img_dir/${IMAGE_NAME}_hls_action_0_pblock_1_partial.bin
+exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit $img_dir/${IMAGE_NAME}_partial.bit
+exec rm -rf $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin
+#keep a copy of the generated partial bit files in DCP
+exec cp $img_dir/${IMAGE_NAME}_partial.bit $dcp_dir/.
 
 close_project  >> $logfile
 

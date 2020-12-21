@@ -79,6 +79,10 @@
 `define ENABLE_ETH_LOOP_BACK
 #endif
 
+#if defined(CONFIG_ENABLE_EMAC_V3_1)
+`define ENABLE_EMAC_V3_1
+#endif
+
 #if defined(CONFIG_ACTION_HALF_WIDTH)
 `define ACTION_HALF_WIDTH
 #endif
@@ -191,6 +195,8 @@
   `define IMP_VERSION_DAT 64'h0
   `define BUILD_DATE_DAT 64'h0
   `define CARD_TYPE 8'h0
+  `define USERCODE 64'h0
+
 
 //   Don't touch, they will be replaced by patch_version.sh (only for HLS Action)
   `define HLS_ACTION_TYPE 32'h0

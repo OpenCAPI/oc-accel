@@ -2,6 +2,9 @@
 
 OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that helps you implement your FPGA acceleration solutions with OpenCAPI technology.
 
+# Documentation
+ <https://opencapi.github.io/oc-accel-doc/>
+
 # Dependencies 
  * On a X86 server:
     * Install Xilinx tools (tested with Vivado 2019.2) with the desired fpga family (used by the card you want to test).
@@ -70,10 +73,6 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
   ./actions/hls_helloworld_1024/tests/hw_test.sh
   ```
 * Check results
-
-# Documentation
- <https://opencapi.github.io/oc-accel-doc/>
-
 
 # Contributing
 This is an open-source project. We greatly appreciate your contributions and collaboration.

@@ -60,12 +60,12 @@ if { $fpgacard == "AD9H7" } {
    puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_action_name_synth_dcp}"]
    read_checkpoint -cell [get_cells oc_func0/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp} >> $logfile
 
-   create_pblock hls_action_0_pblock_1 >> $logfile
-   add_cells_to_pblock [get_pblocks hls_action_0_pblock_1] [get_cells [list oc_func0/fw_afu/action_core_i]] >> $logfile
-   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X4Y4:CLOCKREGION_X7Y11 >> $logfile
-   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X0Y6:CLOCKREGION_X3Y11 >> $logfile
-   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X5Y0:CLOCKREGION_X6Y3 >> $logfile
-   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X0Y0:CLOCKREGION_X7Y0 >> $logfile
+   create_pblock pblock_dynamic_PR >> $logfile
+   add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func0/fw_afu/action_core_i]] >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y3:CLOCKREGION_X7Y11 >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y6:CLOCKREGION_X3Y11 >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X5Y0:CLOCKREGION_X6Y3 >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y0:CLOCKREGION_X7Y0 >> $logfile
 
 } elseif { $fpgacard == "AD9V3" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
@@ -73,9 +73,9 @@ if { $fpgacard == "AD9H7" } {
    puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_action_name_synth_dcp}"]
    read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp} >> $logfile
 
-   create_pblock hls_action_0_pblock_1 >> $logfile
-   add_cells_to_pblock [get_pblocks hls_action_0_pblock_1] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
-   resize_pblock [get_pblocks hls_action_0_pblock_1] -add CLOCKREGION_X0Y2:CLOCKREGION_X5Y4 >> $logfile
+   create_pblock pblock_dynamic_PR >> $logfile
+   add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X5Y4 >> $logfile
 }
 
 #-----------------------
@@ -166,20 +166,21 @@ set directive Explore
 
 set logfile   $logs_dir/${step}.log
 set command   "phys_opt_design  -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+#puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-if { [catch "$command > $logfile" errMsg] } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     SKIPPING opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+#if { [catch "$command > $logfile" errMsg] } {
+#  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
+#  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
-  if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
-  }
-  exit 42
-} else {
+#  if { ![catch {current_instance}] } {
+#    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+#  }
+#  exit 42
+#} else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     generating ${oc_action_name_routed_dcp}"]
   write_checkpoint -force $dcp_dir/${oc_action_name_routed_dcp} >> $logfile
-}
+#}
 
 ##----------------
 # lock design
@@ -194,7 +195,7 @@ set command   "lock_design -level routing"
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start lock design" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: lock design failed" $widthCol4 "" ]
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
@@ -212,7 +213,7 @@ if { [catch "$command > $logfile" errMsg] } {
 
 ## generating reports
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-report_utilization    -quiet -pblocks [get_pblocks hls_action_0_pblock_1]  -file  ${rpt_dir}/utilization_route_design.rpt
+report_utilization    -quiet -pblocks [get_pblocks pblock_dynamic_PR]  -file  ${rpt_dir}/utilization_route_design.rpt
 report_utilization    -quiet -file  ${rpt_dir}/utilization_route_design.rpt
 report_route_status   -quiet -file  ${rpt_dir}/route_status.rpt
 report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt

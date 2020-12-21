@@ -14,6 +14,11 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
+# This script is typically called by hardware/Makefile and takes as arguments the location of a variable file and the file name
+# to update its default parameters.
+# Typically file is created with $(SNAP_HARDWARE_ROOT)/hardware/setup/create_framework.tcl
+# path is hdl/core
+# and file is snap_global_vars.v
 set -e
 NAME=`basename $2`
 
@@ -30,6 +35,15 @@ sed -i "s/$SRC/$DST/" $1/$2
 SRC="define BUILD_DATE_DAT 64'h.*"
 DST="define BUILD_DATE_DAT 64'h0000_${SNAP_BUILD_DATE}"
 sed -i "s/$SRC/$DST/" $1/$2
+
+# Manually Patching with USERCODE
+SRC="define USERCODE 64'h.*"
+# usercode should be less than 64 bit long
+#usercode=`echo 0123456789ABCDEF`
+usercode=`echo 0000000000000000`
+DST="define USERCODE 64'h${usercode}"
+sed -i "s/$SRC/$DST/" $1/$2
+
 
 #Patch card info and sdram_size
 # SDRAM_SIZE="2000" stand for 8GB of SDRAM - 0 for IBM but will be overwritten later by HBM_AXI_IF_NB
@@ -80,7 +94,7 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
          echo "   -------------------------------------------------------------------------------------------------"
       elif [ $SDRAM_SIZE_DEC != $HBM_AXI_IF_NUM ]; then
          echo "   ---------------------------------------------------------------------------------------------"
-         echo "   -- ERROR : HBM AXI interfaces defined in ~/actions/$ACTION_NAME (=$SDRAM_SIZE_DEC)"
+         echo "   -- ERROR : HBM AXI interfaces defined in ~/actions$ACTION_NAME (=$SDRAM_SIZE_DEC)"
          echo "   --         is different than the one specified in the Kconfig menu (=$HBM_AXI_IF_NUM)!!"
          echo "   --         Please correct one or the other to keep coherency."
          echo "   ---------------------------------------------------------------------------------------------"

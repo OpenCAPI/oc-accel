@@ -151,7 +151,7 @@ fi
       fi
       echo "ok"
   
-      echo -n "Write from FPGA to Card DDR Memory ... "
+      echo -n "Write from FPGA to HBM Memory ... "
       cmd="snap_hbm_memcopy -C${snap_card}     ${noirq}\
         -D HBM_P0 -d 0x0    \
         -s ${size}     >>    \

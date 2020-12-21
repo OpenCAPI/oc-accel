@@ -40,6 +40,7 @@ snap_env_sh        = $(SNAP_ROOT)/snap_env.sh
 -include $(snap_env_sh)
 
 SIMULATOR ?= nosim
+VIVADO_MAJOR_RELEASE = $(shell vivado -version | grep Vivado | cut -d '.' -f1 | tr -d "Vivado ")
 
 #small case -- not used
 #FPGA_CARD := $(shell echo $(FPGACARD) | tr '[:upper:]' '[:lower:]')
@@ -85,6 +86,7 @@ SNAP_TMP_FILES =  $(SIM_DIR)/README.txt
 SNAP_ACTION_DCP=$(DCP_ROOT)/user_action_synth.dcp
 SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
 
+
 #
 # FIXME Targets in this Makefile are to be build in the correct order.
 #      Parallelization e.g. by using -jN will not work at this point in time
@@ -93,7 +95,7 @@ SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
 
 ifeq ($(PLATFORM),x86_64)
 
-.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_enable cloud_base cloud_action cloud_merge ocse software app model xsim irun nosim sim clean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image
+.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_base cloud_action ocse software app model xsim irun nosim sim clean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_image
 
 all: model image
 
@@ -244,7 +246,23 @@ action_hw: prepare_logs
 	@echo -e "[CREATE ETHERNET IP..] start `date +"%T %a %b %d %Y"`";
 	@rm -rf $(SNAP_HARDWARE_ROOT)/ip/eth_100G
 	echo "Calling create_eth_100G TCL script" >> $(LOGS_DIR)/eth_100G_make.log; 
-	@echo -e "			generating 100G Ethernet IP";
+	@if [ "$(ENABLE_EMAC_V3_1)" == "TRUE" ]; then \
+		if [ $(VIVADO_MAJOR_RELEASE) -gt "2019" ]; then \
+			echo -e "			generating 100G Ethernet IP V3.1"; \
+		else \
+			echo -e "##ERROR: Vivado $(VIVADO_MAJOR_RELEASE) is incompatible with  100G Ethernet IP V3.1"; \
+			echo -e "    Please rerun 'make snap_config' to set correctly the variables"; \
+			exit -1; \
+		fi; \
+	else \
+		if [ $(VIVADO_MAJOR_RELEASE) -gt "2019" ]; then \
+			echo -e "##ERROR: Vivado $(VIVADO_MAJOR_RELEASE) is incompatible with  100G Ethernet IP V3.0"; \
+			echo -e "    Please rerun 'make snap_config' to set correctly the variables"; \
+			exit -1; \
+		else \
+			echo -e "			generating 100G Ethernet IP V3.0"; \
+		fi; \
+	fi
 	@cd $(BUILD_DIR)  &&  vivado -quiet -mode batch -source $(SETUP_DIR)/create_eth_100G_ip.tcl -notrace -log $(LOGS_DIR)/eth_100G_make.log -journal $(LOGS_DIR)/eth_100G_make.jou >> $(LOGS_DIR)/eth_100G_make.log; 
 	@echo -e "[CREATE ETHERNET IP..] done `date +"%T %a %b %d %Y"`";
 	@touch .create_ethernet_done
@@ -362,12 +380,6 @@ allow_%:
 		echo; echo "Error: Makefile target $* is not allowed for cloud user flow!"; exit -1; \
 	fi
 
-cloud_enable: allow_cloud_action
-	@echo -e "[ENABLE CLOUD FLOW...] start `date +"%T %a %b %d %Y"e`"
-	@$(MAKE) -s patch_version
-	@cd $(BUILD_DIR) && env CLOUD_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
-	@echo -e "[ENABLE CLOUD FLOW...] done  `date +"%T %a %b %d %Y"`"
-
 cloud_base: allow_cloud_base .hw_project_done
 	@echo -e "[BUILD CLOUD BASE....] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=BASE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
@@ -381,78 +393,6 @@ $(SNAP_BASE_DCP):
 	@echo -e "                        Need to run cloud_base first"
 	@exit -1
 
-
-#---------------------------------
-# Partial reconfiguration recipes
-#
-#
-#pr_synth_static prepares the synthesized dcp containing mainly TLx/DLx and all static objects that
-# will remain in the FPGA
-
-pr_synth_static: .hw_project_done
-	@echo -e "[ACTION in BLACKBOX..] start `date +"%T %a %b %d %Y"`"
-	# remove any "(* black_box *) module oc_action_core" sequence if 
-	# the previous run failed before being able to remove it
-	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
-	# add "(* black_box *)"
-	@sed -i "s/module oc_action_core/(\* black_box \*) module oc_action_core/g" hdl/core/oc_action_core.v
-	@echo -e "[PR SYNTH STATIC ....] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_static.log
-	@echo -e "[PR SYNTH STATIC ....] done  `date +"%T %a %b %d %Y"`"
-	@echo -e "[ACTION not BLACKBOX.] start `date +"%T %a %b %d %Y"`"
-	# remove "(* black_box *)"
-	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
-	@echo "  Suggested next step: To synthesize the action: make pr_synth_action"
-
-# pr_synth_action prepares the synthesis of the dynamic part of the FPGA, mainly the action and all required hardware drivers
-# This part is the one that can be replaced on the fly
-
-pr_synth_action: .hw_project_done
-	@echo -e "[PR SYNTH ACTION ....] start `date +"%T %a %b %d %Y"`"
-	#remove any black_box word if pr_synth_static run failed before being able to remove it
-	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_action.log
-	@echo -e "[PR SYNTH ACTION ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To route the   top  design : make pr_route_static"
-	@echo "  Suggested next step: To route the action design : make pr_route_action"
-
-# pr_route_static prepares a complete refence routing of the FPGA, including both sttic and dynamic parts with 
-# a hls_helloworld_1024 reference action. From this complete routed design we substract the reference dynamic part
-# to obtain the static_routed static. This is the base of any future user designs.
-
-pr_route_static: snap_preprocess_start
-	@echo -e "[PR ROUTING STATIC ..] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_static.log
-	@echo -e "[PR ROUTING STATIC ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To build the bin files : make pr_image"
-
-# pr_route_action prepares a routing of the action. 
-# You need to have run almost once the pr_route_static to have the right dcp file.
-
-pr_route_action: snap_preprocess_start
-	@echo -e "[PR ROUTING ACTION ..] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_action.log
-	@echo -e "[PR ROUTING ACTION ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To build the bin files : make pr_image"
-
-
-#pr_merge will assembly static base and user dynamic part
-pr_merge:
-
-# hopefully pr_image will build the complete image with static base and dynamic user part
-
-pr_image: snap_preprocess_start
-	@echo -e "[Building image files] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_image.tcl -notrace -log $(LOGS_DIR)/oc_pr_image.log -journal $(LO    GS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_image.log
-	@echo -e "[Building image files] done  `date +"%T %a %b %d %Y"`"
-
-
-# End of partial reconfiguration recipes
-#---------------------------------------
-
-
-
-  
 cloud_action: allow_cloud_action .hw_project_done
 	@echo -e "[CLOUD ACTION SYNTH..] start `date +"%T %a %b %d %Y"e`"
 	@$(MAKE) -s patch_version
@@ -460,17 +400,8 @@ cloud_action: allow_cloud_action .hw_project_done
 	@cd $(BUILD_DIR) && env CLOUD_RUN=ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
 	@echo -e "[CLOUD ACTION SYNTH..] done  `date +"%T %a %b %d %Y"`"
 
-cloud_merge: allow_cloud_merge $(SNAP_BASE_DCP) $(SNAP_ACTION_DCP)
-	@ignore_action_root=ignore_action_root $(MAKE) prepare_project
-	@echo -e "[CLOUD MERGE ........] start `date +"%T %a %b %d %Y"`"
-	@echo -e "                        using `vivado -version |grep Vivado`"
-	@cd $(BUILD_DIR) && vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_merge.tcl -notrace -log $(LOGS_DIR)/snap_cloud_merge.log -journal $(LOGS_DIR)/snap_cloud_merge.jou
-	@echo -e "[CLOUD MERGE ........] done  `date +"%T %a %b %d %Y"`"
-
-
 #---------------------------------
 # Partial reconfiguration recipes
-#
 #
 #pr_synth_static prepares the synthesized dcp containing mainly TLx/DLx and all static objects that
 # will remain in the FPGA
@@ -521,9 +452,6 @@ pr_route_action: snap_preprocess_start
 	@echo -e "[PR ROUTING ACTION ....] done  `date +"%T %a %b %d %Y"`"
 	@echo "  Suggested next step: To build the bin files : make pr_image"
 
-
-#pr_merge will assembly static base and user dynamic part
-pr_merge:
 
 # hopefully pr_image will build the complete image with static base and dynamic user part
 
@@ -542,6 +470,8 @@ pr_image: snap_preprocess_start
 ocse: prepare_logs
 	@echo -e "[COMPILE OCSE .......] start `date +"%T %a %b %d %Y"`"
 	@$(SNAP_ROOT)/check_ocse.sh > $(LOGS_DIR)/compile_ocse.log 2>&1
+## Switch the comments (and check the slatch) on the following lines to allow debugging OCSE (Open CAPI Simulation engine)
+##	@$(MAKE) DEBUG=1 -C $(OCSE_ROOT) >> $(LOGS_DIR)/compile_ocse.log 2>&1; 
 	@$(MAKE) -C $(OCSE_ROOT) >> $(LOGS_DIR)/compile_ocse.log 2>&1; \
 	if [ $$? -ne 0 ]; then echo -e "                        Error: please look into $(LOGS_DIR)/compile_ocse.log"; exit -1; fi
 	@echo -e "[COMPILE OCSE .......] done  `date +"%T %a %b %d %Y"`"

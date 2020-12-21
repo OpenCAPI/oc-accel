@@ -90,9 +90,15 @@ function test_all_actions() # $1 = card, $2 = accel
 		*"1014300d") # HLS Image Filter
                         cmd="./actions/hls_image_filter/tests/hw_test.sh"
                 ;;
+	 	*"10143010") # HLS UDP
+                        cmd="./actions/hls_udp_512/tests/hw_test.sh"
+                ;;
                 *"1014300e") # HLS Memcopy 512
                         cmd="./actions/hls_memcopy_512/tests/hw_test.sh"
                 ;;
+                *"1014300f") # HLS Decimal multiplication 512
+                        cmd="./actions/hls_decimal_mult/tests/hw_test.sh"
+                ;; 
 		*)
 			echo "Error: Action: $action is not valid !"
 			run_test=0
@@ -221,9 +227,10 @@ function test_hard()
 function usage() {
 	echo "Usage: $PROGRAM -D [] -A [] -F [] -f []"
 	echo "    [-D <Target Dir>]"
-	echo "    [-A <OC-AD9V3>  : Select AlphaData OC-AD9V3 Card"
-	echo "    [-A <OC-AD9V3>  : Select AlphaData OC-AD9H3 Card"
-	echo "    [-A <OC-AD9V3>  : Select AlphaData OC-AD9H7 Card"
+	echo "    [-A <OC-AD9V3>     : Select AlphaData OC-AD9V3 Card"
+	echo "    [-A <OC-AD9H3>     : Select AlphaData OC-AD9H3 Card"
+	echo "    [-A <OC-AD9H7>     : Select AlphaData OC-AD9H7 Card"
+	echo "    [-A <OC-BW250SOC>  : Select AlphaData OC-BW250SOC Card"
 	echo "        <ALL>    : Select ALL Cards"
 	echo "    [-F <Image>  : Set Image file for Accelerator -A"
 	echo "    [-f <Image>  : Set SPI secondary Image file for Accelerator -A"
@@ -233,11 +240,11 @@ function usage() {
 	echo "    [-h] Print this help"
 	echo "    Option -D must be set"
 	echo "    following combinations can happen"
-	echo "    1.) Option -A [OC-AD9V3, OC-AD9H3, OC-AD9H7] and -F is set"
+	echo "    1.) Option -A [OC-AD9V3, OC-AD9H3, OC-AD9H7, OC-BW250SOC] and -F is set"
 	echo "        for Card in all Accelerators (-A)"
 	echo "           => Image will be flashed on Card (using oc-flash-script and reset routines)"
 	echo "           => and Software Test will then run on Card"
-	echo "    2.) Option -A [OC-AD9V3, OC-AD9H3, OC-AD9H7]"
+	echo "    2.) Option -A [OC-AD9V3, OC-AD9H3, OC-AD9H7, OC-BW250SOC]"
 	echo "        for Card in all given Accelerators (-A)"
 	echo "           => Software Test will run on Card (using current FPGA content)"
 	echo "    3.) Option -A ALL"
@@ -252,7 +259,8 @@ function usage() {
 #       starting this script.
 #
 # -------------------------------------------------------
-VERSION=1.0 # creation for OC-AD9V3, OC-AD9H3, OC-AD9H7 cards
+#VERSION=1.0 # creation for OC-AD9V3, OC-AD9H3, OC-AD9H7 cards
+VERSION=1.1 # addition of OC-BW350SOC card
 # --------------------------------------------------------
 PROGRAM=$0
 BINFILE=""
@@ -277,12 +285,13 @@ while getopts "D:A:F:f:C:h" opt; do
 		;;
 	A)
 		accel=$OPTARG;
-		if [[ $accel != "OC-AD9V3"  ]] &&
-		   [[ $accel != "OC-AD9H3" ]] &&
-		   [[ $accel != "OC-AD9H7"  ]] &&
-		   [[ $accel != "ALL"    ]]; then
+		if [[ $accel != "OC-AD9V3"    ]] &&
+		   [[ $accel != "OC-AD9H3"    ]] &&
+		   [[ $accel != "OC-AD9H7"    ]] &&
+		   [[ $accel != "OC-BW250SOC" ]] &&
+		   [[ $accel != "ALL"         ]]; then
 			echo "Error:  Option -A $OPTARG is not valid !" >&2
-			echo "Expect: [OC-AD9V3, OC-AD9H3, OC-AD9H7 or ALL]" >&2
+			echo "Expect: [OC-AD9V3, OC-AD9H3, OC-AD9H7, OCBW250SOC or ALL]" >&2
 			exit 1
 		fi
 		;;
@@ -385,6 +394,8 @@ if [[ $accel != "ALL" ]]; then
 		echo "`date` Image Test on Accel: $accel was executed $test_done time(s)"
 		exit 0
 	fi
+
+	# at this level no binary file has been provided, still in the -ALL case
 	# Run Software Test on one Type of Card
 	echo "Test Software on: $accel Card: $CARD"
 	if [ $CARD -eq "-1" ]; then
@@ -407,16 +418,12 @@ if [[ $accel != "ALL" ]]; then
 		# -C Option was set:
 		# Make sure i did get the correct values for Card and Accel (-C and -A)
 		# -t3 for detecting only OPENCAPI (CAPI3.0) card result
-		accel_to_use=`./software/tools/oc_find_card -C $CARD` -t3
+		accel_to_use=`./software/tools/oc_find_card -C $CARD -t3`
                 echo "accel_to_use=$accel_to_use"
                 echo "accel       =$accel"
                 echo "CARD        =$CARD"
 		if [ "$accel_to_use" == "$accel" ]; then
-		    if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H3" ]]; then
-			    test_hard $accel $CARD $BINFILE
-		    else
-			    test_hard $accel $CARD $BINFILE $BINFILE2
-					fi
+			test_soft $accel $CARD
 			if [ $? -ne 0 ]; then
 				exit 1
 			fi
@@ -436,7 +443,10 @@ if [[ $accel != "ALL" ]]; then
 	exit 0
 fi
 
+# At this level we should have a ALL cards  test case
 # Run Software Test on ALL Cards
+
+# if we ask for ALL cards, this is not compatible with providing a BIN file
 if [[ $BINFILE != "" ]]; then
 	# Error: I can not use the same BINFILE for ALL cards
 	echo "Error: Option -A $accel and -F $BINFILE is not valid"
@@ -451,13 +461,13 @@ if [ $? -eq 0 ]; then
 fi
 echo "Found Accel#: [$MY_CARDS]"
 for card in $MY_CARDS ; do
-	accel=`./software/tools/oc_find_card -C $card` -t3
+	accel=`./software/tools/oc_find_card -C $card -t3`
 	if [ $? -eq 0 ]; then
 		echo "Can not find valid Accelerator for Card# $card"
 		continue
 	fi
 	# oc_find_card also detects GZIP cards, i will skip this cards
-	if [[ $accel != "OC-AD9V3" ]]  && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
+	if [[ $accel != "OC-AD9V3" ]]  && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]  && [[ $accel != "OC-BW250SOC" ]]; then
 		echo "Invalid Accelerator $accel for Card $card, skip"
 		continue
 	fi
