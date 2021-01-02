@@ -1612,7 +1612,9 @@ module action_wrapper (
    output [  63 : 0]                        dout_eth_TKEEP    ,
    output [   0 : 0]                        dout_eth_TUSER    ,
    output                                   dout_eth_TLAST    ,
-   output                                   eth_reset         ,
+   output                                   eth_rx_fifo_reset ,
+   input                                    eth_stat_rx_status,
+   input                                    eth_stat_rx_aligned,
 `endif
 `endif
     //
@@ -3430,7 +3432,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TKEEP               (dout_eth_TKEEP           ) ,
     .dout_eth_TUSER               (dout_eth_TUSER           ) ,
     .dout_eth_TLAST               (dout_eth_TLAST           ) ,
-    .eth_reset_V                  (eth_reset                ) ,
+    .eth_reset_V                  (eth_rx_fifo_reset        ) ,
 `else
     .din_eth_TDATA                (dwrap_eth_TDATA          ) ,
     .din_eth_TVALID               (dwrap_eth_TVALID         ) ,
