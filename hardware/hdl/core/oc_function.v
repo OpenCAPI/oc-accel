@@ -262,6 +262,18 @@ module oc_function (
 `endif
 `endif
 
+`ifdef ENABLE_9H3_LED
+     , output                 user_led_a0
+     , output                 user_led_a1
+     , output                 user_led_g0
+     , output                 user_led_g1
+`endif
+`ifdef ENABLE_9H3_EEPROM
+     , inout                  eeprom_scl
+     , inout                  eeprom_sda
+     , output                 eeprom_wp
+`endif
+
 );
 
 // ==============================================================================================================================
@@ -553,6 +565,17 @@ framework_afu  fw_afu
    `endif
    `endif
 
+   `ifdef ENABLE_9H3_LED
+      .user_led_a0     ( user_led_a0        ),
+      .user_led_a1     ( user_led_a1        ),
+      .user_led_g0     ( user_led_g0        ),
+      .user_led_g1     ( user_led_g1        ),
+   `endif
+   `ifdef ENABLE_9H3_EEPROM
+      .eeprom_scl      (eeprom_scl          ),
+      .eeprom_sda      (eeprom_sda          ),
+      .eeprom_wp       (eeprom_wp           ),
+   `endif
 
       // -- AFU Index
       .afu_index                           ( 6'b000000 ),                                 // -- input   // -- This AFU is number 0                                                      

@@ -262,6 +262,18 @@ module framework_afu (
     , output                 gt_tx_gt_port_3_p
    `endif
    `endif
+
+`ifdef ENABLE_9H3_LED
+     , output                 user_led_a0
+     , output                 user_led_a1
+     , output                 user_led_g0
+     , output                 user_led_g1
+`endif
+`ifdef ENABLE_9H3_EEPROM
+     , inout                  eeprom_scl
+     , inout                  eeprom_sda
+     , output                 eeprom_wp
+`endif 
   );
 
   // // ******************************************************************************
@@ -4146,6 +4158,17 @@ module framework_afu (
       .eth_stat_rx_status                 ( eth_stat_rx_status        ) ,
       .eth_stat_rx_aligned                ( eth_stat_rx_aligned       ) ,
 `endif
+`endif
+`ifdef ENABLE_9H3_LED
+      .user_led_a0     ( user_led_a0        ),
+      .user_led_a1     ( user_led_a1        ),
+      .user_led_g0     ( user_led_g0        ),
+      .user_led_g1     ( user_led_g1        ),
+`endif
+`ifdef ENABLE_9H3_EEPROM
+      .eeprom_scl      (eeprom_scl          ),
+      .eeprom_sda      (eeprom_sda          ),
+      .eeprom_wp       (eeprom_wp           ),
 `endif
       //
       // AXI Control Register Interface

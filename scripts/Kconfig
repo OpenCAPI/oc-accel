@@ -608,6 +608,16 @@ config OCSE_PATH
 	string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
 	default "../ocse"
 
+config ENABLE_9H3_LED
+	bool "User LEDs on the board"
+	depends on (AD9H3 || AD9H335) && HDL_ACTION
+	default n
+
+config ENABLE_9H3_EEPROM
+	bool "I2C interface for on-board EEPROM (2kbit); WARNING! IOBUF and I2C need to be handled within action logic"
+	depends on (AD9H3 || AD9H335) && HDL_ACTION
+	default n
+
 comment "================= Advanced Options: ================="
 
 choice
