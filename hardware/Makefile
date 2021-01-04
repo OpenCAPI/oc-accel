@@ -241,7 +241,7 @@ action_hw: prepare_logs
 	fi
 	@echo -e "[CONFIG ACTION HW....] done  `date +"%T %a %b %d %Y"`";
 
-.create_ethernet_done: prepare_logs
+.create_ethernet_done:
 	@echo -e "[CREATE ETHERNET IP..] start `date +"%T %a %b %d %Y"`";
 	@rm -rf $(SNAP_HARDWARE_ROOT)/ip/eth_100G
 	echo "Calling create_eth_100G TCL script" >> $(LOGS_DIR)/eth_100G_make.log; 
