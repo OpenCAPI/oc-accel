@@ -274,6 +274,11 @@ module framework_afu (
      , inout                  eeprom_sda
      , output                 eeprom_wp
 `endif 
+`ifdef ENABLE_9H3_AVR
+    , input                  avr_rx
+    , output                 avr_tx
+    , input                  avr_ck
+`endif
   );
 
   // // ******************************************************************************
@@ -4170,6 +4175,12 @@ module framework_afu (
       .eeprom_sda      (eeprom_sda          ),
       .eeprom_wp       (eeprom_wp           ),
 `endif
+`ifdef ENABLE_9H3_AVR
+      .avr_rx          (avr_rx              ),
+      .avr_tx          (avr_tx              ),
+      .avr_ck          (avr_ck              ),
+ `endif
+
       //
       // AXI Control Register Interface
       .s_axi_ctrl_reg_araddr              ( lite_conv2act_araddr       ) ,

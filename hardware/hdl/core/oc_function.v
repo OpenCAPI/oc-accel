@@ -273,7 +273,11 @@ module oc_function (
      , inout                  eeprom_sda
      , output                 eeprom_wp
 `endif
-
+`ifdef ENABLE_9H3_AVR
+    , input                  avr_rx
+    , output                 avr_tx
+    , input                  avr_ck
+`endif
 );
 
 // ==============================================================================================================================
@@ -576,6 +580,11 @@ framework_afu  fw_afu
       .eeprom_sda      (eeprom_sda          ),
       .eeprom_wp       (eeprom_wp           ),
    `endif
+   `ifdef ENABLE_9H3_AVR
+      .avr_rx          (avr_rx              ),
+      .avr_tx          (avr_tx              ),
+      .avr_ck          (avr_ck              ),
+    `endif
 
       // -- AFU Index
       .afu_index                           ( 6'b000000 ),                                 // -- input   // -- This AFU is number 0                                                      

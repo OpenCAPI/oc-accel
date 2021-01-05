@@ -618,6 +618,11 @@ config ENABLE_9H3_EEPROM
 	depends on (AD9H3 || AD9H335) && HDL_ACTION
 	default n
 
+config ENABLE_9H3_AVR
+	bool "Serial interface for on-board management microcontroller; WARNING! Requires IP from (paid) reference design from Alpha Data to use it within the action"
+	depends on (AD9H3 || AD9H335) && HDL_ACTION
+	default n
+
 comment "================= Advanced Options: ================="
 
 choice
