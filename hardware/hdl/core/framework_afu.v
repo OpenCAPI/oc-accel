@@ -4171,14 +4171,14 @@ module framework_afu (
       .user_led_g1     ( user_led_g1        ),
 `endif
 `ifdef ENABLE_9H3_EEPROM
-      .eeprom_scl      (eeprom_scl          ),
-      .eeprom_sda      (eeprom_sda          ),
-      .eeprom_wp       (eeprom_wp           ),
+      .eeprom_scl_io   ( eeprom_scl         ),
+      .eeprom_sda_io   ( eeprom_sda         ),
+      .eeprom_wp       ( eeprom_wp          ),
 `endif
 `ifdef ENABLE_9H3_AVR
-      .avr_rx          (avr_rx              ),
-      .avr_tx          (avr_tx              ),
-      .avr_ck          (avr_ck              ),
+      .uc_avr_rx       ( avr_rx             ),
+      .uc_avr_tx       ( avr_tx             ),
+      .uc_avr_ck       ( avr_ck             ),
  `endif
 
       //
