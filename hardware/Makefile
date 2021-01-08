@@ -351,7 +351,7 @@ config: hw_project
 #	@$(MAKE) -C $(SNAP_HARDWARE_ROOT)/oc-bip unit_sim;
 
 #-----
-# make synth is the 1rst step (out of 3) of a 'make image' containing synthesis + opt_design 
+# 'make synth' is the 1rst step (out of 3) of a 'make image' containing synthesis + opt_design 
 synth:
 	$(MAKE) .hw_project_done
 	@echo -e "[BUILD synthesis only] start `date +"%T %a %b %d %Y"`\n"
@@ -359,7 +359,7 @@ synth:
 	@echo -e "[BUILD synthesis only] done  `date +"%T %a %b %d %Y"`"
 	@echo -e "--- Recommended next step : 'make place' ---"
 
-# make place is the 2nd step (out of 3) of a 'make image' containing place_design + phys_opt_design 
+# 'make place' is the 2nd step (out of 3) of a 'make image' containing place_design + phys_opt_design 
 place:
 	@echo -e "--- 2nd step to build an image: You must have run a 'make synth' before ---\n"
 	@echo -e "[BUILD placing only..] start `date +"%T %a %b %d %Y"`\n"
@@ -367,7 +367,7 @@ place:
 	@echo -e "[BUILD placing only..] done  `date +"%T %a %b %d %Y"`"
 	@echo -e "--- Recommended next step : 'make route' ---"
 
-# make place is the 3rd step (out of 3) of a 'make image' containing route_design + phys_opt_design + generate_bitstreams
+# 'make route' is the 3rd step (out of 3) of a 'make image' containing route_design + phys_opt_design + generate_bitstreams
 route:
 	@echo -e "--- 3rd step to build an image: You must have run a 'make place' before ---\n"
 	@echo -e "[BUILD routing only..] start `date +"%T %a %b %d %Y"`\n"
