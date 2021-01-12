@@ -610,18 +610,34 @@ config OCSE_PATH
 
 config ENABLE_9H3_LED
 	bool "User LEDs on the board"
-	depends on (AD9H3 || AD9H335) && HDL_ACTION
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
 	default n
+
+config AD9H3_LED_USED
+        string
+        default "TRUE"  if ENABLE_9H3_LED
+        default "FALSE" if ! ENABLE_9H3_LED
 
 config ENABLE_9H3_EEPROM
 	bool "I2C interface for on-board EEPROM (2kbit); WARNING! IOBUF and I2C need to be handled within action logic"
-	depends on (AD9H3 || AD9H335) && HDL_ACTION
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
 	default n
+
+config AD9H3_EEPROM_USED
+        string
+        default "TRUE"  if ENABLE_9H3_EEPROM
+        default "FALSE" if ! ENABLE_9H3_EEPROM
 
 config ENABLE_9H3_AVR
 	bool "Serial interface for on-board management microcontroller; WARNING! Requires IP from (paid) reference design from Alpha Data to use it within the action"
-	depends on (AD9H3 || AD9H335) && HDL_ACTION
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
 	default n
+	default n
+
+config AD9H3_AVR_USED
+        string
+        default "TRUE"  if ENABLE_9H3_AVR
+        default "FALSE" if ! ENABLE_9H3_AVR
 
 comment "================= Advanced Options: ================="
 
