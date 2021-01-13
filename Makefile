@@ -41,11 +41,11 @@ help:
 	@echo "=================================================";
 	@echo "* snap_config    Configure OC-Accel framework";
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
-	@echo "* sim            Start a simulation";
+	@echo "* sim            Start a simulation (it will build the model before)";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
 	@echo "* hw_project     Create Vivado project with oc-bip";
-	@echo "* image          Build a complete FPGA bitstream after hw_project (takes more than one hour)";
-	@echo "*                 (This command can be splitted into make synth + make place + make route)";
+	@echo "* image          Build a complete FPGA bitstream (takes more than one hour)";
+	@echo "*                 (This command can be splitted into 'make synth' + 'make place' + 'make route')";
 	@echo "* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')";
 	@echo "* software       Build software libraries and tools for SNAP";
 	@echo "* apps           Build the applications for all actions";

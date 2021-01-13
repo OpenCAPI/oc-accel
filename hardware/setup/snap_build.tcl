@@ -99,11 +99,13 @@ if { $ila_debug == "TRUE" } {
 ## removing temporary checkpoint files
 if { ($::env(REMOVE_TMP_FILES) == "TRUE") && ($impl_step == "ALL") } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing temp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  #We intentionally keep the latest dcp generated  => opt_routed_design.dcp
   exec rm -rf $dcp_dir/synth_design.dcp
   exec rm -rf $dcp_dir/opt_design.dcp
   exec rm -rf $dcp_dir/place_design.dcp
   exec rm -rf $dcp_dir/phys_opt_design.dcp
   exec rm -rf $dcp_dir/route_design.dcp
+  exec rm -rf $dcp_dir/*_error.dcp
 }
 
 close_project >> $logfile
