@@ -91,6 +91,10 @@
 `define ENABLE_9H3_EEPROM
 #endif
 
+#if defined(CONFIG_ENABLE_9H3_AVR)
+`define ENABLE_9H3_AVR
+#endif
+
 #if defined(CONFIG_ACTION_HALF_WIDTH)
 `define ACTION_HALF_WIDTH
 #endif
