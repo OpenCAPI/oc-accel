@@ -27,6 +27,7 @@ set hbm_ip_dir          $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip
 set action_dir          $::env(ACTION_ROOT)
 set action_hw_dir       $action_dir/hw
 set action_ip_dir       $action_dir/ip/action_ip_prj/action_ip_prj.srcs/sources_1/ip
+set action_bd_dir       $action_dir/ip/action_ip_prj/action_ip_prj.srcs/sources_1/bd
 set action_tcl          [exec find $action_hw_dir -name tcl -type d]
 
 #set usr_ip_dir          $ip_dir/managed_ip_project/managed_ip_project.srcs/sources_1/ip
@@ -245,6 +246,13 @@ foreach ip_xci [glob -nocomplain -dir $action_ip_dir */*.xci] {
   puts "                        adding HDL Action IP $ip_name"
   add_files -norecurse $ip_xci -force >> $log_file
   export_ip_user_files -of_objects  [get_files "$ip_xci"] -no_script -sync -force >> $log_file
+}
+
+foreach ip_bd [glob -nocomplain -dir $action_bd_dir */*.bd] {
+  set bd_name [exec basename $ip_bd .bd]
+  puts "                        adding HDL board design $bd_name"
+  add_files -norecurse $ip_bd -force >> $log_file
+  export_ip_user_files -of_objects  [get_files "$ip_bd"] -no_script -sync -force >> $log_file
 }
 
 # Add Ethernet IP

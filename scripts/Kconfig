@@ -128,6 +128,7 @@ choice
 	config HDL_EXAMPLE
 		bool "HDL Example"
 		select ACTION_HALF_WIDTH
+		select DISABLE_HBM
 	
 	config HDL_SINGLE_ENGINE
 		bool "HDL Single Engine"
@@ -138,6 +139,7 @@ choice
 		  - Write data to server memory
 		select DISABLE_SDRAM_AND_BRAM
 		select DISABLE_ETHERNET
+		select DISABLE_HBM
 
 #experimental - not available yet
 #	config HDL_MULTI_PROCESS
@@ -393,7 +395,7 @@ config ENABLE_HBM
 	bool
 	prompt "Enable HBM"
 	#ddepends on ((AD9H3 || AD9H335 || AD9H7)  && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	depends on (AD9H3 || AD9H335 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
+	depends on (AD9H3 || AD9H335 || AD9H7) && ! DISABLE_HBM
 	help
 	  This option enables the on-card HBM.
 
@@ -605,6 +607,37 @@ config DENALI_USED
 config OCSE_PATH
 	string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
 	default "../ocse"
+
+config ENABLE_9H3_LED
+	bool "User LEDs on the board"
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
+	default n
+
+config AD9H3_LED_USED
+        string
+        default "TRUE"  if ENABLE_9H3_LED
+        default "FALSE" if ! ENABLE_9H3_LED
+
+config ENABLE_9H3_EEPROM
+	bool "I2C interface for on-board EEPROM (2kbit); WARNING! IOBUF and I2C need to be handled within action logic"
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
+	default n
+
+config AD9H3_EEPROM_USED
+        string
+        default "TRUE"  if ENABLE_9H3_EEPROM
+        default "FALSE" if ! ENABLE_9H3_EEPROM
+
+config ENABLE_9H3_AVR
+	bool "Serial interface for on-board management microcontroller; WARNING! Requires IP from (paid) reference design from Alpha Data to use it within the action"
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
+	default n
+	default n
+
+config AD9H3_AVR_USED
+        string
+        default "TRUE"  if ENABLE_9H3_AVR
+        default "FALSE" if ! ENABLE_9H3_AVR
 
 comment "================= Advanced Options: ================="
 

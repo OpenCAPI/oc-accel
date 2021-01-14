@@ -48,6 +48,9 @@ set_property  ip_repo_paths [concat [get_property ip_repo_paths [current_project
 update_ip_catalog -rebuild -scan_changes 
 
  # Create interface ports
+  set o_stat_rx_status [ create_bd_port -dir O o_stat_rx_status ]
+  set o_stat_rx_aligned [ create_bd_port -dir O o_stat_rx_aligned ]
+
   set i_gt_ref [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 i_gt_ref ]
   set_property -dict [ list \
    CONFIG.FREQ_HZ {161132812} \
@@ -219,6 +222,8 @@ update_ip_catalog -rebuild -scan_changes
   connect_bd_net -net util_vector_logic_2_Res [get_bd_pins axis_clock_converter_0/s_axis_aresetn] [get_bd_pins util_vector_logic_2/Res]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins axis_clock_converter_tx_0/s_axis_aresetn] [get_bd_pins xlconstant_0/dout]
 
+  connect_bd_net -net cmac_usplus_0_stat_rx_status  [get_bd_ports o_stat_rx_status] [get_bd_pins cmac_usplus_0/stat_rx_status]
+  connect_bd_net -net cmac_usplus_0_stat_rx_aligned [get_bd_ports o_stat_rx_aligned] [get_bd_pins cmac_usplus_0/stat_rx_aligned]
 assign_bd_address
 regenerate_bd_layout
 validate_bd_design

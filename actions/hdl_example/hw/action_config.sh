@@ -30,10 +30,28 @@ else
   NVME_FILTER="\-\- only for NVME_USED=TRUE"
 fi
 
+if [ "$AD9H3_LED_USED" == "TRUE" ]; then
+  ENB_9H3_LED_FILTER="\-\- only for AD9H3_LED_USED!=TRUE"
+else
+  ENB_9H3_LED_FILTER="\-\- only for AD9H3_LED_USED=TRUE"
+fi
+
+if [ "$AD9H3_EEPROM_USED" == "TRUE" ]; then
+  ENB_9H3_EEPROM_FILTER="\-\- only for AD9H3_EEPROM_USED!=TRUE"
+else
+  ENB_9H3_EEPROM_FILTER="\-\- only for AD9H3_EEPROM_USED=TRUE"
+fi
+
+if [ "$AD9H3_AVR_USED" == "TRUE" ]; then
+  ENB_9H3_AVR_FILTER="\-\- only for AD9H3_AVR_USED!=TRUE"
+else
+  ENB_9H3_AVR_FILTER="\-\- only for AD9H3_AVR_USED=TRUE"
+fi
+
 for vhdsource in *.vhd_source; do
     vhdfile=`echo $vhdsource | sed 's/vhd_source$/vhd/'`
     echo -e "\t                        generating $vhdfile"
-    grep -v "$DDRI_FILTER" $vhdsource | grep -v "$NVME_FILTER" > $vhdfile
+    grep -v "$DDRI_FILTER" $vhdsource | grep -v "$NVME_FILTER" | grep -v "$ENB_9H3_LED_FILTER" | grep -v "$ENB_9H3_EEPROM_FILTER" | grep -v "$ENB_9H3_AVR_FILTER" > $vhdfile
 done
 
 if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then

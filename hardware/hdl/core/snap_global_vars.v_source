@@ -83,6 +83,18 @@
 `define ENABLE_EMAC_V3_1
 #endif
 
+#if defined(CONFIG_ENABLE_9H3_LED)
+`define ENABLE_9H3_LED
+#endif
+
+#if defined(CONFIG_ENABLE_9H3_EEPROM)
+`define ENABLE_9H3_EEPROM
+#endif
+
+#if defined(CONFIG_ENABLE_9H3_AVR)
+`define ENABLE_9H3_AVR
+#endif
+
 #if defined(CONFIG_ACTION_HALF_WIDTH)
 `define ACTION_HALF_WIDTH
 #endif

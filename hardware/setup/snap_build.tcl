@@ -26,6 +26,12 @@ set fpgacard      $::env(FPGACARD)
 set ila_debug     [string toupper $::env(ILA_DEBUG)]
 set vivadoVer     [version -short]
 
+if { [info exists ::env(IMPL_STEP)] == 1 } {
+  set impl_step     $::env(IMPL_STEP)
+} else {
+  set impl_step   "ALL"
+}
+
 #Checkpoint directory
 set dcp_dir $root_dir/build/Checkpoints
 set ::env(DCP_DIR) $dcp_dir
@@ -62,20 +68,22 @@ open_project $root_dir/viv_project/framework.xpr >> $logfile
 
 
 ##
-## run synthese
-source $root_dir/setup/snap_synth_step.tcl
-
+## run synthesis -- SYNTH means "synthesis  + opt_design" => skip this tcl if other options
+if { ($impl_step == "SYNTH") || ($impl_step == "ALL") } {
+  source $root_dir/setup/snap_synth_step.tcl
+}
 
 ##
 ## run implementation in the base flow
+# SYNTH means "synthesis  + opt_design" so need part of this command
 set ::env(IMPL_FLOW) BASE
 source $root_dir/setup/snap_impl_step.tcl
 
-
 ##
 ## writing bitstream
-source $root_dir/setup/snap_bitstream_step.tcl
-
+if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
+  source $root_dir/setup/snap_bitstream_step.tcl
+}
 
 ##
 ## writing debug probes
@@ -89,13 +97,15 @@ if { $ila_debug == "TRUE" } {
 
 ##
 ## removing temporary checkpoint files
-if { $::env(REMOVE_TMP_FILES) == "TRUE" } {
+if { ($::env(REMOVE_TMP_FILES) == "TRUE") && ($impl_step == "ALL") } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing temp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-  exec rm -rf $dcp_dir/synth.dcp
+  #We intentionally keep the latest dcp generated  => opt_routed_design.dcp
+  exec rm -rf $dcp_dir/synth_design.dcp
   exec rm -rf $dcp_dir/opt_design.dcp
   exec rm -rf $dcp_dir/place_design.dcp
   exec rm -rf $dcp_dir/phys_opt_design.dcp
   exec rm -rf $dcp_dir/route_design.dcp
+  exec rm -rf $dcp_dir/*_error.dcp
 }
 
 close_project >> $logfile
