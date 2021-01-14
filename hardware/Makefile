@@ -355,7 +355,9 @@ image:
 	$(MAKE) .hw_project_done
 	@echo -e "[BUILD IMAGE.........] start `date +"%T %a %b %d %Y"`\n"
 ifeq ($(USE_PRFLOW),TRUE)
-	snap-cloud-build ${SNAP_ROOT}/snap_env.sh
+	##snap-cloud-build ${SNAP_ROOT}/snap_env.sh
+	@echo "You have selected PR Flow in menu - please run 'make cloud_base' or 'make cloud_action'";
+	@exit -1
 else
 	@echo "A complete FPGA bitstream build got kicked off.";
 	@echo "This might take more than an hour depending on the machine used";

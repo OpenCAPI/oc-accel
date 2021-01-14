@@ -721,9 +721,9 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
 	  By constraining differently HLS tool, packing logic may be different and give you better results.
 
 config ENABLE_PRFLOW
-	bool "Enabling Partial Reconfiguration)"
+	bool "Enabling Partial Reconfiguration Flow"
 	help
-	  Used for Future or Cloud environment using pre-routed static images
+	  Used for Cloud environment using dynamic reconfiguration of the images
 
 config USE_PRFLOW
 	string
