@@ -252,11 +252,16 @@ report_drc            -quiet -ruledeck bitstream_checks -name psl_fpga -file ${r
 ## checking timing
 ## Extract timing information, change ns to ps, remove leading 0's in number to avoid treatment as octal.
 set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir_prefix}timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
-if { [expr $TIMING_WNS >= 0 ] } {
+if { ($impl_step == "PLACE") } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Estimated Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+} elseif { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+}
+if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
+  if { [expr $TIMING_WNS >= 0 ] } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "TIMING OK" $widthCol4 "" ]
     set ::env(REMOVE_TMP_FILES) TRUE
-} elseif { [expr $TIMING_WNS < $timing_lablimit ] && ( $ila_debug != "TRUE" ) } {
+  } elseif { [expr $TIMING_WNS < $timing_lablimit ] && ( $ila_debug != "TRUE" ) } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: TIMING FAILED" $widthCol4 "" ]
     puts "---------------------------------------------------------------------------------------------"
     puts "-- The building of the image code has failed for timing reasons.                           --"
@@ -267,13 +272,14 @@ if { [expr $TIMING_WNS >= 0 ] } {
     puts "---------------------------------------------------------------------------------------------"
     set ::env(REMOVE_TMP_FILES) FALSE
     exit 42
-} else {
+  } else {
     if { $ila_debug == "TRUE" } {
         puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "WARNING: TIMING FAILED, but may be OK for lab use with ILA" $widthCol4 "" ]
     } else {
         puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "WARNING: TIMING FAILED, but may be OK for lab use" $widthCol4 "" ]
     }
     set ::env(REMOVE_TMP_FILES) FALSE
+  }
 }
 
 ##
