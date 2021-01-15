@@ -361,7 +361,8 @@ synth:
 
 # 'make place' is the 2nd step (out of 3) of a 'make image' containing place_design + phys_opt_design 
 place:
-	@echo -e "--- 2nd step to build an image: You must have run a 'make synth' before ---\n"
+	@echo -e "--- 2nd step to build an image: You must have run a 'make synth' previously.\n"
+	@echo -e "--- You'll be given a rough estimate of the WNS you can expect after routing\n"
 	@echo -e "[BUILD placing only..] start `date +"%T %a %b %d %Y"`\n"
 	@cd $(BUILD_DIR) && env IMPL_STEP=PLACE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
 	@echo -e "[BUILD placing only..] done  `date +"%T %a %b %d %Y"`"
@@ -369,7 +370,7 @@ place:
 
 # 'make route' is the 3rd step (out of 3) of a 'make image' containing route_design + phys_opt_design + generate_bitstreams
 route:
-	@echo -e "--- 3rd step to build an image: You must have run a 'make place' before ---\n"
+	@echo -e "--- 3rd step to build an image: You must have run a 'make place' previously.\n"
 	@echo -e "[BUILD routing only..] start `date +"%T %a %b %d %Y"`\n"
 	@cd $(BUILD_DIR) && env IMPL_STEP=ROUTE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
 	@$(RM) -r .bitstream_name.txt
