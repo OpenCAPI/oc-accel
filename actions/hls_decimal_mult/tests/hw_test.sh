@@ -78,7 +78,7 @@ function test_decimal_mult {
     local size=$1
 
     if [ ! -f "${ACTION_ROOT}/sw/snap_decimal_mult" ]; then
-       echo "ERROR: please compile 'snap_decimal_mult' before execution (or run 'make app')"
+       echo "ERROR: please compile 'snap_decimal_mult' before execution (or run 'make apps')"
        exit 1
     fi
 

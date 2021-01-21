@@ -89,7 +89,7 @@ function test_memcopy {
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
     if [ ! -f "${ACTION_ROOT}/sw/snap_memcopy" ]; then
-       echo "ERROR: please compile 'snap_memcopy' before execution (or run 'make app')"
+       echo "ERROR: please compile 'snap_memcopy' before execution (or run 'make apps')"
        exit 1
     fi
 

@@ -84,7 +84,7 @@ function test_single_engine {
     local pattern=$(($(($idn<<16))+$(($length<<8))+$size))
 
     if [ ! -f "${ACTION_ROOT}/sw/hdl_single_engine" ]; then
-       echo "ERROR: please compile 'hdl_single_engine' before execution (or run 'make app')"
+       echo "ERROR: please compile 'hdl_single_engine' before execution (or run 'make apps')"
        exit 1
     fi
 

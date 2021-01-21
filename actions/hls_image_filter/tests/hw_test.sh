@@ -79,7 +79,7 @@ function test_image_filter {
     local file_out=$2
 
     if [ ! -f "${ACTION_ROOT}/sw/snap_image_filter" ]; then
-       echo "ERROR: please compile 'snap_image_filter' before execution (or run 'make app')"
+       echo "ERROR: please compile 'snap_image_filter' before execution (or run 'make apps')"
        exit 1
     fi
 

@@ -240,7 +240,7 @@ else
 fi
 
 if [ ! -f "${FUNC}" ]; then
-        echo "ERROR: please compile 'snap_example' before execution (or run 'make app')"
+        echo "ERROR: please compile 'snap_example' before execution (or run 'make apps')"
         exit 1
 fi
 

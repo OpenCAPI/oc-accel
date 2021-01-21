@@ -64,8 +64,8 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 ####iHELLOWORLD PYTHON ##########################################################
 
 function test_helloworld {
-    if [ ! -f "${ACTION_ROOT}/sw/snap_helloworld" ]; then
-       echo "ERROR: please compile 'snap_helloworld' before execution (or run 'make app')"
+    if [ ! -f "${ACTION_ROOT}/sw/snap_helloworld_python" ]; then
+       echo "ERROR: please compile 'snap_helloworld_python' before execution (or run 'make apps')"
        exit 1
     fi
 

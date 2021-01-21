@@ -65,7 +65,7 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 
 function test_helloworld_512 {
     if [ ! -f "${ACTION_ROOT}/sw/snap_helloworld_512" ]; then
-       echo "ERROR: please compile 'snap_helloworld_512' before execution (or run 'make app')"
+       echo "ERROR: please compile 'snap_helloworld_512' before execution (or run 'make apps')"
        exit 1
     fi
 

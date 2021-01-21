@@ -121,7 +121,7 @@ function test_memcopy {
     local noirq=$2
 
     if [ ! -f "${ACTION_ROOT}/sw/snap_hbm_memcopy" ]; then
-       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make app')"
+       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make apps')"
        exit 1
     fi
 
@@ -181,7 +181,7 @@ echo
 function test_memcopy_with_hbm {
     local size=$1
     if [ ! -f "${ACTION_ROOT}/sw/snap_hbm_memcopy" ]; then
-       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make app')"
+       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make apps')"
        exit 1
     fi
 

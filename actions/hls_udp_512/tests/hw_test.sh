@@ -78,7 +78,7 @@ function test_udp {
     local size=$1
 
     if [ ! -f "${ACTION_ROOT}/sw/oc-accel_udp" ]; then
-       echo "ERROR: please compile 'oc-accel_udp' before execution (or run 'make app')"
+       echo "ERROR: please compile 'oc-accel_udp' before execution (or run 'make apps')"
        exit 1
     fi
 

@@ -108,7 +108,7 @@ fi
 #    echo "Doing snap_memcopy benchmarking with" ${size} "bytes transfers ... "
 
     if [ ! -f "${ACTION_ROOT}/sw/snap_memcopy" ]; then
-       echo "ERROR: please compile 'snap_memcopy' before execution (or run 'make app')"
+       echo "ERROR: please compile 'snap_memcopy' before execution (or run 'make apps')"
        exit 1
     fi
 
