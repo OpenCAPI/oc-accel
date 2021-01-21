@@ -64,6 +64,11 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 ####iHELLOWORLD PYTHON ##########################################################
 
 function test_helloworld {
+    if [ ! -f "${ACTION_ROOT}/sw/snap_helloworld" ]; then
+       echo "ERROR: please compile 'snap_helloworld' before execution (or run 'make app')"
+       exit 1
+    fi
+
     cmd="echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\" > tin"
     echo "cmd: ${cmd}"
     eval ${cmd}
