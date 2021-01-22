@@ -107,6 +107,11 @@ fi
 
 #    echo "Doing snap_hbm_memcopy benchmarking with" ${size} "bytes transfers ... "
 
+    if [ ! -f "${ACTION_ROOT}/sw/snap_hbm_memcopy" ]; then
+       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     echo -n "Read from Host Memory to FPGA ... "
     cmd="snap_hbm_memcopy -C${snap_card} ${noirq}     \
         -i temp_A.bin    >>    \

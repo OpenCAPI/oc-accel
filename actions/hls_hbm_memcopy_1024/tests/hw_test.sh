@@ -120,6 +120,11 @@ function test_memcopy {
     local size=$1
     local noirq=$2
 
+    if [ ! -f "${ACTION_ROOT}/sw/snap_hbm_memcopy" ]; then
+       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
     echo -n "Doing snap_hbm_memcopy ${size} bytes ... "
@@ -175,6 +180,10 @@ echo
 
 function test_memcopy_with_hbm {
     local size=$1
+    if [ ! -f "${ACTION_ROOT}/sw/snap_hbm_memcopy" ]; then
+       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make apps')"
+       exit 1
+    fi
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 

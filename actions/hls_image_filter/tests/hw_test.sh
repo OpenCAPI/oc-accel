@@ -78,6 +78,10 @@ function test_image_filter {
     local file_in=$1
     local file_out=$2
 
+    if [ ! -f "${ACTION_ROOT}/sw/snap_image_filter" ]; then
+       echo "ERROR: please compile 'snap_image_filter' before execution (or run 'make apps')"
+       exit 1
+    fi
 
     echo  "Executing action_test snap_image_filter"
     echo  "converting image: ${file_in}"

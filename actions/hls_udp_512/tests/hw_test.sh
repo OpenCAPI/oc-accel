@@ -77,6 +77,11 @@ fi
 function test_udp {
     local size=$1
 
+    if [ ! -f "${ACTION_ROOT}/sw/oc-accel_udp" ]; then
+       echo "ERROR: please compile 'oc-accel_udp' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     echo -n "doing action_test hls_udp"
     cmd="oc-accel_udp -C ${snap_card} >> hls_udp.log 2>&1"
     eval ${cmd}
