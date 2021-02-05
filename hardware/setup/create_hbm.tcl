@@ -94,7 +94,7 @@ set_property -dict [list CONFIG.CONST_WIDTH {32} CONFIG.CONST_VAL {0}] [get_bd_c
 #====================
 #create the clocks and the reset signals for the design
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_bufg_apb_clk
-set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {3}] [get_bd_cells refclk_bufg_apb_clk]
+set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {4}] [get_bd_cells refclk_bufg_apb_clk]
 
 #====================
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_CLR]
@@ -162,9 +162,9 @@ if { $hbm_axi_if_num < 16 } {
      CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_1 {0x00001414}  \
      CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_1 {0x00000482}  \
      CONFIG.USER_MC_ENABLE_APB_01 {TRUE}                 \
-     CONFIG.USER_APB_PCLK_1 {67}                         \
-     CONFIG.USER_APB_PCLK_PERIOD_1 {14.925373134328359}  \
-     CONFIG.USER_TEMP_POLL_CNT_1 {67000}                 \
+     CONFIG.USER_APB_PCLK_1 {50}                         \
+     CONFIG.USER_APB_PCLK_PERIOD_1 {20.0}                \
+     CONFIG.USER_TEMP_POLL_CNT_1 {50000}                 \
     ] $cell >> $log_file
 
 } 
@@ -197,9 +197,9 @@ if { $hbm_axi_if_num < 16 } {
     CONFIG.USER_tRFC_0 {0xDF}                            \
     CONFIG.USER_tRFCSB_0 {0x89}                          \
     CONFIG.USER_tRREFD_0 {0x7}                           \
-    CONFIG.USER_APB_PCLK_0 {67}                          \
-    CONFIG.USER_APB_PCLK_PERIOD_0 {14.925373134328359}   \
-    CONFIG.USER_TEMP_POLL_CNT_0 {67000}                  \
+    CONFIG.USER_APB_PCLK_0 {50}                          \
+    CONFIG.USER_APB_PCLK_PERIOD_0 {20.0}                 \
+    CONFIG.USER_TEMP_POLL_CNT_0 {50000}                  \
     CONFIG.USER_HBM_REF_OUT_CLK_0 {1710}                 \
     CONFIG.USER_MC0_REF_CMD_PERIOD {0x0D06}              \
     CONFIG.USER_MC1_REF_CMD_PERIOD {0x0D06}              \
