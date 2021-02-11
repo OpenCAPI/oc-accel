@@ -764,10 +764,10 @@ config ILA_DEBUG
 #	default "FALSE" if ! ENABLE_FACTORY
 
 #FIXME Cloud flow will be revised
-config ENABLE_CLOUD_USER_FLOW
-	bool "Cloud user flow"
-	default y
-	depends on ENABLE_PRFLOW
+#config ENABLE_CLOUD_USER_FLOW
+#	bool "Cloud user flow"
+#	default y
+#	depends on ENABLE_PRFLOW
 
 config CLOUD_USER_FLOW
 	string

@@ -18,12 +18,12 @@
  module oc_action_core (
    input                                 clock_afu       ,
    input                                 reset_action_d  ,
-   input                                 oc0_ocde        ,
-   output                                oc0_ocde_for_bsp,
-   output                                int_req       ,
-   output [`INT_BITS-1:0]                int_src       ,
-   output [`CTXW-1:0]                    int_ctx       ,
-   input                                 int_req_ack   ,
+   input                                 ocde            ,
+   output                                ocde_for_bsp    ,
+   output                                int_req         ,
+   output [`INT_BITS-1:0]                int_src         ,
+   output [`CTXW-1:0]                    int_ctx         ,
+   input                                 int_req_ack     ,
     // AXI Control Register interface connected to snap_core
    input [ `AXI_LITE_AW-1 : 0]           s_axil_awaddr   ,
    input                                 s_axil_awprot   ,
@@ -169,8 +169,8 @@
 // IO Buffer used to move the ocde input IO to the dynamic part of PR  
    IBUF #(
    ) IBUF_inst (
-      .O(oc0_ocde_for_bsp),     // Buffer output
-      .I(oc0_ocde)      // Buffer input (connect directly to top-level port)
+      .O(ocde_for_bsp),     // Buffer output
+      .I(ocde)      // Buffer input (connect directly to top-level port)
    );
 
 

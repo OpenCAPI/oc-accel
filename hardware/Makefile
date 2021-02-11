@@ -439,7 +439,8 @@ pr_synth_action: .hw_project_done
 # a hls_helloworld_1024 reference action. From this complete routed design we substract the reference dynamic part
 # to obtain the static_routed static. This is the base of any future user designs.
 
-pr_route_static: snap_preprocess_start
+#pr_route_static: snap_preprocess_start
+pr_route_static:
 	@echo -e "[PR ROUTING STATIC ..] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_static.log
 	@echo -e "[PR ROUTING STATIC ....] done  `date +"%T %a %b %d %Y"`"
@@ -448,7 +449,8 @@ pr_route_static: snap_preprocess_start
 # pr_route_action prepares a routing of the action. 
 # You need to have run almost once the pr_route_static to have the right dcp file.
 
-pr_route_action: snap_preprocess_start
+#pr_route_action: snap_preprocess_start
+pr_route_action:
 	@echo -e "[PR ROUTING ACTION ..] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_action.log
 	@echo -e "[PR ROUTING ACTION ....] done  `date +"%T %a %b %d %Y"`"

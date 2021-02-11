@@ -30,8 +30,8 @@ module framework_afu (
   , input                 clock_afu
   , input                 reset
   , output                decouple
-  , input                 oc0_ocde
-  , output                oc0_ocde_for_bsp
+  , input                 ocde
+  , output                ocde_for_bsp
 
   // // AFU Index
   , input           [5:0] afu_index                            // // This AFU's Index within the Function
@@ -292,6 +292,7 @@ module framework_afu (
   wire                       lite_snap2conv_arvalid ;
   wire                       lite_snap2conv_rready  ;
 
+  wire                       reset_action_d_i         ; // decoupling
   wire                       lite_snap2conv_bready_i  ; // decoupling
   wire                       lite_snap2conv_rready_i  ; // decoupling
   wire                       lite_snap2conv_awvalid_i ; // decoupling
@@ -996,13 +997,13 @@ module framework_afu (
   // // ******************************************************************************
   oc_action_core action_core_i ( 
       .clock_afu       ( clock_afu              ) ,
-      .reset_action_d  ( reset_action_d         ) ,
-      .oc0_ocde        ( oc0_ocde               ),
-      .oc0_ocde_for_bsp ( oc0_ocde_for_bsp      ),
-      .int_req_ack     ( int_req_ack            ),
-      .int_req         ( int_req                ),
-      .int_src         ( int_src                ),
-      .int_ctx         ( int_ctx                ),  
+      .reset_action_d  ( reset_action_d_i         ) ,
+      .ocde            ( ocde                   ) ,
+      .ocde_for_bsp    ( ocde_for_bsp           ) ,
+      .int_req_ack     ( int_req_ack            ) ,
+      .int_req         ( int_req                ) ,
+      .int_src         ( int_src                ) ,
+      .int_ctx         ( int_ctx                ) , 
       
   `ifdef ENABLE_DDR 
     `ifdef AD9V3
@@ -1165,34 +1166,35 @@ module framework_afu (
   // // ******************************************************************************
   // // IO AXI-Lite Decoupling Logic
   // // ******************************************************************************
-  assign lite_snap2conv_awvalid_i           = (~decouple) & lite_snap2conv_awvalid         ;
-  assign lite_snap2conv_wvalid_i            = (~decouple) & lite_snap2conv_wvalid          ;
-  assign lite_snap2conv_arvalid_i           = (~decouple) & lite_snap2conv_arvalid         ;
-  assign lite_snap2conv_bready_i            = (~decouple) & lite_snap2conv_bready          ;
-  assign lite_snap2conv_rready_i            = (~decouple) & lite_snap2conv_rready          ;
+  assign reset_action_d_i                   =  (~decouple) & reset_action_d ;
+  assign lite_snap2conv_awvalid_i           =  lite_snap2conv_awvalid         ; //def 0
+  assign lite_snap2conv_wvalid_i            =  lite_snap2conv_wvalid          ; //def 0
+  assign lite_snap2conv_arvalid_i           =  lite_snap2conv_arvalid         ; //def 0
+  assign lite_snap2conv_bready_i            = (~decouple) & lite_snap2conv_bready          ; //def 1
+  assign lite_snap2conv_rready_i            = (~decouple) & lite_snap2conv_rready          ; //def 0<<<<
 
-  assign lite_conv2snap_bvalid          = (~decouple) & lite_conv2snap_bvalid_i            ;
-  assign lite_conv2snap_rvalid          = (~decouple) & lite_conv2snap_rvalid_i            ;
-  assign lite_conv2snap_awready         = (~decouple) & lite_conv2snap_awready_i           ;
-  assign lite_conv2snap_wready          = (~decouple) & lite_conv2snap_wready_i            ;
-  assign lite_conv2snap_arready         = (~decouple) & lite_conv2snap_arready_i           ;
+  assign lite_conv2snap_bvalid          =  lite_conv2snap_bvalid_i            ; //def 0
+  assign lite_conv2snap_rvalid          =  lite_conv2snap_rvalid_i            ; //def 0
+  assign lite_conv2snap_awready         = (~decouple) & lite_conv2snap_awready_i           ; //def 1
+  assign lite_conv2snap_wready          = (~decouple) & lite_conv2snap_wready_i            ; //def 0<<<<
+  assign lite_conv2snap_arready         = (~decouple) & lite_conv2snap_arready_i           ; //def 1
 
 
   
   // // ******************************************************************************
   // // IO AXI-MM Decoupling Logic
   // // ******************************************************************************
-  assign mm_snap2conv_awready_i                = (~decouple) & mm_snap2conv_awready            ;
-  assign mm_snap2conv_wready_i                 = (~decouple) & mm_snap2conv_wready             ;
-  assign mm_snap2conv_arready_i                = (~decouple) & mm_snap2conv_arready            ;
-  assign mm_snap2conv_bvalid_i                 = (~decouple) & mm_snap2conv_bvalid             ;
-  assign mm_snap2conv_rvalid_i                 = (~decouple) & mm_snap2conv_rvalid             ;
+  assign mm_snap2conv_awready_i                = (~decouple) & mm_snap2conv_awready            ; //def 1
+  assign mm_snap2conv_wready_i                 = (~decouple) & mm_snap2conv_wready             ; //def 1
+  assign mm_snap2conv_arready_i                = (~decouple) & mm_snap2conv_arready            ; //def 1
+  assign mm_snap2conv_bvalid_i                 = mm_snap2conv_bvalid             ; //def 0
+  assign mm_snap2conv_rvalid_i                 = mm_snap2conv_rvalid             ; //def 0
 
-  assign mm_conv2snap_bready               = (~decouple) & mm_conv2snap_bready_i               ;
-  assign mm_conv2snap_rready               = (~decouple) & mm_conv2snap_rready_i               ;
-  assign mm_conv2snap_awvalid              = (~decouple) & mm_conv2snap_awvalid_i              ;
-  assign mm_conv2snap_wvalid               = (~decouple) & mm_conv2snap_wvalid_i               ;
-  assign mm_conv2snap_arvalid              = (~decouple) & mm_conv2snap_arvalid_i              ;
+  assign mm_conv2snap_bready               = (~decouple) & mm_conv2snap_bready_i               ; //def 1
+  assign mm_conv2snap_rready               = (~decouple) & mm_conv2snap_rready_i               ; //def 1
+  assign mm_conv2snap_awvalid              =  mm_conv2snap_awvalid_i              ; //def 0
+  assign mm_conv2snap_wvalid               =  mm_conv2snap_wvalid_i               ; //def 0
+  assign mm_conv2snap_arvalid              =  mm_conv2snap_arvalid_i              ; //def 0
 
 
 

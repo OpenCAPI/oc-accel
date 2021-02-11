@@ -72,10 +72,10 @@ if { $bram_used == "TRUE" } {
   set RAM_TYPE noSDRAM
 }
 if { [info exists ::env(TIMING_WNS)] == 1 } {
-  append IMAGE_NAME [format {_%s_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
+  append IMAGE_NAME [format {_%s_PR_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
 } else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     Timing WNS not found"]
-  append IMAGE_NAME [format {_%s_OC-%s} $RAM_TYPE $fpgacard]
+  append IMAGE_NAME [format {_%s_PR_OC-%s} $RAM_TYPE $fpgacard]
 }
 
 ##
@@ -109,9 +109,11 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     closing project"
 #Remove unncessary files which will not been used
 #exec rm -rf $img_dir/${oc_action_name_image}.bin
 exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit $img_dir/${IMAGE_NAME}_partial.bit
-exec rm -rf $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin
+exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin $img_dir/${IMAGE_NAME}_partial.bin
+#exec rm -rf $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin
 #keep a copy of the generated partial bit files in DCP
 exec cp $img_dir/${IMAGE_NAME}_partial.bit $dcp_dir/.
+exec cp $img_dir/${IMAGE_NAME}_partial.bin $dcp_dir/.
 
 close_project  >> $logfile
 

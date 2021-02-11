@@ -19,19 +19,52 @@
 ############################################################################
 set root_dir        $::env(SNAP_HARDWARE_ROOT)
 set logs_dir        $::env(LOGS_DIR)
-set rpt_dir         $::env(RPT_DIR)
-set dcp_dir         $::env(DCP_DIR)
+
+if { [info exists ::env(DCP_ROOT)] == 1 } {
+    set dcp_dir $::env(DCP_ROOT)
+} else {
+    puts "                        Error: For cloud builds the environment variable DCP_ROOT needs to point to a path for input and output design checkpoints."
+    exit 42
+}
+set ::env(DCP_DIR) $dcp_dir
+#create the DCP dir if it doesn't exist
+if {[catch {file mkdir $dcp_dir} err opts] != 0} {
+    puts $err
+}
+
+if { [info exists ::env(RPT_DIR)] == 1 } {
+    set rpt_dir     $::env(RPT_DIR)
+} else {
+    set rpt_dir        $root_dir/build/Reports
+    set ::env(RPT_DIR) $rpt_dir
+}
+if { [info exists ::env(ILA_DEBUG)] == 1 } {
+    set ila_debug     [string toupper $::env(ILA_DEBUG)]
+}
 
 set timing_lablimit $::env(TIMING_LABLIMIT)
 set fpgacard        $::env(FPGACARD)
 set action_root     $::env(ACTION_ROOT)
 set action_name     [exec basename $action_root]
 set prefix          route_static_
+
 #Define widths of each column
-set widthCol1 $::env(WIDTHCOL1)
-set widthCol2 $::env(WIDTHCOL2)
-set widthCol3 $::env(WIDTHCOL3)
-set widthCol4 $::env(WIDTHCOL4)
+if { [info exists ::env(WIDTHCOL1)] == 1 } {
+    set widthCol1 $::env(WIDTHCOL1)
+    set widthCol2 $::env(WIDTHCOL2)
+    set widthCol3 $::env(WIDTHCOL3)
+    set widthCol4 $::env(WIDTHCOL4)
+} else {
+    set widthCol1 24
+    set widthCol2 24
+    set widthCol3 36
+    set widthCol4 22
+    set ::env(WIDTHCOL1) $widthCol1
+    set ::env(WIDTHCOL2) $widthCol2
+    set ::env(WIDTHCOL3) $widthCol3
+    set ::env(WIDTHCOL4) $widthCol4
+}
+
 
 #Checkpoint file => input files
 set oc_fpga_static_synth      "oc_${fpgacard}_static_synth"
@@ -63,7 +96,7 @@ if { $fpgacard == "AD9H7" } {
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func0/fw_afu/action_core_i]] >> $logfile
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y3:CLOCKREGION_X7Y11 >> $logfile
-   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y6:CLOCKREGION_X3Y11 >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y7:CLOCKREGION_X3Y11 >> $logfile
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X5Y0:CLOCKREGION_X6Y3 >> $logfile
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y0:CLOCKREGION_X7Y0 >> $logfile
 
@@ -76,8 +109,31 @@ if { $fpgacard == "AD9H7" } {
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X5Y4 >> $logfile
-}
 
+} elseif { $fpgacard == "AD9H3" } {
+   set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
+
+   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_action_name_synth_dcp}"]
+   read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp} >> $logfile
+
+   create_pblock pblock_dynamic_PR >> $logfile
+   add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
+   # right side of the FPGA
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
+   # add 3 blocks from bottom left
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X1Y1:CLOCKREGION_X3Y1 >> $logfile
+   # top 2 lines of the FPGA
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
+   #remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
+   resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
+   #remove CONFIG_SITE in X7Y1 for ICAPE3
+   resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
+
+} else {
+   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "This script is not adapted for this card"]
+   exit 42
+}
 #-----------------------
 set step      ${prefix}opt_design
 set directive Explore
@@ -118,6 +174,11 @@ if { [catch "$command > $logfile" errMsg] } {
 #} else {
 #  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
 }
+#-- intermediate WNS display
+report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
+set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir}/timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+#--
 
 #----------------
 # physical optimizing design
@@ -138,6 +199,11 @@ if { [catch "$command > $logfile" errMsg] } {
 #} else {
 #  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
 }
+#-- intermediate WNS display
+report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
+set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir}/timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Estimated Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+#--
 
 #----------------
 ## routing design
@@ -158,6 +224,11 @@ if { [catch "$command > $logfile" errMsg] } {
 #} else {
 #  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
 }
+#-- intermediate WNS display
+report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
+set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir}/timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Estimated Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+#--
 
 ##----------------
 # physical optimizing routed design
@@ -166,21 +237,22 @@ set directive Explore
 
 set logfile   $logs_dir/${step}.log
 set command   "phys_opt_design  -directive $directive"
-#puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+## Skipping opt_routed step which is too long
+##puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     SKIPPING opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-#if { [catch "$command > $logfile" errMsg] } {
-#  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
-#  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     SKIPPING  opt_routed" $widthCol3 "" $widthCol4 ""]
+##if { [catch "$command > $logfile" errMsg] } {
+##  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
+##  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
-#  if { ![catch {current_instance}] } {
-#    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
-#  }
-#  exit 42
-#} else {
+##  if { ![catch {current_instance}] } {
+##    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+##  }
+##  exit 42
+##} else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     generating ${oc_action_name_routed_dcp}"]
   write_checkpoint -force $dcp_dir/${oc_action_name_routed_dcp} >> $logfile
-#}
+##}
 
 ##----------------
 # lock design
