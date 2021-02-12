@@ -21,7 +21,7 @@
  * This makes it obvious that we are influenced by HLS details ...
  * The ACTION control bits are defined in the following file.
  */
-#define ACTION_TYPE_HDL_MULTI_PROCESS     0x1014100E    /* Action Type */
+#define ACTION_TYPE_HDL_MULTI_PROCESS     0x1014100E
 
 #define REG_SNAP_CONTROL        0x00
 #define REG_SNAP_INT_ENABLE     0x04
