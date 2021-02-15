@@ -38,7 +38,7 @@ static const char* version = GIT_VERSION;
 static void usage (const char* prog)
 {
     printf ("Usage: %s [-h] [-v,--verbose]\n"
-            "  -C,--card <cardno> can be (0...3)\n"
+            "  -C,--card <cardno>        use 'oc_find-card -v -AALL' to get the card number\n"
             "  -V, --version             print version.\n"
             "  -q, --quiet               quiece output.\n"
             "  -w, --width <32|64>       access width, 64: default\n"
@@ -49,7 +49,7 @@ static void usage (const char* prog)
             "  <addr> <val>\n"
             "\n"
             "Example:\n"
-            "  snap_poke 0x0000000 0xdeadbeef\n"
+            "  snap_poke -C0 0x0000000 0xdeadbeef\n"
             "\n",
             prog);
 }
