@@ -94,7 +94,7 @@ set_property -dict [list CONFIG.CONST_WIDTH {32} CONFIG.CONST_VAL {0}] [get_bd_c
 #====================
 #create the clocks and the reset signals for the design
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_bufg_apb_clk
-set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {2}] [get_bd_cells refclk_bufg_apb_clk]
+set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {4}] [get_bd_cells refclk_bufg_apb_clk]
 
 #====================
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_CLR]
@@ -132,7 +132,7 @@ if { $hbm_axi_if_num < 16 } {
   set_property -dict [list                               \
     CONFIG.USER_HBM_DENSITY {4GB}                        \
     CONFIG.USER_HBM_STACK {1}                            \
-    CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}  \
+    CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}              \
     ] $cell >> $log_file
     if { $fpga_card == "AD9H3" } {
     set_property -dict [list                             \
@@ -162,53 +162,54 @@ if { $hbm_axi_if_num < 16 } {
      CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_1 {0x00001414}  \
      CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_1 {0x00000482}  \
      CONFIG.USER_MC_ENABLE_APB_01 {TRUE}                 \
-     CONFIG.USER_APB_PCLK_1 {100}                        \
-     CONFIG.USER_APB_PCLK_PERIOD_1 {10.0}                \
+     CONFIG.USER_APB_PCLK_1 {50}                         \
+     CONFIG.USER_APB_PCLK_PERIOD_1 {20.0}                \
+     CONFIG.USER_TEMP_POLL_CNT_1 {50000}                 \
     ] $cell >> $log_file
 
 } 
-# AXI clk is 200MHZ and is used as HBM_ref_clk 
-# AXI clk divided by 2 is used by APB_clock (50-100MHz)
+# AXI clk is 201.420MHZ and is used as HBM_ref_clk 
+# AXI clk divided by 3 is used by APB_clock (50-100MHz)
   set_property -dict [list                               \
-    CONFIG.USER_HBM_REF_CLK_0 {200}                      \
-    CONFIG.USER_HBM_REF_CLK_PS_0 {2500.00}               \
-    CONFIG.USER_HBM_REF_CLK_XDC_0 {5.00}                 \
-    CONFIG.USER_HBM_FBDIV_0 {18}                         \
-    CONFIG.USER_HBM_CP_0 {6}                             \
-    CONFIG.USER_HBM_RES_0 {9}                            \
-    CONFIG.USER_HBM_LOCK_REF_DLY_0 {20}                  \
-    CONFIG.USER_HBM_LOCK_FB_DLY_0 {20}                   \
-    CONFIG.USER_HBM_HEX_CP_RES_0 {0x00009600}            \
-    CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001414}   \
-    CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000482}   \
-    CONFIG.USER_HBM_TCK_0 {900}                          \
-    CONFIG.USER_HBM_TCK_0_PERIOD {1.1111111111111112}    \
-    CONFIG.USER_tRC_0 {0x2B}                             \
-    CONFIG.USER_tRAS_0 {0x1E}                            \
-    CONFIG.USER_tRCDRD_0 {0xD}                           \
+    CONFIG.USER_HBM_REF_CLK_0 {201}                      \
+    CONFIG.USER_HBM_REF_CLK_PS_0 {2487.56}               \
+    CONFIG.USER_HBM_REF_CLK_XDC_0 {4.98}                 \
+    CONFIG.USER_HBM_FBDIV_0 {17}                         \
+    CONFIG.USER_HBM_CP_0 {3}                             \
+    CONFIG.USER_HBM_RES_0 {6}                            \
+    CONFIG.USER_HBM_LOCK_REF_DLY_0 {19}                  \
+    CONFIG.USER_HBM_LOCK_FB_DLY_0 {19}                   \
+    CONFIG.USER_HBM_HEX_CP_RES_0 {0x00006300}            \
+    CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001313}   \
+    CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000442}   \
+    CONFIG.USER_HBM_TCK_0 {855}                          \
+    CONFIG.USER_HBM_TCK_0_PERIOD {1.1695906432748537}    \
+    CONFIG.USER_tRC_0 {0x29}                             \
+    CONFIG.USER_tRAS_0 {0x1D}                            \
+    CONFIG.USER_tRCDRD_0 {0xC}                           \
     CONFIG.USER_tRCDWR_0 {0x9}                           \
     CONFIG.USER_tRRDL_0 {0x4}                            \
     CONFIG.USER_tRRDS_0 {0x4}                            \
-    CONFIG.USER_tFAW_0 {0xF}                             \
-    CONFIG.USER_tRP_0 {0xD}                              \
-    CONFIG.USER_tWR_0 {0xF}                              \
+    CONFIG.USER_tFAW_0 {0xE}                             \
+    CONFIG.USER_tRP_0 {0xC}                              \
+    CONFIG.USER_tWR_0 {0xE}                              \
     CONFIG.USER_tXP_0 {0x7}                              \
-    CONFIG.USER_tRFC_0 {0xEA}                            \
-    CONFIG.USER_tRFCSB_0 {0x90}                          \
-    CONFIG.USER_tRREFD_0 {0x8}                           \
-    CONFIG.USER_APB_PCLK_0 {100}                         \
-    CONFIG.USER_APB_PCLK_PERIOD_0 {10.0}                 \
-    CONFIG.USER_TEMP_POLL_CNT_0 {100000}                 \
-    CONFIG.USER_HBM_REF_OUT_CLK_0 {1800}                 \
-    CONFIG.USER_MC0_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC1_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC2_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC3_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC4_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC5_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC6_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC7_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_DFI_CLK0_FREQ {450.000}                  \
+    CONFIG.USER_tRFC_0 {0xDF}                            \
+    CONFIG.USER_tRFCSB_0 {0x89}                          \
+    CONFIG.USER_tRREFD_0 {0x7}                           \
+    CONFIG.USER_APB_PCLK_0 {50}                          \
+    CONFIG.USER_APB_PCLK_PERIOD_0 {20.0}                 \
+    CONFIG.USER_TEMP_POLL_CNT_0 {50000}                  \
+    CONFIG.USER_HBM_REF_OUT_CLK_0 {1710}                 \
+    CONFIG.USER_MC0_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC1_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC2_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC3_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC4_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC5_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC6_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC7_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_DFI_CLK0_FREQ {427.500}                  \
   ] $cell >> $log_file
  
 #===============================================================================
