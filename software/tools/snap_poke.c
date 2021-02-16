@@ -48,8 +48,12 @@ static void usage (const char* prog)
             "  -r, --read-back           read back and verify.\n"
             "  <addr> <val>\n"
             "\n"
+            "Note: Use -w32 to access snap action starting at offset 0x10000\n"
             "Example:\n"
-            "  snap_poke -C0 0x0000000 0xdeadbeef\n"
+            "Write OC global BDR register (Build date register):\n"
+            "  $ snap_poke -C0 0x0008 0xdeadbeef\n"
+            "Write OC action ATR register (Action ID):\n"
+            "  $ snap_poke -C0 -w32 0x0010 0xdeadbeef\n"
             "\n",
             prog);
 }
