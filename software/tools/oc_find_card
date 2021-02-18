@@ -34,8 +34,9 @@ normal=$(tput sgr0)
 # v2.4 : add OC-BW250SOC card
 # v2.5 : use real slot number for OC cards
 # v2.6 : add generation of report tar.gzip archive in debug mode
+# v2.7 : February 18th, 2021: Debug mode, collecting dmesg command output
 
-version=2.6
+version=2.7
 accel=UNKNOWN
 VERBOSE=0
 
@@ -297,32 +298,44 @@ while getopts ":vA:C:Vdht:" opt; do
 		VERBOSE=1
 		echo "oc_find_card version is ${version}"
 		;;
-        d)
-                DEBUG=1
-                DistribLike=`{ [ -f /etc/os-release ] && grep -a '^ID=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`
-                if (echo $DistribLike | egrep -a -qi 'centos|fedora|rhel'); then DistribLike=fedora; PackageCmd="rpm -qva"
-                elif (echo $DistribLike | egrep -a -qi 'ubuntu|debian'); then DistribLike=debian; PackageCmd="dpkg -l"
-                else DistribLike=unknown; PackageCmd="echo 'Unknown Distribution !'"
-                fi
+	d)
+		DEBUG=1
+		DistribLike=`{ [ -f /etc/os-release ] && grep -a '^ID=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`
+		if (echo $DistribLike | egrep -a -qi 'centos|fedora|rhel'); then DistribLike=fedora; PackageCmd="rpm -qva"
+		elif (echo $DistribLike | egrep -a -qi 'ubuntu|debian'); then DistribLike=debian; PackageCmd="dpkg -l"
+		else DistribLike=unknown; PackageCmd="echo 'Unknown Distribution !'"
+		fi
 		MyName=$(who am i | awk '{print $1}')
 		Time=$(date +%F-%H%M%S)
 		OutputDir=./OCFindCard_Debug_$Time
-		DebugResultTarFile=./OCFindCard_Debug_$Time.tar.gz
+		TarFileDir=./OCFindCard_debug
+		DebugResultTarFile=$TarFileDir/OCFindCard_Debug_$Time.tar.gz
 		mkdir $OutputDir
+		mkdir -p $TarFileDir
 		SystemInfo=$OutputDir/System_INFO.txt
 		> $SystemInfo
 		OutputFile=$OutputDir/oc_find_card_OUTPUT.txt
 		> $OutputFile
 
 		{
-                echo;echo "###########################################################################################################"
-                echo;echo "( ͡° ͜ʖ ͡°) DEBUG INFO (more info if run as root)"
-
-                echo
-                echo "==========================================================================================================="
-                echo "COLLECTING SYSTEM INFO:"
-                echo "-----------------------"
-                echo
+		echo;echo "###########################################################################################################"
+		echo;echo "( ͡° ͜ʖ ͡°) DEBUG INFO (more info if run as root)"
+		echo
+ 		echo "==========================================================================================================="
+		echo "DEBUG MODE DESCRIPTION:"
+		echo "-----------------------"
+		echo
+		echo "this mode displays below all the useful debugging short information on screen"
+		echo "+"
+		echo "it saves this screen output plus also some needed log files (msglog, dmesg, etc.) to the following gzip tar archive report file:"
+		echo "    $DebugResultTarFile"
+		echo
+		echo "(keeping/sending the $DebugResultTarFile file allows you to keep/send all the relevant information"
+		echo
+		echo "==========================================================================================================="
+		echo "COLLECTING SYSTEM INFO:"
+		echo "-----------------------"
+		echo
 		echo "hostname, installed packages, etc... Please have a look at $SystemInfo file"
 		debug_output "hostname" >> $SystemInfo
 		debug_output "cat /etc/os-release" >> $SystemInfo
@@ -330,127 +343,135 @@ while getopts ":vA:C:Vdht:" opt; do
 		debug_output "$PackageCmd" >> $SystemInfo
 		debug_output "dmesg" >> $SystemInfo
 
-                echo
-                echo "==========================================================================================================="
-                echo "FIRMWARE INFO:"
-                echo "--------------"
-                echo
-                echo "Active SKIBOOT firmware release:      `cat /proc/device-tree/ibm,opal/firmware/version | tr -d '\0'`  (/proc/device-tree/ibm,opal/firmware/version)"  # tr strips NUL bytes (ubuntu warns if not doing) 
-                echo "(Active and LSMCode SKIBOOT may be different if a custom SKIBOOT has been applyied. The 'Active' one is the really running one)"
-                echo
-                echo "LSMCODE output:"
-                lsmcode
-                echo
-                echo "Testing /proc/device-tree/ibm,secureboot/secure-enabled existence:"
-                if [ -f /proc/device-tree/ibm,secureboot/secure-enabled ]; then
-                        echo "  file exists ==> Secure-Boot ENABLED"
-                else
+		echo
+		echo "==========================================================================================================="
+		echo "FIRMWARE INFO:"
+		echo "--------------"
+		echo
+		echo "Active SKIBOOT firmware release:      `cat /proc/device-tree/ibm,opal/firmware/version | tr -d '\0'`  (/proc/device-tree/ibm,opal/firmware/version)"  # tr strips NUL bytes (ubuntu warns if not doing) 
+		echo "(Active and LSMCode SKIBOOT may be different if a custom SKIBOOT has been applyied. The 'Active' one is the really running one)"
+		echo
+		echo "LSMCODE output:"
+		lsmcode
+		echo
+		echo "Testing /proc/device-tree/ibm,secureboot/secure-enabled existence:"
+		if [ -f /proc/device-tree/ibm,secureboot/secure-enabled ]; then
+			echo "  file exists ==> Secure-Boot ENABLED"
+		else
 			echo "  file doesn't exist ==> Secure-Boot DISABLED"
-                fi
+		fi
 
-                echo
-                echo "==========================================================================================================="
-                echo "OS INFO:"
-                echo "--------"
-                echo
-                echo "LINUX distribution:            `{ [ -f /etc/os-release ] && grep -a PRETTY_NAME /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
-                echo "LINUX version:                 `{ [ -f /etc/os-release ] && grep -a '^VERSION=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
-                echo "OS KERNEL release:             `uname -r`"; echo
+		echo
+		echo "==========================================================================================================="
+		echo "OS INFO:"
+		echo "--------"
+		echo
+		echo "LINUX distribution:            `{ [ -f /etc/os-release ] && grep -a PRETTY_NAME /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
+		echo "LINUX version:                 `{ [ -f /etc/os-release ] && grep -a '^VERSION=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`"
+		echo "OS KERNEL release:             `uname -r`"; echo
 
-                echo
-                echo "CXL / OCXL installed packages:"
-                eval $PackageCmd | grep -a -i cxl
+		echo
+		echo "CXL / OCXL installed packages:"
+		eval $PackageCmd | grep -a -i cxl
 
-                echo
-                echo "==========================================================================================================="
-                echo "PCI ACCELERATOR CARDS:"
-                echo "----------------------"
-                echo
-                echo "PCI cards detected (lspci):"
-                lspci -nn | grep -a -i accelerator
-                echo "(0632: CAPI card, 062b: OPENCAPI card)"
-                echo
-                echo "Card installed on non-CAPI PCI slot (dmesg):"
-                dmesg | grep -a incompatible
-                echo
-                echo "CAPI /dev/cxl directory:"
-                ls -la /dev/cxl
-                echo
-                echo "CAPI /sys/class/cxl directory:"
-                ls -la /sys/class/cxl
-                echo
-                echo "OPENCAPI /dev/ocxl directory:"
-                ls -la /dev/ocxl
-                echo
-                echo "OPENCAPI /sys/class/ocxl directory:"
-                ls -la /sys/class/ocxl
-                echo
-                echo "EEH_MAX_FREEZES: default number of resets allowed per PCI device per hour (/sys/kernel/debug/powerpc/eeh_max_freezes)"
-                PCIMaxReset=`[ -f /sys/kernel/debug/powerpc/eeh_max_freezes ] && cat /sys/kernel/debug/powerpc/eeh_max_freezes`
-                printf "%d ($PCIMaxReset)\n" $PCIMaxReset
-                echo
+		echo
+		echo "==========================================================================================================="
+		echo "PCI ACCELERATOR CARDS:"
+		echo "----------------------"
+		echo
+		echo "PCI cards detected (lspci):"
+		lspci -nn | grep -a -i accelerator
+		echo "(0632: CAPI card, 062b: OPENCAPI card)"
+		echo
+		echo "Card installed on non-CAPI PCI slot (dmesg):"
+		dmesg | grep -a incompatible
+		echo
+		echo "CAPI /dev/cxl directory:"
+		ls -la /dev/cxl
+		echo
+		echo "CAPI /sys/class/cxl directory:"
+		ls -la /sys/class/cxl
+		echo
+		echo "OPENCAPI /dev/ocxl directory:"
+		ls -la /dev/ocxl
+		echo
+		echo "OPENCAPI /sys/class/ocxl directory:"
+		ls -la /sys/class/ocxl
+		echo
+		echo "EEH_MAX_FREEZES: default number of resets allowed per PCI device per hour (/sys/kernel/debug/powerpc/eeh_max_freezes)"
+		PCIMaxReset=`[ -f /sys/kernel/debug/powerpc/eeh_max_freezes ] && cat /sys/kernel/debug/powerpc/eeh_max_freezes`
+		printf "%d ($PCIMaxReset)\n" $PCIMaxReset
+		echo
 
-                echo
-                echo "==========================================================================================================="
+		echo
+		echo "==========================================================================================================="
 		echo "OPAL MSGLOG (from /sys/firmware/opal/msglog file):"
-                echo "--------------------------------------------------"
+		echo "--------------------------------------------------"
 		mkdir -p $OutputDir/sys/firmware/opal
 		cp /sys/firmware/opal/msglog $OutputDir/sys/firmware/opal/msglog
 		chmod 666 $OutputDir/sys/firmware/opal/msglog
-                echo
-                echo "Looking for 'degraded':"
-                grep -a -i degraded /sys/firmware/opal/msglog
-                echo
 		echo
-                echo "Looking for 'OCAPI':"
-                grep -a OCAPI /sys/firmware/opal/msglog
-                echo
+		echo "Looking for 'degraded':"
+		grep -a -i degraded /sys/firmware/opal/msglog
 		echo
-                echo "Looking for 'HMI':"
-                grep -a HMI /sys/firmware/opal/msglog
-                echo
 		echo
-                echo "OCAPI link information:"
-                grep -a OCAPI /sys/firmware/opal/msglog | grep -a link
+		echo "Looking for 'OCAPI':"
+		grep -a OCAPI /sys/firmware/opal/msglog
+		echo
+		echo
+		echo "Looking for 'HMI':"
+		grep -a HMI /sys/firmware/opal/msglog
+		echo
+		echo
+		echo "OCAPI link information:"
+		grep -a OCAPI /sys/firmware/opal/msglog | grep -a link
 
 		echo
-                echo "==========================================================================================================="
+		echo "==========================================================================================================="
+		echo "DMESG COMMAND OUTPUT:"
+		echo "--------------------------------------------------"
+		echo
+		echo "Saving dmesg command output for gzip tar archive result file"
+		dmesg > $OutputDir/dmesg.out
+
+		echo
+		echo "==========================================================================================================="
 		echo "`basename $0` WITHOUT THE -d DEBUG OPTION (in order to get normal output in the archive report):"
-                echo "-----------------------------------------------------------------------------------------------"
+		echo "-----------------------------------------------------------------------------------------------"
 		$0 -AALL -v # Running the script in normal mode (without the -d) just to get the normal output inside the tar.gz archive report
 
 		echo
-                echo "==========================================================================================================="
+		echo "==========================================================================================================="
 		echo "oc_maint -v -Cxx FOR ALL OPENCAPI CARD:"
-                echo "---------------------------------------"
+		echo "---------------------------------------"
 		for i in `$0 -AALL -v | grep position | grep OPENCAPI | awk -F: '{print $2}'`; do
 			echo
 			echo "`dirname $0`/oc_maint -v -C$i"
 			`dirname $0`/oc_maint -v -C$i
 		done
 
-                echo
-                echo "==========================================================================================================="
-                echo "More info could be found in /sys/firmware/opal/msglog rolling file (firmware journal)"
-                echo "or with dmesg (kernel journal) or journalctl (systemd journal) commands"
-                echo
-                echo "( ͡° ͜ʖ ͡°) END OF DEBUG INFO"
-                echo;echo "###########################################################################################################"
+		echo
+		echo "==========================================================================================================="
+		echo "More info could be found in /sys/firmware/opal/msglog rolling file (firmware journal)"
+		echo "or with dmesg (kernel journal) or journalctl (systemd journal) commands"
+		echo
+		echo "( ͡° ͜ʖ ͡°) END OF DEBUG INFO"
+		echo;echo "###########################################################################################################"
 		} 2>&1 | tee $OutputFile
 
-                echo
-                echo "==========================================================================================================="
+		echo
+		echo "==========================================================================================================="
 		echo "GENERATING $DebugResultTarFile report file:"
-                echo "-------------------------------------------"
+		echo "-------------------------------------------"
 		chown -Rh $MyName:$MyName $OutputDir
 		tar cvzf $DebugResultTarFile $OutputDir
 		chown $MyName:$MyName $DebugResultTarFile
 		rm -rf $OutputDir
 		echo
 		echo "$DebugResultTarFile gzip tar archive generated"
-                echo;echo "###########################################################################################################"
+		echo;echo "###########################################################################################################"
 		echo
-                ;;
+		;;
 	A)
 		accel=${OPTARG};
 		;;
