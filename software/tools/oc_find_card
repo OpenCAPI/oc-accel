@@ -45,6 +45,9 @@ function usage() {
 	echo "Usage: $PROGRAM"
 	echo "    [-v] Prints extra information (to be put as first param)"
 	echo "    [-d] Debug mode to get additional system info and build a tar.gz archive report file (in local directory)"
+	echo "         By default, -d option asks if you want to generate a gzip tar report file"
+	echo "    [-dy] Generate the gzip tar report file (without asking)"
+	echo "    [-dn] Do NOT generate the gzip tar report file (without asking)"
 	echo "    [-A] <accelerator> use either ADKU3, N250S, S121B_BPIx16, S121B_SPIx4, AD8K5, RCXVUP, FX609, S241, N250SP, AD9V3, OC-AD9V3, AD9H3, AD9H335, OC-AD9H3, OC-AD9H335, AD9H7, OC-AD9H7, OC-BW250SOC, U200 or ALL"
 	echo "    [-C] <0..3> Print accelerator name for this Card"
 	echo "    [-t] <1..3> Specifies the Type of CAPI: CAPI1.0, CAPI2.0 or OPENCAPI (CAPI3.0)"
@@ -300,6 +303,7 @@ while getopts ":vA:C:Vdht:" opt; do
 		;;
 	d)
 		DEBUG=1
+		TarFileOption=${OPTARG}
 		DistribLike=`{ [ -f /etc/os-release ] && grep -a '^ID=' /etc/os-release | cut -d= -f2 ; } || { [ -f /etc/system-release ] && cat /etc/system-release ; }`
 		if (echo $DistribLike | egrep -a -qi 'centos|fedora|rhel'); then DistribLike=fedora; PackageCmd="rpm -qva"
 		elif (echo $DistribLike | egrep -a -qi 'ubuntu|debian'); then DistribLike=debian; PackageCmd="dpkg -l"
@@ -311,7 +315,7 @@ while getopts ":vA:C:Vdht:" opt; do
 		TarFileDir=./OCFindCard_debug_output
 		DebugResultTarFile=$TarFileDir/OCFindCard_Debug_$Time.tar.gz
 		mkdir $OutputDir
-		mkdir -p $TarFileDir
+		trap "rm -rf $OutputDir" EXIT
 		SystemInfo=$OutputDir/System_INFO.txt
 		> $SystemInfo
 		OutputFile=$OutputDir/oc_find_card_OUTPUT.txt
@@ -327,11 +331,27 @@ while getopts ":vA:C:Vdht:" opt; do
 		echo
 		echo "this mode displays below all the useful debugging short information on screen"
 		echo "+"
-		echo "it saves this screen output plus also some needed log files (msglog, dmesg, etc.) to the following gzip tar archive report file:"
+		echo "it offers the possibility to save this screen output plus also some needed log files (msglog, dmesg, etc.) to the following gzip tar report file:"
 		echo "    $DebugResultTarFile"
 		echo
 		echo "(keeping/sending the $DebugResultTarFile file allows you to keep/send all the relevant information"
 		echo
+
+		if [[ $TarFileOption == ""]]; then
+			echo "==========================================================================================================="
+			echo "GZIP TAR REPORT FILE CHOICE:"
+			echo "---------------------------"
+			echo
+			echo -e "Do you want to generate a gzip tar report file [Y/n]: \c"
+			read TarFileOption
+			if [ "X$TarFileOption" != "X" ] &&[ "X$TarFileOption" != "Xy" ] && [ "X$TarFileOption" != "XY" ]; then
+				TarFileOption="n"
+			else
+				TarFileOption="y"
+				echo "  -> A report file is going to be generated: $DebugResultTarFile"
+			fi
+		fi
+
 		echo "==========================================================================================================="
 		echo "COLLECTING SYSTEM INFO:"
 		echo "-----------------------"
@@ -459,17 +479,19 @@ while getopts ":vA:C:Vdht:" opt; do
 		echo;echo "###########################################################################################################"
 		} 2>&1 | tee $OutputFile
 
-		echo
-		echo "==========================================================================================================="
-		echo "GENERATING $DebugResultTarFile report file:"
-		echo "-------------------------------------------"
-		chown -Rh $MyName:$MyName $OutputDir
-		tar cvzf $DebugResultTarFile $OutputDir
-		chown $MyName:$MyName $DebugResultTarFile
-		rm -rf $OutputDir
-		echo
-		echo "$DebugResultTarFile gzip tar archive generated"
-		echo;echo "###########################################################################################################"
+		if [[ $TarFileOption == "y" ]]; then
+			mkdir -p $TarFileDir
+			echo
+			echo "==========================================================================================================="
+			echo "GENERATING $DebugResultTarFile report file:"
+			echo "-------------------------------------------"
+			chown -Rh $MyName:$MyName $OutputDir
+			tar cvzf $DebugResultTarFile $OutputDir
+			chown $MyName:$MyName $DebugResultTarFile
+			echo
+			echo "$DebugResultTarFile gzip tar archive generated"
+			echo;echo "###########################################################################################################"
+		fi
 		echo
 		;;
 	A)
