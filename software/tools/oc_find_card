@@ -337,7 +337,7 @@ while getopts ":vA:C:Vdht:" opt; do
 		echo "(keeping/sending the $DebugResultTarFile file allows you to keep/send all the relevant information"
 		echo
 
-		if [[ $TarFileOption == ""]]; then
+		if [[ $TarFileOption == "" ]]; then
 			echo "==========================================================================================================="
 			echo "GZIP TAR REPORT FILE CHOICE:"
 			echo "---------------------------"
