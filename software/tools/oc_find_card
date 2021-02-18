@@ -308,7 +308,7 @@ while getopts ":vA:C:Vdht:" opt; do
 		MyName=$(who am i | awk '{print $1}')
 		Time=$(date +%F-%H%M%S)
 		OutputDir=./OCFindCard_Debug_$Time
-		TarFileDir=./OCFindCard_debug
+		TarFileDir=./OCFindCard_debug_output
 		DebugResultTarFile=$TarFileDir/OCFindCard_Debug_$Time.tar.gz
 		mkdir $OutputDir
 		mkdir -p $TarFileDir
