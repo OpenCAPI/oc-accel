@@ -92,8 +92,9 @@ while [ -z "$SETUP_DONE" ]; do
     echo  "Vivado version          is set to: `vivado -version|head -n1`"
   fi
 
-VIVADO_MAJOR_RELEASE=`vivado -version | grep Vivado | cut -d '(' -f1 | tr -d "Vivado "|cut -d '.' -f1`
-VIVADO_MINOR_RELEASE=`vivado -version | grep Vivado | cut -d '(' -f1 | tr -d "Vivado "|cut -d '.' -f2`
+VIVADO_RELEASE=`vivado -version | grep Vivado | cut -d '(' -f1 | tr -d "Vivado "`
+VIVADO_MAJOR_RELEASE=`echo ${VIVADO_RELEASE} |cut -d '.' -f1`
+VIVADO_MINOR_RELEASE=`echo ${VIVADO_RELEASE} |cut -d '.' -f2`
 if [ "$VIVADO_MAJOR_RELEASE" -ge "2020" ]; then
    if [ "$VIVADO_MINOR_RELEASE" -gt "1" ]; then
       echo  "HLS tool                is set to: `vitis_hls -version |head -n1`"
