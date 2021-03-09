@@ -55,7 +55,7 @@ OpenCAPI Acceleration Framework, abbreviated as OC-Accel, is a framework that he
         * Transfer the .bin file into the POWER server by any mean (scp, ftp, ...)
         * Use OpenCAPI Utils tools to load the oc_date_XX_hls_helloworld_1024_YY_OC-card_YY.bin file.
            ```console
-           sudo git clone https://github.ibm.com/OC-Enablement/oc-utils.git
+           sudo git clone https://github.com/OpenCAPI/oc-utils.git
            sudo make install # default installation
            ```
         * Flash the card memory.
