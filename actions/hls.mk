@@ -51,9 +51,14 @@ $(syn_dir): $(srcs) run_hls_script.tcl
 	@if [ ! -d "$(SNAP_ROOT)/hardware/logs" ]; then \
 		mkdir -p $(SNAP_ROOT)/hardware/logs; \
 	fi
-	@echo "   Compiling action with Vivado HLS `vitis_hls -version|head -n1|cut -d " " -f 11`"
 	@echo "   Clock period used for HLS is $(HLS_ACTION_CLOCK) ns"
-	vitis_hls -f run_hls_script.tcl > $(SNAP_ROOT)/hardware/logs/action_make.log
+	@if [ "$(HLS_VITIS_USED)" == "TRUE" ]; then  \
+		echo "   Compiling action with Vitis HLS `vitis_hls -version|head -n1|cut -d " " -f 11`"; \
+		vitis_hls -f run_hls_script.tcl > $(SNAP_ROOT)/hardware/logs/action_make.log; \
+	else \
+		echo "   Compiling action with Vivado HLS `vivado_hls -version|head -n1|cut -d " " -f 11`"; \
+		vivado_hls -f run_hls_script.tcl > $(SNAP_ROOT)/hardware/logs/action_make.log; \
+	fi
 	$(RM) -rf $@/systemc $@/verilog
 
 # Create symlinks for simpler access

@@ -111,8 +111,8 @@ set_top ${wrapper}
 
 # Can that be a list?
 foreach file [ list ${files} ] {
-  add_files \${file} -cflags "$cflags -I$snap_root/actions/include -I$snap_root/software/include -I../../../software/examples -I../include"
-  add_files -tb \${file} -cflags "$cflags -DNO_SYNTH -I$snap_root/actions/include -I$snap_root/software/include -I../../../software/examples -I../include"
+  add_files \${file} -cflags "$cflags -DHLS_VITIS_USED -I$snap_root/actions/include -I$snap_root/software/include -I../../../software/examples -I../include"
+  add_files -tb \${file} -cflags "$cflags -DHLS_VITIS_USED -DNO_SYNTH -I$snap_root/actions/include -I$snap_root/software/include -I../../../software/examples -I../include"
 }
 
 open_solution -flow_target vivado "${name}"
