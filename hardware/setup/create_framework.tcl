@@ -318,7 +318,7 @@ if { $unit_sim_used == "TRUE" } {
 
 if {$fpga_card == "BW250SOC"} {
   puts "                        adding Flash IP "
-  add_files $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.vhd -norecurse  >> $log_file
+  #add_files $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.vhd -norecurse  >> $log_file
   add_files -norecurse $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/design_1.bd  >> $log_file
   export_ip_user_files -of_objects  [get_files  $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/design_1.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
 #  puts "                        adding  $fpga_card_dir/ip/qspi_mb.elf"
