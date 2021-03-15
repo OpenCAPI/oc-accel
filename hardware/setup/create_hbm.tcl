@@ -39,20 +39,10 @@ set bd_name  hbm_top
 # _______________________________________________________________________________
 # In this file, we define all the logic to have independent 256MB/2Gb memories
 # each with an independent AXI interfaces which will be connected to the action
-# Default is hbm_axi_if_num = 12 interfaces
-# TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change in menu the HBM_AXI_IF_NUM with a value between 1 and 32. 
-# and 2) set the right params enabling AXI and MC
-# -------------------------------------------------------
-# If you modify the number of AXI interfaces, don't forget to modify also :
-#   actions/hls_hbm_memcopy/hw/hw_action_memcopy.cpp
-#   hardware/hdl/hls/action_wrapper.v
-#   hardware/hdl/core/framework_afu.v
-#   --> follow HBM names <--
+# The number of HBM interfaces is selected by the Kconfig menu
+# It needs to be in sync with the param #define HBM_AXI_IF_NB which should be 
+# defined in actions/hls_hbm_memcopy_1024/hw/hw_action_hbm_memcopy_1024.cpp
 # _______________________________________________________________________________
-#CHANGE_HBM_INTERFACES_NUMBER
-#set  HBM_MEM_NUM 12
-##This number is now taken from the Kmenu => hbm_axi_if_num
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -110,6 +100,7 @@ set port [create_bd_port -dir I CRESETN]
 #LEFT stack is used for SNAP/CAPI2.0 since BSP/PSL logic is using right resources of the FPGA
 #RIGHT stack is used for OC-Accel/OCAPI3.0 since TLX/DLX logic is using left resources of the FPGA
 set cell [create_bd_cell -quiet -type ip -vlnv {xilinx.com:ip:hbm:*} hbm]
+         #create_bd_cell -type ip -vlnv xilinx.com:ip:hbm:1.0 hbm
 
 #Common params for the HBM not depending on the number of memories enabled
 # The reference clock provided to HBM is AXI clock
@@ -320,6 +311,9 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
     CONFIG.REG_B {10}                   \
     }  $cell
 
+
+
+
   #create the ports
   create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_p$i\_HBM
   set_property -dict [list \
@@ -352,11 +346,11 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
   if { $i < 10} {
     connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_0$i\_ARESET_N]
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_0$i\_ACLK]
-    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
+    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i\_RT]
   } else {
     connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
-    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
+    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i\_RT]
   }
 }
 #--------------------- end loop ------------------
