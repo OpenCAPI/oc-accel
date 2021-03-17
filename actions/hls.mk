@@ -52,7 +52,7 @@ $(syn_dir): $(srcs) run_hls_script.tcl
 		mkdir -p $(SNAP_ROOT)/hardware/logs; \
 	fi
 	@echo "   Clock period used for HLS is $(HLS_ACTION_CLOCK) ns"
-	@if [ "$(HLS_VITIS_USED)" == "TRUE" ]; then  \
+	@if [ "$(HLS_VITIS_USED)" = "TRUE" ]; then  \
 		echo "   Compiling action with Vitis HLS `vitis_hls -version|head -n1|cut -d " " -f 11`"; \
 		vitis_hls -f run_hls_script.tcl > $(SNAP_ROOT)/hardware/logs/action_make.log; \
 	else \
