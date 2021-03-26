@@ -52,7 +52,7 @@ $(syn_dir): $(srcs) run_hls_script.tcl
 		mkdir -p $(SNAP_ROOT)/hardware/logs; \
 	fi
 	@echo "   Clock period used for HLS is $(HLS_ACTION_CLOCK) ns"
-	@if [ "$(HLS_VITIS_USED)" = "TRUE" ]; then  \
+	@if [ "X$(HLS_VITIS_USED)" = "XTRUE" ]; then  \
 		echo "   Compiling action with Vitis HLS `vitis_hls -version|head -n1|cut -d " " -f 11`"; \
 		vitis_hls -f run_hls_script.tcl > $(SNAP_ROOT)/hardware/logs/action_make.log; \
 	else \
@@ -81,7 +81,7 @@ $(SOLUTION_NAME): $(objs)
 
 # FIXME That those things are not resulting in an error is problematic.
 #      If we get critical warnings we stay away from continuing now,
-#      since that will according to our experience with vitis_hls, lead
+#      since that will according to our experience with vivado/vitis_hls, lead
 #      to strange problems later on. So let us work on fixing the design
 #      if they occur. Rather than challenging our luck.
 #
@@ -89,21 +89,20 @@ $(SOLUTION_NAME): $(objs)
 # Check for CRITICAL warnings and exit if those occur. Add more if needed.
 # Check for critical warnings and exit if those occur. Add more if needed.
 # Check for reserved HLS MMIO reg at offset 0x17c.
-#
+
 check: $(syn_dir)
-	@if [ X$(HLS_ACTION_CLOCK) != X$(shell grep "Setting up clock" vitis_hls.log |cut -d " " -f 12|cut -d "n" -f 1) ]; then \
-		echo " ---------------------------------------------------------- "; \
-		echo " ERROR: Action was last compiled with a different HLS clock."; \
-		echo " Please force the recompilation with a 'make clean' command";  \
-		echo " ---------------------------------------------------------- "; exit -1; \
+	@if [ "${HLS_ACTION_CLOCK}" != "${shell grep "Setting up clock" *_hls.log |cut -d " " -f 12|cut -d "n" -f 1}" ]; then \
+			echo " ERROR with VivadoVitis HLS Action was last compiled with a different HLS clock."; \
+			echo " Please force the recompilation with a 'make clean' command";  \
+			echo " ---------------------------------------------------------- "; exit 1; \
 	fi
 	@echo -n "   Checking for critical warnings during HLS synthesis .... "
-	@grep -A8 CRITICAL vitis_hls.log;  \
+	@grep -A8 CRITICAL *_hls.log;  \
 		test $$? = 1 
 	@echo "OK"
 	@if [ $(HLS_ACTION_CLOCK) == $(HLS_ACTION_CLOCK_DEFAULT) ]; then                \
 		echo -n "   Checking for critical timings during HLS synthesis  .... ";    \
-        	grep -A8 critical vitis_hls.log;     \
+        	grep -A8 critical *_hls.log;     \
 		if [ $$? -eq 0 ]; then \
 		  echo "------------------------------------------------------------------ "; \
                   echo "TIMING ERROR: Please correct your action code before going further"!; \
@@ -118,11 +117,11 @@ check: $(syn_dir)
 		echo "   By defining a HLS clock different than the default 5ns, the automatic checking"; \
 		echo "   of the critical timings is disabled. You need to manually check them."; \
 		echo "   FYI action was compiled with following HLS clock:"; \
-		grep "Setting up clock" vitis_hls.log ; \
+		grep "Setting up clock" *_hls.log ; \
 		echo "   --------------------------------------------------------------------------- ";    \
 		echo "   please CHECK the below list (if any) for HLS synthesis critical timing .... ";    \
 		echo "   --------------------------------------------------------------------------- ";    \
-        	grep -A8 critical vitis_hls.log ;     \
+        	grep -A8 critical *_hls.log ;     \
 		echo "   --------------------------------------------------------------------------- ";    \
 		if [ $$? -ne 0 ]; then \
 	  	  echo "OK";                                                                    \
