@@ -347,7 +347,7 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
     connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_0$i\_ARESET_N]
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_0$i\_ACLK]
   # AD9H7 cards require a different AXI name
-      if { ($fpga_card != "AD9H7" && $vivadoVer >= "2019.2") } {
+      if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2019.2") } {
 	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i\_RT]
 	 } else {
         connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
@@ -356,7 +356,7 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 	connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
         connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
 
-       if { ($fpga_card != "AD9H7"  && $vivadoVer >= "2019.2") } {
+       if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2019.2") } {
 	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i\_RT]
 	 } else {
 	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
