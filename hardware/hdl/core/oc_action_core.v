@@ -18,8 +18,8 @@
  module oc_action_core (
    input                                 clock_afu       ,
    input                                 reset_action_d  ,
-   input                                 ocde            ,
-   output                                ocde_for_bsp    ,
+   //input                                 ocde            ,
+   //output                                ocde_for_bsp    ,
    output                                int_req         ,
    output [`INT_BITS-1:0]                int_src         ,
    output [`CTXW-1:0]                    int_ctx         ,
@@ -167,11 +167,11 @@
 
 
 // IO Buffer used to move the ocde input IO to the dynamic part of PR  
-   IBUF #(
-   ) IBUF_inst (
-      .O(ocde_for_bsp),     // Buffer output
-      .I(ocde)      // Buffer input (connect directly to top-level port)
-   );
+   //IBUF #(
+   //) IBUF_inst (
+      //.O(ocde_for_bsp),     // Buffer output
+      //.I(ocde)      // Buffer input (connect directly to top-level port)
+   //);
 
 
   // // ******************************************************************************

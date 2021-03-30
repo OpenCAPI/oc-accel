@@ -108,7 +108,10 @@ if { $fpgacard == "AD9H7" } {
 
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
-   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X5Y4 >> $logfile
+   #resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X5Y4 >> $logfile
+   #following pblock is Zhichao's one
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X2Y1:CLOCKREGION_X3Y2 >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -remove CLOCKREGION_X3Y1 >> $logfile
 
 } elseif { $fpgacard == "AD9H3" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
@@ -174,11 +177,6 @@ if { [catch "$command > $logfile" errMsg] } {
 #} else {
 #  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
 }
-#-- intermediate WNS display
-report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
-set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir}/timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
-#--
 
 #----------------
 # physical optimizing design

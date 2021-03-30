@@ -732,7 +732,7 @@ config USE_PRFLOW
 
 config ENABLE_ILA
 	bool "Enable ILA Debug"
-	depends on ! ENABLE_PRFLOW
+	#depends on ! ENABLE_PRFLOW
 	help
 	  Used for debugging the design by inserting probes into the FPGA
 	  Enable the usage of Vivado's integrated logic analyzer. There are

@@ -72,10 +72,10 @@ if { $bram_used == "TRUE" } {
 append IMAGE_NAME [format {_%s_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
 
 ##
-## writing bitstream
+## writing bitstream (bit and bin files)
 set step     write_bitstream
 set logfile  $logs_dir/${step}.log
-set command  "write_bitstream -force -file $img_dir/$IMAGE_NAME"
+set command  "write_bitstream -force -bin_file $img_dir/$IMAGE_NAME"
 
 # source the common bitstream settings before creating a bit and bin file
 # This is move to oc-bip/AD9V3/top/xdc

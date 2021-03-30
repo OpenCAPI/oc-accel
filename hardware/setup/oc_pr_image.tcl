@@ -69,7 +69,7 @@ if { $bram_used == "TRUE" } {
 } elseif { $hbm_used == "TRUE" } {
   set RAM_TYPE HBM
 } else {
-  set RAM_TYPE noSDRAM
+  set RAM_TYPE ""
 }
 if { [info exists ::env(TIMING_WNS)] == 1 } {
   append IMAGE_NAME [format {_%s_PR_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
@@ -110,9 +110,9 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     closing project"
 #exec rm -rf $img_dir/${oc_action_name_image}.bin
 exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit $img_dir/${IMAGE_NAME}_partial.bit
 exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin $img_dir/${IMAGE_NAME}_partial.bin
-#exec rm -rf $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin
+exec rm -rf $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit
 #keep a copy of the generated partial bit files in DCP
-exec cp $img_dir/${IMAGE_NAME}_partial.bit $dcp_dir/.
+#exec cp $img_dir/${IMAGE_NAME}_partial.bit $dcp_dir/.
 exec cp $img_dir/${IMAGE_NAME}_partial.bin $dcp_dir/.
 
 close_project  >> $logfile
