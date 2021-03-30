@@ -714,7 +714,7 @@ config ACTION_USER_CLOCK
 config HLS_CLOCK_PERIOD_CONSTRAINT
 	prompt "The HLS clock period constraint used when C code (only used for hls action)"
 	string
-	default "4ns"
+	default "5ns"
 	range "1ns" "20ns"
 	help
 	  The HLS clock period constraint in "ns" used when C code is compiled to rtl, 
