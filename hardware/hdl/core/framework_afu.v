@@ -4149,16 +4149,20 @@ module framework_afu (
       .din_eth_tdata                      ( eth1_rx_tdata              ) ,
       .din_eth_tvalid                     ( eth1_rx_tvalid             ) ,
       .din_eth_tready                     ( eth1_rx_tready             ) ,
+  `ifndef HLS_VITIS_USED
       .din_eth_tkeep                      ( eth1_rx_tkeep              ) ,
       .din_eth_tuser                      ( eth1_rx_tuser              ) ,
       .din_eth_tlast                      ( eth1_rx_tlast              ) ,
+  `endif
       //Enable for ethernet TX
       .dout_eth_tdata                     ( eth1_tx_tdata             ) ,
       .dout_eth_tvalid                    ( eth1_tx_tvalid            ) ,
       .dout_eth_tready                    ( eth1_tx_tready            ) ,
+  `ifndef HLS_VITIS_USED
       .dout_eth_tkeep                     ( eth1_tx_tkeep             ) ,
       .dout_eth_tuser                     ( eth1_tx_tuser             ) ,
       .dout_eth_tlast                     ( eth1_tx_tlast             ) ,
+   `endif
       .eth_rx_fifo_reset                  ( eth_m_axis_rx_rst         ) ,
       .eth_stat_rx_status                 ( eth_stat_rx_status        ) ,
       .eth_stat_rx_aligned                ( eth_stat_rx_aligned       ) ,
@@ -6612,16 +6616,19 @@ eth_100G eth_100G_0
     `endif
 
       .m_axis_rx_tdata             ( eth1_rx_tdata                 ),
+      .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
+      .m_axis_rx_tready            ( eth1_rx_tready                ),
+  `ifndef HLS_VITIS_USED
       .m_axis_rx_tkeep             ( eth1_rx_tkeep                 ),
       .m_axis_rx_tlast             ( eth1_rx_tlast                 ),
-      .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
       .m_axis_rx_tuser             ( eth1_rx_tuser                 ),
-      .m_axis_rx_tready            ( eth1_rx_tready                ),
-      .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
+
       .s_axis_tx_tkeep             ( eth1_tx_tkeep                 ),
       .s_axis_tx_tlast             ( eth1_tx_tlast                 ),
-      .s_axis_tx_tvalid            ( eth1_tx_tvalid                ),
       .s_axis_tx_tuser             ( eth1_tx_tuser                 ),
+   `endif
+      .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
+      .s_axis_tx_tvalid            ( eth1_tx_tvalid                ),
       .s_axis_tx_tready            ( eth1_tx_tready                ),
 
       .i_sys_reset                 ( eth_rst                       ),
