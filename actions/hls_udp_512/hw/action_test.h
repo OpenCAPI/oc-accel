@@ -1,7 +1,6 @@
 #include <stdio.h>
-#include <iostream>
-//#define NO_SYNTH
-#include "../hw/hls_udp.h"
+//#include <iostream>
+//#include "hls_udp.h"
 
 
 #pragma pack(push)
