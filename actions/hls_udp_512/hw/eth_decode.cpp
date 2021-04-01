@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "hls_udp.h"
 #include <unistd.h>
-#include "osnap_hls_if.h"
+//#include "osnap_hls_if.h"
 #include "ap_int.h"
-#include <iostream>
+//#include <iostream>
+#include "hls_udp.h"
 
 enum rcv_state_t {RCV_INIT, RCV_JF_HEADER, RCV_GOOD, RCV_BAD, RCV_IGNORE};
 

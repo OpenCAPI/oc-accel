@@ -25,7 +25,7 @@
 #include "hls_snap_1024.H"
 #include "action_udp.H" /* Job definition */
 
-typedef char word_t[BPERDW_1024];
+//typedef char word_t[BPERDW_512];
 //---------------------------------------------------------------------
 // This is generic. Just adapt names for a new action
 // CONTROL is defined and handled by SNAP 
