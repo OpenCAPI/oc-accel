@@ -21,7 +21,9 @@
 #include <string.h>
 #include <ap_int.h>
 #include <hls_stream.h>
-
+#ifdef HLS_VITIS_USED
+#include <ap_axi_sdata.h>
+#endif
 #include "hls_snap_1024.H"
 #include "action_udp.H" /* Job definition */
 
@@ -36,13 +38,18 @@ typedef struct {
 	uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(rx100G_job_t)];
 } action_reg;
 
+#ifdef HLS_VITIS_USED
+  //redefining the structure to get keep, user and last signals
+  typedef ap_axiu<512,1,0,0> ap_axiu_for_eth;
+#else
 // Based on https://forums.xilinx.com/t5/High-Level-Synthesis-HLS/ap-axiu-parameters/td-p/635138
-struct ap_axiu_for_eth {
+ struct ap_axiu_for_eth {
 	ap_uint<512>     data;
 	ap_uint<64>      keep;
 	ap_uint<1>       user;
 	ap_uint<1>       last;
-};
+ };
+#endif
 
 struct eth_settings_t {
 	uint64_t expected_packets;
@@ -100,7 +107,6 @@ struct packet_header_t {
 	ap_uint<8> jf_detector_type;
 	ap_uint<8> jf_header_version_type;
 };
-
 typedef hls::stream<ap_axiu_for_eth> AXI_STREAM;
 typedef hls::stream<data_packet_t> DATA_STREAM;
 
