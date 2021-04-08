@@ -31,6 +31,10 @@
 `define AD9H3
 #endif
 
+#if defined(CONFIG_AD9H335)
+`define AD9H3
+#endif
+
 #if defined(CONFIG_AD9H7)
 `define AD9H7
 #endif
