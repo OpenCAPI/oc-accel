@@ -39,20 +39,10 @@ set bd_name  hbm_top
 # _______________________________________________________________________________
 # In this file, we define all the logic to have independent 256MB/2Gb memories
 # each with an independent AXI interfaces which will be connected to the action
-# Default is hbm_axi_if_num = 12 interfaces
-# TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change in menu the HBM_AXI_IF_NUM with a value between 1 and 32. 
-# and 2) set the right params enabling AXI and MC
-# -------------------------------------------------------
-# If you modify the number of AXI interfaces, don't forget to modify also :
-#   actions/hls_hbm_memcopy/hw/hw_action_memcopy.cpp
-#   hardware/hdl/hls/action_wrapper.v
-#   hardware/hdl/core/framework_afu.v
-#   --> follow HBM names <--
+# The number of HBM interfaces is selected by the Kconfig menu
+# It needs to be in sync with the param #define HBM_AXI_IF_NB which should be 
+# defined in actions/hls_hbm_memcopy_1024/hw/hw_action_hbm_memcopy_1024.cpp
 # _______________________________________________________________________________
-#CHANGE_HBM_INTERFACES_NUMBER
-#set  HBM_MEM_NUM 12
-##This number is now taken from the Kmenu => hbm_axi_if_num
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -127,8 +117,8 @@ set_property -dict [list                               \
   CONFIG.USER_XSDB_INTF_EN {FALSE}                     \
   ] $cell >> $log_file
 
-
-if { $hbm_axi_if_num < 16 } {
+# if less or equal than 16 HBM then 1 stack used
+if { $hbm_axi_if_num <= 16 } {
   set_property -dict [list                               \
     CONFIG.USER_HBM_DENSITY {4GB}                        \
     CONFIG.USER_HBM_STACK {1}                            \
@@ -143,6 +133,7 @@ if { $hbm_axi_if_num < 16 } {
       CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}          \
       ] $cell >> $log_file
     }
+# 2 stacks
 } else {
   set_property -dict [list                               \
      CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}           \
@@ -277,7 +268,7 @@ connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_0_PWRITE]
 connect_bd_net [get_bd_pins refclk_bufg_apb_clk/BUFGCE_O] [get_bd_pins hbm/APB_0_PCLK]
 connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/APB_0_PRESET_N]
 
-if { $hbm_axi_if_num > 15 } {
+if { $hbm_axi_if_num > 16 } {
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PENABLE] >> $log_file
 connect_bd_net [get_bd_pins constant_22_zero/dout] [get_bd_pins hbm/APB_1_PADDR]  >> $log_file
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PSEL]    >> $log_file
@@ -364,7 +355,7 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 #This line need to be added after the loop since the S_AXI_p0_HBM_ACLK is not defined before
 connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_0] [get_bd_pins S_AXI_p0_HBM_ACLK]
 connect_bd_net [get_bd_ports S_AXI_p0_HBM_ACLK] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_I]
-if { $hbm_axi_if_num > 15 } {
+if { $hbm_axi_if_num > 16 } {
   connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_1] [get_bd_pins S_AXI_p0_HBM_ACLK]
 }
 
