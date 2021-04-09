@@ -115,7 +115,7 @@ if { ( $simulator == "irun" ) } {
   }
 } elseif { $simulator == "xcelium" } {
   set_property target_simulator Xcelium [current_project]
-  set_property compxlib.ies_compiled_library_dir $::env(IES_LIBS) [current_project]
+  set_property compxlib.xcelium_compiled_library_dir $::env(IES_LIBS) [current_project]
   if { $hbm_used == TRUE } {
     #NEW - 2 following lines to circumvent Xilinx bug when simulating HBM (PG276)
     set_property -name {xcelium.simulate.xmsim.more_options} -value {-notimingcheck} -objects [get_filesets sim_1]

@@ -118,8 +118,8 @@ set_property -dict [list                               \
   CONFIG.USER_XSDB_INTF_EN {FALSE}                     \
   ] $cell >> $log_file
 
-
-if { $hbm_axi_if_num < 16 } {
+# if less or equal than 16 HBM then 1 stack used
+if { $hbm_axi_if_num <= 16 } {
   set_property -dict [list                               \
     CONFIG.USER_HBM_DENSITY {4GB}                        \
     CONFIG.USER_HBM_STACK {1}                            \
@@ -134,6 +134,7 @@ if { $hbm_axi_if_num < 16 } {
       CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}          \
       ] $cell >> $log_file
     }
+# 2 stacks
 } else {
   set_property -dict [list                               \
      CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}           \
@@ -268,7 +269,7 @@ connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_0_PWRITE]
 connect_bd_net [get_bd_pins refclk_bufg_apb_clk/BUFGCE_O] [get_bd_pins hbm/APB_0_PCLK]
 connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/APB_0_PRESET_N]
 
-if { $hbm_axi_if_num > 15 } {
+if { $hbm_axi_if_num > 16 } {
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PENABLE] >> $log_file
 connect_bd_net [get_bd_pins constant_22_zero/dout] [get_bd_pins hbm/APB_1_PADDR]  >> $log_file
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PSEL]    >> $log_file
@@ -347,7 +348,7 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
     connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_0$i\_ARESET_N]
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_0$i\_ACLK]
   # AD9H7 cards require a different AXI name
-      if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2019.2") } {
+      if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2020.2") } {
 	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i\_RT]
 	 } else {
         connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
@@ -356,7 +357,7 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 	connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
         connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
 
-       if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2019.2") } {
+       if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2020.2") } {
 	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i\_RT]
 	 } else {
 	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
@@ -368,7 +369,7 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 #This line need to be added after the loop since the S_AXI_p0_HBM_ACLK is not defined before
 connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_0] [get_bd_pins S_AXI_p0_HBM_ACLK]
 connect_bd_net [get_bd_ports S_AXI_p0_HBM_ACLK] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_I]
-if { $hbm_axi_if_num > 15 } {
+if { $hbm_axi_if_num > 16 } {
   connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_1] [get_bd_pins S_AXI_p0_HBM_ACLK]
 }
 

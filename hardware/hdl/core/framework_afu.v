@@ -2222,7 +2222,7 @@ module framework_afu (
       .desc_cfg_echo_cmd_valid                     ( desc_cfg_echo_cmd_valid         ) , // output
 
       // // Error indicator
-      .err_unimplemented_addr                      ( err_unimplemented_addr          ) // // output
+      .err_unimplemented_addr                      ( vpd_err_unimplemented_addr          ) // // output
 
     );
 
@@ -4991,7 +4991,7 @@ block_RAM block_ram_i1
       .c0_ddr4_s_axi_rresp         ( memctl0_axi_rresp           ) ,
       .c0_ddr4_s_axi_rid           ( memctl0_axi_rid             ) ,
       .c0_ddr4_s_axi_rdata         ( memctl0_axi_rdata           ) ,
-      .sys_rst                     ( memctl0_reset_q             )
+      .sys_rst                     ( input_reset_q               )
     );
 `endif
 `ifdef BW250SOC
@@ -5076,7 +5076,7 @@ block_RAM block_ram_i1
       .c0_ddr4_s_axi_rresp         ( memctl0_axi_rresp           ) ,
       .c0_ddr4_s_axi_rid           ( memctl0_axi_rid             ) ,
       .c0_ddr4_s_axi_rdata         ( memctl0_axi_rdata           ) ,
-      .sys_rst                     ( memctl0_reset_q             )
+      .sys_rst                     ( input_reset_q               )
     );
 `endif
 `endif
