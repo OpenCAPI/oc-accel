@@ -599,7 +599,7 @@ if  [ $CardOption == 1 ]; then
 		if [ $? == 1 ]; then
 			rc=1
 		fi
-		detect_card_name $card  "0x0632" "0x066B" "AD9H335"
+		detect_card_name $card  "0x0632" "0x066b" "AD9H335"
 		if [ $? == 1 ]; then
 			rc=1
 		fi
@@ -715,7 +715,7 @@ case ${accel} in
 		;;
 	# OC-AD9H335 OpenCAPI 3.0 card from Alphadata
 	"OC-AD9H335")
-		detect_snap_cards "0x062b" "0x066B" "OC-AD9H335"
+		detect_snap_cards "0x062b" "0x066b" "OC-AD9H335"
 		RC=$?
 		;;
 	# OC-AD9H7 OpenCAPI 3.0 card from Alphadata
@@ -797,7 +797,7 @@ case ${accel} in
 		detect_snap_cards "0x0632" "0x0667" "AD9H3"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x0632" "0x066B" "AD9H335"
+		detect_snap_cards "0x0632" "0x066b" "AD9H335"
 		RC=$((RC + $?))
 
 		detect_snap_cards "0x0632" "0x0665" "U200"
@@ -815,7 +815,7 @@ case ${accel} in
 		detect_snap_cards "0x062b" "0x0667" "OC-AD9H3"
 		RC=$((RC + $?))
 
-		detect_snap_cards "0x062b" "0x066B" "OC-AD9H335"
+		detect_snap_cards "0x062b" "0x066b" "OC-AD9H335"
 		RC=$((RC + $?))
 
 		detect_snap_cards "0x062b" "0x0666" "OC-AD9H7"
