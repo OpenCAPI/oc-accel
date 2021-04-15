@@ -199,7 +199,7 @@ static void snap_version (void* handle)
 
     /* if card is a 9H3 or 9H7 then display number of HBM AX interfaces */
     snap_card_ioctl (handle, GET_SDRAM_SIZE, (unsigned long)&ioctl_data);
-    if ( !( strcmp(buffer, "AD9H3") && strcmp(buffer,"AD9H7") )) {
+    if ( !( strcmp(buffer, "AD9H3") && strcmp(buffer,"AD9H7")  && strcmp(buffer,"AD9H335") )) {
         VERBOSE1 (" %d HBM AXI interfaces. ", (int)ioctl_data);
     } else {
         VERBOSE1 (" %d MB DRAM available. ", (int)ioctl_data);
