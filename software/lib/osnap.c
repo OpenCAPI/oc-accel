@@ -130,11 +130,12 @@ struct card_2_name {
 
 /* Limit Card names to max of 15 Bytes */
 struct card_2_name snap_card_2_name_tab[] = {
-	{.card_id = AD9V3_OC_CARD,  .card_name = "AD9V3"},
-	{.card_id = AD9H3_OC_CARD,  .card_name = "AD9H3"},
-	{.card_id = AD9H7_OC_CARD,  .card_name = "AD9H7"},
-        {.card_id = BW250SOC_OC_CARD,  .card_name = "BW250SOC"},
-	{.card_id = -1,             .card_name = "INVALID"}
+        {.card_id = AD9V3_OC_CARD,    .card_name = "AD9V3"},
+        {.card_id = AD9H3_OC_CARD,    .card_name = "AD9H3"},
+        {.card_id = AD9H335_OC_CARD,  .card_name = "AD9H335"},
+        {.card_id = AD9H7_OC_CARD,    .card_name = "AD9H7"},
+        {.card_id = BW250SOC_OC_CARD, .card_name = "BW250SOC"},
+        {.card_id = -1,               .card_name = "INVALID"}
 };
 
 /* Search snap_card_2_name_tab to for card name */

@@ -133,11 +133,12 @@ extern "C" {
  */
 #define SNAP_CAP               (CORE_BASE_ADDR + 0x30)
 
-#define SNAP_NVME_ENA   0x100
-#define AD9V3_OC_CARD   0x031     /* OpenCAPI 3.0*/
-#define AD9H3_OC_CARD   0x032     /* OpenCAPI 3.0*/
-#define AD9H7_OC_CARD   0x033     /* OpenCAPI 3.0*/
-#define BW250SOC_OC_CARD   0x034     /* OpenCAPI 3.0*/
+#define SNAP_NVME_ENA    0x100
+#define AD9V3_OC_CARD    0x031     /* OpenCAPI 3.0*/
+#define AD9H3_OC_CARD    0x032     /* OpenCAPI 3.0*/
+#define AD9H335_OC_CARD  0x035     /* OpenCAPI 3.0*/
+#define AD9H7_OC_CARD    0x033     /* OpenCAPI 3.0*/
+#define BW250SOC_OC_CARD 0x034     /* OpenCAPI 3.0*/
 
 /*
  * Freerunning Timer (FRT)
