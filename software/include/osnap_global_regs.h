@@ -154,6 +154,14 @@ extern "C" {
  */
 #define SNAP_USR               (CORE_BASE_ADDR + 0x50)
 
+/*
+ * Partial Reconfiguration Code (PRC)
+ * =======================
+ * 63..0  RO: stores the PR static reference code to ensure following dynamic 
+ * binary are in phase.
+ */
+#define SNAP_PRC               (CORE_BASE_ADDR + 0x60)
+
 //***************************************************************************
 //***************************************************************************
 /*

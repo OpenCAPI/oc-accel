@@ -150,6 +150,8 @@ module mmio (
                 REG_SNAP_OFFSET_ADDR_CAP            = 8'h30, //RO
                 REG_SNAP_OFFSET_ADDR_FRT            = 8'h40, //RO
                 REG_SNAP_OFFSET_ADDR_USR            = 8'h50, //RO
+                REG_SNAP_OFFSET_ADDR_PRC            = 8'h60, //RO
+
 
            REG_DEBUG_BASE_ADDR  = 13'h01A0,
                 REG_DEBUG_OFFSET_ADDR_DBG_CLR       = 8'h00, //WO, self-clear
@@ -372,6 +374,7 @@ module mmio (
             REG_SNAP_OFFSET_ADDR_CAP             : mmio_dout <= REG_capability            ;
             REG_SNAP_OFFSET_ADDR_FRT             : mmio_dout <= REG_freeruntime           ;
             REG_SNAP_OFFSET_ADDR_USR             : mmio_dout <= REG_usercode              ;
+            REG_SNAP_OFFSET_ADDR_PRC             : mmio_dout <= REG_partial_reconf_code   ;
             default                              : raddr_decode_error <= 1'b1;
           endcase
 
