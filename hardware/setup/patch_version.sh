@@ -40,10 +40,21 @@ sed -i "s/$SRC/$DST/" $1/$2
 SRC="define USERCODE 64'h.*"
 # usercode should be less than 64 bit long
 #usercode=`echo 0123456789ABCDEF`
-usercode=`echo 0000000000000000`
+usercode=`echo 0000000000000001`
 DST="define USERCODE 64'h${usercode}"
 sed -i "s/$SRC/$DST/" $1/$2
 
+if [ "USE_PRFLOW" == "TRUE" ]; then
+ # Manually Patching with a random PRCODE
+ SRC="define PRCODE 64'h.*"
+ # prcode should be less than 64 bit long
+ # It is calculated as a random number between 1 and 4095 => 1 to FFF
+ # prcode is left at 0 for non Partial Reconfiguration configurations
+ prcode=`echo $[RANDOM%4094+1]`
+ DST="define PRCODE 64'h${prcode}"
+ sed -i "s/$SRC/$DST/" $1/$2
+ echo "prcode is $prcode"
+fi
 
 #Patch card info and sdram_size
 # SDRAM_SIZE="2000" stand for 8GB of SDRAM - 0 for IBM but will be overwritten later by HBM_AXI_IF_NB
@@ -112,5 +123,9 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
    sed -i "s/$SRC/$DST/" $1/$2
 
 fi
-#Calculate 
-echo "oc_$SNAP_RELEASE_$SNAP_BUILD_DATE" >.bitstream_name.txt
+#Calculate
+if [ "USE_PRFLOW" == "TRUE" ]; then 
+   echo "oc_${SNAP_BUILD_DATE}_${prcode}" >.bitstream_name.txt
+else
+   echo "oc_${SNAP_BUILD_DATE}" >.bitstream_name.txt
+fi

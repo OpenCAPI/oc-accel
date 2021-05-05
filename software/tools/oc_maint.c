@@ -82,7 +82,7 @@ struct mdev_ctx {
 };
 
     bool usercode;           /* used to report a code user has specified */
-    bool prccode;            /* used to report static prc if required    */
+    bool prcode;             /* used to report static prc if required    */
 
 static struct mdev_ctx        master_ctx;
 
@@ -246,9 +246,9 @@ static void snap_version (void* handle)
 		reg = snap_read64(handle, SNAP_USR);
 		VERBOSE1("OC-ACCEL FPGA User Code:     %ld \n", reg);
     }
-    if (prccode == true)
+    if (prcode == true)
     {
-                reg = snap_read64(handle, SNAP_USR);
+                reg = snap_read64(handle, SNAP_PRC
                 VERBOSE1("OC-ACCEL Static PR Code:     %ld \n", reg);
     }
     VERBOSE2 ("[%s] Exit\n", __func__);
@@ -344,7 +344,7 @@ static void help (char* prog)
             "\t-h, --help             This help message\n"
             "\t-q, --quiet            No output at all\n"
             "\t-u, --usercode         Provides usercode\n"
-            "\t-p, --prccode          Provides prccode\n"
+            "\t-p, --prcode           Provides prcode\n"
             "\t-v, --verbose          verbose mode, up to -vvv\n"
             "\t-m, --mode         Mode:\n"
             "\t\t 1 = Show Action number only\n"
@@ -428,8 +428,8 @@ int main (int argc, char* argv[])
             usercode = true;
             break;
 
-        case 'p':        /* --prccode */
-             prccode = true;
+        case 'p':        /* --prcode */
+             prcode = true;
             break;
 
         case 'v':        /* --verbose */

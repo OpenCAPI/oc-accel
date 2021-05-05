@@ -281,6 +281,7 @@ module mmio (
        REG_capability [7:0]        <= `CARD_TYPE;
        REG_freeruntime             <= REG_freeruntime+1;
        REG_usercode                <= `USERCODE;
+       REG_prcode                  <= `PRCODE;
 
 
 

@@ -208,10 +208,12 @@
 
 ////////////////////////////////////////////////////////////////////
 //   Don't touch, they will be replaced by patch_version.sh
+//   Keep spaces as they are, since we will look for strings
   `define IMP_VERSION_DAT 64'h0
-  `define BUILD_DATE_DAT 64'h0
+  `define BUILD_DATE_DAT  64'h0
   `define CARD_TYPE 8'h0
   `define USERCODE 64'h0
+  `define PRCODE 64'h0
 
 
 //   Don't touch, they will be replaced by patch_version.sh (only for HLS Action)
@@ -221,9 +223,9 @@
 
 //Not implemented yet
   `define NUM_OF_ACTIONS 16'h0
-  `define DMA_XFER_SIZE 4'h0
-  `define DMA_ALIGNMENT 4'h0
-  `define SDRAM_SIZE 16'h0
+  `define DMA_XFER_SIZE   4'h0
+  `define DMA_ALIGNMENT   4'h0
+  `define SDRAM_SIZE      16'h0
 
 
 ////////////////////////////////////////////////////////////////////
