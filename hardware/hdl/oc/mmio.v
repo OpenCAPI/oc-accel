@@ -117,6 +117,7 @@ module mmio (
  reg [63:00] REG_capability            ;
  reg [63:00] REG_freeruntime           ;
  reg [63:00] REG_usercode              ;
+ reg [63:00] REG_prcode                ;
 
 //------------ REG_DEBUG_BASE_ADDR --------------
  reg [63:00] REG_debug_clear            ; // clear out all debug registers
