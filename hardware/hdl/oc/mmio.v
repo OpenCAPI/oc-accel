@@ -251,6 +251,7 @@ module mmio (
        REG_capability              <= 64'd0;
        REG_freeruntime             <= 64'd0;
        REG_usercode                <= 64'd0;
+       REG_prcode                  <= 64'd0;
 
        // REG_DEBUG_BASE_ADDR
        REG_debug_tlx_cnt_cmd       <= 64'd0; 
@@ -376,8 +377,8 @@ module mmio (
             REG_SNAP_OFFSET_ADDR_CAP             : mmio_dout <= REG_capability            ;
             REG_SNAP_OFFSET_ADDR_FRT             : mmio_dout <= REG_freeruntime           ;
             REG_SNAP_OFFSET_ADDR_USR             : mmio_dout <= REG_usercode              ;
-            REG_SNAP_OFFSET_ADDR_PRC             : mmio_dout <= REG_partial_reconf_code   ;
-            default                              : raddr_decode_error <= 1'b1;
+            REG_SNAP_OFFSET_ADDR_PRC             : mmio_dout <= REG_prcode                ;
+            default                              : raddr_decode_error <= 1'b1             ;
           endcase
 
        REG_DEBUG_BASE_ADDR :
