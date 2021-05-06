@@ -46,7 +46,7 @@ module mmio (
              output reg           soft_reset_action          , // soft reset action logic
 
              // Decouple control for PR
-             output reg           decouple                   ,
+             //output reg           decouple                   ,
              
              //---- MMIO side interface --------------------
              input                mmio_wr                    ,
@@ -120,6 +120,7 @@ module mmio (
  reg [63:00] REG_capability            ;
  reg [63:00] REG_freeruntime           ;
  reg [63:00] REG_usercode              ;
+ reg [63:00] REG_prcode                ;
 
 //------------ REG_DEBUG_BASE_ADDR --------------
  reg [63:00] REG_debug_clear            ; // clear out all debug registers
@@ -153,6 +154,7 @@ module mmio (
                 REG_SNAP_OFFSET_ADDR_CAP            = 8'h30, //RO
                 REG_SNAP_OFFSET_ADDR_FRT            = 8'h40, //RO
                 REG_SNAP_OFFSET_ADDR_USR            = 8'h50, //RO
+                REG_SNAP_OFFSET_ADDR_PRC            = 8'h60, //RO
 
            REG_DEBUG_BASE_ADDR  = 13'h01A0,
                 REG_DEBUG_OFFSET_ADDR_DBG_CLR       = 8'h00, //WO, self-clear
@@ -251,6 +253,7 @@ module mmio (
        REG_capability              <= 64'd0;
        REG_freeruntime             <= 64'd0;
        REG_usercode                <= 64'd0;
+       REG_prcode                  <= 64'd0;
 
        // REG_DEBUG_BASE_ADDR
        REG_debug_tlx_cnt_cmd       <= 64'd0; 
@@ -282,6 +285,7 @@ module mmio (
        REG_capability [7:0]        <= `CARD_TYPE;
        REG_freeruntime             <= REG_freeruntime+1;
        REG_usercode                <= `USERCODE;
+       REG_prcode                  <= `PRCODE;
 
 
 
@@ -377,6 +381,7 @@ module mmio (
             REG_SNAP_OFFSET_ADDR_CAP             : mmio_dout <= REG_capability            ;
             REG_SNAP_OFFSET_ADDR_FRT             : mmio_dout <= REG_freeruntime           ;
             REG_SNAP_OFFSET_ADDR_USR             : mmio_dout <= REG_usercode              ;
+            REG_SNAP_OFFSET_ADDR_PRC             : mmio_dout <= REG_prcode                ;
             default                              : raddr_decode_error <= 1'b1;
           endcase
 
@@ -449,11 +454,11 @@ module mmio (
 
 // Add decoupling signal
 // assign decouple = REG_command[1];
-   always@(posedge clk or negedge rst_n)
-     if(~rst_n)
-        decouple <= 1'b0;
-     else
-        decouple <= REG_command[1];
+ //  always@(posedge clk or negedge rst_n)
+ //    if(~rst_n)
+ //       decouple <= 1'b0;
+ //    else
+ //       decouple <= REG_command[1];
 
  always@(posedge clk or negedge rst_n)
    if(~rst_n)

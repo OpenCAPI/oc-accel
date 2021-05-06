@@ -106,14 +106,16 @@ if { [catch "$command > $logfile" errMsg] } {
 
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     closing project" $widthCol3 "" $widthCol4 ""]
 
-#Remove unncessary files which will not been used
-#exec rm -rf $img_dir/${oc_action_name_image}.bin
-exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit $img_dir/${IMAGE_NAME}_partial.bit
+#Remove unncessary files which will not be used
+exec rm -rf $img_dir/${IMAGE_NAME}.bin
+#partial.bin is used for PR with oc-flash-script
 exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin $img_dir/${IMAGE_NAME}_partial.bin
-exec rm -rf $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit
 #keep a copy of the generated partial bit files in DCP
-#exec cp $img_dir/${IMAGE_NAME}_partial.bit $dcp_dir/.
 exec cp $img_dir/${IMAGE_NAME}_partial.bin $dcp_dir/.
+
+#partial.bit is used for PR with jtag only
+exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit $img_dir/${IMAGE_NAME}_partial.bit
+exec rm -f $img_dir/${IMAGE_NAME}_partial.bit
 
 close_project  >> $logfile
 

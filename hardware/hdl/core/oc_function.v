@@ -25,9 +25,9 @@ module oc_function (
     input          clock_tlx
   , input          clock_afu                               
   , input          reset                        
-  , output         decouple
-  //, input          ocde
-  //, output         ocde_for_bsp
+  , input          decouple
+  , input          ocde                         //connected from top-level port
+  , output         ocde_to_bsp_dcpl
 
     // Bus number comes from CFG_SEQ
   , input    [7:0] cfg_bus                      // Extracted from config_write command
@@ -489,9 +489,9 @@ framework_afu  fw_afu
       .clock_tlx                           ( clock_tlx),                                 // -- input
       .clock_afu                           ( clock_afu ),                                 // -- input
       .reset                               ( reset_afu00 ),                               // -- input
-      .decouple                            ( decouple ),
-      //.ocde                                ( ocde ), 
-      //.ocde_for_bsp                        ( ocde_for_bsp ),
+      .decouple                            ( decouple ),                                  // -- input
+      .ocde                                ( ocde ),                                     //connected from top-level port
+      .ocde_to_bsp_dcpl                    ( ocde_to_bsp_dcpl ),
                                                                                          
   `ifdef ENABLE_DDR 
   `ifdef AD9V3

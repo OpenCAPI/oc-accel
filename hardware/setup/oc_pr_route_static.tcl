@@ -87,6 +87,7 @@ open_checkpoint  $dcp_dir/$oc_fpga_static_synth_dcp  >> $logfile
 set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN DISABLE [get_designs checkpoint_$oc_fpga_static_synth]
 set_property BITSTREAM.CONFIG.CONFIGRATE 51.0 [get_designs checkpoint_$oc_fpga_static_synth]
 
+#---------------------------------------
 if { $fpgacard == "AD9H7" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func0/fw_afu/action_core_i] >> $logfile
 
@@ -100,6 +101,7 @@ if { $fpgacard == "AD9H7" } {
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X5Y0:CLOCKREGION_X6Y3 >> $logfile
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y0:CLOCKREGION_X7Y0 >> $logfile
 
+#---------------------------------------
 } elseif { $fpgacard == "AD9V3" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
 
@@ -112,7 +114,7 @@ if { $fpgacard == "AD9H7" } {
    #following pblock is Zhichao's one
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X2Y1:CLOCKREGION_X3Y2 >> $logfile
    resize_pblock [get_pblocks pblock_dynamic_PR] -remove CLOCKREGION_X3Y1 >> $logfile
-
+#---------------------------------------
 } elseif { $fpgacard == "AD9H3" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
 
@@ -121,6 +123,16 @@ if { $fpgacard == "AD9H7" } {
 
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
+
+   ## Settings for a minimal dynamic area
+   ##resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y0 >> $logfile
+   ##resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X5Y0:CLOCKREGION_X7Y3 >> $logfile
+   ###remove CONFIG_SITE in X7Y1 for ICAPE3
+   ##resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
+   ###remove IOB_X0Y2 in X4Y0 used by ocse IBUF
+   ##resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y2} >> $logfile
+
+   ## Settings for a maximal dynamic area
    # right side of the FPGA
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
    # add 3 blocks from bottom left

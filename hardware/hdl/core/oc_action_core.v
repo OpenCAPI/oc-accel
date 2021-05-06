@@ -18,8 +18,8 @@
  module oc_action_core (
    input                                 clock_afu       ,
    input                                 reset_action_d  ,
-   //input                                 ocde            ,
-   //output                                ocde_for_bsp    ,
+   input                                 ocde            , //connected from top-level port
+   output                                ocde_to_bsp     ,
    output                                int_req         ,
    output [`INT_BITS-1:0]                int_src         ,
    output [`CTXW-1:0]                    int_ctx         ,
@@ -166,13 +166,16 @@
   );
 
 
+// ocde IO is located in the same pad than HBM clk. As we want to have the HBM in dynamic area
+// this ocde will be forced into the dynamic area. This is a trick to allow the ocde pin from
+// top level to be part of the dynamic area. A decoupling has been added to ensure this ocde
+// value never change during a dynamic programming.  
 // IO Buffer used to move the ocde input IO to the dynamic part of PR  
-   //IBUF #(
-   //) IBUF_inst (
-      //.O(ocde_for_bsp),     // Buffer output
-      //.I(ocde)      // Buffer input (connect directly to top-level port)
-   //);
-
+   IBUF #(
+   ) IBUF_inst (
+      .O(ocde_to_bsp),     // Buffer output to send to BSP
+      .I(ocde)             // Buffer input (connect directly from top-level port)
+   );
 
   // // ******************************************************************************
   // // wires

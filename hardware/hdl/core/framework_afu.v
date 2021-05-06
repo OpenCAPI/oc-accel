@@ -29,9 +29,9 @@ module framework_afu (
     input                 clock_tlx
   , input                 clock_afu
   , input                 reset
-  , output                decouple
-  //, input                 ocde
-  //, output                ocde_for_bsp
+  , input                 decouple
+  , input                 ocde                   //connected from top-level port
+  , output                ocde_to_bsp_dcpl
 
   // // AFU Index
   , input           [5:0] afu_index                            // // This AFU's Index within the Function
@@ -279,7 +279,6 @@ module framework_afu (
 
   // // Interface between snap_core to (clock/dwidth) converter
 `ifndef ENABLE_ODMA
-  //wire                       decouple               ; // decoupling
   wire [`AXI_LITE_AW-1:0]     lite_snap2conv_awaddr  ;
   wire [2:0]                 lite_snap2conv_awprot  ;
   wire                       lite_snap2conv_awvalid ;
@@ -377,6 +376,11 @@ module framework_afu (
   wire                       int_req         ;
   wire [`INT_BITS-1:0]        int_src         ;
   wire [`CTXW-1:0]            int_ctx         ;
+  wire                       int_req_ack_i     ; // decoupling
+  wire                       int_req_i         ; // decoupling
+  wire [`INT_BITS-1:0]        int_src_i         ; // decoupling
+  wire [`CTXW-1:0]            int_ctx_i         ; // decoupling
+  wire                        ocde_to_bsp       ; // decoupling
 
 `ifdef ENABLE_ODMA
     `ifndef ENABLE_ODMA_ST_MODE
@@ -809,8 +813,6 @@ module framework_afu (
       //
       // misc
       .soft_reset_action                ( soft_reset_action               ) ,//output
-      // PR decoupling control
-      .decouple                         ( decouple                        ) ,
 
 
 `ifndef ENABLE_ODMA
@@ -884,10 +886,10 @@ module framework_afu (
       .mm_conv2snap_arvalid             (mm_conv2snap_arvalid             ),
       .mm_conv2snap_rready              (mm_conv2snap_rready              ),
 
-      .int_req_ack                      (int_req_ack                      ),
-      .int_req                          (int_req                          ),
-      .int_src                          (int_src                          ),
-      .int_ctx                          (int_ctx                          )
+      .int_req_ack                      (int_req_ack                      ), // output
+      .int_req                          (int_req                          ), // input
+      .int_src                          (int_src                          ), // input
+      .int_ctx                          (int_ctx                          )  // input
 
 `else
       // ODMA mode: AXI4-MM Interface to action
@@ -996,14 +998,14 @@ module framework_afu (
   // // Action core logic 
   // // ******************************************************************************
   oc_action_core action_core_i ( 
-      .clock_afu       ( clock_afu              ) ,
+      .clock_afu       ( clock_afu                ) ,
       .reset_action_d  ( reset_action_d_i         ) ,
-      //.ocde            ( ocde                   ) ,
-      //.ocde_for_bsp    ( ocde_for_bsp           ) ,
-      .int_req_ack     ( int_req_ack            ) ,
-      .int_req         ( int_req                ) ,
-      .int_src         ( int_src                ) ,
-      .int_ctx         ( int_ctx                ) , 
+      .ocde            ( ocde                     ) ,  //connected from top-level port
+      .ocde_to_bsp     ( ocde_to_bsp              ) ,
+      .int_req_ack     ( int_req_ack_i            ) , // input
+      .int_req         ( int_req_i                ) , // output
+      .int_src         ( int_src_i                ) , // output
+      .int_ctx         ( int_ctx_i                ) ,  // output
       
   `ifdef ENABLE_DDR 
     `ifdef AD9V3
@@ -1166,7 +1168,16 @@ module framework_afu (
   // // ******************************************************************************
   // // IO AXI-Lite Decoupling Logic
   // // ******************************************************************************
-  assign reset_action_d_i                   = (~decouple) & reset_action_d ;
+  
+  // Decoupling ocde signal coming from dynamic logic to ensure stability of the signal during PR
+  assign ocde_to_bsp_dcpl                   =  decouple | ocde_to_bsp                      ;
+  
+  assign int_req                            =  (~decouple) & int_req_i                     ;
+  assign int_src                            =  decouple ? `INT_BITS'b0 : int_src_i         ;
+  assign int_ctx                            =  decouple ? `CTXW'b0     : int_ctx_i         ;
+  assign int_req_ack_i                      =  (~decouple) & int_req_ack                   ;
+  
+  assign reset_action_d_i                   =  decouple  | reset_action_d                  ; // reset is active when decouple
   assign lite_snap2conv_awvalid_i           = (~decouple) & lite_snap2conv_awvalid         ; //def 0
   assign lite_snap2conv_wvalid_i            = (~decouple) & lite_snap2conv_wvalid          ; //def 0
   assign lite_snap2conv_arvalid_i           = (~decouple) & lite_snap2conv_arvalid         ; //def 0
