@@ -44,7 +44,7 @@ usercode=`echo 0000000000000001`
 DST="define USERCODE 64'h${usercode}"
 sed -i "s/$SRC/$DST/" $1/$2
 
-if [ "USE_PRFLOW" == "TRUE" ]; then
+if [ "$USE_PRFLOW" == "TRUE" ]; then
  # Manually Patching with a random PRCODE
  SRC="define PRCODE 64'h.*"
  # prcode should be less than 64 bit long
@@ -124,7 +124,7 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
 
 fi
 #Calculate
-if [ "USE_PRFLOW" == "TRUE" ]; then 
+if [ "$USE_PRFLOW" == "TRUE" ]; then 
    echo "oc_${SNAP_BUILD_DATE}_${prcode}" >.bitstream_name.txt
 else
    echo "oc_${SNAP_BUILD_DATE}" >.bitstream_name.txt
