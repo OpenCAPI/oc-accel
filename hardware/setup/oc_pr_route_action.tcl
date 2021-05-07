@@ -35,13 +35,22 @@ set widthCol2 $::env(WIDTHCOL2)
 set widthCol3 $::env(WIDTHCOL3)
 set widthCol4 $::env(WIDTHCOL4)
 
+#Looking for PRxxxx occurrence in static_routed.dcp filename
+#WARNING - dealing with only 1 filename per card
+set prefix  "oc_${fpgacard}_PR"
+set pr_file_name [exec basename [ exec find $dcp_dir/ -name ${prefix}*_static_routed.dcp ]]
+if { $pr_file_name != "" } {
+   #looking for 3 digits after PR
+   set pattern {PR([0-9a-f]{3})}
+   set PRC3 [regexp -all $pattern $pr_file_name PRC]
+   #puts $PRC
+}
+
 #Checkpoint file => input files
-set oc_fpga_static_synth      "oc_${fpgacard}_static_synth"
-set oc_fpga_static_synth_dcp  "${oc_fpga_static_synth}.dcp"
 set oc_action_name_synth_dcp  "oc_${fpgacard}_${action_name}_synth.dcp"
+set oc_fpga_static_routed_dcp "oc_${fpgacard}_${PRC}_static_routed.dcp"
 #Checkpoint file => output files
 set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
-set oc_fpga_static_routed_dcp "oc_${fpgacard}_static_routed.dcp"
 
 ##
 ## open oc-accel project

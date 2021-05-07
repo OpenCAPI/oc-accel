@@ -50,10 +50,10 @@ if [ "$USE_PRFLOW" == "TRUE" ]; then
  # prcode should be less than 64 bit long
  # It is calculated as a random number between 1 and 4095 => 1 to FFF
  # prcode is left at 0 for non Partial Reconfiguration configurations
- prcode=`echo $[RANDOM%4094+1]`
+ prcode=`printf "%03x" $[RANDOM%4094+1]`
  DST="define PRCODE 64'h${prcode}"
  sed -i "s/$SRC/$DST/" $1/$2
- echo "prcode is $prcode"
+ #echo "prcode is $prcode"
 fi
 
 #Patch card info and sdram_size
@@ -122,8 +122,4 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
 fi
 #Calculate 
 #echo "oc_$SNAP_RELEASE_$SNAP_BUILD_DATE" >.bitstream_name.txt
-if [ "$USE_PRFLOW" == "TRUE" ]; then 
-   echo "oc_${SNAP_BUILD_DATE}_PR${prcode}" >.bitstream_name.txt
-else
-   echo "oc_${SNAP_BUILD_DATE}" >.bitstream_name.txt
-fi
+echo "oc_${SNAP_BUILD_DATE}" >.bitstream_name.txt

@@ -46,8 +46,6 @@ if {[catch {file mkdir $dcp_dir} err opts] != 0} {
 #Checkpoint file
 set oc_fpga_static_synth_dcp  "oc_${fpgacard}_static_synth.dcp"
 set oc_action_name_synth_dcp  "oc_${fpgacard}_${action_name}_synth.dcp"
-set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
-set oc_fpga_static_routed_dcp "oc_${fpgacard}_static_routed.dcp"
 
 #Report directory
 set rpt_dir        $root_dir/build/Reports

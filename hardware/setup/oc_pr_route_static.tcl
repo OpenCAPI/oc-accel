@@ -65,6 +65,8 @@ if { [info exists ::env(WIDTHCOL1)] == 1 } {
     set ::env(WIDTHCOL4) $widthCol4
 }
 
+#Read PRC in register files
+set PRC [exec grep "PRCODE" $root_dir/hdl/core/snap_global_vars.v | cut -d "h" -f 2]
 
 #Checkpoint file => input files
 set oc_fpga_static_synth      "oc_${fpgacard}_static_synth"
@@ -72,7 +74,7 @@ set oc_fpga_static_synth_dcp  "${oc_fpga_static_synth}.dcp"
 set oc_action_name_synth_dcp  "oc_${fpgacard}_${action_name}_synth.dcp"
 #Checkpoint file => output files
 set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
-set oc_fpga_static_routed_dcp "oc_${fpgacard}_static_routed.dcp"
+set oc_fpga_static_routed_dcp "oc_${fpgacard}_PR${PRC}_static_routed.dcp"
 
 ##
 ## open oc-accel project

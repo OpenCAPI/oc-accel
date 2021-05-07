@@ -171,12 +171,24 @@
 // top level to be part of the dynamic area. A decoupling has been added to ensure this ocde
 // value never change during a dynamic programming.  
 // IO Buffer used to move the ocde input IO to the dynamic part of PR  
+// This is related only to AD9H3 and AD9H7 who have HBM memories
+`ifdef AD9H3
    IBUF #(
    ) IBUF_inst (
       .O(ocde_to_bsp),     // Buffer output to send to BSP
       .I(ocde)             // Buffer input (connect directly from top-level port)
    );
-
+`else
+  `ifdef AD9H7
+     IBUF #(
+     ) IBUF_inst (
+        .O(ocde_to_bsp),     // Buffer output to send to BSP
+        .I(ocde)             // Buffer input (connect directly from top-level port)
+     );
+  `else
+     assign ocde_to_bsp = ocde;
+  `endif
+`endif
   // // ******************************************************************************
   // // wires
   // // ******************************************************************************

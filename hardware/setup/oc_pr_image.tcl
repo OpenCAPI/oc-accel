@@ -35,10 +35,19 @@ set hbm_used      $::env(HBM_USED)
 set flash_interface $::env(FLASH_INTERFACE)
 set flash_size      $::env(FLASH_SIZE)
 
+#Looking for PRxxxx occurrence in static_routed.dcp filename
+#WARNING - dealing with only 1 filename per card
+set prefix  "oc_${fpgacard}_PR"
+set pr_file_name [exec basename [ exec find $dcp_dir/ -name ${prefix}*_static_routed.dcp ]]
+if { $pr_file_name != "" } {
+   #looking for 3 digits after PR
+   set pattern {PR([0-9a-f]{3})}
+   set PRC3 [regexp -all $pattern $pr_file_name PRC]
+   #puts $PRC
+}
+
 #Checkpoint file => input file
 set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
-#Image file => output file
-set oc_action_name_image "oc_pr_${fpgacard}_${action_name}"
 
 #Define widths of each column
 set widthCol1 24
@@ -54,6 +63,9 @@ set ::env(WIDTHCOL4) $widthCol4
 ## generating bitstream name
 set IMAGE_NAME [exec cat $root_dir/.bitstream_name.txt]
 
+# append PRC
+append IMAGE_NAME "_" ${PRC}
+
 # append phy_speed
 append IMAGE_NAME [expr {$::env(PHY_SPEED) == "20.0" ? "_20G" : "_25G"}]
 
@@ -63,19 +75,19 @@ append IMAGE_NAME [format {_%s} $ACTION_NAME]
 
 # append ram_type and timing information
 if { $bram_used == "TRUE" } {
-  set RAM_TYPE BRAM
+  set RAM_TYPE "_BRAM"
 } elseif { $sdram_used == "TRUE" } {
-  set RAM_TYPE SDRAM
+  set RAM_TYPE "_SDRAM"
 } elseif { $hbm_used == "TRUE" } {
-  set RAM_TYPE HBM
+  set RAM_TYPE "_HBM"
 } else {
   set RAM_TYPE ""
 }
 if { [info exists ::env(TIMING_WNS)] == 1 } {
-  append IMAGE_NAME [format {_%s_PR_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
+  append IMAGE_NAME [format {%s_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
 } else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     Timing WNS not found"]
-  append IMAGE_NAME [format {_%s_PR_OC-%s} $RAM_TYPE $fpgacard]
+  append IMAGE_NAME [format {%s_OC-%s} $RAM_TYPE $fpgacard]
 }
 
 ##

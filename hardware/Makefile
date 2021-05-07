@@ -219,7 +219,7 @@ snap_preprocess: snap_preprocess_start
 	@$(MAKE) -s snap_preprocess_execute
 
 patch_version:
-	@echo -e "                        patching OC-Accel version and build date registers"; \
+	@echo -e "                        patching OC-Accel version, build date registers and PR code"; \
 	$(SNAP_HARDWARE_ROOT)/setup/patch_version.sh $(SNAP_HDL_CORE) snap_global_vars.v
 
 
@@ -317,7 +317,7 @@ hw_project: hw_project_start action_hw
 	@$(MAKE) -s create_project
 	@touch .hw_project_done
 	@touch .sim_project_done
-	@echo -e "[HW PROJECT (full)...] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "[HW PROJECT (image)..] done  `date +"%T %a %b %d %Y"`"
 
 .sim_project_done:
 	$(MAKE) -s sim_project
@@ -397,11 +397,9 @@ $(SNAP_BASE_DCP):
 	@exit -1
 
 cloud_action: allow_cloud_action .hw_project_done
-	@echo -e "[CLOUD ACTION SYNTH..] start `date +"%T %a %b %d %Y"e`"
-	@$(MAKE) -s patch_version
-	@echo -e "                        using `vivado -version |grep Vivado`"
+	@echo -e "[BUILD CLOUD ACTION..] start `date +"%T %a %b %d %Y"e`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
-	@echo -e "[CLOUD ACTION SYNTH..] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "[BUILD CLOUD ACTION..] done  `date +"%T %a %b %d %Y"`"
 
 #---------------------------------
 # Partial reconfiguration recipes
