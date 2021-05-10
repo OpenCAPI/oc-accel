@@ -128,7 +128,7 @@ set_property -dict [list                               \
   ] $cell >> $log_file
 
 
-if { $hbm_axi_if_num < 16 } {
+if { $hbm_axi_if_num <= 16 } {
   set_property -dict [list                               \
     CONFIG.USER_HBM_DENSITY {4GB}                        \
     CONFIG.USER_HBM_STACK {1}                            \
@@ -276,7 +276,7 @@ connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_0_PWRITE]
 connect_bd_net [get_bd_pins refclk_bufg_apb_clk/BUFGCE_O] [get_bd_pins hbm/APB_0_PCLK]
 connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/APB_0_PRESET_N]
 
-if { $hbm_axi_if_num > 15 } {
+if { $hbm_axi_if_num > 16 } {
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PENABLE] >> $log_file
 connect_bd_net [get_bd_pins constant_22_zero/dout] [get_bd_pins hbm/APB_1_PADDR]  >> $log_file
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins hbm/APB_1_PSEL]    >> $log_file
@@ -363,7 +363,7 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
 #This line need to be added after the loop since the S_AXI_p0_HBM_ACLK is not defined before
 connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_0] [get_bd_pins S_AXI_p0_HBM_ACLK]
 connect_bd_net [get_bd_ports S_AXI_p0_HBM_ACLK] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_I]
-if { $hbm_axi_if_num > 15 } {
+if { $hbm_axi_if_num > 16 } {
   connect_bd_net [get_bd_pins hbm/HBM_REF_CLK_1] [get_bd_pins S_AXI_p0_HBM_ACLK]
 }
 
