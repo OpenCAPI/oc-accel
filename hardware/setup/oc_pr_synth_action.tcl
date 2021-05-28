@@ -18,6 +18,8 @@
 ############################################################################
 ############################################################################
 
+package require fileutil
+
 set root_dir          $::env(SNAP_HARDWARE_ROOT)
 set logs_dir      $::env(LOGS_DIR)
 set dcp_dir       $::env(DCP_DIR)
@@ -45,6 +47,15 @@ set directive [get_property STEPS.SYNTH_DESIGN.ARGS.DIRECTIVE [get_runs synth_1]
 ##
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start action synthesis" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
+#remove black_box if still in oc_action_core (due to a previous synthesis failing)
+#set black_box_present [exec grep "black_box" $root_dir/hdl/core/oc_action_core.v]
+set black_box_present [::fileutil::grep "black_box" $root_dir/hdl/core/oc_action_core.v]
+if { $black_box_present ne "" } then {
+  # remove "(* black_box *)"
+  puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     cleaning oc_action_core from black_box"]
+  ::fileutil::updateInPlace $root_dir/hdl/core/oc_action_core.v {string map {"(\* black_box \*) module oc_action_core" "module oc_action_core"}}
+}
+  
 #synth_design 
 set    command $step
 append command " -mode out_of_context"
