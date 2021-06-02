@@ -307,6 +307,11 @@ while [ -z "$SETUP_DONE" ]; do
       SETUP_INFO="$SETUP_INFO\n To simulate a design with EMAC, it is recommended to use xcelium simulator (license needed) or use the Ethernet Loop-back option."
   fi
 
+  # Note: USERCODE requested
+  if [ "$ENABLE_USERCODE" == "y" ]; then
+      echo "USERCODE          has been set to : $USERCODE";
+  fi
+
 
   ####### Print warning messages and create $snap_env_sh
   echo  -e "======================================================="

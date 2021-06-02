@@ -411,6 +411,7 @@
           xterm -title "testcase window, use >script ${STIMLOG}< to log input" & 	# tee+RC doesnt work here, use script instead
        else
           # Running inside a tmux session
+          echo "DEBUG : SIMBASE/SIMDIR/SIMOUT is $SIMBASE/$SIMDIR/$SIMOU"
           tmux new-window -c $SIMBASE/$SIMDIR/$SIMOUT
           tmux send-keys ". $SNAP_ROOT/snap_path.sh" Enter
 
