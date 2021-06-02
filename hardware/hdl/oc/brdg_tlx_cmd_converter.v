@@ -552,6 +552,10 @@ module brdg_tlx_cmd_converter (
      .clk                  (clk_tlx                      ),
      .rst_n                (rst_n                        ),
 
+     .cfg_actag_base       (12'b0                        ),
+     .cfg_pasid_base       (20'b0                        ),
+     .cfg_pasid_mask       (20'b0                        ),
+                             
      .tlx_cmd_s1_ready     (context_surveil_stage1_ready ),
      .tlx_wdata_rdrq       (context_surveil_wdata_e_rdrq ),
 

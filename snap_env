@@ -304,7 +304,7 @@ while [ -z "$SETUP_DONE" ]; do
   if [ "$SIM_XSIM" == "y" ] && [ "$ETHERNET_USED" == "TRUE" ] && [ "$ETH_LOOP_BACK" != "TRUE" ]; then
     #echo "=====Ethernet setup===================================="
       SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating EMAC with xsim is not supported by Xilinx, but you can build an image!"
-      SETUP_INFO="$SETUP_INFO\n To simulate a design with EMAC, it is recommended to use xcelium simulator (license needed) or use the Ethernet Loop-back option."
+      SETUP_INFO="$SETUP_INFO\n To simulate a design with EMAC, it is recommended to use irun or xcelium simulator (license needed) or use the Ethernet Loop-back option."
   fi
 
 

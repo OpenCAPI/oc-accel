@@ -85,8 +85,8 @@ assign {cf_id, cf_len, cf_size, cf_burst, cf_user,  cf_addr} = dout;
 //5 + 64 + 8 + 3 + 2 + 9 = 91
 
 
-        //axicf_sync_fifo_16_91i91o axicfifo(
-        fifo_sync          # (.DATA_WIDTH (91),
+        //axicf_sync_fifo_16_91i91o axicfifo( // BM 4/6/2021: din=dout=87 bits whiledeclared as 91
+        fifo_sync          # (.DATA_WIDTH (87),
                               .ADDR_WIDTH (4), 
                               .FWFT (1)
                               ) axicfifo 

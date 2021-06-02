@@ -165,9 +165,9 @@ module oc_function (
     // Error signals into MMIO capture register
   , input          vpd_err_unimplemented_addr
   , input          cfg0_cff_fifo_overflow
-  , input          cfg1_cff_fifo_overflow
+//  , input          cfg1_cff_fifo_overflow
   , input          cfg0_rff_fifo_overflow
-  , input          cfg1_rff_fifo_overflow
+//  , input          cfg1_rff_fifo_overflow
   , input  [127:0] cfg_errvec
   , input          cfg_errvec_valid
 
@@ -406,7 +406,7 @@ cfg_func1 cfg_f1
       // -- Function                                                                    
       .cfg_ro_ofunc_reset_duration         ( f1_ro_ofunc_reset_duration ),                // -- input    // -- Number of cycles Function reset is active (00=256 cycles)
       .cfg_ro_ofunc_afu_present            ( f1_ro_ofunc_afu_present    ),                                     // -- input    // -- Func0=0, FuncN=1 (likely)
-      .cfg_ro_ofunc_max_afu_index          ( f1_ro_ofunc_max_afu_index  ),                // -- input    // -- Default is AFU number 0
+      .cfg_ro_ofunc_max_afu_index          ( { 1'b0, f1_ro_ofunc_max_afu_index}  ),       // -- input    // -- Default is AFU number 0
                                                                                         
       // -- AFU 0 Control                                                               
       .cfg_ro_octrl00_reset_duration       ( f1_ro_octrl00_reset_duration      ),         // -- input    // -- Number of cycles AFU reset is active (00=256 cycles)

@@ -3433,6 +3433,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TUSER               (dout_eth_tuser           ) ,
     .dout_eth_TLAST               (dout_eth_tlast           ) ,
     .eth_reset_V                  (eth_rx_fifo_reset        ) ,
+    .eth_rx_aligned_V             (eth_stat_rx_aligned      ) ,
 `else
     .din_eth_TDATA                (dwrap_eth_TDATA          ) ,
     .din_eth_TVALID               (dwrap_eth_TVALID         ) ,
@@ -3449,6 +3450,8 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TUSER               (dwrap_eth_TUSER          ) ,
     .dout_eth_TLAST               (dwrap_eth_TLAST[0]       ) ,
     .eth_reset_V                  (                         ) ,
+// Force the rx_aligned signal to 1 since no IP to wait for synchronization
+    .eth_rx_aligned_V             ('b1                      ) ,
 //Enable ethernet with loopback
 `endif
 `endif

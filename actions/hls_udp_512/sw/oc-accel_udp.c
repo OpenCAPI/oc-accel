@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 	//  + start the action 
 	//  + wait for completion
 	//  + read all the registers from the action (MMIO) 
-	printf("\ncall snap_action\n");
+	printf("\ncall snap_action (wait 3-4mins to sync IP if simu with real emac IP)\n");
 	rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
 	// Collect the timestamp AFTER the call of the action

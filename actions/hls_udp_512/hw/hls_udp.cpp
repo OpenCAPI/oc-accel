@@ -78,6 +78,7 @@ static int process_action(snap_membus_512_t *din_gmem,
 		snap_membus_512_t *dout_gmem,
 		AXI_STREAM &din_eth,
 		AXI_STREAM &dout_eth,
+		ap_uint<1> eth_rx_aligned,
 		action_reg *act_reg)
 {
 	uint16_t data[4096];
@@ -106,18 +107,21 @@ static int process_action(snap_membus_512_t *din_gmem,
 	eth_stats.good_packets = 0;
 	eth_stats.ignored_packets = 0;
 
-
-		make_packet(dout_eth, 1, 1, data); // recup data memory debug mode
+	//Wait for emac synchronization
+	for(;;) {
+	  if(eth_rx_aligned == 1) {
+	     make_packet(dout_eth, 1, 1, data); // recup data memory debug mode
 	    //make_packet(din_eth, 1, 1, data); // recup data memory sim test with internal loop
 
-	process_frames(din_eth, eth_settings, eth_stats, dout_gmem, out_frame_buffer_addr);
-
+	     process_frames(din_eth, eth_settings, eth_stats, dout_gmem, out_frame_buffer_addr);
+	     break;
+	  }
+	}
 	act_reg->Data.good_packets = eth_stats.good_packets;
 	act_reg->Data.bad_packets = eth_stats.bad_packets;
 	act_reg->Data.ignored_packets = eth_stats.ignored_packets;
 
 	act_reg->Control.Retc = SNAP_RETC_SUCCESS;
-
 
 	return 0;
 }
@@ -127,7 +131,8 @@ void hls_action(snap_membus_512_t *din_gmem,
 		snap_membus_512_t *dout_gmem,
 		AXI_STREAM &din_eth,
 		AXI_STREAM &dout_eth,
-                volatile ap_uint<1> &eth_reset,
+		volatile ap_uint<1> &eth_reset,
+		ap_uint<1> eth_rx_aligned,
 		action_reg *act_reg)
 {
 //----------------------------------------------------------------------
@@ -151,6 +156,7 @@ void hls_action(snap_membus_512_t *din_gmem,
 #pragma HLS INTERFACE axis register off port=din_eth
 #pragma HLS INTERFACE axis register off port=dout_eth
 #pragma HLS INTERFACE ap_none port=eth_reset
+#pragma HLS INTERFACE ap_none port=eth_rx_aligned
 
 
 				if (act_reg->Data.mode == MODE_RESET)
@@ -163,7 +169,7 @@ void hls_action(snap_membus_512_t *din_gmem,
 					}
 					if (i == 32) eth_reset = 0;
 			} else
-	process_action(din_gmem, dout_gmem, din_eth, dout_eth, act_reg);
+			    process_action(din_gmem, dout_gmem, din_eth, dout_eth, eth_rx_aligned, act_reg);
 
 }
 
