@@ -28,11 +28,7 @@ case $SIMULATOR in
     sed -i "s/-log elaborate.log/-log elaborate.log -sv_lib libdpi -sv_root ./g" $1/$2
     ;;
   "irun")
-    if [[ $ETHERNET_USED == 'TRUE' ]]; then  # Ethernet enabled
-      sed -i "s/93 -relax/93 -elaborate -relax +define+SIM_SPEED_UP/gI"         $1/$2 # run irun up to elaboration, skip execution
-    else
-      sed -i "s/93 -relax/93 -elaborate -relax +define+SIM_SPEED_UP/gI"         $1/$2 # run irun up to elaboration, skip execution
-    fi
+    sed -i "s/93 -relax/93 -elaborate -relax +define+SIM_SPEED_UP/gI"         $1/$2 # run irun up to elaboration, skip execution
     sed -i "s/-top xil_defaultlib.top/-top work.$NAME/gI"  $1/$2 # build top in work library
     if [[ "$NVME_USED" == "TRUE" && -n "$DENALI" ]]; then :
       echo "                     patch $irun include denali files for NVMe"
@@ -48,17 +44,13 @@ case $SIMULATOR in
       if [[ $UNIT_SIM_USED == 'TRUE' ]]; then
         sed -i "s%93 -relax%93 -sv -elaborate -notimingchecks -smartorder -relax +libext+.vlib+.v+.sv+.svh -define UNIT_SIM_USED -uvm -uvmhome \$UVM_HOME -uvmnocdnsextra +UVM_VERBOSITY=UVM_LOW +UVM_TESTNAME=action_tb_base_test +WORK_MODE=CROSS_CHECK +UVM_OBJECTION_TRACE +uvm_set_config_int=*,auto_dump_surface,1 +UVM_MAX_QUIT_COUNT=1,NO -assert -coverage a -covoverwrite -covfile $coveragefile -coverage functional%gI"         $1/$2 # run irun up to elaboration, skip execution
       else
-        if [[ $ETHERNET_USED == 'TRUE' ]]; then  # Ethernet enabled
-           sed -i "s/93 -relax/93 -sv -elaborate -notimingchecks -smartorder -relax +define+SIM_SPEED_UP +libext+.vlib+.v+.sv+.svh -timescale 1ns\/1ns/gI"         $1/$2 # run irun up to elaboration, skip execution
-        else
-           sed -i "s/93 -relax/93 -sv -elaborate -notimingchecks -smartorder -relax +libext+.vlib+.v+.sv+.svh -timescale 1ns\/1ns/gI"         $1/$2 # run irun up to elaboration, skip execution
-        fi
+        sed -i "s/93 -relax/93 -sv -elaborate -notimingchecks -smartorder -relax +define+SIM_SPEED_UP +libext+.vlib+.v+.sv+.svh -timescale 1ns\/1ns/gI"         $1/$2 # run irun up to elaboration, skip execution
       fi
     else  # no HBM
       if [[ $UNIT_SIM_USED == 'TRUE' ]]; then
         sed -i "s%93 -relax%93 -sv -elaborate -smartorder -relax +libext+.vlib+.v+.sv+.svh -define UNIT_SIM_USED -uvm -uvmhome \$UVM_HOME -uvmnocdnsextra +UVM_VERBOSITY=UVM_LOW +UVM_TESTNAME=action_tb_base_test +WORK_MODE=CROSS_CHECK +UVM_OBJECTION_TRACE +uvm_set_config_int=*,auto_dump_surface,1 +UVM_MAX_QUIT_COUNT=1,NO -assert -coverage a -covoverwrite -covfile $coveragefile -coverage functional%gI"         $1/$2 # run irun up to elaboration, skip execution
       else
-        sed -i "s/93 -relax/93 -sv -elaborate -smartorder -relax +libext+.vlib+.v+.sv+.svh -timescale 1ns\/1ns/gI"         $1/$2 # run irun up to elaboration, skip execution
+        sed -i "s/93 -relax/93 -sv -elaborate -smartorder -relax +define+SIM_SPEED_UP +libext+.vlib+.v+.sv+.svh -timescale 1ns\/1ns/gI"         $1/$2 # run irun up to elaboration, skip execution
       fi
     fi
     sed -i "s/-top xil_defaultlib.top/-top work.$NAME/gI"  $1/$2 # build top in work library
