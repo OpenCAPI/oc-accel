@@ -40,8 +40,7 @@ sed -i "s/$SRC/$DST/" $1/$2
 SRC="define USERCODE 64'h.*"
 # usercode should be less than 64 bit long
 #usercode=`echo 0123456789ABCDEF`
-usercode=`echo 0000000000000000`
-DST="define USERCODE 64'h${usercode}"
+DST="define USERCODE 64'h${USERCODE}"
 sed -i "s/$SRC/$DST/" $1/$2
 
 

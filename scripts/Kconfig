@@ -890,3 +890,14 @@ config FLASH_USED
 	default "TRUE"  if ENABLE_FLASH
 	default "FALSE" if ! ENABLE_FLASH
 
+config ENABLE_USERCODE
+        bool "Enable USER CODE (code will be requested to user later on)"
+        default n 
+        help
+          This allows user to define a user code associated to the FPGA content
+          For ex user want to create 2 configuration with 2 different VIVADO versions
+
+config USERCODE
+        string "USERCODE(max64bits)"
+        depends on ENABLE_USERCODE
+        default "0000000000000000"
