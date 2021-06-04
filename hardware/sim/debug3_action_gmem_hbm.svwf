@@ -51,48 +51,6 @@ waveform format $id -namecolor #99ff00
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.action_w.hls_action_0:ap_start}]}
 	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:ap_start}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:din_eth_TDATA}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:din_eth_TKEEP}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:din_eth_TLAST}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:din_eth_TREADY}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:din_eth_TUSER}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:din_eth_TVALID}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:read_eth_packet1447_U0:header_dest_mac_V_fu_765_p7}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:read_eth_packet1447_U0:header_ip_version_V_fu_809_p4}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:read_eth_packet1447_U0:header_ipv4_protocol_fu_819_p4}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:read_eth_packet1447_U0:header_jf_frame_numb_fu_947_p2}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:read_eth_packet1447_U0:header_jf_packet_num_fu_380}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:read_eth_packet1447_U0:header_udp_dest_port_fu_376}]}
-	} ]]
-set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.hls_action_0:grp_process_action_fu_197:grp_process_frames_fu_126:read_eth_packet1447_U0:rcv_state_0_i_i_i_i_reg_497}]}
-	} ]]
 set id [waveform add -cdivider divider]
 set id [waveform add -label {GMEM READ INTERFACE} -comment {}]
 waveform format $id -namecolor #ffff00 -bgcolor #000000
@@ -108,6 +66,10 @@ set id [waveform add -signals [subst  {
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_rvalid}]}
 	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_rdata[1023:0]}]}
+	} ]]
+waveform format $id -radix %x
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_rlast}]}
 	} ]]
@@ -126,16 +88,96 @@ set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_wvalid}]}
 	} ]]
 set id [waveform add -signals [subst  {
-	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_wdata[511:0]}]}
+	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_wdata[1023:0]}]}
 	} ]]
+waveform format $id -radix %x
 set id [waveform add -signals [subst  {
 	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_wlast}]}
 	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.action_w.m_axi_host_mem_wstrb[127:0]}]}
+	} ]]
 set id [waveform add -cdivider divider]
-set id [waveform add -label {DDR4/HBM READ INTERFACE} -comment {}]
+set id [waveform add -label {HBM_p0 READ INTERFACE} -comment {}]
 waveform format $id -namecolor #99ff00
-set id [waveform add -label {DDR4/HBM WRITE INTERFACE} -comment {}]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_arvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_araddr}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_arlen}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_rvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_rdata}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_rlast}]}
+	} ]]
+set id [waveform add -label {HBM_p0 WRITE INTERFACE} -comment {}]
 waveform format $id -namecolor #99ff00
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_awvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_awaddr}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_awlen}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_wvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_wdata}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p0_HBM_wlast}]}
+	} ]]
 set id [waveform add -cdivider divider]
+set id [waveform add -label {HBM_p1 READ INTERFACE} -comment {}]
+waveform format $id -namecolor #99ff00
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_arvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_araddr}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_arlen}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_rvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_rdata}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_rlast}]}
+	} ]]
+set id [waveform add -label {HBM_p1 WRITE INTERFACE} -comment {}]
+waveform format $id -namecolor #99ff00
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_awvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_awaddr}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_awlen}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_wvalid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_wdata}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {top.oc_function.fw_afu.hbm_top_wrapper_i:S_AXI_p1_HBM_wlast}]}
+	} ]]
 
-waveform xview limits 46930.641855ns 47034.991657ns
+waveform xview limits 0 14746.25ns
