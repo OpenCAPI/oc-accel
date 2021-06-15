@@ -501,7 +501,7 @@ config ETHERNET_USED
 
 config ETHERNET_RX_FIFO_DEPTH
         int
-        prompt "Depth of receiving FIFO for Ethernet 100G MAC in 512-bit packates (must be power of 2)"
+        prompt "Depth of receiving FIFO for Ethernet 100G MAC in 512-bit packets (must be power of 2)"
         depends on ENABLE_ETHERNET
         default 8192
 
