@@ -390,13 +390,14 @@ else
 	@cd $(BUILD_DIR) && env IMPL_STEP=ALL vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
 	@$(RM) -r .bitstream_name.txt
 endif
-ifeq ($(ILA_DEBUG),TRUE)
-	@echo -e "Generating ltx file for ILA debug."
-	@cd $(BUILD_DIR) && vivado -mode batch -source $(SETUP_DIR)/gen_probe_ltx.tcl -notrace  -log $(LOGS_DIR)/gen_probe_ltx.log         -journal $(LOGS_DIR)/gen_probe_ltx.jou
-	@echo -e "Generation of ltx file done."
-	@mv $(BUILD_DIR)/probe.ltx $(BUILD_DIR)/Images
-	@echo -e "Moved ltx file into Image."
-endif
+# removed temporarily the following condition since ltx files already generated in snap_build.tcl
+#ifeq ($(ILA_DEBUG),TRUE)
+#	@echo -e "Generating ltx file for ILA debug."
+#	@cd $(BUILD_DIR) && vivado -mode batch -source $(SETUP_DIR)/gen_probe_ltx.tcl -notrace  -log $(LOGS_DIR)/gen_probe_ltx.log         -journal $(LOGS_DIR)/gen_probe_ltx.jou
+#	@echo -e "Generation of ltx file done."
+#	@mv $(BUILD_DIR)/probe.ltx $(BUILD_DIR)/Images
+#	@echo -e "Moved ltx file into Image."
+#endif
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
 
 allow_%:
