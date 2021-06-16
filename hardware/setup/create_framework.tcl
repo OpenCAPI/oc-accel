@@ -372,6 +372,7 @@ if { $ila_debug == "TRUE" } {
     add_files -fileset constrs_1 -norecurse $::env(ILA_SETUP_FILE)
   } else {
     puts "                        ignore \$ILA_SETUP_FILE: not provided or doesn't exist."
+    puts "                         (using by default the extra.xdc file)"
   }
 
   # Way2: Instantiate ila cores

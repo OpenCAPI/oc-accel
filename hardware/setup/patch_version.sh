@@ -36,13 +36,14 @@ SRC="define BUILD_DATE_DAT 64'h.*"
 DST="define BUILD_DATE_DAT 64'h0000_${SNAP_BUILD_DATE}"
 sed -i "s/$SRC/$DST/" $1/$2
 
-# Manually Patching with USERCODE
-SRC="define USERCODE 64'h.*"
-# usercode should be less than 64 bit long
-#usercode=`echo 0123456789ABCDEF`
-DST="define USERCODE 64'h${USERCODE}"
-sed -i "s/$SRC/$DST/" $1/$2
-
+# Manually Patching with USERCODE if required
+if [ -z $FPGACARD ]; then
+  SRC="define USERCODE 64'h.*"
+  # usercode should be less than 64 bit long
+  #usercode=`echo 0123456789ABCDEF`
+  DST="define USERCODE 64'h${USERCODE}"
+  sed -i "s/$SRC/$DST/" $1/$2
+fi
 
 #Patch card info and sdram_size
 # SDRAM_SIZE="2000" stand for 8GB of SDRAM - 0 for IBM but will be overwritten later by HBM_AXI_IF_NB
