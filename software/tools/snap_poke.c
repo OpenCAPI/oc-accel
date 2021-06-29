@@ -163,7 +163,7 @@ int main (int argc, char* argv[])
     rbval = ~val;
     switch_cpu (cpu, verbose_flag);
 
-    if ((card_no < 0) || (card_no > 4)) {
+    if ((card_no < 0) || (card_no > 7)) {
         fprintf (stderr, "err: (%d) is a invalid card number!\n",
                  card_no);
         usage (argv[0]);
