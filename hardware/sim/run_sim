@@ -299,10 +299,12 @@
      `sed -i "s/ input ncinject.tcl/#input ncinject.tcl/g" ncrun.tcl` 		# disable/comment  error injection in ncrun.tcl
    fi
  elif [ "$SIMDIR" == "xsim" ];then
+   #SIM_INIT='-key {Behavioral:sim_1:Functional:top} -protoinst "/afs/vlsilab.boeblingen.ibm.com/projects/fpga/framework/mesnet/oc-accel_VITIS/hardware/sim/xsim/protoinst_files/bd_2a05.protoinst"'		 	# default init value for simulator
    SIM_INIT=''		 	# default init value for simulator
    SIM_ARG=''			# -batch overrides -tcl
    VPI_OPT='libdpi.so'
-   SIM_ARG+=" -t xsrun.tcl"
+   SIM_ARG+=" -t xsrun.tcl"     # -tclbatch arg
+   #SIM_ARG+=" -t /afs/vlsilab.boeblingen.ibm.com/projects/fpga/framework/mesnet/oc-accel_VITIS/hardware/sim/xsim/cmd.tcl"     # -tclbatch arg
 #  SIM_ARG+=" -t xsrun.tcl +model_data+."   # syntax errors
    if [ "$AET" == "1" ];then
      `sed -i "s/#source xsaet.tcl/ source xsaet.tcl/g" xsrun.tcl`               # enable/uncomment AET generation in xsrun.tcl
