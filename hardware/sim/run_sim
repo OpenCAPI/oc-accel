@@ -338,7 +338,7 @@
  if [ "$SIMULATOR" == "irun" ]||[ "$SIMULATOR" == "xrun" ];then SIM_ARG+=" -r";fi
  echo "**** call simulator=$SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM in background, wait for socket in $SIMULATOR.log->shim_host.dat"|tee -a sim.log &
 #DEBUG 7/22 - add cd to remove the 2020.1 issue
- cd $SNAP_ROOT/hardware/sim/xsim
+ cd $SNAP_ROOT/hardware/sim/$SIMDIR
  $SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM |tee -a $SIMOUT/sim.log &
  cd $SIMOUT
 
