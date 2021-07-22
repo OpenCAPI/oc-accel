@@ -1,4 +1,4 @@
-From the snap directory, you can use 2 ways to configure and use the OC-ACCEL framework.
+From the oc-accel directory, you can use 2 ways to configure and use the OC-ACCEL framework.
 
 Option 1 (default): use the Kconfig menu by typing: make snap_config
  This will allow you to define a specific configuration which will be saved in the .snap_config file
