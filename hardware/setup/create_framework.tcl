@@ -165,17 +165,6 @@ puts "                        importing design files"
 add_files -scan_for_includes $hdl_dir/core  >> $log_file
 add_files -scan_for_includes $hdl_dir/oc >> $log_file
 add_files -scan_for_includes $fpga_top_src_dir/oc_fpga_top.v >> $log_file
-#add mem files (needed starting vivado 2019.2 and later
-#if { ($fpga_card == "AD9V3") && ($sdram_used == "TRUE") } {
-  ##add_files -norecurse $ip_dir/ddr4sdram_ex/imports/*.mem
-  #add_files -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_lmb_bram_I_0.mem
-  #add_files -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_second_lmb_bram_I_0.mem
-  #update_ip_catalog  >> $log_file
-  ##add_files -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/*.mem
-  #import_files -fileset sim_1 -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_lmb_bram_I_0.mem
-  #import_files -fileset sim_1 -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_second_lmb_bram_I_0.mem
-  ##update_compile_order -fileset sim_1 >> $log_file
-#}
 
 set file "snap_global_vars.v"
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
@@ -228,15 +217,6 @@ if { $simulator != "nosim" } {
     add_files -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_lmb_bram_I_0.mem
     add_files -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_second_lmb_bram_I_0.mem
     update_ip_catalog  >> $log_file
-
-    #add_files -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/bd_2a05_lmb_bram_I_0.mem
-    #add_files -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/bd_2a05_second_lmb_bram_I_0.mem
-   # Import local files from the original project
-   #set files [list \
-   #[file normalize "$ip_dir/ddr4sdram_ex/imports/bd_2a05_lmb_bram_I_0.mem"]\
-   #[file normalize "$ip_dir/ddr4sdram_ex/imports/bd_2a05_second_lmb_bram_I_0.mem"]\
-   #]
-   #set imported_files [import_files -fileset sources_1 $files]
 
     add_files    -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/ddr4_model.sv  >> $log_file
     add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_dir/src/ddr4_dimm_ad9v3.sv  >> $log_file
