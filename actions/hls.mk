@@ -92,7 +92,7 @@ $(SOLUTION_NAME): $(objs)
 
 check: $(syn_dir)
 	@if [ "${HLS_ACTION_CLOCK}" != "${shell grep "Setting up clock" *_hls.log |cut -d " " -f 12|cut -d "n" -f 1}" ]; then \
-			echo " ERROR with VivadoVitis HLS Action was last compiled with a different HLS clock."; \
+			echo " ERROR with Vivado/Vitis HLS. HLS Action was last compiled with a different HLS clock."; \
 			echo " Please force the recompilation with a 'make clean' command";  \
 			echo " ---------------------------------------------------------- "; exit 1; \
 	fi
