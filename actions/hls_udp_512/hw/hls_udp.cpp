@@ -18,9 +18,10 @@
 #include <string.h>
 #include "ap_int.h"
 #include <unistd.h>
-#include "osnap_hls_if.h"
-
-#include "../tests/action_test.h"
+//#include "osnap_hls_if.h"
+//#include "hls_snap_1024.H"
+#include "hls_udp.h"
+#include "action_test.h"
 
 void process_frames(AXI_STREAM &din_eth, eth_settings_t eth_settings, eth_stat_t &eth_stat, snap_membus_512_t *dout_gmem, uint64_t out_frame_buffer_addr) {
 	#pragma HLS DATAFLOW
@@ -144,7 +145,11 @@ void hls_action(snap_membus_512_t *din_gmem,
 #pragma HLS INTERFACE s_axilite port=dout_gmem bundle=ctrl_reg offset=0x040
 
 	// Host Memory AXI Lite Master Interface - NO CHANGE BELOW
-#pragma HLS DATA_PACK variable=act_reg
+#ifdef HLS_VITIS_USED
+       #pragma HLS AGGREGATE variable=act_reg
+#else
+       #pragma HLS DATA_PACK variable=act_reg
+#endif
 #pragma HLS INTERFACE s_axilite port=act_reg bundle=ctrl_reg offset=0x100
 #pragma HLS INTERFACE s_axilite port=return bundle=ctrl_reg
 
@@ -164,6 +169,7 @@ void hls_action(snap_membus_512_t *din_gmem,
 					if (i == 32) eth_reset = 0;
 			} else
 	process_action(din_gmem, dout_gmem, din_eth, dout_eth, act_reg);
+
 
 }
 

@@ -100,6 +100,7 @@ set port [create_bd_port -dir I CRESETN]
 #LEFT stack is used for SNAP/CAPI2.0 since BSP/PSL logic is using right resources of the FPGA
 #RIGHT stack is used for OC-Accel/OCAPI3.0 since TLX/DLX logic is using left resources of the FPGA
 set cell [create_bd_cell -quiet -type ip -vlnv {xilinx.com:ip:hbm:*} hbm]
+         #create_bd_cell -type ip -vlnv xilinx.com:ip:hbm:1.0 hbm
 
 #Common params for the HBM not depending on the number of memories enabled
 # The reference clock provided to HBM is AXI clock
@@ -311,6 +312,9 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
     CONFIG.REG_B {10}                   \
     }  $cell
 
+
+
+
   #create the ports
   create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_p$i\_HBM
   set_property -dict [list \
@@ -343,11 +347,21 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
   if { $i < 10} {
     connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_0$i\_ARESET_N]
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_0$i\_ACLK]
-    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
+  # AD9H7 cards require a different AXI name
+      if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2020.2") } {
+	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i\_RT]
+	 } else {
+        connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
+	 }
   } else {
-    connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
-    connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
-    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
+	connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
+        connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
+
+       if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2020.2") } {
+	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i\_RT]
+	 } else {
+	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
+	}
   }
 }
 #--------------------- end loop ------------------

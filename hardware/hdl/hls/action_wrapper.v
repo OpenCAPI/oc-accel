@@ -3417,7 +3417,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
 `endif
     // ETHERNET interface
 `ifdef ENABLE_ETHERNET
-`ifndef ENABLE_ETH_LOOP_BACK
+ `ifndef ENABLE_ETH_LOOP_BACK
 //ethernet enabled without loopback
     .din_eth_TDATA                (din_eth_tdata            ) ,
     .din_eth_TVALID               (din_eth_tvalid           ) ,
@@ -3432,8 +3432,15 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TKEEP               (dout_eth_tkeep           ) ,
     .dout_eth_TUSER               (dout_eth_tuser           ) ,
     .dout_eth_TLAST               (dout_eth_tlast           ) ,
+  `ifdef HLS_VITIS_USED
+    .eth_reset                    (eth_rx_fifo_reset        ) ,
+    .din_eth_TSTRB                (64'b0                    ) ,
+    .dout_eth_TSTRB               (                         ) ,
+  `else
     .eth_reset_V                  (eth_rx_fifo_reset        ) ,
-`else
+  `endif
+//ethernet enabled with loopback
+ `else
     .din_eth_TDATA                (dwrap_eth_TDATA          ) ,
     .din_eth_TVALID               (dwrap_eth_TVALID         ) ,
     .din_eth_TREADY               (                         ) ,
@@ -3448,15 +3455,21 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TKEEP               (dwrap_eth_TKEEP          ) ,
     .dout_eth_TUSER               (dwrap_eth_TUSER          ) ,
     .dout_eth_TLAST               (dwrap_eth_TLAST[0]       ) ,
+  `ifdef HLS_VITIS_USED
+    .din_eth_TSTRB                (64'b0                    ) ,
+    .dout_eth_TSTRB               (                         ) ,
+    .eth_reset                    (                         ) ,
+  `else
     .eth_reset_V                  (                         ) ,
+  `endif
 //Enable ethernet with loopback
-`endif
+ `endif
 `endif
     //
-    .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr    ) ,
+    .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr[8:0]    ) ,
     .s_axi_ctrl_reg_arready       (s_axi_ctrl_reg_arready   ) ,
     .s_axi_ctrl_reg_arvalid       (s_axi_ctrl_reg_arvalid   ) ,
-    .s_axi_ctrl_reg_awaddr        (s_axi_ctrl_reg_awaddr    ) ,
+    .s_axi_ctrl_reg_awaddr        (s_axi_ctrl_reg_awaddr[8:0]    ) ,
     .s_axi_ctrl_reg_awready       (s_axi_ctrl_reg_awready   ) ,
     .s_axi_ctrl_reg_awvalid       (s_axi_ctrl_reg_awvalid   ) ,
     .s_axi_ctrl_reg_bready        (s_axi_ctrl_reg_bready    ) ,

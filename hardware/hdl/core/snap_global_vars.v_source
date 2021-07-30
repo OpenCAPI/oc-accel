@@ -87,6 +87,10 @@
 `define ENABLE_EMAC_V3_1
 #endif
 
+#if defined(CONFIG_HLS_VITIS_USED)
+`define HLS_VITIS_USED
+#endif
+
 #if defined(CONFIG_ENABLE_9H3_LED)
 `define ENABLE_9H3_LED
 #endif

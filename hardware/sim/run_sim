@@ -302,7 +302,10 @@
    SIM_INIT=''		 	# default init value for simulator
    SIM_ARG=''			# -batch overrides -tcl
    VPI_OPT='libdpi.so'
-   SIM_ARG+=" -t xsrun.tcl"
+#DEBUG 7/22 - add cd later so need to add path
+   #SIM_ARG+=" -t xsrun.tcl"     # -tclbatch arg
+   SIM_ARG+=" -t $SNAP_ROOT/hardware/sim/xsrun.tcl"     # -tclbatch arg
+
 #  SIM_ARG+=" -t xsrun.tcl +model_data+."   # syntax errors
    if [ "$AET" == "1" ];then
      `sed -i "s/#source xsaet.tcl/ source xsaet.tcl/g" xsrun.tcl`               # enable/uncomment AET generation in xsrun.tcl
@@ -334,7 +337,15 @@
 ##### call Simulator
  if [ "$SIMULATOR" == "irun" ]||[ "$SIMULATOR" == "xrun" ];then SIM_ARG+=" -r";fi
  echo "**** call simulator=$SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM in background, wait for socket in $SIMULATOR.log->shim_host.dat"|tee -a sim.log &
- $SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM |tee -a sim.log &
+#DEBUG 7/22 - add cd to remove the 2020.1 issue
+ if [ "$SIMULATOR" == "xsim" ];then 
+    cd $SNAP_ROOT/hardware/sim/$SIMDIR;
+    $SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM |tee -a $SIMOUT/sim.log &
+    cd $SIMOUT;
+ else
+    $SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM |tee -a sim.log &
+ fi
+
  SIMLOG_PID=$!                          # sim.log records 1st socket
  SIMLOG_PPID=`ps -ef|grep $SIMLOG_PID |grep tee  |awk '{print $3}'`
  if [ "$SIMLOG_PPID" == "" ];then echo "could not start $SIMULATOR, did you successfully compile the model ?";TCRC=-1;fi
