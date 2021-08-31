@@ -276,9 +276,19 @@ if { $eth_used == TRUE } {
 }
 
 # Add HBM
+
 if { $hbm_used == TRUE } {
-  #add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
-  add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
+  puts "                        Vivado version is $vivadoVer"
+  puts "                        Adjusting hbm directory to Vivado version"
+  if {[regexp {2020.2} $vivadoVer]} {
+    puts "                        Version 2020.2 uses hbm.gen"
+    puts "                        Path forced to hbm.gen"
+    add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
+  } else {
+    puts "                        Eariler than 2020.2 versions use hbm.srcs"
+    puts "                        Path forced to hbm.srcs"
+    add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
+  }
   if { $bram_used == TRUE } {
     puts "                        adding HBM-like block design (BRAM)"
   } else {
@@ -287,22 +297,39 @@ if { $hbm_used == TRUE } {
     puts "                        adding HBM initialization files "
     #add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
     #add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+  if {[regexp {2020.2} $vivadoVer]} {
     add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
     add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+  } else {
+    add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
+    add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+    
+  }    
+
     update_ip_catalog  >> $log_file
   }
 
-
+  if {[regexp {2020.2} $vivadoVer]} {
+  add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd  >> $log_file
+  export_ip_user_files -of_objects  [get_files  $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/hbm_top.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
+  } else {
   add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd  >> $log_file
   export_ip_user_files -of_objects  [get_files  $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
+  } 
 
   #puts "                        adding HBM initialization files "
   # if BRAM model used to replace HBM then do not add specific hbm init files
   if { $bram_used != TRUE } {
     #import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
     #import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
-    import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
-    import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+   if {[regexp {2020.2} $vivadoVer]} {
+     import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
+     import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+   } else {
+    import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
+    import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+   }
+
   }
   update_compile_order -fileset sim_1 >> $log_file
 }

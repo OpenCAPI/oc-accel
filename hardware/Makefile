@@ -67,7 +67,7 @@ SNAP_HDL_HLS=$(SNAP_HARDWARE_ROOT)/hdl/hls
 SNAP_SIM_CORE=$(SIM_DIR)/core
 
 SNAP_SIMULATORS += irun xsim questa modelsim xcelium
-SNAP_MODELS += .model_irun .model_xsim
+SNAP_MODELS += .model_irun .model_xsim  .model_questa .model_modelsim .model_xcelium
 
 #SNAP_PP_FILES_VHD = $(SNAP_HDL_HLS)/action_wrapper.vhd
 
