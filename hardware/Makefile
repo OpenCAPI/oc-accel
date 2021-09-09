@@ -397,7 +397,7 @@ $(SNAP_BASE_DCP):
 	@exit -1
 
 cloud_action: allow_cloud_action .hw_project_done
-	@echo -e "[BUILD CLOUD ACTION..] start `date +"%T %a %b %d %Y"e`"
+	@echo -e "[BUILD CLOUD ACTION..] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
 	@echo -e "[BUILD CLOUD ACTION..] done  `date +"%T %a %b %d %Y"`"
 

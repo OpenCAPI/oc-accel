@@ -121,70 +121,35 @@ if { $fpgacard == "AD9V3" } {
    ###remove IOB_X0Y2 in X4Y0 used by ocse IBUF
    ##resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y2} >> $logfile
 
-   ## Settings for a maximal dynamic area
-   ## functionally correct - works with 16HBM but seems not optmized
-   ## right side of the FPGA
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
-   ## add 3 blocks from bottom left
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X1Y1:CLOCKREGION_X3Y1 >> $logfile
-   ## top 2 lines of the FPGA
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
-   ##remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
-   ##remove CONFIG_SITE in X7Y1 for ICAPE3
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
+   # Settings for a maximal dynamic area
+   # functionally correct - works with 16HBM but seems not optmized
+   # right side of the FPGA
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
+   # add 3 blocks from bottom left
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X1Y1:CLOCKREGION_X3Y1 >> $logfile
+   # top 2 lines of the FPGA
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
+   #remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
+   resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
+   #remove CONFIG_SITE in X7Y1 for ICAPE3
+   resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
 
 #16 HBM trying to optimize
 
 # right side of the FPGA
-resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
+#resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
 # add 3 blocks from bottom left
-resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X1Y0:CLOCKREGION_X3Y0 >> $logfile
+#resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X1Y0:CLOCKREGION_X3Y0 >> $logfile
 # top 2 lines of the FPGA
-resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
+#resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
 #remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
-resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
+#resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
 #remove CONFIG_SITE in X7Y1 for ICAPE3
-resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
-resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
+#resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
+#resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
 
 
-
-   #following is failing due to routing issue
-   ## right side of the FPGA
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
-   ## add 3 blocks from bottom left
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y0:CLOCKREGION_X3Y0 >> $logfile
-   ## top 2 lines of the FPGA
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
-   ##remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
-   ##remove CONFIG_SITE in X7Y1 for ICAPE3
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
-   #resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
-   ##remove bsp/dlx_phy_IBUFDS_GTE4 from X0Y0
-   ##resize_pblock [get_pblocks pblock_dynamic_PR] -remove {GTYE4_CHANNEL_X0Y0:GTYE4_CHANNEL_X0Y3 GTYE4_COMMON_X0Y0:GTYE4_COMMON_X0Y0}
-
-   # # right side of the FPGA
-   # resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X5Y1:CLOCKREGION_X7Y1 >> $logfile
-   # # top 2 lines of the FPGA
-   # resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
-   # # last line of the FPGA
-   # resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y0:CLOCKREGION_X7Y0 >> $logfile
-   # #remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
-   # #resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
-   # #add IOB_X0Y2 in X4Y0 used by ocse IBUF
-   # #resize_pblock [get_pblocks pblock_dynamic_PR] -add {IOB_X0Y2} >> $logfile
-   # #add HBM clock (and ocde signal) in the dynamic area
-   # #resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0 >> $logfile
-   # #remove bsp/dlx_phy_IBUFDS_GTE4 from X0Y0
-   # resize_pblock [get_pblocks pblock_dynamic_PR] -remove {GTYE4_CHANNEL_X0Y0:GTYE4_CHANNEL_X0Y3 GTYE4_COMMON_X0Y0:GTYE4_COMMON_X0Y0}
-   # #bsp/dlx_phy buffers removed from dynamic part
-   # resize_pblock [get_pblocks pblock_dynamic_PR] -remove IOB_X0Y130 >> $logfile
-   # resize_pblock [get_pblocks pblock_dynamic_PR] -remove HPIOBDIFFINBUF_X0Y60 >> $logfile
-   # #remove CONFIG_SITE in X7Y1 for ICAPE3
-   # resize_pblock [get_pblocks pblock_dynamic_PR] -remove CONFIG_SITE_X0Y0 >> $logfile
 
 #---------------------------------------
 } elseif { $fpgacard == "AD9H7" } {
