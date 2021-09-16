@@ -332,6 +332,8 @@
  echo "SNAP_root= $SNAP_ROOT"		 |tee -a sim.log
  echo "simbase=   $SIMBASE"		 |tee -a sim.log
  echo "simout=    $SIMOUT"		 |tee -a sim.log
+ echo "simtop=    $SIMTOP"		 |tee -a sim.log
+ echo "simparm=   $SIMPARM"		 |tee -a sim.log
  echo "run_sim sim_arg=${SIM_ARG}, tst_arg=${TST_ARG}, AET=$AET"|tee -a sim.log
 
 ##### call Simulator
@@ -342,6 +344,7 @@
     cd $SNAP_ROOT/hardware/sim/$SIMDIR;
     $SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM |tee -a $SIMOUT/sim.log &
     cd $SIMOUT;
+    mv ../top.wdb .
  else
     $SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM |tee -a sim.log &
  fi
