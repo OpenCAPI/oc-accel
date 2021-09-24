@@ -302,15 +302,16 @@
    SIM_INIT=''		 	# default init value for simulator
    SIM_ARG=''			# -batch overrides -tcl
    VPI_OPT='libdpi.so'
-#DEBUG 7/22 - add cd later so need to add path
-   #SIM_ARG+=" -t xsrun.tcl"     # -tclbatch arg
-   SIM_ARG+=" -t $SNAP_ROOT/hardware/sim/xsrun.tcl"     # -tclbatch arg
+   #7/22: starting with 2020.1 xsim simulator need now to be called from xsim vs SIMOUT
+   SIM_ARG+=" -t ./$SIMOUT/xsrun.tcl"     # -tclbatch arg
 
 #  SIM_ARG+=" -t xsrun.tcl +model_data+."   # syntax errors
    if [ "$AET" == "1" ];then
-     `sed -i "s/#source xsaet.tcl/ source xsaet.tcl/g" xsrun.tcl`               # enable/uncomment AET generation in xsrun.tcl
+     #7/22: starting with 2020.1 xsim simulator need now to be called from xsim vs SIMOUT
+     `sed -i "s|#source xsaet.tcl| source ./$SIMOUT/xsaet.tcl|g" xsrun.tcl`     # enable/uncomment AET generation in xsrun.tcl
    else
-     `sed -i "s/ source xsaet.tcl/#source xsaet.tcl/g" xsrun.tcl`               # disable/comment  AET generation in xsrun.tcl
+     #7/22: starting with 2020.1 xsim simulator need now to be called from xsim vs SIMOUT
+     `sed -i "s| source xsaet.tcl|#source ./$SIMOUT/xsaet.tcl|g" xsrun.tcl`     # disbale/comment AET generation in xsrun.tcl
    fi
  elif [ "$SIMDIR" == "questa" ];then
    SIM_INIT=''		 	# default init value for simulator
@@ -337,9 +338,9 @@
 ##### call Simulator
  if [ "$SIMULATOR" == "irun" ]||[ "$SIMULATOR" == "xrun" ];then SIM_ARG+=" -r";fi
  echo "**** call simulator=$SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM in background, wait for socket in $SIMULATOR.log->shim_host.dat"|tee -a sim.log &
-#DEBUG 7/22 - add cd to remove the 2020.1 issue
  if [ "$SIMULATOR" == "xsim" ];then 
-    cd $SNAP_ROOT/hardware/sim/$SIMDIR;
+    #7/22: starting with 2020.1 xsim simulator need now to be called from xsim vs SIMOUT
+    cd ..;
     $SIMULATOR $SIM_ARG $SIMTOP $SIM_PARM |tee -a $SIMOUT/sim.log &
     cd $SIMOUT;
  else
@@ -585,4 +586,10 @@
    cd $SIMBASE; sleep 5; grep --text -Hi 'testcase RC=0, '   $SIMOUT/stim.log|sed 's/\// /g'|awk '{print $1}'|xargs -i{} rm -fr "{}" 2>/dev/null 		# remove directories with 0 errors
  fi
 #echo "*** leftover processes on this machine:"; ps -ef|grep -E "$SIMULATOR|ocse|genwqe"|grep $IAM|grep -v grep
+
+ #7/22: starting with 2020.1 xsim simulator need now to be called from xsim vs SIMOUT
+ #so the top.wdb has to be moved to the $SIMOUT current  directory
+ if [ "$SIMULATOR" == "xsim" ];then 
+   mv ../top.wdb .
+ fi
  exit $TCRC
