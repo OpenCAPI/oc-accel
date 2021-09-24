@@ -113,6 +113,9 @@ if { $fpgacard == "AD9V3" } {
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
 
+   #SR#10523711 - required to correct timing closure even after removing hbm_ip.xdc constraints file
+   set_property LOC BLI_HBM_AXI_INTF_X17Y0 [get_cells oc_func/fw_afu/action_core_i/hbm_top_wrapper_i/hbm_top_i/hbm/inst/ONE_STACK.u_hbm_top/ONE_STACK_HBM.hbm_one_stack_intf]
+
    ## Settings for a minimal dynamic area
    ##resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y0 >> $logfile
    ##resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X5Y0:CLOCKREGION_X7Y3 >> $logfile
