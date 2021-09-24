@@ -311,7 +311,7 @@
      `sed -i "s|#source xsaet.tcl| source ./$SIMOUT/xsaet.tcl|g" xsrun.tcl`     # enable/uncomment AET generation in xsrun.tcl
    else
      #7/22: starting with 2020.1 xsim simulator need now to be called from xsim vs SIMOUT
-     `sed -i "s| source xsaet.tcl|#source ./$SIMOUT/xsaet.tcl|g" xsrun.tcl`     # disbale/comment AET generation in xsrun.tcl
+     `sed -i "s| source xsaet.tcl|#source ./$SIMOUT/xsaet.tcl|g" xsrun.tcl`     # disable/comment AET generation in xsrun.tcl
    fi
  elif [ "$SIMDIR" == "questa" ];then
    SIM_INIT=''		 	# default init value for simulator
