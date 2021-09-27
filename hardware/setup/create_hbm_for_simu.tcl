@@ -26,6 +26,7 @@ set hbm_axi_if_num   $::env(HBM_AXI_IF_NUM)
 
 # user can set a specific value for the Action clock lower than the 250MHz nominal clock
 # as of now, only 3 clock frequencies are enabled in this file: 200MHz, 225MHz and 250MHz
+# At this time, only AXI Action clock which can be used is the 200MHz nominal clock
 set action_clock_freq "200MHz"
 #overide default value if variable exist
 #set action_clock_freq $::env(FPGA_ACTION_CLK)
@@ -37,20 +38,10 @@ set bd_name  hbm_top
 # _______________________________________________________________________________
 # In this file, we define all the logic to have independent 256MB/2Gb memories
 # each with an independent AXI interfaces which will be connected to the action
-# Default is hbm_axi_if_num = 12 interfaces
-# TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change HBM_AXI_IF_NUM value n Kconfig menu with a value between 1 and 32
-# and 2) set the right params enabling AXI and MC
-# -------------------------------------------------------
-# If you modify the number of AXI interfaces, don't forget to modify also :
-#   actions/hls_hbm_memcopy/hw/hw_action_memcopy.cpp
-#   hardware/hdl/hls/action_wrapper.v
-#   hardware/hdl/core/framework_afu.v
-#   --> follow HBM names <--
+# The number of HBM interfaces is selected by the Kconfig menu
+# It needs to be in sync with the param #define HBM_AXI_IF_NB which should be 
+# defined in actions/hls_hbm_memcopy_1024/hw/hw_action_hbm_memcopy_1024.cpp
 # _______________________________________________________________________________
-#CHANGE_HBM_INTERFACES_NUMBER
-#set  HBM_MEM_NUM 12
-#this parameter is taken from Kmenu => set hbm_axi_if_num
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file

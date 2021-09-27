@@ -34,18 +34,20 @@ snap_env_sh = snap_env.sh
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image
+#.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image
 
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
 
 help:
 	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";
 	@echo "* snap_config    Configure OC-Accel framework";
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
-	@echo "* sim            Start a simulation";
+	@echo "* sim            Start a simulation (it will build the model before)";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
 	@echo "* hw_project     Create Vivado project with oc-bip";
-	@echo "* image          Build a complete FPGA bitstream after hw_project (takes more than one hour)";
+	@echo "* image          Build a complete FPGA bitstream (takes more than one hour)";
+	@echo "*                 (This command can be splitted into 'make synth' + 'make place' + 'make route')";
 	@echo "* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')";
 	@echo "* software       Build software libraries and tools for SNAP";
 	@echo "* apps           Build the applications for all actions";
@@ -118,6 +120,8 @@ hardware: $(hardware_subdirs)
 
 # Model build and config
 hw_project model sim image cloud_enable cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image sim_tmux: $(snap_env_sh)
+
+#hw_project model sim image synth place route cloud_enable cloud_base cloud_action sim_tmux: $(snap_env_sh)
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
@@ -139,6 +143,8 @@ wrong_platform:
 	@echo; echo "\nSNAP hardware builds and simulation are possible on x86 platform only\n"; echo;
 
 $(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image cloud_merge: wrong_platform
+
+#$(hardware_subdirs) hardware hw_project model sim image synth place route cloud_base cloud_action cloud_merge: wrong_platform
 endif
 
 # SNAP Config

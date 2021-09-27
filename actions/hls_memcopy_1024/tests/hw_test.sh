@@ -88,6 +88,11 @@ function test_memcopy {
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
+    if [ ! -f "${ACTION_ROOT}/sw/snap_memcopy" ]; then
+       echo "ERROR: please compile 'snap_memcopy' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     echo -n "Doing snap_memcopy ${size} bytes from host mem to host mem through FPGA buffer ... "
     cmd="snap_memcopy -C${snap_card} ${noirq} -X -t 720   \
         -i ${size}_A.bin    \

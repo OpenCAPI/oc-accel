@@ -83,6 +83,11 @@ function test_single_engine {
 
     local pattern=$(($(($idn<<16))+$(($length<<8))+$size))
 
+    if [ ! -f "${ACTION_ROOT}/sw/hdl_single_engine" ]; then
+       echo "ERROR: please compile 'hdl_single_engine' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     echo -n "Read and Write Duplex ... "
     cmd="hdl_single_engine -C${snap_card} -c 1 -w 0 -n ${num} -N ${num} -p ${pattern} -P ${pattern} -t 100000 >>  hdl_single_engine_general_test.log 2>&1"
     eval ${cmd}

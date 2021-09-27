@@ -21,14 +21,14 @@ choice
 		  AlphaData 9V3 has ethernet and 16GB DDR4 SDRAM. Uses Xilinx FPGA VU3P.
 
 	config AD9H3
-		bool "OpenCAPI3.0: AlphaData 9H3 (VU33P with HBM)"
+		bool "OpenCAPI3.0: AlphaData 9H3 (incl. VU33P with HBM)"
 		select OPENCAPI30
 		select DISABLE_NVME
 		help
 		  AlphaData 9H3 has ethernet and 2x 4GB HBM Gen2. Uses Xilinx FPGA VU33P.
 
 	config AD9H335
-		bool "OpenCAPI3.0: AlphaData 9H3 (VU35P with HBM) (under development)"
+		bool "OpenCAPI3.0: AlphaData 9H3-35 (incl. VU35P with HBM) (under development)"
 		select OPENCAPI30
 		select DISABLE_NVME
 		help
@@ -128,6 +128,7 @@ choice
 	config HDL_EXAMPLE
 		bool "HDL Example"
 		select ACTION_HALF_WIDTH
+		select DISABLE_HBM
 	
 	config HDL_SINGLE_ENGINE
 		bool "HDL Single Engine"
@@ -138,6 +139,7 @@ choice
 		  - Write data to server memory
 		select DISABLE_SDRAM_AND_BRAM
 		select DISABLE_ETHERNET
+		select DISABLE_HBM
 
 #experimental - not available yet
 #	config HDL_MULTI_PROCESS
@@ -308,7 +310,6 @@ choice
 		select ENABLE_SIMU_WO_ETH
 		select FORCE_SDRAM_OR_BRAM
 		select FORCE_HBM
-		select ACTION_HALF_WIDTH
 
 #	config HLS_SPONGE
 #		bool "HLS Sponge"
@@ -394,7 +395,7 @@ config ENABLE_HBM
 	bool
 	prompt "Enable HBM"
 	#ddepends on ((AD9H3 || AD9H335 || AD9H7)  && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_BRAM))
-	depends on (AD9H3 || AD9H335 || AD9H7) && ENABLE_HLS_SUPPORT && ! DISABLE_HBM
+	depends on (AD9H3 || AD9H335 || AD9H7) && ! DISABLE_HBM
 	help
 	  This option enables the on-card HBM.
 
@@ -499,6 +500,18 @@ config ETHERNET_USED
         default "TRUE"  if  ENABLE_ETHERNET
         default "FALSE" if !ENABLE_ETHERNET
 
+config ETHERNET_RX_FIFO_DEPTH
+        int
+        prompt "Depth of receiving FIFO for Ethernet 100G MAC in 512-bit packets (must be power of 2)"
+        depends on ENABLE_ETHERNET
+        default 8192
+
+config ETHERNET_RX_FIFO_URAM
+	bool
+        prompt "Force implementation of receiving FIFO for Ethernet 100G MAC in UltraRAM"
+        depends on ENABLE_ETHERNET
+        default n
+
 config USER_CLOCK
 	string
 	default "TRUE"  if ACTION_USER_CLOCK
@@ -595,6 +608,37 @@ config DENALI_USED
 config OCSE_PATH
 	string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
 	default "../ocse"
+
+config ENABLE_9H3_LED
+	bool "User LEDs on the board"
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
+	default n
+
+config AD9H3_LED_USED
+        string
+        default "TRUE"  if ENABLE_9H3_LED
+        default "FALSE" if ! ENABLE_9H3_LED
+
+config ENABLE_9H3_EEPROM
+	bool "I2C interface for on-board EEPROM (2kbit); WARNING! IOBUF and I2C need to be handled within action logic"
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
+	default n
+
+config AD9H3_EEPROM_USED
+        string
+        default "TRUE"  if ENABLE_9H3_EEPROM
+        default "FALSE" if ! ENABLE_9H3_EEPROM
+
+config ENABLE_9H3_AVR
+	bool "Serial interface for on-board management microcontroller; WARNING! Requires IP from (paid) reference design from Alpha Data to use it within the action"
+	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
+	default n
+	default n
+
+config AD9H3_AVR_USED
+        string
+        default "TRUE"  if ENABLE_9H3_AVR
+        default "FALSE" if ! ENABLE_9H3_AVR
 
 comment "================= Advanced Options: ================="
 
@@ -847,3 +891,14 @@ config FLASH_USED
 	default "TRUE"  if ENABLE_FLASH
 	default "FALSE" if ! ENABLE_FLASH
 
+config ENABLE_USERCODE
+        bool "Enable USER CODE (code will be requested to user later on)"
+        default n 
+        help
+          This allows user to define a user code associated to the FPGA content
+          For ex user want to create 2 configuration with 2 different VIVADO versions
+
+config USERCODE
+        string "USERCODE(max64bits)"
+        depends on ENABLE_USERCODE
+        default "0000000000000000"

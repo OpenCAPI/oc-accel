@@ -15,11 +15,11 @@
  */
 
 
-#include "hls_udp.h"
 #include <unistd.h>
 #include "ap_int.h"
-#include "osnap_hls_if.h"
-#include <iostream>
+//#include "osnap_hls_if.h"
+//#include <iostream>
+#include "hls_udp.h"
 
 void write_data(DATA_STREAM &in, snap_membus_512_t *dout_gmem, uint64_t out_frame_buffer_addr) {
 	data_packet_t packet_in;

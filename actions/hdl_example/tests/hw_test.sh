@@ -120,6 +120,7 @@ function test_bs () # $1 = card, $2 = action, $3 = min_align, $4 = dma_size
 	if [ $block_step -eq "0" ]; then
 		block_step=1
 	fi
+
 	for align in 4096 2048 1024 512 256 128 64 ; do		# Align
 		tests=0
 		echo -n "Testing Action $action Align $align  64B=($block_step..$((128*$block_step))) 4K=(1..16) "
@@ -156,6 +157,7 @@ function test_rnd () # $1 = card, $2 = action, $3 = min_align, $4 = dma_size
 	if [ $block_step -eq "0" ]; then
 		block_step=1
 	fi
+
 	for align in 4096 1024 2048 512 256 128 64 ; do
 		tests=0
 		echo -n "Testing Action $action Align $align 1000 x 64B=random 4K=random "
@@ -235,6 +237,11 @@ else
 	echo ">>> To avoid timeout, -d SHORT should be used for simulation <<<"
 	timeoutsim=2	# hardware test case
 	endsimu=60
+fi
+
+if [ ! -f "${FUNC}" ]; then
+        echo "ERROR: please compile 'snap_example' before execution (or run 'make apps')"
+        exit 1
 fi
 
 for ((iter=1;iter <= iteration;iter++))

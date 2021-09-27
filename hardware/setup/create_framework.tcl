@@ -27,6 +27,7 @@ set hbm_ip_dir          $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip
 set action_dir          $::env(ACTION_ROOT)
 set action_hw_dir       $action_dir/hw
 set action_ip_dir       $action_dir/ip/action_ip_prj/action_ip_prj.srcs/sources_1/ip
+set action_bd_dir       $action_dir/ip/action_ip_prj/action_ip_prj.srcs/sources_1/bd
 set action_tcl          [exec find $action_hw_dir -name tcl -type d]
 
 #set usr_ip_dir          $ip_dir/managed_ip_project/managed_ip_project.srcs/sources_1/ip
@@ -114,7 +115,7 @@ if { ( $simulator == "irun" ) } {
   }
 } elseif { $simulator == "xcelium" } {
   set_property target_simulator Xcelium [current_project]
-  set_property compxlib.ies_compiled_library_dir $::env(IES_LIBS) [current_project]
+  set_property compxlib.xcelium_compiled_library_dir $::env(IES_LIBS) [current_project]
   if { $hbm_used == TRUE } {
     #NEW - 2 following lines to circumvent Xilinx bug when simulating HBM (PG276)
     set_property -name {xcelium.simulate.xmsim.more_options} -value {-notimingcheck} -objects [get_filesets sim_1]
@@ -212,6 +213,11 @@ if { $simulator != "nosim" } {
   
   # DDR4 Sim Files
   if { ($fpga_card == "AD9V3") && ($sdram_used == "TRUE") } {
+    #keep the 3 following lines
+    add_files -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_lmb_bram_I_0.mem
+    add_files -norecurse $ip_dir/ddr4sdram_ex/imports/bd_2a05_second_lmb_bram_I_0.mem
+    update_ip_catalog  >> $log_file
+
     add_files    -fileset sim_1 -norecurse -scan_for_includes $ip_dir/ddr4sdram_ex/imports/ddr4_model.sv  >> $log_file
     add_files    -fileset sim_1 -norecurse -scan_for_includes $sim_dir/src/ddr4_dimm_ad9v3.sv  >> $log_file
     set_property used_in_synthesis false           [get_files $sim_dir/src/ddr4_dimm_ad9v3.sv]
@@ -247,6 +253,13 @@ foreach ip_xci [glob -nocomplain -dir $action_ip_dir */*.xci] {
   export_ip_user_files -of_objects  [get_files "$ip_xci"] -no_script -sync -force >> $log_file
 }
 
+foreach ip_bd [glob -nocomplain -dir $action_bd_dir */*.bd] {
+  set bd_name [exec basename $ip_bd .bd]
+  puts "                        adding HDL board design $bd_name"
+  add_files -norecurse $ip_bd -force >> $log_file
+  export_ip_user_files -of_objects  [get_files "$ip_bd"] -no_script -sync -force >> $log_file
+}
+
 # Add Ethernet IP
 if { $eth_used == TRUE } {
   if { $eth_loop_back == TRUE } {
@@ -265,14 +278,17 @@ if { $eth_used == TRUE } {
 # Add HBM
 if { $hbm_used == TRUE } {
   add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
+  #add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
   if { $bram_used == TRUE } {
     puts "                        adding HBM-like block design (BRAM)"
   } else {
     # if BRAM model used replacing HBM do not add specific hbm init files
     puts "                        adding HBM block design"
-    puts "                        adding HBM initialization files"
+    puts "                        adding HBM initialization files "
     add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
     add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+    #add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
+    #add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
     update_ip_catalog  >> $log_file
   }
 
@@ -288,6 +304,8 @@ if { $hbm_used == TRUE } {
   if { $bram_used != TRUE } {
     import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
     import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+    #import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
+    #import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
   }
   update_compile_order -fileset sim_1 >> $log_file
 }
@@ -313,7 +331,7 @@ if { $unit_sim_used == "TRUE" } {
 
 if {$fpga_card == "BW250SOC"} {
   puts "                        adding Flash IP "
-  add_files $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.vhd -norecurse  >> $log_file
+  #add_files $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.vhd -norecurse  >> $log_file
   add_files -norecurse $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/design_1.bd  >> $log_file
   export_ip_user_files -of_objects  [get_files  $ip_dir/flash_ip_project/flash_ip_project.srcs/sources_1/bd/design_1/design_1.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
 #  puts "                        adding  $fpga_card_dir/ip/qspi_mb.elf"
@@ -367,6 +385,7 @@ if { $ila_debug == "TRUE" } {
     add_files -fileset constrs_1 -norecurse $::env(ILA_SETUP_FILE)
   } else {
     puts "                        ignore \$ILA_SETUP_FILE: not provided or doesn't exist."
+    puts "                         (using by default the extra.xdc file)"
   }
 
   # Way2: Instantiate ila cores

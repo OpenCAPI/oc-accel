@@ -77,6 +77,11 @@ fi
 function test_decimal_mult {
     local size=$1
 
+    if [ ! -f "${ACTION_ROOT}/sw/snap_decimal_mult" ]; then
+       echo "ERROR: please compile 'snap_decimal_mult' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     echo -n "Doing snap_decimal_mult "
     cmd="snap_decimal_mult -C${snap_card} -n 16 -w >> snap_decimal_mult.log 2>&1"
     eval ${cmd}

@@ -28,6 +28,11 @@ set fpgacard        $::env(FPGACARD)
 set ila_debug       $::env(ILA_DEBUG)
 set vivadoVer       [version -short]
 
+if { [info exists ::env(IMPL_STEP)] == 1 } {
+  set impl_step     $::env(IMPL_STEP)
+} else {
+  set impl_step   "ALL"
+}
 #Define widths of each column
 set widthCol1 $::env(WIDTHCOL1)
 set widthCol2 $::env(WIDTHCOL2)
@@ -57,13 +62,13 @@ if { $impl_flow == "CLOUD_BASE" } {
 ## Adding elf file to project and loading on microblaze BRAM for 250SOC only
 
 if { $fpgacard == "BW250SOC" } {
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Adding elf file" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-import_files -fileset sim_1 -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
-import_files -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
-set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
-set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
-set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
-set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Adding elf file" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  import_files -fileset sim_1 -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
+  import_files -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
+  set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
+  set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
+  set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
+  set_property SCOPED_TO_CELLS { microblaze_0 } [get_files -all -of_objects [get_fileset sim_1] [get_files $root_dir/viv_project/framework.srcs/sim_1/imports/ip/qspi_mb_golden.elf]]
 }
 
 ##
@@ -75,31 +80,39 @@ if { $cloud_flow == "TRUE" } {
   set step      opt_design
   set directive [get_property STEPS.OPT_DESIGN.ARGS.DIRECTIVE [get_runs impl_1]]
 }
-set logfile   $logs_dir/${step}.log
-set command   "opt_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+
+## SYNTH means "synthesis + opt_design"
+if { ($impl_step == "SYNTH") || ($impl_step == "ALL") } {
+  set logfile   $logs_dir/${step}.log
+  set command   "opt_design -directive $directive"
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_design failed" $widthCol4 "" ]
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
-
-  if { ![catch {current_instance}] } {
-      write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_design failed" $widthCol4 "" ]
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+  
+    if { ![catch {current_instance}] } {
+        write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    }
+    exit 42
+  } else {
+    write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
+    report_utilization -file  ${rpt_dir}/${step}_utilization.rpt -quiet
   }
-  exit 42
-} else {
-  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
-  report_utilization -file  ${rpt_dir}/${step}_utilization.rpt -quiet
 }
-
 
 ##
 ## Vivado 2017.4 has problems to place the SNAP core logic, if they can place inside the PSL
-if { ($vivadoVer >= "2017.4") && ($cloud_flow == "FALSE") } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-  close_project                         >> $logfile
-  open_checkpoint $dcp_dir/${step}.dcp  >> $logfile
+#if { ($vivadoVer >= "2017.4") && ($cloud_flow == "FALSE") } {
+#  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+#  close_project                         >> $logfile
+#  open_checkpoint $dcp_dir/${step}.dcp  >> $logfile
+#}
 
+## if impl_step == "PLACE" then last dcp needs to be loaded
+if { ($impl_step == "PLACE") } {
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  open_checkpoint $dcp_dir/${step}.dcp  >> $logfile
 }
 
 ##
@@ -111,27 +124,30 @@ if { $cloud_flow == "TRUE" } {
   set step      place_design
   set directive $place_directive
 }
-set logfile   $logs_dir/${step}.log
-set command   "place_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-##
-## prevent placing inside PSL
-if { $capi_ver == "capi10" } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Prevent placing inside PSL" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
-  set_property EXCLUDE_PLACEMENT 1 [get_pblocks b_nestedpsl]
-}
-
-if { [catch "$command > $logfile" errMsg] } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: place_design failed" $widthCol4 "" ]
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
-
-  if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+if { ($impl_step == "PLACE") || ($impl_step == "ALL") } {
+  set logfile   $logs_dir/${step}.log
+  set command   "place_design -directive $directive"
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  
+  ##
+  ## prevent placing inside PSL
+  if { $capi_ver == "capi10" } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Prevent placing inside PSL" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+    set_property EXCLUDE_PLACEMENT 1 [get_pblocks b_nestedpsl]
   }
-  exit 42
-} else {
-  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
+  
+  if { [catch "$command > $logfile" errMsg] } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: place_design failed" $widthCol4 "" ]
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+  
+    if { ![catch {current_instance}] } {
+      write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    }
+    exit 42
+  } else {
+    write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
+  }
 }
 
 ##
@@ -143,23 +159,30 @@ if { $cloud_flow == "TRUE" } {
   set step      phys_opt_design
   set directive $phys_opt_directive
 }
-set logfile   $logs_dir/${step}.log
-set command   "phys_opt_design  -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start phys_opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-if { [catch "$command > $logfile" errMsg] } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: phys_opt_design failed" $widthCol4 "" ]
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
-
-  if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+if { ($impl_step == "PLACE") || ($impl_step == "ALL") } {
+  set logfile   $logs_dir/${step}.log
+  set command   "phys_opt_design  -directive $directive"
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start phys_opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  
+  if { [catch "$command > $logfile" errMsg] } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: phys_opt_design failed" $widthCol4 "" ]
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+  
+    if { ![catch {current_instance}] } {
+      write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    }
+    exit 42
+  } else {
+    write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
   }
-  exit 42
-} else {
-  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
 }
 
-
+## if impl_step == "ROUTE" then last dcp needs to be loaded
+if { ($impl_step == "ROUTE") } {
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload phys_opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  open_checkpoint $dcp_dir/${step}.dcp  >> $logfile
+}
 ##
 ## routing design
 if { $cloud_flow == "TRUE" } {
@@ -169,22 +192,24 @@ if { $cloud_flow == "TRUE" } {
   set step      route_design
   set directive $route_directive
 }
-set logfile   $logs_dir/${step}.log
-set command   "route_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-if { [catch "$command > $logfile" errMsg] } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: route_design failed" $widthCol4 "" ]
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
-
-  if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
+  set logfile   $logs_dir/${step}.log
+  set command   "route_design -directive $directive"
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  
+  if { [catch "$command > $logfile" errMsg] } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: route_design failed" $widthCol4 "" ]
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+  
+    if { ![catch {current_instance}] } {
+      write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    }
+    exit 42
+  } else {
+    write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
   }
-  exit 42
-} else {
-  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
 }
-
 
 ##
 ## physical optimizing routed design
@@ -195,22 +220,24 @@ if { $cloud_flow == "TRUE" } {
   set step      opt_routed_design
   set directive $opt_route_directive
 }
-set logfile   $logs_dir/${step}.log
-set command   "phys_opt_design  -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_routed_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-if { [catch "$command > $logfile" errMsg] } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
-
-  if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
+  set logfile   $logs_dir/${step}.log
+  set command   "phys_opt_design  -directive $directive"
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_routed_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  
+  if { [catch "$command > $logfile" errMsg] } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+  
+    if { ![catch {current_instance}] } {
+      write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    }
+    exit 42
+  } else {
+    write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
   }
-  exit 42
-} else {
-  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
 }
-
 
 ##
 ## generating reports
@@ -225,11 +252,16 @@ report_drc            -quiet -ruledeck bitstream_checks -name psl_fpga -file ${r
 ## checking timing
 ## Extract timing information, change ns to ps, remove leading 0's in number to avoid treatment as octal.
 set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir_prefix}timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
-if { [expr $TIMING_WNS >= 0 ] } {
+if { ($impl_step == "PLACE") } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Estimated Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+} elseif { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+}
+if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
+  if { [expr $TIMING_WNS >= 0 ] } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "TIMING OK" $widthCol4 "" ]
     set ::env(REMOVE_TMP_FILES) TRUE
-} elseif { [expr $TIMING_WNS < $timing_lablimit ] && ( $ila_debug != "TRUE" ) } {
+  } elseif { [expr $TIMING_WNS < $timing_lablimit ] && ( $ila_debug != "TRUE" ) } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: TIMING FAILED" $widthCol4 "" ]
     puts "---------------------------------------------------------------------------------------------"
     puts "-- The building of the image code has failed for timing reasons.                           --"
@@ -240,13 +272,14 @@ if { [expr $TIMING_WNS >= 0 ] } {
     puts "---------------------------------------------------------------------------------------------"
     set ::env(REMOVE_TMP_FILES) FALSE
     exit 42
-} else {
+  } else {
     if { $ila_debug == "TRUE" } {
         puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "WARNING: TIMING FAILED, but may be OK for lab use with ILA" $widthCol4 "" ]
     } else {
         puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "WARNING: TIMING FAILED, but may be OK for lab use" $widthCol4 "" ]
     }
     set ::env(REMOVE_TMP_FILES) FALSE
+  }
 }
 
 ##

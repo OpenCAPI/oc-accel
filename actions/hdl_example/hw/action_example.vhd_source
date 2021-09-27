@@ -150,7 +150,21 @@ entity action_example is
         axi_nvme_rid            : in std_logic_vector(0 downto 0);                                 -- only for NVME_USED=TRUE
         axi_nvme_ruser          : in std_logic_vector(0 downto 0);                                 -- only for NVME_USED=TRUE
         axi_nvme_wuser          : out std_logic_vector(0 downto 0);                                -- only for NVME_USED=TRUE
-
+        -- EXTRA LED IOs                                    -- only for AD9H3_LED_USED=TRUE
+        user_led_a0             : out std_logic;            -- only for AD9H3_LED_USED=TRUE
+        user_led_a1             : out std_logic;            -- only for AD9H3_LED_USED=TRUE
+        user_led_g0             : out std_logic;            -- only for AD9H3_LED_USED=TRUE
+        user_led_g1             : out std_logic;            -- only for AD9H3_LED_USED=TRUE
+        -- EXTRA EEPROM IOs                                 -- only for AD9H3_EEPROM_USED=TRUE
+        eeprom_scl_io           : in  std_logic;            -- only for AD9H3_EEPROM_USED=TRUE
+        eeprom_sda_io           : in  std_logic;            -- only for AD9H3_EEPROM_USED=TRUE
+        eeprom_wp               : out std_logic;            -- only for AD9H3_EEPROM_USED=TRUE
+        -- EXTRA AVR IOs                                    -- only for AD9H3_AVR_USED=TRUE
+        uc_avr_rx               : IN  STD_LOGIC;            -- only for AD9H3_AVR_USED=TRUE
+        uc_avr_tx               : OUT STD_LOGIC;            -- only for AD9H3_AVR_USED=TRUE
+        uc_avr_ck               : IN  STD_LOGIC;            -- only for AD9H3_AVR_USED=TRUE
+        --
+        --
         -- Ports of Axi Slave Bus Interface AXI_CTRL_REG
         axi_ctrl_reg_awaddr     : in std_logic_vector(C_AXI_CTRL_REG_ADDR_WIDTH-1 downto 0);
      -- axi_ctrl_reg_awprot : in std_logic_vector(2 downto 0);
@@ -361,8 +375,6 @@ architecture action_example of action_example is
         signal nvme_lba_count    : std_logic_vector (31 downto 0);          -- only for NVME_USED=TRUE 
         signal nvme_status       : std_logic_vector (31 downto 0);          -- only for NVME_USED=TRUE 
 
-
-
         function or_reduce (signal arg : std_logic_vector) return std_logic is
           variable result : std_logic;
 
@@ -379,7 +391,17 @@ begin
 
     int_ctx <= reg_0x20(CONTEXT_BITS - 1 downto 0);
     int_src <= reg_0x4c & reg_0x48;
-
+--
+--    User can define these values accordingly     -- only for AD9H3_LED_USED=TRUE
+        user_led_a0     <=   '0';                  -- only for AD9H3_LED_USED=TRUE
+        user_led_a1     <=   '0';                  -- only for AD9H3_LED_USED=TRUE
+        user_led_g0     <=   '0';                  -- only for AD9H3_LED_USED=TRUE
+        user_led_g1     <=   '0';                  -- only for AD9H3_LED_USED=TRUE
+--    User can define this value accordingly       -- only for AD9H3_EEPROM_USED=TRUE
+        eeprom_wp       <=   '0';                  -- only for AD9H3_EEPROM_USED=TRUE
+--    User can define this value accordingly       -- only for AD9H3_AVR_USED=TRUE
+        uc_avr_tx       <=   '0';                  -- only for AD9H3_AVR_USED=TRUE
+--
   ----
   ---- ILA core
   ----

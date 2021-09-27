@@ -93,6 +93,8 @@ if [ $card_type -eq "31" ]; then
    echo "AD9V3 card"
 elif [ $card_type -eq "32" ]; then
    echo "AD9H3 card"
+elif [ $card_type -eq "35" ]; then
+   echo "AD9H335 card"
 elif [ $card_type -eq "33" ]; then
    echo "AD9H7 card"
 elif [ $card_type -eq "34" ]; then
@@ -102,7 +104,8 @@ else
 fi
 
 #for HBM cards
-if [ $card_type -eq "32" ] || [ $card_type -eq "33" ]; then
+if [ $card_type -eq "32" ] || [ $card_type -eq "33" ] || [ $card_type -eq "35" ]; then
+  echo -n "HBM card detected"
   echo -n "Number of AXI HBM IF: "
   hbm_if_num_hexa=`snap_peek -C ${snap_card} 0x30 |grep 30|cut -c22-23 || exit 1;`
   hbm_if_num=$(printf '%#x' "0x$hbm_if_num_hexa")
@@ -119,6 +122,11 @@ fi
 function test_memcopy {
     local size=$1
     local noirq=$2
+
+    if [ ! -f "${ACTION_ROOT}/sw/snap_hbm_memcopy" ]; then
+       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make apps')"
+       exit 1
+    fi
 
     dd if=/dev/urandom of=${size}_A.bin count=1 bs=${size} 2> dd.log
 
@@ -153,6 +161,8 @@ function test_memcopy {
 rm -f snap_hbm_memcopy.log
 touch snap_hbm_memcopy.log
 
+echo "-----------------------------------------------------"
+echo "Running simple host memory test in \"$duration\" mode..."
 if [ "$duration" = "SHORT" ]; then
 
     for (( size=64; size<128; size*=2 )); do
@@ -165,16 +175,23 @@ if [ "$duration" = "NORMAL" ]; then
     test_memcopy ${size}
     done
 fi
-
 echo
-#echo "Print time: (small size doesn't represent performance)"
+echo
+echo "Summary of execution times"
+echo "NOTE : In simulation reported times are greater compared to POWER actual operation"
 grep "memcopy of" snap_hbm_memcopy.log
 echo
+echo "End of simple host memory test in \"$duration\" mode."
+echo "----------------------------------------------------"
 
 #### MEMCOPY to and from HBM #############
 
 function test_memcopy_with_hbm {
     local size=$1
+    if [ ! -f "${ACTION_ROOT}/sw/snap_hbm_memcopy" ]; then
+       echo "ERROR: please compile 'snap_hbm_memcopy' before execution (or run 'make apps')"
+       exit 1
+    fi
 
     dd if=/dev/urandom of=${size}_B.bin count=1 bs=${size} 2> dd.log
 
@@ -237,7 +254,9 @@ function test_memcopy_with_hbm {
 ################ TEST Begins ##################
 rm -f snap_memcopy_with_hbm.log
 touch snap_memcopy_with_hbm.log
-
+echo
+echo "----------------------------------------------------"
+echo "Running HBM tests in \"$duration\" mode..."
 if [ "$duration" = "SHORT" ]; then
     for (( size=64; size<512; size*=2 )); do
     test_memcopy_with_hbm ${size}
@@ -251,6 +270,12 @@ if [ "$duration" = "NORMAL" ]; then
 fi
 
 echo
-#echo "Print time: (small size doesn't represent performance)"
+echo
+echo "Summary of execution times"
+echo "NOTE, in simulation reported times are greater compared to POWER actual operation"
 grep "memcopy of" snap_memcopy_with_hbm.log
 echo
+echo
+echo "End of HBM memory test in \"$duration\" mode."
+echo "----------------------------------------------------"
+

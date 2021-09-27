@@ -303,22 +303,20 @@ set directive Explore
 
 set logfile   $logs_dir/${step}.log
 set command   "phys_opt_design  -directive $directive"
-## Skipping opt_routed step which is too long
-##puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     SKIPPING  opt_routed" $widthCol3 "" $widthCol4 ""]
-##if { [catch "$command > $logfile" errMsg] } {
-##  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
-##  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
+if { [catch "$command > $logfile" errMsg] } {
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
-##  if { ![catch {current_instance}] } {
-##    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
-##  }
-##  exit 42
-##} else {
+  if { ![catch {current_instance}] } {
+    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+  }
+  exit 42
+} else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     generating ${oc_action_name_routed_dcp}"]
   write_checkpoint -force $dcp_dir/${oc_action_name_routed_dcp} >> $logfile
-##}
+}
 
 ##----------------
 # lock design

@@ -39,20 +39,10 @@ set bd_name  hbm_top
 # _______________________________________________________________________________
 # In this file, we define all the logic to have independent 256MB/2Gb memories
 # each with an independent AXI interfaces which will be connected to the action
-# Default is hbm_axi_if_num = 12 interfaces
-# TO increase/decrease the number of memory needed, just look to #CHANGE_HBM_INTERFACES_NUMBER
-# param and 1) change in menu the HBM_AXI_IF_NUM with a value between 1 and 32. 
-# and 2) set the right params enabling AXI and MC
-# -------------------------------------------------------
-# If you modify the number of AXI interfaces, don't forget to modify also :
-#   actions/hls_hbm_memcopy/hw/hw_action_memcopy.cpp
-#   hardware/hdl/hls/action_wrapper.v
-#   hardware/hdl/core/framework_afu.v
-#   --> follow HBM names <--
+# The number of HBM interfaces is selected by the Kconfig menu
+# It needs to be in sync with the param #define HBM_AXI_IF_NB which should be 
+# defined in actions/hls_hbm_memcopy_1024/hw/hw_action_hbm_memcopy_1024.cpp
 # _______________________________________________________________________________
-#CHANGE_HBM_INTERFACES_NUMBER
-#set  HBM_MEM_NUM 12
-##This number is now taken from the Kmenu => hbm_axi_if_num
 
 # Create HBM project
 create_project   $prj_name $root_dir/ip/hbm -part $fpga_part -force >> $log_file
@@ -94,7 +84,7 @@ set_property -dict [list CONFIG.CONST_WIDTH {32} CONFIG.CONST_VAL {0}] [get_bd_c
 #====================
 #create the clocks and the reset signals for the design
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.1 refclk_bufg_apb_clk
-set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {2}] [get_bd_cells refclk_bufg_apb_clk]
+set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV} CONFIG.C_BUFGCE_DIV {4}] [get_bd_cells refclk_bufg_apb_clk]
 
 #====================
 connect_bd_net [get_bd_pins constant_1_zero/dout] [get_bd_pins refclk_bufg_apb_clk/BUFGCE_CLR]
@@ -110,6 +100,7 @@ set port [create_bd_port -dir I CRESETN]
 #LEFT stack is used for SNAP/CAPI2.0 since BSP/PSL logic is using right resources of the FPGA
 #RIGHT stack is used for OC-Accel/OCAPI3.0 since TLX/DLX logic is using left resources of the FPGA
 set cell [create_bd_cell -quiet -type ip -vlnv {xilinx.com:ip:hbm:*} hbm]
+         #create_bd_cell -type ip -vlnv xilinx.com:ip:hbm:1.0 hbm
 
 #Common params for the HBM not depending on the number of memories enabled
 # The reference clock provided to HBM is AXI clock
@@ -127,12 +118,12 @@ set_property -dict [list                               \
   CONFIG.USER_XSDB_INTF_EN {FALSE}                     \
   ] $cell >> $log_file
 
-
+# if less or equal than 16 HBM then 1 stack used
 if { $hbm_axi_if_num <= 16 } {
   set_property -dict [list                               \
     CONFIG.USER_HBM_DENSITY {4GB}                        \
     CONFIG.USER_HBM_STACK {1}                            \
-    CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}  \
+    CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}              \
     ] $cell >> $log_file
     if { $fpga_card == "AD9H3" } {
     set_property -dict [list                             \
@@ -143,6 +134,7 @@ if { $hbm_axi_if_num <= 16 } {
       CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}          \
       ] $cell >> $log_file
     }
+# 2 stacks
 } else {
   set_property -dict [list                               \
      CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}           \
@@ -162,53 +154,54 @@ if { $hbm_axi_if_num <= 16 } {
      CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_1 {0x00001414}  \
      CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_1 {0x00000482}  \
      CONFIG.USER_MC_ENABLE_APB_01 {TRUE}                 \
-     CONFIG.USER_APB_PCLK_1 {100}                        \
-     CONFIG.USER_APB_PCLK_PERIOD_1 {10.0}                \
+     CONFIG.USER_APB_PCLK_1 {50}                         \
+     CONFIG.USER_APB_PCLK_PERIOD_1 {20.0}                \
+     CONFIG.USER_TEMP_POLL_CNT_1 {50000}                 \
     ] $cell >> $log_file
 
 } 
-# AXI clk is 200MHZ and is used as HBM_ref_clk 
-# AXI clk divided by 2 is used by APB_clock (50-100MHz)
+# AXI clk is 201.420MHZ and is used as HBM_ref_clk 
+# AXI clk divided by 3 is used by APB_clock (50-100MHz)
   set_property -dict [list                               \
-    CONFIG.USER_HBM_REF_CLK_0 {200}                      \
-    CONFIG.USER_HBM_REF_CLK_PS_0 {2500.00}               \
-    CONFIG.USER_HBM_REF_CLK_XDC_0 {5.00}                 \
-    CONFIG.USER_HBM_FBDIV_0 {18}                         \
-    CONFIG.USER_HBM_CP_0 {6}                             \
-    CONFIG.USER_HBM_RES_0 {9}                            \
-    CONFIG.USER_HBM_LOCK_REF_DLY_0 {20}                  \
-    CONFIG.USER_HBM_LOCK_FB_DLY_0 {20}                   \
-    CONFIG.USER_HBM_HEX_CP_RES_0 {0x00009600}            \
-    CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001414}   \
-    CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000482}   \
-    CONFIG.USER_HBM_TCK_0 {900}                          \
-    CONFIG.USER_HBM_TCK_0_PERIOD {1.1111111111111112}    \
-    CONFIG.USER_tRC_0 {0x2B}                             \
-    CONFIG.USER_tRAS_0 {0x1E}                            \
-    CONFIG.USER_tRCDRD_0 {0xD}                           \
+    CONFIG.USER_HBM_REF_CLK_0 {201}                      \
+    CONFIG.USER_HBM_REF_CLK_PS_0 {2487.56}               \
+    CONFIG.USER_HBM_REF_CLK_XDC_0 {4.98}                 \
+    CONFIG.USER_HBM_FBDIV_0 {17}                         \
+    CONFIG.USER_HBM_CP_0 {3}                             \
+    CONFIG.USER_HBM_RES_0 {6}                            \
+    CONFIG.USER_HBM_LOCK_REF_DLY_0 {19}                  \
+    CONFIG.USER_HBM_LOCK_FB_DLY_0 {19}                   \
+    CONFIG.USER_HBM_HEX_CP_RES_0 {0x00006300}            \
+    CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001313}   \
+    CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000442}   \
+    CONFIG.USER_HBM_TCK_0 {855}                          \
+    CONFIG.USER_HBM_TCK_0_PERIOD {1.1695906432748537}    \
+    CONFIG.USER_tRC_0 {0x29}                             \
+    CONFIG.USER_tRAS_0 {0x1D}                            \
+    CONFIG.USER_tRCDRD_0 {0xC}                           \
     CONFIG.USER_tRCDWR_0 {0x9}                           \
     CONFIG.USER_tRRDL_0 {0x4}                            \
     CONFIG.USER_tRRDS_0 {0x4}                            \
-    CONFIG.USER_tFAW_0 {0xF}                             \
-    CONFIG.USER_tRP_0 {0xD}                              \
-    CONFIG.USER_tWR_0 {0xF}                              \
+    CONFIG.USER_tFAW_0 {0xE}                             \
+    CONFIG.USER_tRP_0 {0xC}                              \
+    CONFIG.USER_tWR_0 {0xE}                              \
     CONFIG.USER_tXP_0 {0x7}                              \
-    CONFIG.USER_tRFC_0 {0xEA}                            \
-    CONFIG.USER_tRFCSB_0 {0x90}                          \
-    CONFIG.USER_tRREFD_0 {0x8}                           \
-    CONFIG.USER_APB_PCLK_0 {100}                         \
-    CONFIG.USER_APB_PCLK_PERIOD_0 {10.0}                 \
-    CONFIG.USER_TEMP_POLL_CNT_0 {100000}                 \
-    CONFIG.USER_HBM_REF_OUT_CLK_0 {1800}                 \
-    CONFIG.USER_MC0_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC1_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC2_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC3_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC4_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC5_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC6_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_MC7_REF_CMD_PERIOD {0x0DB6}              \
-    CONFIG.USER_DFI_CLK0_FREQ {450.000}                  \
+    CONFIG.USER_tRFC_0 {0xDF}                            \
+    CONFIG.USER_tRFCSB_0 {0x89}                          \
+    CONFIG.USER_tRREFD_0 {0x7}                           \
+    CONFIG.USER_APB_PCLK_0 {50}                          \
+    CONFIG.USER_APB_PCLK_PERIOD_0 {20.0}                 \
+    CONFIG.USER_TEMP_POLL_CNT_0 {50000}                  \
+    CONFIG.USER_HBM_REF_OUT_CLK_0 {1710}                 \
+    CONFIG.USER_MC0_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC1_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC2_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC3_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC4_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC5_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC6_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_MC7_REF_CMD_PERIOD {0x0D06}              \
+    CONFIG.USER_DFI_CLK0_FREQ {427.500}                  \
   ] $cell >> $log_file
  
 #===============================================================================
@@ -319,6 +312,9 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
     CONFIG.REG_B {10}                   \
     }  $cell
 
+
+
+
   #create the ports
   create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_p$i\_HBM
   set_property -dict [list \
@@ -351,11 +347,21 @@ for {set i 0} {$i < $hbm_axi_if_num} {incr i} {
   if { $i < 10} {
     connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_0$i\_ARESET_N]
     connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_0$i\_ACLK]
-    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
+  # AD9H7 cards require a different AXI name
+      if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2020.2") } {
+	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i\_RT]
+	 } else {
+        connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_0$i]
+	 }
   } else {
-    connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
-    connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
-    connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
+	connect_bd_net [get_bd_pins ARESETN] [get_bd_pins hbm/AXI_$i\_ARESET_N]
+        connect_bd_net [get_bd_pins axi4_to_axi3_$i/aclk] [get_bd_pins hbm/AXI_$i\_ACLK]
+
+       if { (($fpga_card != "AD9H7" && $fpga_card != "AD9H335") && $vivadoVer >= "2020.2") } {
+	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i\_RT]
+	 } else {
+	connect_bd_intf_net [get_bd_intf_pins axi_register_slice_$i\/M_AXI] [get_bd_intf_pins hbm/SAXI_$i]
+	}
   }
 }
 #--------------------- end loop ------------------

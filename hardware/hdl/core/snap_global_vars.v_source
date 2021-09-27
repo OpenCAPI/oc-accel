@@ -31,6 +31,10 @@
 `define AD9H3
 #endif
 
+#if defined(CONFIG_AD9H335)
+`define AD9H3
+#endif
+
 #if defined(CONFIG_AD9H7)
 `define AD9H7
 #endif
@@ -81,6 +85,22 @@
 
 #if defined(CONFIG_ENABLE_EMAC_V3_1)
 `define ENABLE_EMAC_V3_1
+#endif
+
+#if defined(CONFIG_HLS_VITIS_USED)
+`define HLS_VITIS_USED
+#endif
+
+#if defined(CONFIG_ENABLE_9H3_LED)
+`define ENABLE_9H3_LED
+#endif
+
+#if defined(CONFIG_ENABLE_9H3_EEPROM)
+`define ENABLE_9H3_EEPROM
+#endif
+
+#if defined(CONFIG_ENABLE_9H3_AVR)
+`define ENABLE_9H3_AVR
 #endif
 
 #if defined(CONFIG_ACTION_HALF_WIDTH)

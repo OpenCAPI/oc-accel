@@ -91,6 +91,19 @@ while [ -z "$SETUP_DONE" ]; do
     echo  "Vivado version          is set to: `vivado -version|head -n1`"
   fi
 
+VIVADO_RELEASE=`vivado -version | grep Vivado | cut -d '(' -f1 | tr -d "Vivado "`
+VIVADO_MAJOR_RELEASE=`echo ${VIVADO_RELEASE} |cut -d '.' -f1`
+VIVADO_MINOR_RELEASE=`echo ${VIVADO_RELEASE} |cut -d '.' -f2`
+if [ "$VIVADO_MAJOR_RELEASE" -ge "2020" ]; then
+   if [ "$VIVADO_MINOR_RELEASE" -gt "1" ]; then
+      echo  "HLS tool                is set to: `vitis_hls -version |head -n1`"
+   else
+      #echo  "Using Vivado HLS (could use Vitis HLS)"
+      echo  "HLS tool                is set to: `vivado_hls -version |head -n1`"
+   fi
+else
+   echo  "HLS tool                is set to: `vivado_hls -version |head -n1`"
+fi
 
   ####### checking path to OCSE (only if simulation is enabled)
   # Note: SIMULATOR is defined via snap_config
@@ -296,6 +309,11 @@ while [ -z "$SETUP_DONE" ]; do
     #echo "=====Ethernet setup===================================="
       SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating EMAC with xsim is not supported by Xilinx, but you can build an image!"
       SETUP_INFO="$SETUP_INFO\n To simulate a design with EMAC, it is recommended to use xcelium simulator (license needed) or use the Ethernet Loop-back option."
+  fi
+
+  # Note: USERCODE requested
+  if [ "$ENABLE_USERCODE" == "y" ]; then
+      echo "USERCODE          has been set to : $USERCODE";
   fi
 
 

@@ -64,6 +64,11 @@ export PATH=$PATH:${SNAP_ROOT}/software/tools:${ACTION_ROOT}/sw
 ####HELLOWORLD_512 ##########################################################
 
 function test_helloworld_512 {
+    if [ ! -f "${ACTION_ROOT}/sw/snap_helloworld_512" ]; then
+       echo "ERROR: please compile 'snap_helloworld_512' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     cmd="echo \"Hello world. This is my first CAPI SNAP experience. It's real fun.\" > tin"
     echo "cmd: ${cmd}"
     eval ${cmd}

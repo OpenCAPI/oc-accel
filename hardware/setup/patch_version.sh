@@ -36,13 +36,15 @@ SRC="define BUILD_DATE_DAT 64'h.*"
 DST="define BUILD_DATE_DAT 64'h0000_${SNAP_BUILD_DATE}"
 sed -i "s/$SRC/$DST/" $1/$2
 
-# Manually Patching with USERCODE
-SRC="define USERCODE 64'h.*"
-# usercode should be less than 64 bit long
-#usercode=`echo 0123456789ABCDEF`
-usercode=`echo 0000000000000000`
-DST="define USERCODE 64'h${usercode}"
-sed -i "s/$SRC/$DST/" $1/$2
+# Manually Patching with USERCODE if required
+if [ -z $FPGACARD ]; then
+  SRC="define USERCODE 64'h.*"
+  # usercode should be less than 64 bit long
+  #usercode=`echo 0123456789ABCDEF`
+  usercode=`echo 0000000000000000`
+  DST="define USERCODE 64'h${usercode}"
+  sed -i "s/$SRC/$DST/" $1/$2
+fi
 
 if [ "$USE_PRFLOW" == "TRUE" ]; then
 # Manually Patching with a random PRCODE
@@ -64,6 +66,9 @@ if [ "$FPGACARD" == "AD9V3" ]; then
   SDRAM_SIZE="2000"
 elif [ "$FPGACARD" == "AD9H3" ]; then
   CARD_TYPE="32"
+  SDRAM_SIZE="0"
+elif [ "$FPGACARD" == "AD9H335" ]; then
+  CARD_TYPE="35"
   SDRAM_SIZE="0"
 elif [ "$FPGACARD" == "AD9H7" ]; then
   CARD_TYPE="33"

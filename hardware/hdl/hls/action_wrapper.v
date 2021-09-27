@@ -1599,20 +1599,22 @@ module action_wrapper (
 `ifdef ENABLE_ETHERNET
 `ifndef ENABLE_ETH_LOOP_BACK
 // we define ethernet pins only if connected to an emac (no loopback)
-   input [ 511 : 0]                        din_eth_TDATA    ,
-   input                                   din_eth_TVALID   ,
-   output                                  din_eth_TREADY   ,
-   input [  63 : 0]                        din_eth_TKEEP    ,
-   input [   0 : 0]                        din_eth_TUSER    ,
-   input                                   din_eth_TLAST    ,
+   input [ 511 : 0]                        din_eth_tdata    ,
+   input                                   din_eth_tvalid   ,
+   output                                  din_eth_tready   ,
+   input [  63 : 0]                        din_eth_tkeep    ,
+   input [   0 : 0]                        din_eth_tuser    ,
+   input                                   din_eth_tlast    ,
 // Enable for ethernet TX
-   output [ 511 : 0]                        dout_eth_TDATA    ,
-   output                                   dout_eth_TVALID   ,
-   input                                    dout_eth_TREADY   ,
-   output [  63 : 0]                        dout_eth_TKEEP    ,
-   output [   0 : 0]                        dout_eth_TUSER    ,
-   output                                   dout_eth_TLAST    ,
-   output                                   eth_reset         ,
+   output [ 511 : 0]                        dout_eth_tdata    ,
+   output                                   dout_eth_tvalid   ,
+   input                                    dout_eth_tready   ,
+   output [  63 : 0]                        dout_eth_tkeep    ,
+   output [   0 : 0]                        dout_eth_tuser    ,
+   output                                   dout_eth_tlast    ,
+   output                                   eth_rx_fifo_reset ,
+   input                                    eth_stat_rx_status,
+   input                                    eth_stat_rx_aligned,
 `endif
 `endif
     //
@@ -3415,23 +3417,30 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
 `endif
     // ETHERNET interface
 `ifdef ENABLE_ETHERNET
-`ifndef ENABLE_ETH_LOOP_BACK
+ `ifndef ENABLE_ETH_LOOP_BACK
 //ethernet enabled without loopback
-    .din_eth_TDATA                (din_eth_TDATA            ) ,
-    .din_eth_TVALID               (din_eth_TVALID           ) ,
-    .din_eth_TREADY               (din_eth_TREADY           ) ,
-    .din_eth_TKEEP                (din_eth_TKEEP            ) ,
-    .din_eth_TUSER                (din_eth_TUSER            ) ,
-    .din_eth_TLAST                (din_eth_TLAST            ) ,
+    .din_eth_TDATA                (din_eth_tdata            ) ,
+    .din_eth_TVALID               (din_eth_tvalid           ) ,
+    .din_eth_TREADY               (din_eth_tready           ) ,
+    .din_eth_TKEEP                (din_eth_tkeep            ) ,
+    .din_eth_TUSER                (din_eth_tuser            ) ,
+    .din_eth_TLAST                (din_eth_tlast            ) ,
 //Enable for ethernet TX
-    .dout_eth_TDATA               (dout_eth_TDATA           ) ,
-    .dout_eth_TVALID              (dout_eth_TVALID          ) ,
-    .dout_eth_TREADY              (dout_eth_TREADY          ) ,
-    .dout_eth_TKEEP               (dout_eth_TKEEP           ) ,
-    .dout_eth_TUSER               (dout_eth_TUSER           ) ,
-    .dout_eth_TLAST               (dout_eth_TLAST           ) ,
-    .eth_reset_V                  (eth_reset                ) ,
-`else
+    .dout_eth_TDATA               (dout_eth_tdata           ) ,
+    .dout_eth_TVALID              (dout_eth_tvalid          ) ,
+    .dout_eth_TREADY              (dout_eth_tready          ) ,
+    .dout_eth_TKEEP               (dout_eth_tkeep           ) ,
+    .dout_eth_TUSER               (dout_eth_tuser           ) ,
+    .dout_eth_TLAST               (dout_eth_tlast           ) ,
+  `ifdef HLS_VITIS_USED
+    .eth_reset                    (eth_rx_fifo_reset        ) ,
+    .din_eth_TSTRB                (64'b0                    ) ,
+    .dout_eth_TSTRB               (                         ) ,
+  `else
+    .eth_reset_V                  (eth_rx_fifo_reset        ) ,
+  `endif
+//ethernet enabled with loopback
+ `else
     .din_eth_TDATA                (dwrap_eth_TDATA          ) ,
     .din_eth_TVALID               (dwrap_eth_TVALID         ) ,
     .din_eth_TREADY               (                         ) ,
@@ -3446,15 +3455,21 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .dout_eth_TKEEP               (dwrap_eth_TKEEP          ) ,
     .dout_eth_TUSER               (dwrap_eth_TUSER          ) ,
     .dout_eth_TLAST               (dwrap_eth_TLAST[0]       ) ,
+  `ifdef HLS_VITIS_USED
+    .din_eth_TSTRB                (64'b0                    ) ,
+    .dout_eth_TSTRB               (                         ) ,
+    .eth_reset                    (                         ) ,
+  `else
     .eth_reset_V                  (                         ) ,
+  `endif
 //Enable ethernet with loopback
-`endif
+ `endif
 `endif
     //
-    .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr    ) ,
+    .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr[8:0]    ) ,
     .s_axi_ctrl_reg_arready       (s_axi_ctrl_reg_arready   ) ,
     .s_axi_ctrl_reg_arvalid       (s_axi_ctrl_reg_arvalid   ) ,
-    .s_axi_ctrl_reg_awaddr        (s_axi_ctrl_reg_awaddr    ) ,
+    .s_axi_ctrl_reg_awaddr        (s_axi_ctrl_reg_awaddr[8:0]    ) ,
     .s_axi_ctrl_reg_awready       (s_axi_ctrl_reg_awready   ) ,
     .s_axi_ctrl_reg_awvalid       (s_axi_ctrl_reg_awvalid   ) ,
     .s_axi_ctrl_reg_bready        (s_axi_ctrl_reg_bready    ) ,

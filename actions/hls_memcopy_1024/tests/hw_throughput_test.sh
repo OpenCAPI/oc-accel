@@ -107,6 +107,11 @@ fi
 
 #    echo "Doing snap_memcopy benchmarking with" ${size} "bytes transfers ... "
 
+    if [ ! -f "${ACTION_ROOT}/sw/snap_memcopy" ]; then
+       echo "ERROR: please compile 'snap_memcopy' before execution (or run 'make apps')"
+       exit 1
+    fi
+
     echo -n "Read from Host Memory to FPGA ... "
     cmd="snap_memcopy -C${snap_card} ${noirq}     \
         -i temp_A.bin    >>    \
@@ -192,7 +197,7 @@ if [ "$duration" = "INCR" ]; then
   # -lt 32 means 2GB
   # -lt 33 means 4GB
   # -lt 34 means 8GB
-    while [ $exp -lt 29 ]
+    while [ $exp -lt 31 ]
     do
         test_memcopy ${size}
         exp=$(($exp + 1))

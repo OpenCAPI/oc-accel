@@ -264,6 +264,23 @@ module framework_afu (
     , output                 gt_tx_gt_port_3_p
       `endif
    `endif
+
+`ifdef ENABLE_9H3_LED
+     , output                 user_led_a0
+     , output                 user_led_a1
+     , output                 user_led_g0
+     , output                 user_led_g1
+`endif
+`ifdef ENABLE_9H3_EEPROM
+     , inout                  eeprom_scl
+     , inout                  eeprom_sda
+     , output                 eeprom_wp
+`endif 
+`ifdef ENABLE_9H3_AVR
+    , input                  avr_rx
+    , output                 avr_tx
+    , input                  avr_ck
+`endif
   );
 
   // // ******************************************************************************
@@ -585,6 +602,8 @@ module framework_afu (
   wire      [0:0] eth1_tx_tuser                       ;
 
   wire            eth_m_axis_rx_rst                   ;
+  wire            eth_stat_rx_status                  ;
+  wire            eth_stat_rx_aligned                 ;
 `endif
 `endif
 
@@ -708,7 +727,7 @@ module framework_afu (
       .desc_cfg_echo_cmd_valid                     ( desc_cfg_echo_cmd_valid         ) , // output
 
       // // Error indicator
-      .err_unimplemented_addr                      ( err_unimplemented_addr          ) // // output
+      .err_unimplemented_addr                      ( vpd_err_unimplemented_addr          ) // // output
 
     );
 
@@ -1054,22 +1073,44 @@ module framework_afu (
 `ifdef ENABLE_ETHERNET
 `ifndef ENABLE_ETH_LOOP_BACK
       //ethernet enabled without loopback
-      .din_eth_TDATA                      ( eth1_rx_tdata              ) ,
-      .din_eth_TVALID                     ( eth1_rx_tvalid             ) ,
-      .din_eth_TREADY                     ( eth1_rx_tready             ) ,
-      .din_eth_TKEEP                      ( eth1_rx_tkeep              ) ,
-      .din_eth_TUSER                      ( eth1_rx_tuser              ) ,
-      .din_eth_TLAST                      ( eth1_rx_tlast              ) ,
+      .din_eth_tdata                      ( eth1_rx_tdata              ) ,
+      .din_eth_tvalid                     ( eth1_rx_tvalid             ) ,
+      .din_eth_tready                     ( eth1_rx_tready             ) ,
+  `ifndef HLS_VITIS_USED
+      .din_eth_tkeep                      ( eth1_rx_tkeep              ) ,
+      .din_eth_tuser                      ( eth1_rx_tuser              ) ,
+      .din_eth_tlast                      ( eth1_rx_tlast              ) ,
+  `endif
       //Enable for ethernet TX
-      .dout_eth_TDATA                     ( eth1_tx_tdata             ) ,
-      .dout_eth_TVALID                    ( eth1_tx_tvalid            ) ,
-      .dout_eth_TREADY                    ( eth1_tx_tready            ) ,
-      .dout_eth_TKEEP                     ( eth1_tx_tkeep             ) ,
-      .dout_eth_TUSER                     ( eth1_tx_tuser             ) ,
-      .dout_eth_TLAST                     ( eth1_tx_tlast             ) ,
-      .eth_reset                          ( eth_m_axis_rx_rst         ) ,
+      .dout_eth_tdata                     ( eth1_tx_tdata             ) ,
+      .dout_eth_tvalid                    ( eth1_tx_tvalid            ) ,
+      .dout_eth_tready                    ( eth1_tx_tready            ) ,
+  `ifndef HLS_VITIS_USED
+      .dout_eth_tkeep                     ( eth1_tx_tkeep             ) ,
+      .dout_eth_tuser                     ( eth1_tx_tuser             ) ,
+      .dout_eth_tlast                     ( eth1_tx_tlast             ) ,
+   `endif
+      .eth_rx_fifo_reset                  ( eth_m_axis_rx_rst         ) ,
+      .eth_stat_rx_status                 ( eth_stat_rx_status        ) ,
+      .eth_stat_rx_aligned                ( eth_stat_rx_aligned       ) ,
 `endif
 `endif
+`ifdef ENABLE_9H3_LED
+      .user_led_a0     ( user_led_a0        ),
+      .user_led_a1     ( user_led_a1        ),
+      .user_led_g0     ( user_led_g0        ),
+      .user_led_g1     ( user_led_g1        ),
+`endif
+`ifdef ENABLE_9H3_EEPROM
+      .eeprom_scl_io   ( eeprom_scl         ),
+      .eeprom_sda_io   ( eeprom_sda         ),
+      .eeprom_wp       ( eeprom_wp          ),
+`endif
+`ifdef ENABLE_9H3_AVR
+      .uc_avr_rx       ( avr_rx             ),
+      .uc_avr_tx       ( avr_tx             ),
+      .uc_avr_ck       ( avr_ck             ),
+ `endif
 
   `ifdef ENABLE_ETHERNET
   `ifndef ENABLE_ETH_LOOP_BACK
@@ -1307,22 +1348,27 @@ eth_100G eth_100G_0
     `endif
 
       .m_axis_rx_tdata             ( eth1_rx_tdata                 ),
+      .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
+      .m_axis_rx_tready            ( eth1_rx_tready                ),
+  `ifndef HLS_VITIS_USED
       .m_axis_rx_tkeep             ( eth1_rx_tkeep                 ),
       .m_axis_rx_tlast             ( eth1_rx_tlast                 ),
-      .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
       .m_axis_rx_tuser             ( eth1_rx_tuser                 ),
-      .m_axis_rx_tready            ( eth1_rx_tready                ),
-      .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
+
       .s_axis_tx_tkeep             ( eth1_tx_tkeep                 ),
       .s_axis_tx_tlast             ( eth1_tx_tlast                 ),
-      .s_axis_tx_tvalid            ( eth1_tx_tvalid                ),
       .s_axis_tx_tuser             ( eth1_tx_tuser                 ),
+   `endif
+      .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
+      .s_axis_tx_tvalid            ( eth1_tx_tvalid                ),
       .s_axis_tx_tready            ( eth1_tx_tready                ),
 
       .i_sys_reset                 ( eth_rst                       ),
       .i_core_rx_reset             ( 1'b0                          ),
       .i_core_tx_reset             ( 1'b0                          ),
       .m_axis_rx_reset             ( eth_m_axis_rx_rst             ),
+      .o_stat_rx_status            ( eth_stat_rx_status            ),
+      .o_stat_rx_aligned           ( eth_stat_rx_aligned           ),
       .i_capi_clk                  ( clock_afu                     ),
 
       .i_ctl_rx_enable             ( 1'b1                          ),
