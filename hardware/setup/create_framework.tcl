@@ -294,9 +294,10 @@ if { $hbm_used == TRUE } {
 
 
   add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd  >> $log_file
-  #SR#10523711 - disable the hbm_ip.xdc to remove an automatically inserted clock constraint
-  set_property IS_ENABLED false [get_files $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/par/hbm_ip.xdc]
-
+  if { $bram_used != TRUE } {
+    #SR#10523711 - disable the hbm_ip.xdc to remove an automatically inserted clock constraint
+    set_property IS_ENABLED false [get_files $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/par/hbm_ip.xdc]
+  }
   export_ip_user_files -of_objects  [get_files  $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
 
   #puts "                        adding HBM initialization files "
