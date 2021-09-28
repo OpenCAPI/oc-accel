@@ -641,7 +641,7 @@ clean:
 	@echo -e "                        sim files" 1>/dev/null 2>/dev/null;
 	@$(RM) -r sim/ies sim/xsim sim/xsim.dir sim/modelsim sim/questa sim/xcelium
 	@echo -e "                        log files" 1>/dev/null 2>/dev/null;
-	@$(RM) -r logs
+	@$(RM) -r logs sim/xsim*.log sim/xsim*.jou
 	@echo -e "                        action / application" 1>/dev/null 2>/dev/null;
 	@$(RM) $(ACTION_ROOT)/hw/vhdl
 	@if [ -e "$(ACTION_ROOT)/Makefile" ]; then	    \
