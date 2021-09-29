@@ -60,6 +60,9 @@ SIM_XSIM=y
 SIMULATOR="xsim"
 DENALI_USED="FALSE"
 OCSE_PATH="../ocse"
+AD9H3_LED_USED="FALSE"
+AD9H3_EEPROM_USED="FALSE"
+AD9H3_AVR_USED="FALSE"
 
 #
 # ================= Advanced Options: =================
@@ -77,7 +80,9 @@ Action_clock_200MHz=y
 # Action_clock_350MHz is not set
 # Action_clock_400MHz is not set
 USER_CLOCK_FREQ=200
-HLS_CLOCK_PERIOD_CONSTRAINT="4ns"
+HLS_CLOCK_PERIOD_CONSTRAINT="5ns"
+# ENABLE_PRFLOW is not set
+USE_PRFLOW="FALSE"
 # ENABLE_ILA is not set
 ILA_DEBUG="FALSE"
 CLOUD_USER_FLOW="FALSE"
@@ -88,3 +93,4 @@ ODMA_ST_MODE_USED="FALSE"
 ODMA_512_USED="FALSE"
 ENABLE_FLASH=y
 FLASH_USED="TRUE"
+# ENABLE_USERCODE is not set
