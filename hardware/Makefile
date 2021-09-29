@@ -220,7 +220,11 @@ snap_preprocess: snap_preprocess_start
 	@$(MAKE) -s snap_preprocess_execute
 
 patch_version:
-	@echo -e "                        patching OC-Accel version, build date registers and PR code"; \
+	@if [ "$(USE_PRFLOW)" != "TRUE" ]; then \
+	       echo -e "                        patching OC-Accel version, build date registers"; \
+	else \
+	       echo -e "                        patching OC-Accel version, build date registers and PR code"; \
+	fi
 	$(SNAP_HARDWARE_ROOT)/setup/patch_version.sh $(SNAP_HDL_CORE) snap_global_vars.v
 
 
