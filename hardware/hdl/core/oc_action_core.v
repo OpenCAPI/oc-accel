@@ -163,6 +163,24 @@
     , output                 gt_tx_gt_port_3_p
    `endif
    `endif
+
+   `ifdef ENABLE_9H3_LED
+     , output                 user_led_a0
+     , output                 user_led_a1
+     , output                 user_led_g0
+     , output                 user_led_g1
+   `endif
+   `ifdef ENABLE_9H3_EEPROM
+     , inout                  eeprom_scl_io
+     , inout                  eeprom_sda_io
+     , output                 eeprom_wp
+   `endif
+   `ifdef ENABLE_9H3_AVR
+    , input                  uc_avr_rx
+    , output                 uc_avr_tx
+    , input                  uc_avr_ck
+   `endif
+
   );
 
 
@@ -3956,6 +3974,24 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
       .eth_reset                          ( eth_m_axis_rx_rst         ) ,
 `endif
 `endif
+
+`ifdef ENABLE_9H3_LED
+      .user_led_a0                        ( user_led_a0                ),
+      .user_led_a1                        ( user_led_a1                ),
+      .user_led_g0                        ( user_led_g0                ),
+      .user_led_g1                        ( user_led_g1                ),
+`endif
+`ifdef ENABLE_9H3_EEPROM
+      .eeprom_scl_io                      ( eeprom_scl_io              ),
+      .eeprom_sda_io                      ( eeprom_sda_io              ),
+      .eeprom_wp                          ( eeprom_wp                  ),
+`endif
+`ifdef ENABLE_9H3_AVR
+      .uc_avr_rx                          ( uc_avr_rx                  ),
+      .uc_avr_tx                          ( uc_avr_tx                  ),
+      .uc_avr_ck                          ( uc_avr_ck                  ),
+ `endif
+
       //
       // AXI Control Register Interface
       .s_axi_ctrl_reg_araddr              ( lite_conv2act_araddr       ) ,
