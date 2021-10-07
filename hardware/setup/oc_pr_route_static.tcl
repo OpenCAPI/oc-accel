@@ -104,7 +104,7 @@ if { $fpgacard == "AD9V3" } {
    resize_pblock [get_pblocks pblock_dynamic_PR] -remove CLOCKREGION_X3Y1 >> $logfile
 
 #---------------------------------------
-} elseif { $fpgacard == "AD9H3" } {
+} elseif { ($fpgacard == "AD9H3") || ($fpgacard == "AD9H335") } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
 
    puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_action_name_synth_dcp}"]
@@ -113,25 +113,33 @@ if { $fpgacard == "AD9V3" } {
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
 
-   #SR#10523711 - required to correct timing closure even after removing hbm_ip.xdc constraints file
-   #This value is created by the HBM bd which generates the hbm_ip.xdc
-   #This file hbm_ip.xdc is disabled in create_framework.tcl by the command set_property IS_ENABLED false
-   set_property LOC BLI_HBM_AXI_INTF_X17Y0 [get_cells oc_func/fw_afu/action_core_i/hbm_top_wrapper_i/hbm_top_i/hbm/inst/ONE_STACK.u_hbm_top/ONE_STACK_HBM.hbm_one_stack_intf]
+   if { $fpgacard == "AD9H3" } {
+     #SR#10523711 - required to correct timing closure even after removing hbm_ip.xdc constraints file
+     #This value is created by the HBM bd only for the 9H3 card which generates the hbm_ip.xdc
+     #This file hbm_ip.xdc is disabled in create_framework.tcl by the command set_property IS_ENABLED false
+     set_property LOC BLI_HBM_AXI_INTF_X17Y0 [get_cells oc_func/fw_afu/action_core_i/hbm_top_wrapper_i/hbm_top_i/hbm/inst/ONE_STACK.u_hbm_top/ONE_STACK_HBM.hbm_one_stack_intf]
+   }
 
-   ## Settings for a minimal dynamic area
-   ##resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y0 >> $logfile
-   ##resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X5Y0:CLOCKREGION_X7Y3 >> $logfile
-   ###remove CONFIG_SITE in X7Y1 for ICAPE3
-   ##resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
-   ###remove IOB_X0Y2 in X4Y0 used by ocse IBUF
-   ##resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y2} >> $logfile
+   # Static zone for 9H3 is in SLR0
+   #     ----------------------------------
+   # Y3: |   |   |   |   ||   |   |   |   |
+   # Y2: |   |   |   |   ||   |   |   |   |
+   # Y1: | X | X | X |   ||   |   |   |   |
+   # Y0: | X | X |   |   ||   |   |   |   | SLR0
+   #     ----------------------------------
+   #      X0: X1: X2: X3:  X4: X5: X6: X7: 
 
-   # Settings for a maximal dynamic area
-   # functionally correct - works with 16HBM but seems not optmized
+   # Static zone for 9H335 is 9H3's + SLR1 (above SLR0)
+   if { $fpgacard == "AD9H335" } {
+     # add SLR1 (top of the FPGA)
+     resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y4:CLOCKREGION_X7Y7 >> $logfile
+   }
    # right side of the FPGA
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
-   # add 3 blocks from bottom left
-   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X1Y1:CLOCKREGION_X3Y1 >> $logfile
+   # add 2 blocks from bottom left
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X2Y0:CLOCKREGION_X3Y0 >> $logfile
+   # top 2 lines of the FPGA
+   resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X3Y1:CLOCKREGION_X3Y1 >> $logfile
    # top 2 lines of the FPGA
    resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
    #remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
@@ -139,20 +147,6 @@ if { $fpgacard == "AD9V3" } {
    #remove CONFIG_SITE in X7Y1 for ICAPE3
    resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
    resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
-
-#16 HBM trying to optimize
-
-# right side of the FPGA
-#resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X4Y0:CLOCKREGION_X7Y3 >> $logfile
-# add 3 blocks from bottom left
-#resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X1Y0:CLOCKREGION_X3Y0 >> $logfile
-# top 2 lines of the FPGA
-#resize_pblock [get_pblocks pblock_dynamic_PR] -add CLOCKREGION_X0Y2:CLOCKREGION_X7Y3 >> $logfile
-#remove IOB in X4Y0 and X4Y1 used by bsp/FLASH and bsp/dlx_phy
-#resize_pblock [get_pblocks pblock_dynamic_PR] -remove {IOB_X0Y52:IOB_X0Y155} >> $logfile
-#remove CONFIG_SITE in X7Y1 for ICAPE3
-#resize_pblock [get_pblocks pblock_dynamic_PR] -remove {CONFIG_SITE_X0Y0:CONFIG_SITE_X0Y0 } >> $logfile
-#resize_pblock [get_pblocks pblock_dynamic_PR] -add HBM_REF_CLK_X0Y0:HBM_REF_CLK_X0Y1 >> $logfile
 
 
 

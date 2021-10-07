@@ -57,6 +57,7 @@ set unit_sim_used       $::env(UNIT_SIM_USED)
 set odma_used           $::env(ODMA_USED)
 set log_dir             $::env(LOGS_DIR)
 set log_file            $log_dir/create_framework.log
+set use_prflow		$::env(USE_PRFLOW)
 set vivadoVer           [version -short]
 
 set hbm_top_dir          $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top
@@ -348,6 +349,12 @@ if {$fpga_card == "BW250SOC"} {
 
 # XDC
 puts "                        importing other XDCs"
+
+if { $use_prflow == "TRUE" } {
+    puts "                        importing PR XDC"
+    add_files -fileset constrs_1 -norecurse $top_xdc_dir/pr_static_pblock.xdc 
+    set_property used_in_implementation true [get_files $top_xdc_dir/pr_static_pblock.xdc]
+}
 
 # Bitstream XDC
 #  add_files -fileset constrs_1 -norecurse $top_xdc_dir/config_bitstream.xdc

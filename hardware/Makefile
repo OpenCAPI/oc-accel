@@ -383,7 +383,15 @@ route:
 	@echo -e "[BUILD routing only..] done  `date +"%T %a %b %d %Y"`"
 #-----
 
-image:
+cmd_allow_%:
+	@if [ "$(USE_PRFLOW)" == "TRUE" ]; then \
+		echo; echo "Error: the command \"make $*\" is only allowed for non PR flow!"; \
+		echo "   Did you mean \"make cloud_base\" or \"make cloud_action\"? "; \
+		echo "   Otherwise use Kconfig menu to unselect the PR flow!"; \
+		echo; exit -1; \
+	fi
+
+image: cmd_allow_image
 	$(MAKE) .hw_project_done
 	@echo -e "[BUILD IMAGE.........] start `date +"%T %a %b %d %Y"`\n"
 ifeq ($(USE_PRFLOW),TRUE)
@@ -407,18 +415,26 @@ endif
 #	@echo -e "Moved ltx file into Image."
 #endif
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "==> Binary images to program FPGA are in : ~/hardware/build/Images"
+	@echo -e ""
 
-allow_%:
+cloudcmd_allow_%:
 	@if [ "$(USE_PRFLOW)" != "TRUE" ]; then \
-		echo; echo "Error: Makefile target $* is only allowed for PR flow!"; exit -1; \
+		echo; echo "Error: the command \"make $*\" is only allowed for PR flow!"; \
+		echo "   Did you mean \"make image\"? "; \
+		echo "   Otherwise use Kconfig menu to select the PR flow!"; \
+		echo; exit -1; \
 	elif [ "$(CLOUD_USER_FLOW)" == "TRUE" ] && [ "$*" == "cloud_base" ]; then \
-		echo; echo "Error: Makefile target $* is not allowed for cloud user flow!"; exit -1; \
+		echo; echo "Error: the command \"make $*\" is not allowed for cloud user flow!"; exit -1; \
 	fi
 
-cloud_base: allow_cloud_base .hw_project_done
+cloud_base: cloudcmd_allow_cloud_base .hw_project_done
 	@echo -e "[BUILD CLOUD BASE....] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=BASE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[BUILD CLOUD BASE....] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "==> Binary images can be found in ~/hardware/build/Images"
+	@echo -e "==> Copy of partial binary images can be found in ~/hardware/DCP"
+	@echo -e ""
 
 $(SNAP_ACTION_DCP):
 	@echo -e "                        Need to run cloud_action first"
@@ -428,7 +444,7 @@ $(SNAP_BASE_DCP):
 	@echo -e "                        Need to run cloud_base first"
 	@exit -1
 
-cloud_action: allow_cloud_action .hw_project_done
+cloud_action: cloudcmd_allow_cloud_action .hw_project_done
 	@echo -e "[BUILD CLOUD ACTION..] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
 	@echo -e "[BUILD CLOUD ACTION..] done  `date +"%T %a %b %d %Y"`"
