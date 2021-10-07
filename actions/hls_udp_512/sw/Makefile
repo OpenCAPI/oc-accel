@@ -53,7 +53,7 @@ endif
 #oc-accel_udp_objs = sw_action_udp.o
 oc-accel_udp: ${oc-accel_udp_objs}
 
-projs += snap_udp
+projs += oc-accel_udp
 
 
 # If you have the host code outside of the default snap directory structure, 
