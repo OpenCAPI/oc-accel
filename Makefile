@@ -140,7 +140,7 @@ else #noteq ($(PLATFORM),x86_64)
 .PHONY: wrong_platform
 
 wrong_platform:
-	@echo; echo "\nSNAP hardware builds and simulation are possible on x86 platform only\n"; echo;
+	@echo; echo "ERROR: SNAP hardware builds and simulation are possible on x86 platform only"; echo;
 
 $(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image cloud_merge: wrong_platform
 

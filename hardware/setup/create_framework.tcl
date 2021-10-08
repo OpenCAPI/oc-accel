@@ -350,11 +350,11 @@ if {$fpga_card == "BW250SOC"} {
 # XDC
 puts "                        importing other XDCs"
 
-set static_pblock_xdc  $top_xdc_dir/pr_static_pblock.xdc;
+set static_pblock_xdc  $top_xdc_dir/pr_static_pblock.xdc
 if { ($use_prflow == "TRUE") && [file exists $static_pblock_xdc] == 1 } {
     puts "                        importing PR XDC"
-    add_files -fileset constrs_1 -norecurse $top_xdc_dir/pr_static_pblock.xdc 
-    set_property used_in_implementation true [get_files $top_xdc_dir/pr_static_pblock.xdc]
+    add_files -fileset constrs_1 -norecurse $static_pblock_xdc
+    set_property used_in_implementation true [get_files $static_pblock_xdc]
 }
 
 # Bitstream XDC
