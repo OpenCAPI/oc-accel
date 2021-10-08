@@ -3466,10 +3466,10 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
  `endif
 `endif
     //
-    .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr[8:0]    ) ,
+    .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr    ) ,
     .s_axi_ctrl_reg_arready       (s_axi_ctrl_reg_arready   ) ,
     .s_axi_ctrl_reg_arvalid       (s_axi_ctrl_reg_arvalid   ) ,
-    .s_axi_ctrl_reg_awaddr        (s_axi_ctrl_reg_awaddr[8:0]    ) ,
+    .s_axi_ctrl_reg_awaddr        (s_axi_ctrl_reg_awaddr    ) ,
     .s_axi_ctrl_reg_awready       (s_axi_ctrl_reg_awready   ) ,
     .s_axi_ctrl_reg_awvalid       (s_axi_ctrl_reg_awvalid   ) ,
     .s_axi_ctrl_reg_bready        (s_axi_ctrl_reg_bready    ) ,
