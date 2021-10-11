@@ -407,14 +407,13 @@ config HBM_USED
 config ENABLE_BRAM
 	bool
 	prompt ">> Replace DDR by 512KB BRAM"
-	depends on (AD9V3 || BW250SOC) && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
+	depends on (AD9V3 || BW250SOC) && ! DISABLE_SDRAM_AND_BRAM
 	help
 	  This is a development option. The AXI attached on-card SDRAM will be replaced by 512KB BRAM.
 
 config ENABLE_BRAM
 	bool
 	prompt ">> Replace HBM by 32KB URAM (recommended for simulating HBM)"
-	#depends on !AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
 	depends on !(AD9V3 || BW250SOC) && ! DISABLE_SDRAM_AND_BRAM
 	help
 	  This is a development option. The AXI attached on-card SDRAM will be replaced by 32KB URAM.
