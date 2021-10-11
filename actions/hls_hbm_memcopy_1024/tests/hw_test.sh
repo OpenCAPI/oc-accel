@@ -210,6 +210,26 @@ function test_memcopy_with_hbm {
 
     for (( i=0, j=1; i < hbm_if_num-1; i++, j++ ))
     do
+    	echo "Check data in hbm_p$i ... "
+    	cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
+        	-a 0x0 -A HBM_P$i -s ${size}  \
+        	-o ${size}_B.out   >> \
+        	snap_memcopy_with_hbm.log 2>&1"
+    	echo ${cmd} >> snap_memcopy_with_hbm.log
+    	eval ${cmd}
+    	if [ $? -ne 0 ]; then
+        	echo "cmd: ${cmd}"
+        	echo "failed, check snap_memcopy_with_hbm.log"
+        	exit 1
+    	fi
+    	diff ${size}_B.bin ${size}_B.out 2>&1 > /dev/null
+    	if [ $? -ne 0 ]; then
+        	echo "  ${size}_B.bin ${size}_B.out are different! >> hbm_p$i r/w has failed"
+        	exit 1
+    	fi
+    	echo "ok"
+#-----------------------
+
        echo "Doing snap_hbm_memcopy from hbm_p$i to hbm_p$j (aligned) ${size} bytes ... "
        cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
            -a 0x0 -A HBM_P$i   \
@@ -225,7 +245,7 @@ function test_memcopy_with_hbm {
     done
 
     last_hbm="$i"
-    echo "Doing snap_hbm_memcopy from hbm_p$last_hbm to HOST memory (aligned) ${size} bytes ... "
+    echo "Check data in hbm_p$i ... "
     cmd="snap_hbm_memcopy -C${snap_card}   ${noirq} \
         -a 0x0 -A HBM_P$last_hbm -s ${size}  \
         -o ${size}_B.out   >> \
@@ -237,9 +257,6 @@ function test_memcopy_with_hbm {
         echo "failed, check snap_memcopy_with_hbm.log"
         exit 1
     fi
-    echo "ok"
-
-    echo "Check results ... "
     diff ${size}_B.bin ${size}_B.out 2>&1 > /dev/null
     if [ $? -ne 0 ]; then
         echo "failed"
