@@ -765,6 +765,7 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
 
 config ENABLE_PRFLOW
 	bool "Enabling Partial Reconfiguration Flow"
+        default n
 	help
 	  Used for Cloud environment using dynamic reconfiguration of the images
 
