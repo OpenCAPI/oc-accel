@@ -19,6 +19,7 @@
 ############################################################################
 set root_dir        $::env(SNAP_HARDWARE_ROOT)
 set logs_dir        $::env(LOGS_DIR)
+set hbm_used        $::env(HBM_USED)
 
 if { [info exists ::env(DCP_ROOT)] == 1 } {
     set dcp_dir $::env(DCP_ROOT)
@@ -113,7 +114,7 @@ if { $fpgacard == "AD9V3" } {
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
 
-   if { $fpgacard == "AD9H3" } {
+   if { ($fpgacard == "AD9H3") && ($hbm_used == "TRUE") } {
      #SR#10523711 - required to correct timing closure even after removing hbm_ip.xdc constraints file
      #This value is created by the HBM bd only for the 9H3 card which generates the hbm_ip.xdc
      #This file hbm_ip.xdc is disabled in create_framework.tcl by the command set_property IS_ENABLED false

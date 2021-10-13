@@ -584,32 +584,6 @@ module framework_afu (
   wire    [127:0] ro_naa_wwid                         ;
   wire     [63:0] ro_system_memory_length             ;
 
-  // ETHERNET
-`ifdef ENABLE_ETHERNET 
-`ifndef ENABLE_ETH_LOOP_BACK
-  wire    [511:0] eth1_rx_tdata                       ;
-  wire     [63:0] eth1_rx_tkeep                       ;
-  wire            eth1_rx_tlast                       ;
-  wire            eth1_rx_tvalid                      ;
-  wire            eth1_rx_tready                      ;
-  wire      [0:0] eth1_rx_tuser                       ;
-
-  wire    [511:0] eth1_tx_tdata                       ;
-  wire     [63:0] eth1_tx_tkeep                       ;
-  wire            eth1_tx_tlast                       ;
-  wire            eth1_tx_tvalid                      ;
-  wire            eth1_tx_tready                      ;
-  wire      [0:0] eth1_tx_tuser                       ;
-
-  wire            eth_m_axis_rx_rst                   ;
-  wire            eth_stat_rx_status                  ;
-  wire            eth_stat_rx_aligned                 ;
-`endif
-`endif
-
-  // // ******************************************************************************
-  // // User clock
-  // // ******************************************************************************
   // // ******************************************************************************
   // // Reset signals
   // // ******************************************************************************
@@ -1069,32 +1043,6 @@ module framework_afu (
      `endif
    `endif
 
-    // ETHERNET interface
-`ifdef ENABLE_ETHERNET
-`ifndef ENABLE_ETH_LOOP_BACK
-      //ethernet enabled without loopback
-      .din_eth_tdata                      ( eth1_rx_tdata              ) ,
-      .din_eth_tvalid                     ( eth1_rx_tvalid             ) ,
-      .din_eth_tready                     ( eth1_rx_tready             ) ,
-  `ifndef HLS_VITIS_USED
-      .din_eth_tkeep                      ( eth1_rx_tkeep              ) ,
-      .din_eth_tuser                      ( eth1_rx_tuser              ) ,
-      .din_eth_tlast                      ( eth1_rx_tlast              ) ,
-  `endif
-      //Enable for ethernet TX
-      .dout_eth_tdata                     ( eth1_tx_tdata             ) ,
-      .dout_eth_tvalid                    ( eth1_tx_tvalid            ) ,
-      .dout_eth_tready                    ( eth1_tx_tready            ) ,
-  `ifndef HLS_VITIS_USED
-      .dout_eth_tkeep                     ( eth1_tx_tkeep             ) ,
-      .dout_eth_tuser                     ( eth1_tx_tuser             ) ,
-      .dout_eth_tlast                     ( eth1_tx_tlast             ) ,
-   `endif
-      .eth_rx_fifo_reset                  ( eth_m_axis_rx_rst         ) ,
-      .eth_stat_rx_status                 ( eth_stat_rx_status        ) ,
-      .eth_stat_rx_aligned                ( eth_stat_rx_aligned       ) ,
-`endif
-`endif
 `ifdef ENABLE_9H3_LED
       .user_led_a0     ( user_led_a0        ),
       .user_led_a1     ( user_led_a1        ),
@@ -1112,6 +1060,7 @@ module framework_afu (
       .uc_avr_ck       ( avr_ck             ),
  `endif
 
+    // ETHERNET interface
   `ifdef ENABLE_ETHERNET
   `ifndef ENABLE_ETH_LOOP_BACK
       .gt_ref_clk_n      ( gt_ref_clk_n       ),
@@ -1315,67 +1264,7 @@ assign  gt_tx_gt_port_1_p = gt_gtxp[1];
 assign  gt_tx_gt_port_2_p = gt_gtxp[2];
 assign  gt_tx_gt_port_3_p = gt_gtxp[3];
     `endif
-eth_100G eth_100G_0
-(
-      .i_gt_ref_clk_n              ( gt_ref_clk_n                  ),
-      .i_gt_ref_clk_p              ( gt_ref_clk_p                  ),
 
-    `ifdef ENABLE_EMAC_V3_1
-      //Vivado 2020.1 and later
-      .gt_grx_n                    ( gt_grxn                       ),
-      .gt_grx_p                    ( gt_grxp                       ),
-      .gt_gtx_n                    ( gt_gtxn                       ),
-      .gt_gtx_p                    ( gt_gtxp                       ),
-    `else
-      //Vivado 2019.2 and earlier
-      .i_gt_rx_gt_port_0_n         ( gt_rx_gt_port_0_n             ),
-      .i_gt_rx_gt_port_0_p         ( gt_rx_gt_port_0_p             ),
-      .i_gt_rx_gt_port_1_n         ( gt_rx_gt_port_1_n             ),
-      .i_gt_rx_gt_port_1_p         ( gt_rx_gt_port_1_p             ),
-      .i_gt_rx_gt_port_2_n         ( gt_rx_gt_port_2_n             ),
-      .i_gt_rx_gt_port_2_p         ( gt_rx_gt_port_2_p             ),
-      .i_gt_rx_gt_port_3_n         ( gt_rx_gt_port_3_n             ),
-      .i_gt_rx_gt_port_3_p         ( gt_rx_gt_port_3_p             ),
-
-      .o_gt_tx_gt_port_0_n         ( gt_tx_gt_port_0_n             ),
-      .o_gt_tx_gt_port_0_p         ( gt_tx_gt_port_0_p             ),
-      .o_gt_tx_gt_port_1_n         ( gt_tx_gt_port_1_n             ),
-      .o_gt_tx_gt_port_1_p         ( gt_tx_gt_port_1_p             ),
-      .o_gt_tx_gt_port_2_n         ( gt_tx_gt_port_2_n             ),
-      .o_gt_tx_gt_port_2_p         ( gt_tx_gt_port_2_p             ),
-      .o_gt_tx_gt_port_3_n         ( gt_tx_gt_port_3_n             ),
-      .o_gt_tx_gt_port_3_p         ( gt_tx_gt_port_3_p             ),
-    `endif
-
-      .m_axis_rx_tdata             ( eth1_rx_tdata                 ),
-      .m_axis_rx_tvalid            ( eth1_rx_tvalid                ),
-      .m_axis_rx_tready            ( eth1_rx_tready                ),
-  `ifndef HLS_VITIS_USED
-      .m_axis_rx_tkeep             ( eth1_rx_tkeep                 ),
-      .m_axis_rx_tlast             ( eth1_rx_tlast                 ),
-      .m_axis_rx_tuser             ( eth1_rx_tuser                 ),
-
-      .s_axis_tx_tkeep             ( eth1_tx_tkeep                 ),
-      .s_axis_tx_tlast             ( eth1_tx_tlast                 ),
-      .s_axis_tx_tuser             ( eth1_tx_tuser                 ),
-   `endif
-      .s_axis_tx_tdata             ( eth1_tx_tdata                 ),
-      .s_axis_tx_tvalid            ( eth1_tx_tvalid                ),
-      .s_axis_tx_tready            ( eth1_tx_tready                ),
-
-      .i_sys_reset                 ( eth_rst                       ),
-      .i_core_rx_reset             ( 1'b0                          ),
-      .i_core_tx_reset             ( 1'b0                          ),
-      .m_axis_rx_reset             ( eth_m_axis_rx_rst             ),
-      .o_stat_rx_status            ( eth_stat_rx_status            ),
-      .o_stat_rx_aligned           ( eth_stat_rx_aligned           ),
-      .i_capi_clk                  ( clock_afu                     ),
-
-      .i_ctl_rx_enable             ( 1'b1                          ),
-      .i_ctl_rx_rsfec_enable       ( 1'b1                          ),
-      .i_ctl_tx_enable             ( 1'b1                          ),
-      .i_ctl_tx_rsfec_enable       ( 1'b1                          )
-);
 
 `endif
 `endif

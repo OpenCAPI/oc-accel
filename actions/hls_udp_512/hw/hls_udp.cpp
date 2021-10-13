@@ -35,6 +35,8 @@ void process_frames(AXI_STREAM &din_eth, eth_settings_t eth_settings, eth_stat_t
 
 void make_packet(AXI_STREAM &stream, uint64_t frame_number, uint32_t eth_packet, uint16_t *data) {
 
+//add following pragma to parallelize make_packet and process_frames functions (mandatory for Vitis_hls)
+ #pragma HLS INLINE off
 	static char buff[130*64];
 	RAW_JFUDP_Packet *packet = (RAW_JFUDP_Packet *)buff;
 
@@ -108,8 +110,8 @@ static int process_action(snap_membus_512_t *din_gmem,
 	eth_stats.ignored_packets = 0;
 
 
-		make_packet(dout_eth, 1, 1, data); // recup data memory debug mode
-	    //make_packet(din_eth, 1, 1, data); // recup data memory sim test with internal loop
+	make_packet(dout_eth, 1, 1, data); // recup data memory debug mode
+	//make_packet(din_eth, 1, 1, data); // recup data memory sim test with internal loop
 
 	process_frames(din_eth, eth_settings, eth_stats, dout_gmem, out_frame_buffer_addr);
 

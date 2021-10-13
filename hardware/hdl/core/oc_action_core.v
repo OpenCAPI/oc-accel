@@ -3954,27 +3954,6 @@ assign      m_aximm_rready               =     mm_act2conv_rready               
 `endif
 `endif
 
-    // ETHERNET interface
-`ifdef ENABLE_ETHERNET
-`ifndef ENABLE_ETH_LOOP_BACK
-      //ethernet enabled without loopback
-      .din_eth_TDATA                      ( eth1_rx_tdata              ) ,
-      .din_eth_TVALID                     ( eth1_rx_tvalid             ) ,
-      .din_eth_TREADY                     ( eth1_rx_tready             ) ,
-      .din_eth_TKEEP                      ( eth1_rx_tkeep              ) ,
-      .din_eth_TUSER                      ( eth1_rx_tuser              ) ,
-      .din_eth_TLAST                      ( eth1_rx_tlast              ) ,
-      //Enable for ethernet TX
-      .dout_eth_TDATA                     ( eth1_tx_tdata             ) ,
-      .dout_eth_TVALID                    ( eth1_tx_tvalid            ) ,
-      .dout_eth_TREADY                    ( eth1_tx_tready            ) ,
-      .dout_eth_TKEEP                     ( eth1_tx_tkeep             ) ,
-      .dout_eth_TUSER                     ( eth1_tx_tuser             ) ,
-      .dout_eth_TLAST                     ( eth1_tx_tlast             ) ,
-      .eth_reset                          ( eth_m_axis_rx_rst         ) ,
-`endif
-`endif
-
 `ifdef ENABLE_9H3_LED
       .user_led_a0                        ( user_led_a0                ),
       .user_led_a1                        ( user_led_a1                ),
@@ -6047,6 +6026,8 @@ assign  gt_tx_gt_port_1_p = gt_gtxp[1];
 assign  gt_tx_gt_port_2_p = gt_gtxp[2];
 assign  gt_tx_gt_port_3_p = gt_gtxp[3];
     `endif
+    
+
 eth_100G eth_100G_0
 (
       .i_gt_ref_clk_n              ( gt_ref_clk_n                  ),
