@@ -1903,6 +1903,26 @@
   wire      [0:0] eth1_tx_tuser                       ;
 
   wire            eth_m_axis_rx_rst                   ;
+  
+  wire            gt_ref_clk_p_o                      ;
+  wire            gt_ref_clk_n_o                      ;
+  wire            gt_rx_gt_port_0_p_o                 ;
+  wire            gt_rx_gt_port_0_n_o                 ;
+  wire            gt_rx_gt_port_1_p_o                 ;
+  wire            gt_rx_gt_port_1_n_o                 ;
+  wire            gt_rx_gt_port_2_p_o                 ;
+  wire            gt_rx_gt_port_2_n_o                 ;
+  wire            gt_rx_gt_port_3_p_o                 ;
+  wire            gt_rx_gt_port_3_n_o                 ;
+
+  wire            gt_tx_gt_port_0_p_i                 ;
+  wire            gt_tx_gt_port_0_n_i                 ;
+  wire            gt_tx_gt_port_1_p_i                 ;
+  wire            gt_tx_gt_port_1_n_i                 ;
+  wire            gt_tx_gt_port_2_p_i                 ;
+  wire            gt_tx_gt_port_2_n_i                 ;
+  wire            gt_tx_gt_port_3_p_i                 ;
+  wire            gt_tx_gt_port_3_n_i                 ;
 `endif
 `endif
 
@@ -6008,30 +6028,52 @@ assign hbm_ctrl_reset_n = hbm_ctrl_apb_complete & ~reset_action_q;
   `ifndef ENABLE_ETH_LOOP_BACK
     // following flag depends on vivado release and is set in scripts/snap_config
     `ifdef ENABLE_EMAC_V3_1
-assign  gt_grxn[0] = gt_rx_gt_port_0_n;
-assign  gt_grxn[1] = gt_rx_gt_port_1_n;
-assign  gt_grxn[2] = gt_rx_gt_port_2_n;
-assign  gt_grxn[3] = gt_rx_gt_port_3_n;
-assign  gt_grxp[0] = gt_rx_gt_port_0_p;
-assign  gt_grxp[1] = gt_rx_gt_port_1_p;
-assign  gt_grxp[2] = gt_rx_gt_port_2_p;
-assign  gt_grxp[3] = gt_rx_gt_port_3_p;
+assign  gt_grxn[0] = gt_rx_gt_port_0_n_o;
+assign  gt_grxn[1] = gt_rx_gt_port_1_n_o;
+assign  gt_grxn[2] = gt_rx_gt_port_2_n_o;
+assign  gt_grxn[3] = gt_rx_gt_port_3_n_o;
+assign  gt_grxp[0] = gt_rx_gt_port_0_p_o;
+assign  gt_grxp[1] = gt_rx_gt_port_1_p_o;
+assign  gt_grxp[2] = gt_rx_gt_port_2_p_o;
+assign  gt_grxp[3] = gt_rx_gt_port_3_p_o;
 
-assign  gt_tx_gt_port_0_n = gt_gtxn[0];
-assign  gt_tx_gt_port_1_n = gt_gtxn[1];
-assign  gt_tx_gt_port_2_n = gt_gtxn[2];
-assign  gt_tx_gt_port_3_n = gt_gtxn[3];
-assign  gt_tx_gt_port_0_p = gt_gtxp[0];
-assign  gt_tx_gt_port_1_p = gt_gtxp[1];
-assign  gt_tx_gt_port_2_p = gt_gtxp[2];
-assign  gt_tx_gt_port_3_p = gt_gtxp[3];
+assign  gt_tx_gt_port_0_n_i = gt_gtxn[0];
+assign  gt_tx_gt_port_1_n_i = gt_gtxn[1];
+assign  gt_tx_gt_port_2_n_i = gt_gtxn[2];
+assign  gt_tx_gt_port_3_n_i = gt_gtxn[3];
+assign  gt_tx_gt_port_0_p_i = gt_gtxp[0];
+assign  gt_tx_gt_port_1_p_i = gt_gtxp[1];
+assign  gt_tx_gt_port_2_p_i = gt_gtxp[2];
+assign  gt_tx_gt_port_3_p_i = gt_gtxp[3];
     `endif
+
+// Following IBUF allows to create the dynamic area when using partial reconfiguration flow
+// This is needed only for signals in the dynamic area which have external IOs
+   IBUF #() IBUF_gt_ref_clk_p_inst  ( .O(gt_ref_clk_p_o), .I(gt_ref_clk_p));
+   IBUF #() IBUF_gt_ref_clk_n_inst  ( .O(gt_ref_clk_n_o), .I(gt_ref_clk_n));
+
+   IBUF #() IBUF_gt_rx_gt_p0_p_inst ( .O(gt_rx_gt_port_0_p_o), .I(gt_rx_gt_port_0_p));
+   IBUF #() IBUF_gt_rx_gt_p0_n_inst ( .O(gt_rx_gt_port_0_n_o), .I(gt_rx_gt_port_0_n));
+   IBUF #() IBUF_gt_rx_gt_p1_p_inst ( .O(gt_rx_gt_port_1_p_o), .I(gt_rx_gt_port_1_p));
+   IBUF #() IBUF_gt_rx_gt_p1_n_inst ( .O(gt_rx_gt_port_1_n_o), .I(gt_rx_gt_port_1_n));
+   IBUF #() IBUF_gt_rx_gt_p2_p_inst ( .O(gt_rx_gt_port_2_p_o), .I(gt_rx_gt_port_2_p));
+   IBUF #() IBUF_gt_rx_gt_p2_n_inst ( .O(gt_rx_gt_port_2_n_o), .I(gt_rx_gt_port_2_n));
+   IBUF #() IBUF_gt_rx_gt_p3_p_inst ( .O(gt_rx_gt_port_3_p_o), .I(gt_rx_gt_port_3_p));
+   IBUF #() IBUF_gt_rx_gt_p3_n_inst ( .O(gt_rx_gt_port_3_n_o), .I(gt_rx_gt_port_3_n));
     
+   IBUF #() IBUF_gt_tx_gt_p0_p_inst ( .O(gt_tx_gt_port_0_p), .I(gt_tx_gt_port_0_p_i));
+   IBUF #() IBUF_gt_tx_gt_p0_n_inst ( .O(gt_tx_gt_port_0_n), .I(gt_tx_gt_port_0_n_i));
+   IBUF #() IBUF_gt_tx_gt_p1_p_inst ( .O(gt_tx_gt_port_1_p), .I(gt_tx_gt_port_1_p_i));
+   IBUF #() IBUF_gt_tx_gt_p1_n_inst ( .O(gt_tx_gt_port_1_n), .I(gt_tx_gt_port_1_n_i));
+   IBUF #() IBUF_gt_tx_gt_p2_p_inst ( .O(gt_tx_gt_port_2_p), .I(gt_tx_gt_port_2_p_i));
+   IBUF #() IBUF_gt_tx_gt_p2_n_inst ( .O(gt_tx_gt_port_2_n), .I(gt_tx_gt_port_2_n_i));
+   IBUF #() IBUF_gt_tx_gt_p3_p_inst ( .O(gt_tx_gt_port_3_p), .I(gt_tx_gt_port_3_p_i));
+   IBUF #() IBUF_gt_tx_gt_p3_n_inst ( .O(gt_tx_gt_port_3_n), .I(gt_tx_gt_port_3_n_i));
 
 eth_100G eth_100G_0
 (
-      .i_gt_ref_clk_n              ( gt_ref_clk_n                  ),
-      .i_gt_ref_clk_p              ( gt_ref_clk_p                  ),
+      .i_gt_ref_clk_n              ( gt_ref_clk_n_o                  ),
+      .i_gt_ref_clk_p              ( gt_ref_clk_p_o                  ),
 
     `ifdef ENABLE_EMAC_V3_1
       //Vivado 2020.1 and later
@@ -6041,23 +6083,23 @@ eth_100G eth_100G_0
       .gt_gtx_p                    ( gt_gtxp                       ),
     `else
       //Vivado 2019.2 and earlier
-      .i_gt_rx_gt_port_0_n         ( gt_rx_gt_port_0_n             ),
-      .i_gt_rx_gt_port_0_p         ( gt_rx_gt_port_0_p             ),
-      .i_gt_rx_gt_port_1_n         ( gt_rx_gt_port_1_n             ),
-      .i_gt_rx_gt_port_1_p         ( gt_rx_gt_port_1_p             ),
-      .i_gt_rx_gt_port_2_n         ( gt_rx_gt_port_2_n             ),
-      .i_gt_rx_gt_port_2_p         ( gt_rx_gt_port_2_p             ),
-      .i_gt_rx_gt_port_3_n         ( gt_rx_gt_port_3_n             ),
-      .i_gt_rx_gt_port_3_p         ( gt_rx_gt_port_3_p             ),
+      .i_gt_rx_gt_port_0_n         ( gt_rx_gt_port_0_n_o           ),
+      .i_gt_rx_gt_port_0_p         ( gt_rx_gt_port_0_p_o           ),
+      .i_gt_rx_gt_port_1_n         ( gt_rx_gt_port_1_n_o           ),
+      .i_gt_rx_gt_port_1_p         ( gt_rx_gt_port_1_p_o           ),
+      .i_gt_rx_gt_port_2_n         ( gt_rx_gt_port_2_n_o           ),
+      .i_gt_rx_gt_port_2_p         ( gt_rx_gt_port_2_p_o           ),
+      .i_gt_rx_gt_port_3_n         ( gt_rx_gt_port_3_n_o           ),
+      .i_gt_rx_gt_port_3_p         ( gt_rx_gt_port_3_p_o           ),
 
-      .o_gt_tx_gt_port_0_n         ( gt_tx_gt_port_0_n             ),
-      .o_gt_tx_gt_port_0_p         ( gt_tx_gt_port_0_p             ),
-      .o_gt_tx_gt_port_1_n         ( gt_tx_gt_port_1_n             ),
-      .o_gt_tx_gt_port_1_p         ( gt_tx_gt_port_1_p             ),
-      .o_gt_tx_gt_port_2_n         ( gt_tx_gt_port_2_n             ),
-      .o_gt_tx_gt_port_2_p         ( gt_tx_gt_port_2_p             ),
-      .o_gt_tx_gt_port_3_n         ( gt_tx_gt_port_3_n             ),
-      .o_gt_tx_gt_port_3_p         ( gt_tx_gt_port_3_p             ),
+      .o_gt_tx_gt_port_0_n         ( gt_tx_gt_port_0_n_i           ),
+      .o_gt_tx_gt_port_0_p         ( gt_tx_gt_port_0_p_i           ),
+      .o_gt_tx_gt_port_1_n         ( gt_tx_gt_port_1_n_i           ),
+      .o_gt_tx_gt_port_1_p         ( gt_tx_gt_port_1_p_i           ),
+      .o_gt_tx_gt_port_2_n         ( gt_tx_gt_port_2_n_i           ),
+      .o_gt_tx_gt_port_2_p         ( gt_tx_gt_port_2_p_i           ),
+      .o_gt_tx_gt_port_3_n         ( gt_tx_gt_port_3_n_i           ),
+      .o_gt_tx_gt_port_3_p         ( gt_tx_gt_port_3_p_i           ),
     `endif
 
       .m_axis_rx_tdata             ( eth1_rx_tdata                 ),

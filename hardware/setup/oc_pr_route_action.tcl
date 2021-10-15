@@ -44,6 +44,12 @@ if { $pr_file_name != "" } {
    set pattern {PR([0-9a-f]{3})}
    set PRC3 [regexp -all $pattern $pr_file_name PRC]
    #puts $PRC
+} else {
+   puts "-------------------------------------------------------------------------------------"
+   puts "ERROR: File ${prefix}*_static_routed.dcp not found in $dcp_dir!"
+   puts "  Please generate 'make oc_pr_route_static' before running 'make oc_pr_route_action'."
+   puts "-------------------------------------------------------------------------------------"
+  exit 42
 }
 
 #Checkpoint file => input files
@@ -56,7 +62,7 @@ set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
 ## open oc-accel project
 set step      ${prefix}open_checkpoint
 set logfile   $logs_dir/${step}.log
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start routing action" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start routing action" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_fpga_static_routed_dcp}"]
 open_checkpoint  $dcp_dir/$oc_fpga_static_routed_dcp  >> $logfile
 
@@ -74,7 +80,7 @@ set directive Explore
 
 set logfile   $logs_dir/${step}.log
 set command   "opt_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_design failed" $widthCol4 "" ]
@@ -95,7 +101,7 @@ set step      ${prefix}place_design
 set directive Explore
 set logfile   $logs_dir/${step}.log
 set command   "place_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: place_design failed" $widthCol4 "" ]
@@ -115,7 +121,7 @@ set step      ${prefix}phys_opt_design
 set directive Explore
 set logfile   $logs_dir/${step}.log
 set command   "phys_opt_design  -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start phys_opt" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start phys_opt" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: phys_opt_design failed" $widthCol4 "" ]
@@ -135,7 +141,7 @@ set step      ${prefix}route_design
 set directive Explore
 set logfile   $logs_dir/${step}.log
 set command   "route_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: route_design failed" $widthCol4 "" ]
@@ -158,7 +164,7 @@ set directive Explore
 set logfile   $logs_dir/${step}.log
 set command   "phys_opt_design  -directive $directive"
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
@@ -178,7 +184,7 @@ if { [catch "$command > $logfile" errMsg] } {
 
 
 ## generating reports
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 report_utilization    -quiet -pblocks [get_pblocks pblock_dynamic_PR]  -file  ${rpt_dir}/utilization_route_design.rpt
 report_utilization    -quiet -file  ${rpt_dir}/utilization_route_design.rpt
 report_route_status   -quiet -file  ${rpt_dir}/route_status.rpt

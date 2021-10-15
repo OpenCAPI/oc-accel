@@ -287,13 +287,6 @@ module framework_afu (
   // // wires
   // // ******************************************************************************
 
- `ifdef ENABLE_EMAC_V3_1
-  wire [3:0]                 gt_grxn  ;
-  wire [3:0]                 gt_grxp  ;
-  wire [3:0]                 gt_gtxn  ;
-  wire [3:0]                 gt_gtxp  ;
- `endif
-
   // // Interface between snap_core to (clock/dwidth) converter
 `ifndef ENABLE_ODMA
   wire [`AXI_LITE_AW-1:0]     lite_snap2conv_awaddr  ;
@@ -1242,30 +1235,4 @@ BUFGCE_DIV #(
 );
 `endif
 
-`ifdef ENABLE_ETHERNET 
-  `ifndef ENABLE_ETH_LOOP_BACK
-    // following flag depends on vivado release and is set in scripts/snap_config
-    `ifdef ENABLE_EMAC_V3_1
-assign  gt_grxn[0] = gt_rx_gt_port_0_n;
-assign  gt_grxn[1] = gt_rx_gt_port_1_n;
-assign  gt_grxn[2] = gt_rx_gt_port_2_n;
-assign  gt_grxn[3] = gt_rx_gt_port_3_n;
-assign  gt_grxp[0] = gt_rx_gt_port_0_p;
-assign  gt_grxp[1] = gt_rx_gt_port_1_p;
-assign  gt_grxp[2] = gt_rx_gt_port_2_p;
-assign  gt_grxp[3] = gt_rx_gt_port_3_p;
-
-assign  gt_tx_gt_port_0_n = gt_gtxn[0];
-assign  gt_tx_gt_port_1_n = gt_gtxn[1];
-assign  gt_tx_gt_port_2_n = gt_gtxn[2];
-assign  gt_tx_gt_port_3_n = gt_gtxn[3];
-assign  gt_tx_gt_port_0_p = gt_gtxp[0];
-assign  gt_tx_gt_port_1_p = gt_gtxp[1];
-assign  gt_tx_gt_port_2_p = gt_gtxp[2];
-assign  gt_tx_gt_port_3_p = gt_gtxp[3];
-    `endif
-
-
-`endif
-`endif
 endmodule

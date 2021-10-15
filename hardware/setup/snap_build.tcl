@@ -59,7 +59,7 @@ set ::env(WIDTHCOL4) $widthCol4
 
 ##
 ## open snap project
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open framework project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open framework project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 open_project $root_dir/viv_project/framework.xpr >> $logfile
 
 # for test!
@@ -89,7 +89,7 @@ if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
 if { $ila_debug == "TRUE" } {
   set step     write_debug_probes
   set logfile  $logs_dir/${step}.log
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "writing debug probes" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "writing debug probes" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   write_debug_probes $img_dir/$IMAGE_NAME.ltx >> $logfile
 }
 
@@ -97,7 +97,7 @@ if { $ila_debug == "TRUE" } {
 ##
 ## removing temporary checkpoint files
 if { ($::env(REMOVE_TMP_FILES) == "TRUE") && ($impl_step == "ALL") } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing temp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing temp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   #We intentionally keep the latest dcp generated  => opt_routed_design.dcp
   if { $ila_debug != "TRUE" } {exec rm -rf $dcp_dir/synth_design.dcp}
   exec rm -rf $dcp_dir/opt_design.dcp

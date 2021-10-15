@@ -43,6 +43,10 @@ if { [info exists ::env(ILA_DEBUG)] == 1 } {
     set ila_debug     [string toupper $::env(ILA_DEBUG)]
 }
 
+if { [info exists ::env(HBM_AXI_IF_NUM)] == 1 } {
+    set hbm_axi_if_num  $::env(HBM_AXI_IF_NUM)
+}
+
 set timing_lablimit $::env(TIMING_LABLIMIT)
 set fpgacard        $::env(FPGACARD)
 set action_root     $::env(ACTION_ROOT)
@@ -73,6 +77,24 @@ set PRC [exec grep "PRCODE" $root_dir/hdl/core/snap_global_vars.v | cut -d "h" -
 set oc_fpga_static_synth      "oc_${fpgacard}_static_synth"
 set oc_fpga_static_synth_dcp  "${oc_fpga_static_synth}.dcp"
 set oc_action_name_synth_dcp  "oc_${fpgacard}_${action_name}_synth.dcp"
+
+set pr_file_name [exec basename [ exec find $dcp_dir/ -name $oc_fpga_static_synth_dcp ]]
+if { $pr_file_name == "" } {
+   puts "-------------------------------------------------------------------------------------"
+   puts "ERROR: File $oc_fpga_static_synth_dcp not found in $dcp_dir!"
+   puts "  Please generate 'make oc_pr_synth_static' before running 'make oc_pr_route_static'."
+   puts "-------------------------------------------------------------------------------------"
+   exit 42
+}
+set pr_file_name [exec basename [ exec find $dcp_dir/ -name $oc_action_name_synth_dcp ]]
+if { $pr_file_name == "" } {
+   puts "-------------------------------------------------------------------------------------"
+   puts "ERROR: File $oc_action_name_synth_dcp not found in $dcp_dir!"
+   puts "  Please generate 'make oc_pr_synth_action' before running 'make oc_pr_route_static'."
+   puts "-------------------------------------------------------------------------------------"
+   exit 42
+}
+
 #Checkpoint file => output files
 set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
 set oc_fpga_static_routed_dcp "oc_${fpgacard}_PR${PRC}_static_routed.dcp"
@@ -81,7 +103,7 @@ set oc_fpga_static_routed_dcp "oc_${fpgacard}_PR${PRC}_static_routed.dcp"
 ## open oc-accel project
 set step      ${prefix}open_checkpoint
 set logfile   $logs_dir/${step}.log
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start routing static" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start routing static" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_fpga_static_synth_dcp}"]
 open_checkpoint  $dcp_dir/$oc_fpga_static_synth_dcp  >> $logfile
 
@@ -114,7 +136,7 @@ if { $fpgacard == "AD9V3" } {
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
 
-   if { ($fpgacard == "AD9H3") && ($hbm_used == "TRUE") } {
+   if { ($fpgacard == "AD9H3") && ($hbm_used == "TRUE") && ($hbm_axi_if_num <= 16)} {
      #SR#10523711 - required to correct timing closure even after removing hbm_ip.xdc constraints file
      #This value is created by the HBM bd only for the 9H3 card which generates the hbm_ip.xdc
      #This file hbm_ip.xdc is disabled in create_framework.tcl by the command set_property IS_ENABLED false
@@ -208,7 +230,7 @@ set directive Explore
 
 set logfile   $logs_dir/${step}.log
 set command   "opt_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_design failed" $widthCol4 "" ]
@@ -229,7 +251,7 @@ set step      ${prefix}place_design
 set directive Explore
 set logfile   $logs_dir/${step}.log
 set command   "place_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: place_design failed" $widthCol4 "" ]
@@ -249,7 +271,7 @@ set step      ${prefix}phys_opt_design
 set directive Explore
 set logfile   $logs_dir/${step}.log
 set command   "phys_opt_design  -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start phys_opt" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start phys_opt" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: phys_opt_design failed" $widthCol4 "" ]
@@ -265,7 +287,7 @@ if { [catch "$command > $logfile" errMsg] } {
 #-- intermediate WNS display
 report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
 set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir}/timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Estimated Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "          Estimated Timing (WNS) is $TIMING_WNS ps"]
 #--
 
 #----------------
@@ -274,7 +296,7 @@ set step      ${prefix}route_design
 set directive Explore
 set logfile   $logs_dir/${step}.log
 set command   "route_design -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: route_design failed" $widthCol4 "" ]
@@ -290,7 +312,7 @@ if { [catch "$command > $logfile" errMsg] } {
 #-- intermediate WNS display
 report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
 set TIMING_WNS [exec grep -A6 "Design Timing Summary" ${rpt_dir}/timing_summary.rpt | tail -n 1 | tr -s " " | cut -d " " -f 2 | tr -d "." | sed {s/^\(\-*\)0*\([1-9]*[0-9]\)/\1\2/}]
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "Estimated Timing (WNS)" $widthCol3 "$TIMING_WNS ps" $widthCol4 "" ]
+puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "          Estimated Timing (WNS) is $TIMING_WNS ps"]
 #--
 
 ##----------------
@@ -300,7 +322,7 @@ set directive Explore
 
 set logfile   $logs_dir/${step}.log
 set command   "phys_opt_design  -directive $directive"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start opt_routed" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
@@ -325,7 +347,7 @@ if { $fpgacard == "AD9H7" } {
 set step      ${prefix}lock_design
 set logfile   $logs_dir/${step}.log
 set command   "lock_design -level routing"
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start lock design" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     start lock design" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: lock design failed" $widthCol4 "" ]
@@ -345,7 +367,7 @@ if { [catch "$command > $logfile" errMsg] } {
 
 
 ## generating reports
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 report_utilization    -quiet -pblocks [get_pblocks pblock_dynamic_PR]  -file  ${rpt_dir}/utilization_route_design.rpt
 report_utilization    -quiet -file  ${rpt_dir}/utilization_route_design.rpt
 report_route_status   -quiet -file  ${rpt_dir}/route_status.rpt

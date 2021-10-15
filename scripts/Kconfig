@@ -523,7 +523,7 @@ config ACTION_USER_CLOCK
 
 config HBM_AXI_IF_NUM
         prompt "Number of HBM AXI interfaces, range 1-32 (default 12)"
-	depends on ENABLE_HBM
+	depends on (ENABLE_HBM && !ENABLE_PRFLOW)
 	int
 	default 12 
 	range 1 32
@@ -531,6 +531,18 @@ config HBM_AXI_IF_NUM
 	  HBM AXI interfaces generated in the chip
 	  This need to be coherent with what is implemented in the HLS action code
           Please select one of them.
+
+config HBM_AXI_IF_NUM
+        prompt "Number of HBM AXI interfaces, range 1-16 (default 12)"
+	depends on (ENABLE_HBM && ENABLE_PRFLOW)
+	int
+	default 12 
+	range 1 16
+	help
+	  HBM AXI interfaces generated in the chip
+	  This need to be coherent with what is implemented in the HLS action code
+          Please select one of them.
+          In Partial reconfiguration mode, dynamic zone cannot handle more than 16 AXI I/F
 
 choice
 	bool "Simulator"
@@ -608,6 +620,8 @@ config OCSE_PATH
 	string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
 	default "../ocse"
 
+comment "================= Advanced Options: ================="
+
 config ENABLE_9H3_LED
 	bool "User LEDs on the board"
 	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
@@ -638,8 +652,6 @@ config AD9H3_AVR_USED
         string
         default "TRUE"  if ENABLE_9H3_AVR
         default "FALSE" if ! ENABLE_9H3_AVR
-
-comment "================= Advanced Options: ================="
 
 choice
 	bool "PHY Speed"
@@ -765,6 +777,7 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
 
 config ENABLE_PRFLOW
 	bool "Enabling Partial Reconfiguration Flow"
+	depends on AD9H3
         default n
 	help
 	  Used for Cloud environment using dynamic reconfiguration of the images

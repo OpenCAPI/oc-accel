@@ -44,20 +44,23 @@ if { $pr_file_name != "" } {
    set pattern {PR([0-9a-f]{3})}
    set PRC3 [regexp -all $pattern $pr_file_name PRC]
    #puts $PRC
+} else {
+   puts "-------------------------------------------------------------------------------------"
+   puts "ERROR: File $${prefix}*_static_routed.dcp not found in $dcp_dir!"
+   puts "  Please generate 'make oc_pr_route_action' or 'make oc_pr_route_static' before running 'make oc_pr_image'."
+   puts "-------------------------------------------------------------------------------------"
+   exit 42
 }
+
 
 #Checkpoint file => input file
 set oc_action_name_routed_dcp "oc_${fpgacard}_${action_name}_routed.dcp"
 
 #Define widths of each column
-set widthCol1 24
-set widthCol2 24
-set widthCol3 36
-set widthCol4 22
-set ::env(WIDTHCOL1) $widthCol1
-set ::env(WIDTHCOL2) $widthCol2
-set ::env(WIDTHCOL3) $widthCol3
-set ::env(WIDTHCOL4) $widthCol4
+set widthCol1 $::env(WIDTHCOL1)
+set widthCol2 $::env(WIDTHCOL2)
+set widthCol3 $::env(WIDTHCOL3)
+set widthCol4 $::env(WIDTHCOL4)
 
 ##
 ## generating bitstream name
@@ -92,7 +95,7 @@ if { [info exists ::env(TIMING_WNS)] == 1 } {
 
 ##
 ## open oc-accel project
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start generating images files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start generating images files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening $oc_action_name_routed_dcp"]
 open_checkpoint  $dcp_dir/$oc_action_name_routed_dcp  >> $logfile
 

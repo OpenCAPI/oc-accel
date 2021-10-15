@@ -55,8 +55,12 @@ set ::env(RPT_DIR) $rpt_dir
 set img_dir $root_dir/build/Images
 set ::env(IMG_DIR) $img_dir
 
-#Remove temp files
-set ::env(REMOVE_TMP_FILES) TRUE
+#Remove temp files if not in "step by step" flow
+if { ($cloud_run == "SYNTH_ACTION") || ($cloud_run == "SYNTH_STATIC") || ($cloud_run == "ROUTE_ACTION") || ($cloud_run == "ROUTE_STATIC") || ($cloud_run == "GEN_IMAGE") } {
+  set ::env(REMOVE_TMP_FILES) FALSE
+} else {
+  set ::env(REMOVE_TMP_FILES) TRUE
+}
 
 if { [info exists ::env(CLOUD_BUILD_BITFILE)] == 1 } {
   set cloud_build_bitfile [string toupper $::env(CLOUD_BUILD_BITFILE)]
@@ -76,30 +80,30 @@ set ::env(WIDTHCOL4) $widthCol4
 
 
 ## open snap project
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open framework project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "open framework project" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   open_project $root_dir/viv_project/framework.xpr > $logfile
 
 
 ## run synthesis
-if { ($cloud_run == "ACTION") || ($cloud_run == "BASE") } {
+if { ($cloud_run == "ACTION") || ($cloud_run == "BASE") || ($cloud_run == "SYNTH_ACTION") } {
   source $root_dir/setup/oc_pr_synth_action.tcl
 }
 
-if { ($cloud_run == "BASE") } {
+if { ($cloud_run == "BASE") || ($cloud_run == "SYNTH_STATIC") } {
   source $root_dir/setup/oc_pr_synth_static.tcl
 }
 
 
 ## run implementation in the base flow
-if { ($cloud_run == "BASE") } {
+if { ($cloud_run == "BASE") || ($cloud_run == "ROUTE_STATIC") } {
   source $root_dir/setup/oc_pr_route_static.tcl
 }
 
-if { ($cloud_run == "ACTION") } {
+if { ($cloud_run == "ACTION") || ($cloud_run == "ROUTE_ACTION") } {
   source $root_dir/setup/oc_pr_route_action.tcl
 }
 
-if { $cloud_build_bitfile == "TRUE" } {
+if { ($cloud_run == "GEN_IMAGE") || (($cloud_build_bitfile == "TRUE") && !( ($cloud_run == "SYNTH_ACTION") || ($cloud_run == "SYNTH_STATIC") ))  } {
 ## writing bitstream
   source $root_dir/setup/oc_pr_image.tcl
 }
@@ -110,7 +114,7 @@ if { $cloud_build_bitfile == "TRUE" } {
 if { $ila_debug == "TRUE" } {
   set step     write_debug_probes
   set logfile  $logs_dir/${step}.log
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "writing debug probes" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "writing debug probes" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   write_debug_probes $img_dir/$IMAGE_NAME.ltx >> $logfile
 }
 
@@ -118,7 +122,7 @@ if { $ila_debug == "TRUE" } {
 ##
 ## removing temporary checkpoint files
 if { $::env(REMOVE_TMP_FILES) == "TRUE" } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing synth dcp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing synth dcp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 }
   exec rm -rf $dcp_dir/$oc_fpga_static_synth_dcp
   exec rm -rf $dcp_dir/$oc_action_name_synth_dcp

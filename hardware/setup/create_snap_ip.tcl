@@ -48,7 +48,7 @@ set user_clk_freq $::env(USER_CLOCK_FREQ)
 set axi_id_width  $::env(AXI_ID_WIDTH)
 
 ## Create a new Vivado IP Project
-puts "\[CREATE_SNAP_IPs.....\] start [clock format [clock seconds] -format {%T %a %b %d %Y}]"
+puts "\[CREATE_SNAP_IPs.....\] start [clock format [clock seconds] -format {%T}]"
 create_project managed_ip_project $ip_dir/managed_ip_project -force -part $fpga_part -ip >> $log_file
 
 # Project IP Settings
@@ -1216,5 +1216,5 @@ if { [file exists $action_vhdl] == 1 } {
   }
 }
 
-puts "\[CREATE_SNAP_IPs.....\] done  [clock format [clock seconds] -format {%T %a %b %d %Y}]"
+puts "\[CREATE_SNAP_IPs.....\] done  [clock format [clock seconds] -format {%T}]"
 close_project >> $log_file

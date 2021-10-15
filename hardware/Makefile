@@ -95,8 +95,8 @@ SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
 
 ifeq ($(PLATFORM),x86_64)
 
-#.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_base cloud_action ocse software app model xsim irun nosim sim clean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_image
-.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image synth place route cloud_enable cloud_base cloud_action cloud_merge ocse software app model xsim irun nosim sim clean
+#.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_base cloud_action ocse software app model xsim irun nosim sim clean oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image
+.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image synth place route cloud_enable cloud_base cloud_action ocse software app model xsim irun nosim sim clean oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image
 
 all: model image
 
@@ -165,7 +165,6 @@ check_snap_settings:
 	@echo "                        SIMULATOR       = $(SIMULATOR)"
 	@echo "                        USE_PRFLOW      = $(USE_PRFLOW)"
 	@if [ `echo "$(USE_PRFLOW)" | tr a-z A-Z` == "TRUE" ]; then \
-		echo "                        CLOUD_USER_FLOW = $(CLOUD_USER_FLOW)"; \
 		echo "                        DCP_ROOT        = ~$(DCP_ROOT_REL)"; \
 	fi
 	@echo "                        =============================="
@@ -358,7 +357,7 @@ config: hw_project
 
 #-----
 # 'make synth' is the 1rst step (out of 3) of a 'make image' containing synthesis + opt_design 
-synth:
+synth: cmd_allow_synth
 	$(MAKE) .hw_project_done
 	@echo -e "[BUILD synthesis only] start `date +"%T %a %b %d %Y"`\n"
 	@cd $(BUILD_DIR) && env IMPL_STEP=SYNTH vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
@@ -366,8 +365,8 @@ synth:
 	@echo -e "--- Recommended next step : 'make place' ---"
 
 # 'make place' is the 2nd step (out of 3) of a 'make image' containing place_design + phys_opt_design 
-place:
-	@echo -e "--- 2nd step to build an image: You must have run a 'make synth' previously.\n"
+place: cmd_allow_place
+	@echo -e "--- 2nd step to build an image: You must have run a 'make synth' previously."
 	@echo -e "--- You'll be given a rough estimate of the WNS you can expect after routing\n"
 	@echo -e "[BUILD placing only..] start `date +"%T %a %b %d %Y"`\n"
 	@cd $(BUILD_DIR) && env IMPL_STEP=PLACE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
@@ -375,7 +374,7 @@ place:
 	@echo -e "--- Recommended next step : 'make route' ---"
 
 # 'make route' is the 3rd step (out of 3) of a 'make image' containing route_design + phys_opt_design + generate_bitstreams
-route:
+route: cmd_allow_route
 	@echo -e "--- 3rd step to build an image: You must have run a 'make place' previously.\n"
 	@echo -e "[BUILD routing only..] start `date +"%T %a %b %d %Y"`\n"
 	@cd $(BUILD_DIR) && env IMPL_STEP=ROUTE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
@@ -385,9 +384,11 @@ route:
 
 cmd_allow_%:
 	@if [ "$(USE_PRFLOW)" == "TRUE" ]; then \
-		echo; echo "Error: the command \"make $*\" is only allowed for non PR flow!"; \
+		echo; echo "---------------------------------------------------------------"; \
+		echo "Error: the command \"make $*\" is only allowed for non PR flow!"; \
 		echo "   Did you mean \"make cloud_base\" or \"make cloud_action\"? "; \
 		echo "   Otherwise use Kconfig menu to unselect the PR flow!"; \
+		echo "---------------------------------------------------------------"; \
 		echo; exit -1; \
 	fi
 
@@ -406,23 +407,20 @@ else
 	@cd $(BUILD_DIR) && env IMPL_STEP=ALL vivado -quiet -mode batch -source $(SETUP_DIR)/snap_build.tcl -notrace -log $(LOGS_DIR)/snap_build.log -journal $(LOGS_DIR)/snap_build.jou
 	@$(RM) -r .bitstream_name.txt
 endif
-# removed temporarily the following condition since ltx files already generated in snap_build.tcl
-#ifeq ($(ILA_DEBUG),TRUE)
-#	@echo -e "Generating ltx file for ILA debug."
-#	@cd $(BUILD_DIR) && vivado -mode batch -source $(SETUP_DIR)/gen_probe_ltx.tcl -notrace  -log $(LOGS_DIR)/gen_probe_ltx.log         -journal $(LOGS_DIR)/gen_probe_ltx.jou
-#	@echo -e "Generation of ltx file done."
-#	@mv $(BUILD_DIR)/probe.ltx $(BUILD_DIR)/Images
-#	@echo -e "Moved ltx file into Image."
-#endif
+
 	@echo -e "[BUILD IMAGE.........] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "------------------------------------------------------------------"
 	@echo -e "==> Binary images to program FPGA are in : ~/hardware/build/Images"
+	@echo -e "------------------------------------------------------------------"
 	@echo -e ""
 
 cloudcmd_allow_%:
 	@if [ "$(USE_PRFLOW)" != "TRUE" ]; then \
-		echo; echo "Error: the command \"make $*\" is only allowed for PR flow!"; \
+		echo; echo "---------------------------------------------------------------"; \
+		echo "Error: the command \"make $*\" is only allowed for PR flow!"; \
 		echo "   Did you mean \"make image\"? "; \
 		echo "   Otherwise use Kconfig menu to select the PR flow!"; \
+		echo "---------------------------------------------------------------"; \
 		echo; exit -1; \
 	elif [ "$(CLOUD_USER_FLOW)" == "TRUE" ] && [ "$*" == "cloud_base" ]; then \
 		echo; echo "Error: the command \"make $*\" is not allowed for cloud user flow!"; exit -1; \
@@ -432,8 +430,10 @@ cloud_base: cloudcmd_allow_cloud_base .hw_project_done
 	@echo -e "[BUILD CLOUD BASE....] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=BASE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[BUILD CLOUD BASE....] done  `date +"%T %a %b %d %Y"`"
+	@echo -e "------------------------------------------------------------------"
 	@echo -e "==> Binary images can be found in ~/hardware/build/Images"
 	@echo -e "==> Copy of partial binary images can be found in ~/hardware/DCP"
+	@echo -e "------------------------------------------------------------------"
 	@echo -e ""
 
 $(SNAP_ACTION_DCP):
@@ -448,67 +448,61 @@ cloud_action: cloudcmd_allow_cloud_action .hw_project_done
 	@echo -e "[BUILD CLOUD ACTION..] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
 	@echo -e "[BUILD CLOUD ACTION..] done  `date +"%T %a %b %d %Y"`"
-
+	@echo -e "------------------------------------------------------------------"
+	@echo -e "==> Binary images can be found in ~/hardware/build/Images"
+	@echo -e "==> Copy of partial binary images can be found in ~/hardware/DCP"
+	@echo -e "------------------------------------------------------------------"
+	@echo -e ""
 #---------------------------------
 # Partial reconfiguration recipes
 #
-#pr_synth_static prepares the synthesized dcp containing mainly TLx/DLx and all static objects that
+#oc_pr_synth_static prepares the synthesized dcp containing mainly TLx/DLx and all static objects that
 # will remain in the FPGA
 
-pr_synth_static: .hw_project_done
-	@echo -e "[ACTION in BLACKBOX..] start `date +"%T %a %b %d %Y"`"
-	# remove any "(* black_box *) module oc_action_core" sequence if 
-	# the previous run failed before being able to remove it
-	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
-	# add "(* black_box *)"
-	@sed -i "s/module oc_action_core/(\* black_box \*) module oc_action_core/g" hdl/core/oc_action_core.v
+oc_pr_synth_static: cloudcmd_allow_oc_pr_synth_static .hw_project_done
 	@echo -e "[PR SYNTH STATIC ....] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_static.log
+	@cd $(BUILD_DIR) && env CLOUD_RUN=SYNTH_STATIC vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[PR SYNTH STATIC ....] done  `date +"%T %a %b %d %Y"`"
-	@echo -e "[ACTION not BLACKBOX.] start `date +"%T %a %b %d %Y"`"
-	# remove "(* black_box *)"
-	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
-	@echo "  Suggested next step: To synthesize the action: make pr_synth_action"
+	@echo "  Suggested next step: To synthesize the action: make oc_pr_synth_action"
+	@echo "                       To route the   top  design : make oc_pr_route_static (need the action synthesized)"
 
-# pr_synth_action prepares the synthesis of the dynamic part of the FPGA, mainly the action and all required hardware drivers
+# oc_pr_synth_action prepares the synthesis of the dynamic part of the FPGA, mainly the action and all required hardware drivers
 # This part is the one that can be replaced on the fly
 
-pr_synth_action: .hw_project_done
+oc_pr_synth_action: cloudcmd_allow_oc_pr_synth_action .hw_project_done
 	@echo -e "[PR SYNTH ACTION ....] start `date +"%T %a %b %d %Y"`"
-	#remove any black_box word if pr_synth_static run failed before being able to remove it
-	@sed -i " s/(\* black_box \*) module oc_action_core/module oc_action_core/g" hdl/core/oc_action_core.v
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_synth_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_synth_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_synth_action.log
+	@cd $(BUILD_DIR) && env CLOUD_RUN=SYNTH_ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[PR SYNTH ACTION ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To route the   top  design : make pr_route_static"
-	@echo "  Suggested next step: To route the action design : make pr_route_action"
+	@echo "  Suggested next step: To synthesize  top design : make oc_pr_synth_static"
+	@echo "                       To route the   top design : make oc_pr_route_static (need the top synthesized)"
+	@echo "                       To route the action design : make oc_pr_route_action (need the top routed)"
 
-# pr_route_static prepares a complete refence routing of the FPGA, including both sttic and dynamic parts with 
+# oc_pr_route_static prepares a complete refence routing of the FPGA, including both sttic and dynamic parts with 
 # a hls_helloworld_1024 reference action. From this complete routed design we substract the reference dynamic part
 # to obtain the static_routed static. This is the base of any future user designs.
 
-#pr_route_static: snap_preprocess_start
-pr_route_static:
+oc_pr_route_static: cloudcmd_allow_oc_pr_route_static
 	@echo -e "[PR ROUTING STATIC ..] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_static.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_static.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_static.log
+	@cd $(BUILD_DIR) && env CLOUD_RUN=ROUTE_STATIC vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[PR ROUTING STATIC ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To build the bin files : make pr_image"
+	@echo "  Suggested next step: To build the bin files : make oc_pr_image"
+	@echo "                       To route the action design : make oc_pr_route_action (need the top routed)"
 
-# pr_route_action prepares a routing of the action. 
-# You need to have run almost once the pr_route_static to have the right dcp file.
+# oc_pr_route_action prepares a routing of the action. 
+# You need to have run almost once the oc_pr_route_static to have the right dcp file.
 
-#pr_route_action: snap_preprocess_start
-pr_route_action:
+oc_pr_route_action: cloudcmd_allow_oc_pr_route_action
 	@echo -e "[PR ROUTING ACTION ..] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_route_action.tcl -notrace -log $(LOGS_DIR)/oc_pr_route_action.log -journal $(LOGS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_route_action.log
+	@cd $(BUILD_DIR) && env CLOUD_RUN=ROUTE_ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[PR ROUTING ACTION ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To build the bin files : make pr_image"
+	@echo "  Suggested next step: To build the bin files : make oc_pr_image"
 
 
-# hopefully pr_image will build the complete image with static base and dynamic user part
+# hopefully oc_pr_image will build the complete image with static base and dynamic user part
 
-pr_image: snap_preprocess_start
+oc_pr_image: cloudcmd_allow_oc_pr_image
 	@echo -e "[Building image files] start `date +"%T %a %b %d %Y"`"
-	@cd $(BUILD_DIR) && env PR_RUN= vivado -quiet -mode batch -source $(SETUP_DIR)/oc_pr_image.tcl -notrace -log $(LOGS_DIR)/oc_pr_image.log -journal $(LO    GS_DIR)/oc_build.jou >> $(LOGS_DIR)/oc_pr_image.log
+	@cd $(BUILD_DIR) && env CLOUD_RUN=GEN_IMAGE vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[Building image files] done  `date +"%T %a %b %d %Y"`"
 
 

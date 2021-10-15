@@ -34,9 +34,7 @@ snap_env_sh = snap_env.sh
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-#.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image
-
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
 
 help:
 	@echo "Main targets for the OC-Accel Framework make process:";
@@ -45,24 +43,27 @@ help:
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
 	@echo "* sim            Start a simulation (it will build the model before)";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
-	@echo "* hw_project     Create Vivado project with oc-bip";
+	@echo "*";
 	@echo "* image          Build a complete FPGA bitstream (takes more than one hour)";
 	@echo "*                 (This command can be splitted into 'make synth' + 'make place' + 'make route')";
 	@echo "* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')";
+	@echo "*";
+	@echo "* cloud_base     Partial Reconfiguration: synthesize the top (static zone)";
+	@echo "*                 This command can be splitted into 4 steps:";
+	@echo "*                   'make oc_pr_synth_action' + 'make oc_pr_synth_static' and then"; 
+	@echo "*                   'make oc_pr_route_static' + 'make oc_pr_image'";
+	@echo "* cloud_action   Partial Reconfiguration: synthesize the action (dynamic zone)";
+	@echo "*                 This command can be splitted into 3 steps: (after a 'make cloud_base' run)";
+	@echo "*                 'make oc_pr_synth_action' + 'make oc_pr_route_action' + 'make oc_pr_image'";
+	@echo "*";
 	@echo "* software       Build software libraries and tools for SNAP";
 	@echo "* apps           Build the applications for all actions";
+	@echo "* hw_project     Create Vivado project with oc-bip (included in make image)";
 	@echo "* clean          Remove all files generated in make process";
 	@echo "* clean_config   As target 'clean' plus reset of the configuration";
 	@echo "* help           Print this message";
-	@echo "* cloud_base      synthesize the top/static";
-	@echo "* cloud_action    synthesize the action/dynamic";
-	@echo "* pr_synth_static synthesize the top/static";
-	@echo "* pr_synth_action synthesize the action/dynamic";
-	@echo "* pr_route_static route the top/static";
-	@echo "* pr_route_action route the action/dynamic";
-	@echo "* pr_image        build the bin files";
 	@echo;
-	@echo "The hardware related targets 'model', 'image', 'hardware', 'hw_project' and 'sim'";
+	@echo "The hardware related targets 'model', 'image', 'cloud_base', 'cloud_action', 'hardware', 'hw_project' and 'sim'";
 	@echo "do only exist on an x86 platform";
 	@echo;
 	@echo "Few tools to help debug";
@@ -119,20 +120,10 @@ $(hardware_subdirs): $(snap_env_sh)
 hardware: $(hardware_subdirs)
 
 # Model build and config
-hw_project model sim image cloud_enable cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image sim_tmux: $(snap_env_sh)
-
-#hw_project model sim image synth place route cloud_enable cloud_base cloud_action sim_tmux: $(snap_env_sh)
+hw_project model sim image synth place route cloud_enable cloud_base cloud_action oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image sim_tmux: $(snap_env_sh)
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
-	    fi                                             \
-	done
-
-cloud_merge:
-	@ignore_action_root=ignore_action_root $(MAKE) $(snap_env_sh)
-	@for dir in $(hardware_subdirs); do                \
-	    if [ -d $$dir ]; then                          \
-	        ignore_action_root=ignore_action_root $(MAKE) -s -C $$dir $@ || exit 1;          \
 	    fi                                             \
 	done
 
@@ -142,9 +133,8 @@ else #noteq ($(PLATFORM),x86_64)
 wrong_platform:
 	@echo; echo "ERROR: SNAP hardware builds and simulation are possible on x86 platform only"; echo;
 
-$(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action pr_synth_static pr_synth_action pr_route_static pr_route_action pr_merge pr_image cloud_merge: wrong_platform
+$(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image : wrong_platform
 
-#$(hardware_subdirs) hardware hw_project model sim image synth place route cloud_base cloud_action cloud_merge: wrong_platform
 endif
 
 # SNAP Config

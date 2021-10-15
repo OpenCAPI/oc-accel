@@ -42,7 +42,7 @@ set step      synth_design
 set logfile   $logs_dir/static_${step}.log
 set directive [get_property STEPS.SYNTH_DESIGN.ARGS.DIRECTIVE [get_runs synth_1]]
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start static synthesis" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start static synthesis" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 #synth_design 
 set    command $step

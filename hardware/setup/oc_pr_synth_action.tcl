@@ -45,7 +45,7 @@ set logfile   $logs_dir/action_${step}.log
 set directive [get_property STEPS.SYNTH_DESIGN.ARGS.DIRECTIVE [get_runs synth_1]]
 
 ##
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start action synthesis" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start action synthesis" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 #remove black_box if still in oc_action_core (due to a previous synthesis failing)
 #set black_box_present [exec grep "black_box" $root_dir/hdl/core/oc_action_core.v]

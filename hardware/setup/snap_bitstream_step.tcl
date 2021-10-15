@@ -84,7 +84,7 @@ set command  "write_bitstream -force -bin_file $img_dir/$IMAGE_NAME"
 #}
 ##
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: user image" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: user image" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: write_bitstream failed" $widthCol4 "" ]
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
@@ -97,7 +97,7 @@ if { $fpgacard != "BW250SOC" } {
 
 # Also write the factory bitstream if it was selected
 if { $factory_image == "TRUE" } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: factory image" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: factory image" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   # The factory bitstream has the properties from snap_bitstream_pre.tcl plus:
   #xapp1246/xapp1296: These settings are not needed for SNAP.
   #FIXME remove when testing was successful

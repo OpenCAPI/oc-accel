@@ -151,7 +151,7 @@ function test_memcopy {
         echo "  ${size}_A.bin ${size}_A.out are different!"
         exit 1
     fi
-    echo "ok"
+    echo "Check results: ok"
 
 }
 
@@ -227,7 +227,7 @@ function test_memcopy_with_hbm {
         	echo "  ${size}_B.bin ${size}_B.out are different! >> hbm_p$i r/w has failed"
         	exit 1
     	fi
-    	echo "ok"
+    	echo "Check data in hbm_p$i: ok"
 #-----------------------
 
        echo "Doing snap_hbm_memcopy from hbm_p$i to hbm_p$j (aligned) ${size} bytes ... "
