@@ -136,7 +136,7 @@ if { $fpgacard == "AD9V3" } {
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
 
-   if { ($fpgacard == "AD9H3") && ($hbm_used == "TRUE") && ($hbm_axi_if_num <= 16)} {
+   if { (($fpgacard == "AD9H3") || ($fpgacard == "AD9H335")) && ($hbm_used == "TRUE") && ($hbm_axi_if_num <= 16)} {
      #SR#10523711 - required to correct timing closure even after removing hbm_ip.xdc constraints file
      #This value is created by the HBM bd only for the 9H3 card which generates the hbm_ip.xdc
      #This file hbm_ip.xdc is disabled in create_framework.tcl by the command set_property IS_ENABLED false

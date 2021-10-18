@@ -24,6 +24,7 @@ set fpga_card   $::env(FPGACARD)
 set log_dir     $::env(LOGS_DIR)
 set log_file    $log_dir/create_hbm_host.log
 set hbm_axi_if_num   $::env(HBM_AXI_IF_NUM)
+set use_prflow       $::env(USE_PRFLOW)
 
 # user can set a specific value for the Action clock lower than the 250MHz nominal clock
 # as of now, only 3 clock frequencies are enabled in this file: 200MHz, 225MHz and 250MHz
@@ -125,17 +126,29 @@ if { $hbm_axi_if_num <= 16 } {
     CONFIG.USER_HBM_STACK {1}                            \
     CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}              \
     ] $cell >> $log_file
+#Stack selection depends on the chip and the placement of the logic
     if { $fpga_card == "AD9H3" } {
+    set hbm_stack_side "right" 
     set_property -dict [list                             \
       CONFIG.USER_SINGLE_STACK_SELECTION {RIGHT}         \
       ] $cell >> $log_file
     } else {
-    set_property -dict [list                             \
-      CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}          \
-      ] $cell >> $log_file
+      if { $use_prflow != "TRUE" } {
+         set hbm_stack_side "left" 
+         set_property -dict [list                             \
+           CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}          \
+           ] $cell >> $log_file
+      #with Partial reconfiguration, except for 9H3, always select the left stack since static area takes HBM left stack resources
+      } else {
+         set hbm_stack_side "left" 
+         set_property -dict [list                             \
+           CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}         \
+           ] $cell >> $log_file
+      }
     }
 # 2 stacks
 } else {
+  set hbm_stack_side "left" 
   set_property -dict [list                               \
      CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}           \
      CONFIG.USER_HBM_DENSITY {8GB}                       \
@@ -158,8 +171,9 @@ if { $hbm_axi_if_num <= 16 } {
      CONFIG.USER_APB_PCLK_PERIOD_1 {20.0}                \
      CONFIG.USER_TEMP_POLL_CNT_1 {50000}                 \
     ] $cell >> $log_file
-
 } 
+puts "                          $hbm_stack_side HBM stack selected"
+
 # AXI clk is 201.420MHZ and is used as HBM_ref_clk 
 # AXI clk divided by 3 is used by APB_clock (50-100MHz)
   set_property -dict [list                               \

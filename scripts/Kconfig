@@ -777,7 +777,7 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
 
 config ENABLE_PRFLOW
 	bool "Enabling Partial Reconfiguration Flow"
-	depends on AD9H3
+	depends on (AD9H3 || AD9H335 || AD9H7)
         default n
 	help
 	  Used for Cloud environment using dynamic reconfiguration of the images
