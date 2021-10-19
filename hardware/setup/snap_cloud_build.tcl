@@ -62,10 +62,10 @@ if { ($cloud_run == "SYNTH_ACTION") || ($cloud_run == "SYNTH_STATIC") || ($cloud
   set ::env(REMOVE_TMP_FILES) TRUE
 }
 
-if { [info exists ::env(CLOUD_BUILD_BITFILE)] == 1 } {
-  set cloud_build_bitfile [string toupper $::env(CLOUD_BUILD_BITFILE)]
+if { [info exists ::env(ERASE_BASE_BIN_FILE)] == 1 } {
+  set erase_base_bin_file [string toupper $::env(ERASE_BASE_BIN_FILE)]
 } else {
-  set cloud_build_bitfile "FALSE"
+  set erase_base_bin_file "TRUE"
 }
 
 #Define widths of each column
@@ -103,7 +103,7 @@ if { ($cloud_run == "ACTION") || ($cloud_run == "ROUTE_ACTION") } {
   source $root_dir/setup/oc_pr_route_action.tcl
 }
 
-if { ($cloud_run == "GEN_IMAGE") || (($cloud_build_bitfile == "TRUE") && !( ($cloud_run == "SYNTH_ACTION") || ($cloud_run == "SYNTH_STATIC") ))  } {
+if { ($cloud_run == "GEN_IMAGE") ||  !( ($cloud_run == "SYNTH_ACTION") || ($cloud_run == "SYNTH_STATIC") )  } {
 ## writing bitstream
   source $root_dir/setup/oc_pr_image.tcl
 }
@@ -124,9 +124,12 @@ if { $ila_debug == "TRUE" } {
 if { $::env(REMOVE_TMP_FILES) == "TRUE" } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing synth dcp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 }
-  exec rm -rf $dcp_dir/$oc_fpga_static_synth_dcp
-  exec rm -rf $dcp_dir/$oc_action_name_synth_dcp
-#}
+exec rm -rf $dcp_dir/$oc_fpga_static_synth_dcp
+exec rm -rf $dcp_dir/$oc_action_name_synth_dcp
 exec rm -rf $logs_dir/*.backup*
 
+if { (($cloud_run == "ACTION") || ($cloud_run == "ROUTE_ACTION") ) && ($erase_base_bin_file == "TRUE") } {
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing base bin files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
+  exec rm $img_dir/*ary.bin 
+}
 #close_project >> $logfile

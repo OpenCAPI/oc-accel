@@ -32,7 +32,7 @@
 // the application shouldn't use more interfaces than the number you have defined in Kconfig menu.
 // (extra interfaces not connected will be removed if not connected to the wrapper)
 
-#define HBM_AXI_IF_NB 12 
+#define HBM_AXI_IF_NB 12
 
 //===================================================================================//
 
@@ -836,7 +836,7 @@ void hls_action(snap_membus_1024_t *din_gmem,
 
 	// Host Memory AXI Lite Master Interface
 
-	#ifdef HLS_VITIS_USED
+#ifdef HLS_VITIS_USED
        #pragma HLS AGGREGATE variable=act_reg
 #else
        #pragma HLS DATA_PACK variable=act_reg
