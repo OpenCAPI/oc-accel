@@ -294,7 +294,7 @@ static int do_action (struct snap_card* h,
         return 0x100;
     }
 
-    VERBOSE0 ("Attach done\n");
+    VERBOSE1 ("Attach done\n");
     action_memcpy (h, action, dest, src, memsize);
     rc = action_wait_idle (h, timeout, &td);
     print_time (td, memsize);
@@ -720,10 +720,10 @@ int main (int argc, char* argv[])
         exit (1);
     }
 
-    if (card_no > 4) {
-        usage (argv[0]);
-        exit (1);
-    }
+//    if (card_no > 4) {
+//        usage (argv[0]);
+//        exit (1);
+//    }
 
     if (card_no == 0) {
         snprintf (device, sizeof (device) - 1, "IBM,oc-snap");

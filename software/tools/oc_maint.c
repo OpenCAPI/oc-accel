@@ -398,7 +398,7 @@ int main (int argc, char* argv[])
             { "mode",      required_argument,     NULL, 'm' },
             { 0,           0,                     NULL,  0  }
         };
-        ch = getopt_long (argc, argv, "C:i:m:Vqhvdu",
+        ch = getopt_long (argc, argv, "C:i:m:Vqhvdup",
                           long_options, &option_index);
 
         if (-1 == ch) {
