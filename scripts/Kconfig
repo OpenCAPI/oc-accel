@@ -820,28 +820,11 @@ config ILA_DEBUG
 #	default "TRUE"  if ENABLE_FACTORY
 #	default "FALSE" if ! ENABLE_FACTORY
 
-#FIXME Cloud flow will be revised
-#config ENABLE_CLOUD_USER_FLOW
-#	bool "Cloud user flow"
-#	default y
-#	depends on ENABLE_PRFLOW
 
-config CLOUD_USER_FLOW
+config ERASE_BASE_BIN_FILES
 	string
-	default "TRUE" if ENABLE_CLOUD_USER_FLOW
-	default "FALSE" if ! ENABLE_CLOUD_USER_FLOW
-
-config ENABLE_CLOUD_BUILD_BITFILE
-	bool "Build bitstream file"
-	help
-	  Enables the generation of the image for the FPGA
-	default y
 	depends on ENABLE_PRFLOW
-
-config CLOUD_BUILD_BITFILE
-	string
-	default "TRUE" if ENABLE_CLOUD_BUILD_BITFILE
-	default "FALSE" if ! ENABLE_CLOUD_BUILD_BITFILE
+	default "TRUE" 
 
 
 config ENABLE_UNIT_VERIF

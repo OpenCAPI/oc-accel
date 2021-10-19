@@ -19,6 +19,9 @@ PLATFORM ?= $(shell uname -m)
 
 export SNAP_ROOT=$(abspath .)
 
+export DCP_ROOT_REL ?= /hardware/DCP
+export DCP_ROOT ?= $(SNAP_ROOT)$(DCP_ROOT_REL)
+
 config_subdirs += $(SNAP_ROOT)/scripts
 software_subdirs += $(SNAP_ROOT)/software
 hardware_subdirs += $(SNAP_ROOT)/hardware
@@ -34,7 +37,7 @@ snap_env_sh = snap_env.sh
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_cloud clean_config clean_env gitclean
 
 help:
 	@echo "Main targets for the OC-Accel Framework make process:";
@@ -60,6 +63,7 @@ help:
 	@echo "* apps           Build the applications for all actions";
 	@echo "* hw_project     Create Vivado project with oc-bip (included in make image)";
 	@echo "* clean          Remove all files generated in make process";
+	@echo "* clean_cloud    Remove all files generated in DCP dir with make process (PR mode)";
 	@echo "* clean_config   As target 'clean' plus reset of the configuration";
 	@echo "* help           Print this message";
 	@echo;
@@ -191,6 +195,11 @@ clean:
 	@find . -depth -name '*~'  -exec rm -rf '{}' \; -print
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
 	@$(RM) *.mif vivado*.jou vivado*.log
+
+clean_cloud: clean
+	@echo -e "[CLEAN DCP DIRECTORY.] removing directory ~$(DCP_ROOT_REL)";
+	@$(RM) -r $(DCP_ROOT);
+
 
 clean_config: clean
 	@$(RM) snap_workflow*.log

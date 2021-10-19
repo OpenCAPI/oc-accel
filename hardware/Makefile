@@ -95,7 +95,6 @@ SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
 
 ifeq ($(PLATFORM),x86_64)
 
-#.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image cloud_base cloud_action ocse software app model xsim irun nosim sim clean oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image
 .PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image synth place route cloud_enable cloud_base cloud_action ocse software app model xsim irun nosim sim clean oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image
 
 all: model image
@@ -422,8 +421,6 @@ cloudcmd_allow_%:
 		echo "   Otherwise use Kconfig menu to select the PR flow!"; \
 		echo "---------------------------------------------------------------"; \
 		echo; exit -1; \
-	elif [ "$(CLOUD_USER_FLOW)" == "TRUE" ] && [ "$*" == "cloud_base" ]; then \
-		echo; echo "Error: the command \"make $*\" is not allowed for cloud user flow!"; exit -1; \
 	fi
 
 cloud_base: cloudcmd_allow_cloud_base .hw_project_done
@@ -663,5 +660,8 @@ clean:
 		if [ $$? -ne 0 ]; then                      \
 			echo -e "                        Error: [make "$@"] failed for action/application in $(ACTION_ROOT)"; exit -1; \
 		fi                                          \
+	fi
+	@if [ "$(USE_PRFLOW)" == "TRUE" ]; then	    \
+	  echo -e "            INFO: by default ~$(DCP_ROOT_REL) is not cleaned (use 'make clean_cloud' to clean it)"; \
 	fi
 	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`" 1>/dev/null 2>/dev/null
