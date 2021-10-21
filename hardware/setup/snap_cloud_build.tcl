@@ -123,13 +123,15 @@ if { $ila_debug == "TRUE" } {
 ## removing temporary checkpoint files
 if { $::env(REMOVE_TMP_FILES) == "TRUE" } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing synth dcp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
+  exec rm -rf $dcp_dir/$oc_fpga_static_synth_dcp
+  exec rm -rf $dcp_dir/$oc_action_name_synth_dcp
+  exec rm -rf $logs_dir/*.backup*
 }
-exec rm -rf $dcp_dir/$oc_fpga_static_synth_dcp
-exec rm -rf $dcp_dir/$oc_action_name_synth_dcp
-exec rm -rf $logs_dir/*.backup*
 
 if { (($cloud_run == "ACTION") || ($cloud_run == "ROUTE_ACTION") ) && ($erase_base_bin_file == "TRUE") } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing base bin files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
-  exec rm $img_dir/*ary.bin 
+  file delete {*}[glob -nocomplain $img_dir/*ary.bin]
+  file delete {*}[glob -nocomplain $img_dir/*ary.prm]
+  file delete {*}[glob -nocomplain $img_dir/*.bit]
 }
 #close_project >> $logfile
