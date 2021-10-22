@@ -223,6 +223,7 @@
 //   Don't touch, they will be replaced by patch_version.sh (only for HLS Action)
   `define HLS_ACTION_TYPE 32'h0
   `define HLS_RELEASE_LEVEL 32'h0
+  `define HLS_HBM_IF_NUM 32'h0
 ////////////////////////////////////////////////////////////////////
 
 //Not implemented yet

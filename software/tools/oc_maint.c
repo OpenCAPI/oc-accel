@@ -198,11 +198,13 @@ static void snap_version (void* handle)
     snap_card_ioctl (handle, GET_CARD_NAME, (unsigned long)&buffer);
     VERBOSE1 ("Name: OC-%s. ", buffer);
 
-    /* if card is a 9H3 or 9H7 then display number of HBM AX interfaces */
-    snap_card_ioctl (handle, GET_SDRAM_SIZE, (unsigned long)&ioctl_data);
+    uint32_t action_hbm_axi_if_num;
+    /* if card is a 9H3 or 9H7 then display number of HBM AXI interfaces */
     if ( !( strcmp(buffer, "AD9H3") && strcmp(buffer,"AD9H7")  && strcmp(buffer,"AD9H335") )) {
-        VERBOSE1 (" %d HBM AXI interfaces. ", (int)ioctl_data);
+    	action_hbm_axi_if_num = snap_read32 (handle, ACTION_HBM_AXI_NUM);
+        VERBOSE1 (" %d HBM AXI interfaces. ", (int)action_hbm_axi_if_num);
     } else {
+    	snap_card_ioctl (handle, GET_SDRAM_SIZE, (unsigned long)&ioctl_data);
         VERBOSE1 (" %d MB DRAM available. ", (int)ioctl_data);
     }
 
@@ -244,12 +246,20 @@ static void snap_version (void* handle)
     if (usercode == true)
     {
 		reg = snap_read64(handle, SNAP_USR);
-		VERBOSE1("OC-ACCEL FPGA User Code:     %ld \n", reg);
+  		// Convert the hex back to a string.
+  		int j;
+  		char string[9];
+  		char* reg_char = (char *) &reg;
+  		int len = strlen(reg_char);
+  		for (j = 0; j < len; j++) string[len-1 - j] = reg_char[j];
+  
+		//VERBOSE1("OC-ACCEL FPGA User Code:     %16lx \n", reg);
+		VERBOSE1("OC-ACCEL FPGA User Code:     %s \n", string);
     }
     if (prcode == true)
     {
 		reg = snap_read64(handle, SNAP_PRC);
-		VERBOSE1("OC-ACCEL Static PR Code:     %ld \n", reg);
+		VERBOSE1("OC-ACCEL Static PR Code:     %03lx \n", reg);
     }
     VERBOSE2 ("[%s] Exit\n", __func__);
     return;

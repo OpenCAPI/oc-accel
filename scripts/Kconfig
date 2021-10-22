@@ -780,7 +780,13 @@ config ENABLE_PRFLOW
 	depends on (AD9H3 || AD9H335 || AD9H7)
         default n
 	help
-	  Used for Cloud environment using dynamic reconfiguration of the images
+	  Used for Cloud environment using dynamic reconfiguration of the images.
+	  All the code except the action will be be placed in a static area that will
+	  not be reprogrammed meaning that the OC link will not be stopped/retrained.
+	  Loading a dynamic code will be temporary (FPGA) and a oc_reload command will
+	  reload the permanent code from Flash.
+	  HBM resource is part of the dynamic code. Limitation to 16HBM is due to the
+	  actual placement of the static area.
 
 config USE_PRFLOW
 	string
@@ -888,13 +894,13 @@ config FLASH_USED
 	default "FALSE" if ! ENABLE_FLASH
 
 config ENABLE_USERCODE
-        bool "Enable USER CODE (code will be requested to user later on)"
+        bool "Enable USER CODE (select the line below to fill the USERCODE value)"
         default n 
         help
           This allows user to define a user code associated to the FPGA content
           For ex user want to create 2 configuration with 2 different VIVADO versions
 
 config USERCODE
-        string "USERCODE(max64bits)"
+        string "<= value of the USERCODE(8 letters only)"
+        default "usercode"
         depends on ENABLE_USERCODE
-        default "0000000000000000"

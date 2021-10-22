@@ -191,15 +191,13 @@
 // IO Buffer used to move the ocde input IO to the dynamic part of PR  
 // This is related only to AD9H3 and AD9H7 who have HBM memories
 `ifdef AD9H3
-   IBUF #(
-   ) IBUF_inst (
+   IBUF IBUF_inst (
       .O(ocde_to_bsp),     // Buffer output to send to BSP
       .I(ocde)             // Buffer input (connect directly from top-level port)
    );
 `else
   `ifdef AD9H7
-     IBUF #(
-     ) IBUF_inst (
+     IBUF IBUF_inst (
         .O(ocde_to_bsp),     // Buffer output to send to BSP
         .I(ocde)             // Buffer input (connect directly from top-level port)
      );
@@ -6049,26 +6047,26 @@ assign  gt_tx_gt_port_3_p_i = gt_gtxp[3];
 
 // Following IBUF allows to create the dynamic area when using partial reconfiguration flow
 // This is needed only for signals in the dynamic area which have external IOs
-   IBUF #() IBUF_gt_ref_clk_p_inst  ( .O(gt_ref_clk_p_o), .I(gt_ref_clk_p));
-   IBUF #() IBUF_gt_ref_clk_n_inst  ( .O(gt_ref_clk_n_o), .I(gt_ref_clk_n));
+   IBUF IBUF_gt_ref_clk_p_inst  ( .O(gt_ref_clk_p_o), .I(gt_ref_clk_p));
+   IBUF IBUF_gt_ref_clk_n_inst  ( .O(gt_ref_clk_n_o), .I(gt_ref_clk_n));
 
-   IBUF #() IBUF_gt_rx_gt_p0_p_inst ( .O(gt_rx_gt_port_0_p_o), .I(gt_rx_gt_port_0_p));
-   IBUF #() IBUF_gt_rx_gt_p0_n_inst ( .O(gt_rx_gt_port_0_n_o), .I(gt_rx_gt_port_0_n));
-   IBUF #() IBUF_gt_rx_gt_p1_p_inst ( .O(gt_rx_gt_port_1_p_o), .I(gt_rx_gt_port_1_p));
-   IBUF #() IBUF_gt_rx_gt_p1_n_inst ( .O(gt_rx_gt_port_1_n_o), .I(gt_rx_gt_port_1_n));
-   IBUF #() IBUF_gt_rx_gt_p2_p_inst ( .O(gt_rx_gt_port_2_p_o), .I(gt_rx_gt_port_2_p));
-   IBUF #() IBUF_gt_rx_gt_p2_n_inst ( .O(gt_rx_gt_port_2_n_o), .I(gt_rx_gt_port_2_n));
-   IBUF #() IBUF_gt_rx_gt_p3_p_inst ( .O(gt_rx_gt_port_3_p_o), .I(gt_rx_gt_port_3_p));
-   IBUF #() IBUF_gt_rx_gt_p3_n_inst ( .O(gt_rx_gt_port_3_n_o), .I(gt_rx_gt_port_3_n));
+   IBUF IBUF_gt_rx_gt_p0_p_inst ( .O(gt_rx_gt_port_0_p_o), .I(gt_rx_gt_port_0_p));
+   IBUF IBUF_gt_rx_gt_p0_n_inst ( .O(gt_rx_gt_port_0_n_o), .I(gt_rx_gt_port_0_n));
+   IBUF IBUF_gt_rx_gt_p1_p_inst ( .O(gt_rx_gt_port_1_p_o), .I(gt_rx_gt_port_1_p));
+   IBUF IBUF_gt_rx_gt_p1_n_inst ( .O(gt_rx_gt_port_1_n_o), .I(gt_rx_gt_port_1_n));
+   IBUF IBUF_gt_rx_gt_p2_p_inst ( .O(gt_rx_gt_port_2_p_o), .I(gt_rx_gt_port_2_p));
+   IBUF IBUF_gt_rx_gt_p2_n_inst ( .O(gt_rx_gt_port_2_n_o), .I(gt_rx_gt_port_2_n));
+   IBUF IBUF_gt_rx_gt_p3_p_inst ( .O(gt_rx_gt_port_3_p_o), .I(gt_rx_gt_port_3_p));
+   IBUF IBUF_gt_rx_gt_p3_n_inst ( .O(gt_rx_gt_port_3_n_o), .I(gt_rx_gt_port_3_n));
     
-   IBUF #() IBUF_gt_tx_gt_p0_p_inst ( .O(gt_tx_gt_port_0_p), .I(gt_tx_gt_port_0_p_i));
-   IBUF #() IBUF_gt_tx_gt_p0_n_inst ( .O(gt_tx_gt_port_0_n), .I(gt_tx_gt_port_0_n_i));
-   IBUF #() IBUF_gt_tx_gt_p1_p_inst ( .O(gt_tx_gt_port_1_p), .I(gt_tx_gt_port_1_p_i));
-   IBUF #() IBUF_gt_tx_gt_p1_n_inst ( .O(gt_tx_gt_port_1_n), .I(gt_tx_gt_port_1_n_i));
-   IBUF #() IBUF_gt_tx_gt_p2_p_inst ( .O(gt_tx_gt_port_2_p), .I(gt_tx_gt_port_2_p_i));
-   IBUF #() IBUF_gt_tx_gt_p2_n_inst ( .O(gt_tx_gt_port_2_n), .I(gt_tx_gt_port_2_n_i));
-   IBUF #() IBUF_gt_tx_gt_p3_p_inst ( .O(gt_tx_gt_port_3_p), .I(gt_tx_gt_port_3_p_i));
-   IBUF #() IBUF_gt_tx_gt_p3_n_inst ( .O(gt_tx_gt_port_3_n), .I(gt_tx_gt_port_3_n_i));
+   IBUF IBUF_gt_tx_gt_p0_p_inst ( .O(gt_tx_gt_port_0_p), .I(gt_tx_gt_port_0_p_i));
+   IBUF IBUF_gt_tx_gt_p0_n_inst ( .O(gt_tx_gt_port_0_n), .I(gt_tx_gt_port_0_n_i));
+   IBUF IBUF_gt_tx_gt_p1_p_inst ( .O(gt_tx_gt_port_1_p), .I(gt_tx_gt_port_1_p_i));
+   IBUF IBUF_gt_tx_gt_p1_n_inst ( .O(gt_tx_gt_port_1_n), .I(gt_tx_gt_port_1_n_i));
+   IBUF IBUF_gt_tx_gt_p2_p_inst ( .O(gt_tx_gt_port_2_p), .I(gt_tx_gt_port_2_p_i));
+   IBUF IBUF_gt_tx_gt_p2_n_inst ( .O(gt_tx_gt_port_2_n), .I(gt_tx_gt_port_2_n_i));
+   IBUF IBUF_gt_tx_gt_p3_p_inst ( .O(gt_tx_gt_port_3_p), .I(gt_tx_gt_port_3_p_i));
+   IBUF IBUF_gt_tx_gt_p3_n_inst ( .O(gt_tx_gt_port_3_n), .I(gt_tx_gt_port_3_n_i));
 
 eth_100G eth_100G_0
 (

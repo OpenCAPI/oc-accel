@@ -313,7 +313,7 @@ fi
 
   # Note: USERCODE requested
   if [ "$ENABLE_USERCODE" == "y" ]; then
-      echo "USERCODE          has been set to : $USERCODE";
+      echo "USERCODE          has been set to : ${USERCODE:0:8}";
   fi
 
 

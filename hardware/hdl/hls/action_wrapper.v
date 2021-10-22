@@ -1670,6 +1670,7 @@ parameter ADDR_ACTION_TYPE = 32'h10;
 parameter ADDR_RELEASE_LEVEL = 32'h14;
 parameter ADDR_ACTION_INTERRUPT_SRC_ADDR_LO = 32'h18;
 parameter ADDR_ACTION_INTERRUPT_SRC_ADDR_HI = 32'h1C;
+parameter ADDR_HBM_IF_NUM = 32'h20;
 
 reg context_q;
 reg [31:0] interrupt_src_hi;
@@ -3589,6 +3590,8 @@ always @ (posedge ap_clk)
             reg_rdata_hijack <= `HLS_ACTION_TYPE;
         else if (s_axi_ctrl_reg_araddr == ADDR_RELEASE_LEVEL)
             reg_rdata_hijack <= `HLS_RELEASE_LEVEL;
+        else if (s_axi_ctrl_reg_araddr == ADDR_HBM_IF_NUM)
+            reg_rdata_hijack <= `HLS_HBM_IF_NUM;
         else
             reg_rdata_hijack <= 32'h0;
     end

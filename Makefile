@@ -48,7 +48,7 @@ help:
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
 	@echo "*";
 	@echo "* image          Build a complete FPGA bitstream (takes more than one hour)";
-	@echo "*                 (This command can be splitted into 'make synth' + 'make place' + 'make route')";
+	@echo "*                 (can be splitted into 'make synth' + 'make place' + 'make route')";
 	@echo "* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')";
 	@echo "*";
 	@echo "* cloud_base     Partial Reconfiguration: synthesize the top (static zone)";

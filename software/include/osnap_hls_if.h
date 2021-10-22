@@ -66,6 +66,8 @@ extern "C" {
 #define ACTION_IRQ_SRC_LO          0x18              /* SNAP Action interrupt src (low 32bits) (obj_handler) */
 #define ACTION_IRQ_SRC_HI          0x1C              /* SNAP Action interrupt src (high 32bits) (obj_handler) */
 
+#define ACTION_HBM_AXI_NUM         0x20              /* SNAP Action number of HBM AXI interfaces */
+
 /* ACTION Specific register setup: Input */
 #define ACTION_PARAMS_IN           0x100
 #define ACTION_RETC_IN             (ACTION_PARAMS_IN + 4)
