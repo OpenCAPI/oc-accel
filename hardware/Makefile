@@ -429,7 +429,6 @@ cloud_base: cloudcmd_allow_cloud_base .hw_project_done
 	@echo -e "[BUILD CLOUD BASE....] done  `date +"%T %a %b %d %Y"`"
 	@echo -e "------------------------------------------------------------------"
 	@echo -e "==> Binary images can be found in ~/hardware/build/Images"
-	@echo -e "==> Copy of partial binary images can be found in ~/hardware/DCP"
 	@echo -e "------------------------------------------------------------------"
 	@echo -e ""
 
@@ -446,8 +445,7 @@ cloud_action: cloudcmd_allow_cloud_action .hw_project_done
 	@cd $(BUILD_DIR) && env CLOUD_RUN=ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
 	@echo -e "[BUILD CLOUD ACTION..] done  `date +"%T %a %b %d %Y"`"
 	@echo -e "------------------------------------------------------------------"
-	@echo -e "==> Binary images can be found in ~/hardware/build/Images"
-	@echo -e "==> Copy of partial binary images can be found in ~/hardware/DCP"
+	@echo -e "==> Partial binary image can be found in ~/hardware/build/Images"
 	@echo -e "------------------------------------------------------------------"
 	@echo -e ""
 #---------------------------------

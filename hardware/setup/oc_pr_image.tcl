@@ -125,8 +125,6 @@ puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "     closing project"
 exec rm -rf $img_dir/${IMAGE_NAME}.bin
 #partial.bin is used for PR with oc-flash-script
 exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bin $img_dir/${IMAGE_NAME}_partial.bin
-#keep a copy of the generated partial bit files in DCP
-exec cp $img_dir/${IMAGE_NAME}_partial.bin $dcp_dir/.
 
 #partial.bit is used for PR with jtag only
 exec mv $img_dir/${IMAGE_NAME}_pblock_dynamic_PR_partial.bit $img_dir/${IMAGE_NAME}_partial.bit
