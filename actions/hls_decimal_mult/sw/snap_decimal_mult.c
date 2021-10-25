@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
 	uint8_t type_out = SNAP_ADDRTYPE_HOST_DRAM;
 	uint64_t addr_out = 0x0ull;
 	int exit_code = EXIT_SUCCESS;
+	int test_failed = 0;
 	FILE *fp_ref, *fp_action;
 	
 	// default is completion of the action by IRQ
@@ -285,9 +286,13 @@ int main(int argc, char *argv[])
 		MAX_NB_OF_DECIMAL_READ);
 	fprintf(stdout, "Operation is the multiplication of 3 decimals \n");
 	fprintf(stdout, "\n All products results processed by (software or hardware) action are below \n");
-        for ( int i = 0; i < inputs_to_process/3; i++ ) 
+        for ( int i = 0; i < inputs_to_process/3; i++ ) {
 		fprintf(stdout, "inputs: %lf * %lf * %lf =>\t  expected: %lf \t action processed: %lf \n",
-			data_in[3*i], data_in[(3*i)+1], data_in[(3*i)+2], *(data_out + i), *(ref_result + i));
+		     data_in[3*i], data_in[(3*i)+1], data_in[(3*i)+2], *(ref_result + i), *(data_out + i));
+		if (*(ref_result + i) != *(data_out + i)) test_failed++;
+	}
+	if (!test_failed) fprintf(stdout, "TEST OK\n");
+	else              fprintf(stdout, "TEST FAILED\n");
 
 	// This can help understanding how data are stored in host server
 	if (verbose_flag) {
