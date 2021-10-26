@@ -107,7 +107,7 @@ fi
 if [ $card_type -eq "32" ] || [ $card_type -eq "33" ] || [ $card_type -eq "35" ]; then
   echo -n "HBM card detected"
   echo -n "Number of AXI HBM IF: "
-  hbm_if_num_hexa=`snap_peek -C ${snap_card} 0x30 |grep 30|cut -c22-23 || exit 1;`
+  hbm_if_num_hexa=`snap_peek -C ${snap_card} -w32 0x0020 |grep 20|cut -c12-23 || exit 1;`
   hbm_if_num=$(printf '%#x' "0x$hbm_if_num_hexa")
   printf "%d\n" $hbm_if_num
   if [ $hbm_if_num == 0 ]; then
