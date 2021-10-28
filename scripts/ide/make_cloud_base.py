@@ -21,19 +21,19 @@ from os.path import join as pathjoin
 from ocaccel_utils import run_and_poll_with_progress
 from ocaccel_utils import msg 
 
-def make_image(log, options = None):
-    msg.ok_msg_blue("--------> Make the FPGA image")
-    msg.warn_msg("Make image might take quite a long time to finish, be patient ... ")
-    rc = run_and_poll_with_progress(cmd = "make image", work_dir = ".", log = log, max_log_len = 120, timeout = options.make_timeout)
+def make_cloud_base(log, options = None):
+    msg.ok_msg_blue("--------> Make the CLOUD BASE FPGA image in Partial Reconfiguration mode")
+    msg.warn_msg("Building an image might take quite a long time to finish, be patient ... ")
+    rc = run_and_poll_with_progress(cmd = "make cloud_base", work_dir = ".", log = log, max_log_len = 120, timeout = options.make_timeout)
 
     if rc == 0:
-        msg.ok_msg("====================")
-        msg.ok_msg("FPGA image generated")
-        msg.ok_msg("====================")
+        msg.ok_msg("=========================")
+        msg.ok_msg("base FPGA image generated")
+        msg.ok_msg("=========================")
         msg.ok_msg("Images are available in %s" % pathjoin(options.ocaccel_root, 'hardware', 'build', 'Images'))
     else:
-        msg.warn_msg("Failed to make image, check log in %s" % log)
-        msg.warn_msg("Failed to make image! Exiting ... ")
+        msg.warn_msg("Failed to make cloud base image, check log in %s" % log)
+        msg.warn_msg("Failed to make cloud base image ! Exiting ... ")
         msg.warn_msg("Here are some of the error logs:")
         f = open(log,"r")
         l = f.readlines()
@@ -42,4 +42,4 @@ def make_image(log, options = None):
         msg.fail_msg("End of the error log!")
 
 if __name__ == '__main__':
-    make_image("./make_image.log")
+    make_cloud_base("./make_cloud_base.log")
