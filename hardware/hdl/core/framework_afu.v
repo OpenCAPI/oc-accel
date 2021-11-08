@@ -534,7 +534,7 @@ module framework_afu (
   wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_bid       ;
   wire [ `AXI_CARD_MEM_ID_WIDTH-1 : 0 ]    act_axi_card_mem0_rid       ;
 
-  wire                                      clock_hbm_ref               ;
+  //wire                                      clock_hbm_ref               ;
   wire                                      act_axi_card_mem0_apb_pclk               ;
   `endif
 
@@ -1144,7 +1144,7 @@ module framework_afu (
       .m_aximm_wstrb                        ( mm_conv2snap_wstrb    ) ,
       .m_aximm_wvalid                       ( mm_conv2snap_wvalid_i   ),
 //HBM
-      .clock_hbm_ref                        (clock_act),
+      .clock_hbm_ref                        (clock_afu),
       .act_axi_card_mem0_apb_pclk           (act_axi_card_mem0_apb_pclk)
  ) ;
 
@@ -1228,7 +1228,7 @@ BUFGCE_DIV #(
       .BUFGCE_DIVIDE(2)
    )
     u_APB_CLK_BUFG  (
-  .I (clock_act),
+  .I (clock_afu),
   .CE (1'b1),
   .CLR (1'b0),
   .O (act_axi_card_mem0_apb_pclk)

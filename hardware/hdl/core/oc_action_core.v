@@ -189,20 +189,27 @@
 // top level to be part of the dynamic area. A decoupling has been added to ensure this ocde
 // value never change during a dynamic programming.  
 // IO Buffer used to move the ocde input IO to the dynamic part of PR  
-// This is related only to AD9H3 and AD9H7 who have HBM memories
+// This is related only to AD9H3, AD9H335 and AD9H7 who have HBM memories
 `ifdef AD9H3
    IBUF IBUF_inst (
       .O(ocde_to_bsp),     // Buffer output to send to BSP
       .I(ocde)             // Buffer input (connect directly from top-level port)
    );
 `else
-  `ifdef AD9H7
+  `ifdef AD9H335
      IBUF IBUF_inst (
         .O(ocde_to_bsp),     // Buffer output to send to BSP
         .I(ocde)             // Buffer input (connect directly from top-level port)
      );
   `else
-     assign ocde_to_bsp = ocde;
+     `ifdef AD9H7
+        IBUF IBUF_inst (
+           .O(ocde_to_bsp),     // Buffer output to send to BSP
+           .I(ocde)             // Buffer input (connect directly from top-level port)
+        );
+     `else
+        assign ocde_to_bsp = ocde;
+     `endif
   `endif
 `endif
   // // ******************************************************************************
@@ -780,7 +787,7 @@
   wire [ 3 : 0 ]                          act_axi_card_hbm_p8_awcache   ;
   wire [ 2 : 0 ]                          act_axi_card_hbm_p8_awprot    ;
   wire [ 3 : 0 ]                          act_axi_card_hbm_p8_awregion  ;
-  wire [ 3 : 0 ]                          act_axi_card_hbm_pp8awqos     ;
+  wire [ 3 : 0 ]                          act_axi_card_hbm_p8_awqos     ;
   wire                                    act_axi_card_hbm_p8_awvalid   ;
   wire                                    act_axi_card_hbm_p8_awready   ;
   wire [ `AXI_CARD_HBM_DATA_WIDTH-1 : 0 ]  act_axi_card_hbm_p8_wdata     ;
@@ -4564,6 +4571,10 @@ block_RAM block_ram_i1
       .s_axi_p0_HBM_awqos       ( act_axi_card_hbm_p0_awqos     ) ,
       .s_axi_p0_HBM_arregion    ( act_axi_card_hbm_p0_arregion  ) ,
       .s_axi_p0_HBM_arqos       ( act_axi_card_hbm_p0_arqos     ) ,
+      .s_axi_p0_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p0_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p0_HBM_bid         (                               ) ,
+      .s_axi_p0_HBM_rid         (                               ) ,
   `endif
       .s_axi_p0_HBM_awcache     ( act_axi_card_hbm_p0_awcache   ) ,
       .s_axi_p0_HBM_awprot      ( act_axi_card_hbm_p0_awprot    ) ,
@@ -4605,6 +4616,10 @@ block_RAM block_ram_i1
       .s_axi_p1_HBM_awqos       ( act_axi_card_hbm_p1_awqos     ) ,
       .s_axi_p1_HBM_arregion    ( act_axi_card_hbm_p1_arregion  ) ,
       .s_axi_p1_HBM_arqos       ( act_axi_card_hbm_p1_arqos     ) ,
+      .s_axi_p1_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p1_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p1_HBM_bid         (                               ) ,
+      .s_axi_p1_HBM_rid         (                               ) ,
   `endif
       .s_axi_p1_HBM_awcache     ( act_axi_card_hbm_p1_awcache   ) ,
       .s_axi_p1_HBM_awprot      ( act_axi_card_hbm_p1_awprot    ) ,
@@ -4646,6 +4661,10 @@ block_RAM block_ram_i1
       .s_axi_p2_HBM_awqos       ( act_axi_card_hbm_p2_awqos     ) ,
       .s_axi_p2_HBM_arregion    ( act_axi_card_hbm_p2_arregion  ) ,
       .s_axi_p2_HBM_arqos       ( act_axi_card_hbm_p2_arqos     ) ,
+      .s_axi_p2_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p2_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p2_HBM_bid         (                               ) ,
+      .s_axi_p2_HBM_rid         (                               ) ,
   `endif
       .s_axi_p2_HBM_awcache     ( act_axi_card_hbm_p2_awcache   ) ,
       .s_axi_p2_HBM_awprot      ( act_axi_card_hbm_p2_awprot    ) ,
@@ -4687,6 +4706,10 @@ block_RAM block_ram_i1
       .s_axi_p3_HBM_awqos       ( act_axi_card_hbm_p3_awqos     ) ,
       .s_axi_p3_HBM_arregion    ( act_axi_card_hbm_p3_arregion  ) ,
       .s_axi_p3_HBM_arqos       ( act_axi_card_hbm_p3_arqos     ) ,
+      .s_axi_p3_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p3_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p3_HBM_bid         (                               ) ,
+      .s_axi_p3_HBM_rid         (                               ) ,
   `endif
       .s_axi_p3_HBM_awcache     ( act_axi_card_hbm_p3_awcache   ) ,
       .s_axi_p3_HBM_awprot      ( act_axi_card_hbm_p3_awprot    ) ,
@@ -4728,6 +4751,10 @@ block_RAM block_ram_i1
       .s_axi_p4_HBM_awqos       ( act_axi_card_hbm_p4_awqos     ) ,
       .s_axi_p4_HBM_arregion    ( act_axi_card_hbm_p4_arregion  ) ,
       .s_axi_p4_HBM_arqos       ( act_axi_card_hbm_p4_arqos     ) ,
+      .s_axi_p4_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p4_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p4_HBM_bid         (                               ) ,
+      .s_axi_p4_HBM_rid         (                               ) ,
   `endif
       .s_axi_p4_HBM_awcache     ( act_axi_card_hbm_p4_awcache   ) ,
       .s_axi_p4_HBM_awprot      ( act_axi_card_hbm_p4_awprot    ) ,
@@ -4769,6 +4796,10 @@ block_RAM block_ram_i1
       .s_axi_p5_HBM_awqos       ( act_axi_card_hbm_p5_awqos     ) ,
       .s_axi_p5_HBM_arregion    ( act_axi_card_hbm_p5_arregion  ) ,
       .s_axi_p5_HBM_arqos       ( act_axi_card_hbm_p5_arqos     ) ,
+      .s_axi_p5_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p5_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p5_HBM_bid         (                               ) ,
+      .s_axi_p5_HBM_rid         (                               ) ,
   `endif
       .s_axi_p5_HBM_awcache     ( act_axi_card_hbm_p5_awcache   ) ,
       .s_axi_p5_HBM_awprot      ( act_axi_card_hbm_p5_awprot    ) ,
@@ -4810,6 +4841,10 @@ block_RAM block_ram_i1
       .s_axi_p6_HBM_awqos       ( act_axi_card_hbm_p6_awqos     ) ,
       .s_axi_p6_HBM_arregion    ( act_axi_card_hbm_p6_arregion  ) ,
       .s_axi_p6_HBM_arqos       ( act_axi_card_hbm_p6_arqos     ) ,
+      .s_axi_p6_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p6_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p6_HBM_bid         (                               ) ,
+      .s_axi_p6_HBM_rid         (                               ) ,
   `endif
       .s_axi_p6_HBM_awcache     ( act_axi_card_hbm_p6_awcache   ) ,
       .s_axi_p6_HBM_awprot      ( act_axi_card_hbm_p6_awprot    ) ,
@@ -4851,6 +4886,10 @@ block_RAM block_ram_i1
       .s_axi_p7_HBM_awqos       ( act_axi_card_hbm_p7_awqos     ) ,
       .s_axi_p7_HBM_arregion    ( act_axi_card_hbm_p7_arregion  ) ,
       .s_axi_p7_HBM_arqos       ( act_axi_card_hbm_p7_arqos     ) ,
+      .s_axi_p7_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p7_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p7_HBM_bid         (                               ) ,
+      .s_axi_p7_HBM_rid         (                               ) ,
   `endif
       .s_axi_p7_HBM_awcache     ( act_axi_card_hbm_p7_awcache   ) ,
       .s_axi_p7_HBM_awprot      ( act_axi_card_hbm_p7_awprot    ) ,
@@ -4892,6 +4931,10 @@ block_RAM block_ram_i1
       .s_axi_p8_HBM_awqos       ( act_axi_card_hbm_p8_awqos     ) ,
       .s_axi_p8_HBM_arregion    ( act_axi_card_hbm_p8_arregion  ) ,
       .s_axi_p8_HBM_arqos       ( act_axi_card_hbm_p8_arqos     ) ,
+      .s_axi_p8_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p8_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p8_HBM_bid         (                               ) ,
+      .s_axi_p8_HBM_rid         (                               ) ,
   `endif
       .s_axi_p8_HBM_awcache     ( act_axi_card_hbm_p8_awcache   ) ,
       .s_axi_p8_HBM_awprot      ( act_axi_card_hbm_p8_awprot    ) ,
@@ -4933,6 +4976,10 @@ block_RAM block_ram_i1
       .s_axi_p9_HBM_awqos       ( act_axi_card_hbm_p9_awqos     ) ,
       .s_axi_p9_HBM_arregion    ( act_axi_card_hbm_p9_arregion  ) ,
       .s_axi_p9_HBM_arqos       ( act_axi_card_hbm_p9_arqos     ) ,
+      .s_axi_p9_HBM_awid        ( 6'b0                          ) ,
+      .s_axi_p9_HBM_arid        ( 6'b0                          ) ,
+      .s_axi_p9_HBM_bid         (                               ) ,
+      .s_axi_p9_HBM_rid         (                               ) ,
   `endif
       .s_axi_p9_HBM_awcache     ( act_axi_card_hbm_p9_awcache   ) ,
       .s_axi_p9_HBM_awprot      ( act_axi_card_hbm_p9_awprot    ) ,
@@ -4974,6 +5021,10 @@ block_RAM block_ram_i1
       .s_axi_p10_HBM_awqos       ( act_axi_card_hbm_p10_awqos     ) ,
       .s_axi_p10_HBM_arregion    ( act_axi_card_hbm_p10_arregion  ) ,
       .s_axi_p10_HBM_arqos       ( act_axi_card_hbm_p10_arqos     ) ,
+      .s_axi_p10_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p10_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p10_HBM_bid         (                                ) ,
+      .s_axi_p10_HBM_rid         (                                ) ,
   `endif
       .s_axi_p10_HBM_awcache     ( act_axi_card_hbm_p10_awcache   ) ,
       .s_axi_p10_HBM_awprot      ( act_axi_card_hbm_p10_awprot    ) ,
@@ -5015,6 +5066,10 @@ block_RAM block_ram_i1
       .s_axi_p11_HBM_awqos       ( act_axi_card_hbm_p11_awqos     ) ,
       .s_axi_p11_HBM_arregion    ( act_axi_card_hbm_p11_arregion  ) ,
       .s_axi_p11_HBM_arqos       ( act_axi_card_hbm_p11_arqos     ) ,
+      .s_axi_p11_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p11_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p11_HBM_bid         (                                ) ,
+      .s_axi_p11_HBM_rid         (                                ) ,
   `endif
       .s_axi_p11_HBM_awcache     ( act_axi_card_hbm_p11_awcache   ) ,
       .s_axi_p11_HBM_awprot      ( act_axi_card_hbm_p11_awprot    ) ,
@@ -5056,6 +5111,10 @@ block_RAM block_ram_i1
       .s_axi_p12_HBM_awqos       ( act_axi_card_hbm_p12_awqos     ) ,
       .s_axi_p12_HBM_arregion    ( act_axi_card_hbm_p12_arregion  ) ,
       .s_axi_p12_HBM_arqos       ( act_axi_card_hbm_p12_arqos     ) ,
+      .s_axi_p12_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p12_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p12_HBM_bid         (                                ) ,
+      .s_axi_p12_HBM_rid         (                                ) ,
   `endif
       .s_axi_p12_HBM_awcache     ( act_axi_card_hbm_p12_awcache   ) ,
       .s_axi_p12_HBM_awprot      ( act_axi_card_hbm_p12_awprot    ) ,
@@ -5097,6 +5156,10 @@ block_RAM block_ram_i1
       .s_axi_p13_HBM_awqos       ( act_axi_card_hbm_p13_awqos     ) ,
       .s_axi_p13_HBM_arregion    ( act_axi_card_hbm_p13_arregion  ) ,
       .s_axi_p13_HBM_arqos       ( act_axi_card_hbm_p13_arqos     ) ,
+      .s_axi_p13_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p13_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p13_HBM_bid         (                                ) ,
+      .s_axi_p13_HBM_rid         (                                ) ,
   `endif
       .s_axi_p13_HBM_awcache     ( act_axi_card_hbm_p13_awcache   ) ,
       .s_axi_p13_HBM_awprot      ( act_axi_card_hbm_p13_awprot    ) ,
@@ -5138,6 +5201,10 @@ block_RAM block_ram_i1
       .s_axi_p14_HBM_awqos       ( act_axi_card_hbm_p14_awqos     ) ,
       .s_axi_p14_HBM_arregion    ( act_axi_card_hbm_p14_arregion  ) ,
       .s_axi_p14_HBM_arqos       ( act_axi_card_hbm_p14_arqos     ) ,
+      .s_axi_p14_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p14_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p14_HBM_bid         (                                ) ,
+      .s_axi_p14_HBM_rid         (                                ) ,
   `endif
       .s_axi_p14_HBM_awcache     ( act_axi_card_hbm_p14_awcache   ) ,
       .s_axi_p14_HBM_awprot      ( act_axi_card_hbm_p14_awprot    ) ,
@@ -5179,6 +5246,10 @@ block_RAM block_ram_i1
       .s_axi_p15_HBM_awqos       ( act_axi_card_hbm_p15_awqos     ) ,
       .s_axi_p15_HBM_arregion    ( act_axi_card_hbm_p15_arregion  ) ,
       .s_axi_p15_HBM_arqos       ( act_axi_card_hbm_p15_arqos     ) ,
+      .s_axi_p15_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p15_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p15_HBM_bid         (                                ) ,
+      .s_axi_p15_HBM_rid         (                                ) ,
   `endif
       .s_axi_p15_HBM_awcache     ( act_axi_card_hbm_p15_awcache   ) ,
       .s_axi_p15_HBM_awprot      ( act_axi_card_hbm_p15_awprot    ) ,
@@ -5220,6 +5291,10 @@ block_RAM block_ram_i1
       .s_axi_p16_HBM_awqos       ( act_axi_card_hbm_p16_awqos     ) ,
       .s_axi_p16_HBM_arregion    ( act_axi_card_hbm_p16_arregion  ) ,
       .s_axi_p16_HBM_arqos       ( act_axi_card_hbm_p16_arqos     ) ,
+      .s_axi_p16_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p16_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p16_HBM_bid         (                                ) ,
+      .s_axi_p16_HBM_rid         (                                ) ,
   `endif
       .s_axi_p16_HBM_awcache     ( act_axi_card_hbm_p16_awcache   ) ,
       .s_axi_p16_HBM_awprot      ( act_axi_card_hbm_p16_awprot    ) ,
@@ -5261,6 +5336,10 @@ block_RAM block_ram_i1
       .s_axi_p17_HBM_awqos       ( act_axi_card_hbm_p17_awqos     ) ,
       .s_axi_p17_HBM_arregion    ( act_axi_card_hbm_p17_arregion  ) ,
       .s_axi_p17_HBM_arqos       ( act_axi_card_hbm_p17_arqos     ) ,
+      .s_axi_p17_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p17_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p17_HBM_bid         (                                ) ,
+      .s_axi_p17_HBM_rid         (                                ) ,
   `endif
       .s_axi_p17_HBM_awcache     ( act_axi_card_hbm_p17_awcache   ) ,
       .s_axi_p17_HBM_awprot      ( act_axi_card_hbm_p17_awprot    ) ,
@@ -5302,6 +5381,10 @@ block_RAM block_ram_i1
       .s_axi_p18_HBM_awqos       ( act_axi_card_hbm_p18_awqos     ) ,
       .s_axi_p18_HBM_arregion    ( act_axi_card_hbm_p18_arregion  ) ,
       .s_axi_p18_HBM_arqos       ( act_axi_card_hbm_p18_arqos     ) ,
+      .s_axi_p18_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p18_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p18_HBM_bid         (                                ) ,
+      .s_axi_p18_HBM_rid         (                                ) ,
   `endif
       .s_axi_p18_HBM_awcache     ( act_axi_card_hbm_p18_awcache   ) ,
       .s_axi_p18_HBM_awprot      ( act_axi_card_hbm_p18_awprot    ) ,
@@ -5343,6 +5426,10 @@ block_RAM block_ram_i1
       .s_axi_p19_HBM_awqos       ( act_axi_card_hbm_p19_awqos     ) ,
       .s_axi_p19_HBM_arregion    ( act_axi_card_hbm_p19_arregion  ) ,
       .s_axi_p19_HBM_arqos       ( act_axi_card_hbm_p19_arqos     ) ,
+      .s_axi_p19_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p19_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p19_HBM_bid         (                                ) ,
+      .s_axi_p19_HBM_rid         (                                ) ,
   `endif
       .s_axi_p19_HBM_awcache     ( act_axi_card_hbm_p19_awcache   ) ,
       .s_axi_p19_HBM_awprot      ( act_axi_card_hbm_p19_awprot    ) ,
@@ -5384,6 +5471,10 @@ block_RAM block_ram_i1
       .s_axi_p20_HBM_awqos       ( act_axi_card_hbm_p20_awqos     ) ,
       .s_axi_p20_HBM_arregion    ( act_axi_card_hbm_p20_arregion  ) ,
       .s_axi_p20_HBM_arqos       ( act_axi_card_hbm_p20_arqos     ) ,
+      .s_axi_p20_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p20_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p20_HBM_bid         (                                ) ,
+      .s_axi_p20_HBM_rid         (                                ) ,
   `endif
       .s_axi_p20_HBM_awcache     ( act_axi_card_hbm_p20_awcache   ) ,
       .s_axi_p20_HBM_awprot      ( act_axi_card_hbm_p20_awprot    ) ,
@@ -5425,6 +5516,10 @@ block_RAM block_ram_i1
       .s_axi_p21_HBM_awqos       ( act_axi_card_hbm_p21_awqos     ) ,
       .s_axi_p21_HBM_arregion    ( act_axi_card_hbm_p21_arregion  ) ,
       .s_axi_p21_HBM_arqos       ( act_axi_card_hbm_p21_arqos     ) ,
+      .s_axi_p21_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p21_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p21_HBM_bid         (                                ) ,
+      .s_axi_p21_HBM_rid         (                                ) ,
   `endif
       .s_axi_p21_HBM_awcache     ( act_axi_card_hbm_p21_awcache   ) ,
       .s_axi_p21_HBM_awprot      ( act_axi_card_hbm_p21_awprot    ) ,
@@ -5466,6 +5561,10 @@ block_RAM block_ram_i1
       .s_axi_p22_HBM_awqos       ( act_axi_card_hbm_p22_awqos     ) ,
       .s_axi_p22_HBM_arregion    ( act_axi_card_hbm_p22_arregion  ) ,
       .s_axi_p22_HBM_arqos       ( act_axi_card_hbm_p22_arqos     ) ,
+      .s_axi_p22_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p22_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p22_HBM_bid         (                                ) ,
+      .s_axi_p22_HBM_rid         (                                ) ,
   `endif
       .s_axi_p22_HBM_awcache     ( act_axi_card_hbm_p22_awcache   ) ,
       .s_axi_p22_HBM_awprot      ( act_axi_card_hbm_p22_awprot    ) ,
@@ -5507,6 +5606,10 @@ block_RAM block_ram_i1
       .s_axi_p23_HBM_awqos       ( act_axi_card_hbm_p23_awqos     ) ,
       .s_axi_p23_HBM_arregion    ( act_axi_card_hbm_p23_arregion  ) ,
       .s_axi_p23_HBM_arqos       ( act_axi_card_hbm_p23_arqos     ) ,
+      .s_axi_p23_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p23_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p23_HBM_bid         (                                ) ,
+      .s_axi_p23_HBM_rid         (                                ) ,
   `endif
       .s_axi_p23_HBM_awcache     ( act_axi_card_hbm_p23_awcache   ) ,
       .s_axi_p23_HBM_awprot      ( act_axi_card_hbm_p23_awprot    ) ,
@@ -5548,6 +5651,10 @@ block_RAM block_ram_i1
       .s_axi_p24_HBM_awqos       ( act_axi_card_hbm_p24_awqos     ) ,
       .s_axi_p24_HBM_arregion    ( act_axi_card_hbm_p24_arregion  ) ,
       .s_axi_p24_HBM_arqos       ( act_axi_card_hbm_p24_arqos     ) ,
+      .s_axi_p24_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p24_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p24_HBM_bid         (                                ) ,
+      .s_axi_p24_HBM_rid         (                                ) ,
   `endif
       .s_axi_p24_HBM_awcache     ( act_axi_card_hbm_p24_awcache   ) ,
       .s_axi_p24_HBM_awprot      ( act_axi_card_hbm_p24_awprot    ) ,
@@ -5589,6 +5696,10 @@ block_RAM block_ram_i1
       .s_axi_p25_HBM_awqos       ( act_axi_card_hbm_p25_awqos     ) ,
       .s_axi_p25_HBM_arregion    ( act_axi_card_hbm_p25_arregion  ) ,
       .s_axi_p25_HBM_arqos       ( act_axi_card_hbm_p25_arqos     ) ,
+      .s_axi_p25_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p25_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p25_HBM_bid         (                                ) ,
+      .s_axi_p25_HBM_rid         (                                ) ,
   `endif
       .s_axi_p25_HBM_awcache     ( act_axi_card_hbm_p25_awcache   ) ,
       .s_axi_p25_HBM_awprot      ( act_axi_card_hbm_p25_awprot    ) ,
@@ -5630,6 +5741,10 @@ block_RAM block_ram_i1
       .s_axi_p26_HBM_awqos       ( act_axi_card_hbm_p26_awqos     ) ,
       .s_axi_p26_HBM_arregion    ( act_axi_card_hbm_p26_arregion  ) ,
       .s_axi_p26_HBM_arqos       ( act_axi_card_hbm_p26_arqos     ) ,
+      .s_axi_p26_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p26_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p26_HBM_bid         (                                ) ,
+      .s_axi_p26_HBM_rid         (                                ) ,
   `endif
       .s_axi_p26_HBM_awcache     ( act_axi_card_hbm_p26_awcache   ) ,
       .s_axi_p26_HBM_awprot      ( act_axi_card_hbm_p26_awprot    ) ,
@@ -5671,6 +5786,10 @@ block_RAM block_ram_i1
       .s_axi_p27_HBM_awqos       ( act_axi_card_hbm_p27_awqos     ) ,
       .s_axi_p27_HBM_arregion    ( act_axi_card_hbm_p27_arregion  ) ,
       .s_axi_p27_HBM_arqos       ( act_axi_card_hbm_p27_arqos     ) ,
+      .s_axi_p27_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p27_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p27_HBM_bid         (                                ) ,
+      .s_axi_p27_HBM_rid         (                                ) ,
   `endif
       .s_axi_p27_HBM_awcache     ( act_axi_card_hbm_p27_awcache   ) ,
       .s_axi_p27_HBM_awprot      ( act_axi_card_hbm_p27_awprot    ) ,
@@ -5712,6 +5831,10 @@ block_RAM block_ram_i1
       .s_axi_p28_HBM_awqos       ( act_axi_card_hbm_p28_awqos     ) ,
       .s_axi_p28_HBM_arregion    ( act_axi_card_hbm_p28_arregion  ) ,
       .s_axi_p28_HBM_arqos       ( act_axi_card_hbm_p28_arqos     ) ,
+      .s_axi_p28_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p28_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p28_HBM_bid         (                                ) ,
+      .s_axi_p28_HBM_rid         (                                ) ,
   `endif
       .s_axi_p28_HBM_awcache     ( act_axi_card_hbm_p28_awcache   ) ,
       .s_axi_p28_HBM_awprot      ( act_axi_card_hbm_p28_awprot    ) ,
@@ -5753,6 +5876,10 @@ block_RAM block_ram_i1
       .s_axi_p29_HBM_awqos       ( act_axi_card_hbm_p29_awqos     ) ,
       .s_axi_p29_HBM_arregion    ( act_axi_card_hbm_p29_arregion  ) ,
       .s_axi_p29_HBM_arqos       ( act_axi_card_hbm_p29_arqos     ) ,
+      .s_axi_p29_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p29_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p29_HBM_bid         (                                ) ,
+      .s_axi_p29_HBM_rid         (                                ) ,
   `endif
       .s_axi_p29_HBM_awcache     ( act_axi_card_hbm_p29_awcache   ) ,
       .s_axi_p29_HBM_awprot      ( act_axi_card_hbm_p29_awprot    ) ,
@@ -5794,6 +5921,10 @@ block_RAM block_ram_i1
       .s_axi_p30_HBM_awqos       ( act_axi_card_hbm_p30_awqos     ) ,
       .s_axi_p30_HBM_arregion    ( act_axi_card_hbm_p30_arregion  ) ,
       .s_axi_p30_HBM_arqos       ( act_axi_card_hbm_p30_arqos     ) ,
+      .s_axi_p30_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p30_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p30_HBM_bid         (                                ) ,
+      .s_axi_p30_HBM_rid         (                                ) ,
   `endif
       .s_axi_p30_HBM_awcache     ( act_axi_card_hbm_p30_awcache   ) ,
       .s_axi_p30_HBM_awprot      ( act_axi_card_hbm_p30_awprot    ) ,
@@ -5835,6 +5966,10 @@ block_RAM block_ram_i1
       .s_axi_p31_HBM_awqos       ( act_axi_card_hbm_p31_awqos     ) ,
       .s_axi_p31_HBM_arregion    ( act_axi_card_hbm_p31_arregion  ) ,
       .s_axi_p31_HBM_arqos       ( act_axi_card_hbm_p31_arqos     ) ,
+      .s_axi_p31_HBM_awid        ( 6'b0                           ) ,
+      .s_axi_p31_HBM_arid        ( 6'b0                           ) ,
+      .s_axi_p31_HBM_bid         (                                ) ,
+      .s_axi_p31_HBM_rid         (                                ) ,
   `endif
       .s_axi_p31_HBM_awcache     ( act_axi_card_hbm_p31_awcache   ) ,
       .s_axi_p31_HBM_awprot      ( act_axi_card_hbm_p31_awprot    ) ,

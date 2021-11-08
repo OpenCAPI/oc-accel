@@ -42,6 +42,8 @@ clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(act
 help:
 	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";
+	@echo "* ./ocaccel_workflow.py -i  Drives you through the whole simulation process flow";
+	@echo "*";
 	@echo "* snap_config    Configure OC-Accel framework";
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
 	@echo "* sim            Start a simulation (it will build the model before)";
@@ -55,9 +57,12 @@ help:
 	@echo "*                 This command can be splitted into 4 steps:";
 	@echo "*                   'make oc_pr_synth_action' + 'make oc_pr_synth_static' and then"; 
 	@echo "*                   'make oc_pr_route_static' + 'make oc_pr_image'";
+	@echo "*                   Full binary images will be generated for Flash + partial for FPGA";
 	@echo "* cloud_action   Partial Reconfiguration: synthesize the action (dynamic zone)";
-	@echo "*                 This command can be splitted into 3 steps: (after a 'make cloud_base' run)";
-	@echo "*                 'make oc_pr_synth_action' + 'make oc_pr_route_action' + 'make oc_pr_image'";
+	@echo "*                 (can be splitted into 3 steps: (after a 'make cloud_base' run)";
+	@echo "*                   'make oc_pr_synth_action' and then";
+	@echo "*                   'make oc_pr_route_static' + 'make oc_pr_image'";
+	@echo "*                   Partial binary image will be generated for FPGA";
 	@echo "*";
 	@echo "* software       Build software libraries and tools for SNAP";
 	@echo "* apps           Build the applications for all actions";
@@ -67,12 +72,11 @@ help:
 	@echo "* clean_config   As target 'clean' plus reset of the configuration";
 	@echo "* help           Print this message";
 	@echo;
-	@echo "The hardware related targets 'model', 'image', 'cloud_base', 'cloud_action', 'hardware', 'hw_project' and 'sim'";
-	@echo "do only exist on an x86 platform";
+	@echo "The hardware related targets 'model', 'sim', 'image', 'cloud_base', 'cloud_action',";
+	@echo "'hardware', and 'hw_project' do only exist on an x86 platform";
 	@echo;
 	@echo "Few tools to help debug";
 	@echo "-----------------------";
-	@echo "* ./ocaccel_workflow.py  Drives you through the whole simulation process flow";
 	@echo "* ./display_traces       Display traces to debug action code";
 	@echo "* ./debug_timing         Display timing failing paths when image generation fails";
 	@echo "* vivado hardware/build/Checkpoints/opt_routed_design.dcp to see logic placement.";
@@ -194,7 +198,7 @@ clean:
 	done
 	@find . -depth -name '*~'  -exec rm -rf '{}' \; -print
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
-	@$(RM) *.mif vivado*.jou vivado*.log
+	@$(RM) *.log *.mif vivado*.jou vivado*.log
 
 clean_cloud: clean
 	@echo -e "[CLEAN DCP DIRECTORY.] removing directory ~$(DCP_ROOT_REL)";
