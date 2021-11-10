@@ -157,11 +157,11 @@ function test_hard()
 	while [ 1 ]; do
 		wait_flag=0
 		if [[ $accel != "OC-AD9V3" ]] && [[ $accel != "OC-AD9H3" ]] && [[ $accel != "OC-AD9H7" ]]; then
-		     echo "executing non SPI case : sudo ./oc-flash-script.sh -f -C $card -f $IMAGE"
-		sudo ./oc-flash-script.sh -f -C $card -f $IMAGE
+		     echo "executing non SPI case : sudo ./oc-flash-script.sh -C $card -f $IMAGE"
+		sudo ./oc-flash-script.sh -C $card -f $IMAGE
 		else 
-                     echo "executing SPI case : sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2"
-                     sudo ./oc-flash-script.sh -f -C $card $IMAGE $IMAGE2
+                     echo "executing SPI case : sudo ./oc-flash-script.sh -C $card $IMAGE $IMAGE2"
+                     sudo ./oc-flash-script.sh -C $card $IMAGE $IMAGE2
 	        fi
 		RC=$?
 		if [ $RC -eq 0 ]; then
