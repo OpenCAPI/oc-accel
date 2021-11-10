@@ -294,10 +294,6 @@ fi
       SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with xsim is not supported by Xilinx, but you can build an image!"
       SETUP_INFO="$SETUP_INFO\n To simulate a design with HBM, it is recommended to use xcelium simulator (license needed) or use BRAM / URAM option."
   fi
-  if [ "$SIM_IRUN" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
-      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues."
-      SETUP_INFO="$SETUP_INFO\n To simulate a design with HBM, it is recommended to use xcelium simulator (license needed) or use BRAM / URAM option."
-  fi
 
 
   # Note: ETHERNET_USED is defined via snap_config
