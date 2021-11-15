@@ -29,9 +29,7 @@ snap_config_bak = .snap_config_test.bak
 snap_config_new = .snap_config_test.new
 snap_config_sh = .snap_config.sh
 snap_config_cflags = .snap_config.cflags
-
-snap_env_sh        = $(SNAP_ROOT)/snap_env.sh
--include $(snap_env_sh)
+snap_env_sh        = snap_env.sh
 
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
@@ -39,6 +37,12 @@ clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(act
 .PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_cloud clean_config clean_env gitclean
 
 help:
+	@echo "        ____  ______            ___                  __";
+	@echo "       / __ \/ ____/           /   | _____________  / /";
+	@echo "      / / / / /      ______   / /| |/ ___/ ___/ _ \/ / ";
+	@echo "     / /_/ / /___   /_____/  / ___ / /__/ /__/  __/ /  ";
+	@echo "     \____/\____/           /_/  |_\___/\___/\___/_/   ";
+	@echo "";
 	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";
 	@echo "* ./ocaccel_workflow.py -i  Drives you through the whole simulation process flow";
@@ -199,9 +203,9 @@ clean:
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
 	@$(RM) *.log *.mif vivado*.jou vivado*.log
 
-clean_cloud: clean
-	@echo -e "[CLEAN DCP DIRECTORY.] removing directory $(BASE_DCP_DIR)";
-	@$(RM) -r $(BASE_DCP_DIR);
+clean_cloud:
+	@echo -e "[CLEAN DCP DIRECTORY.] removing directory $(BASE_DCP_DIR)"
+#	@$(RM) -r $(BASE_DCP_DIR)
 
 
 clean_config: clean

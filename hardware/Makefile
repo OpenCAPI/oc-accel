@@ -88,7 +88,7 @@ SNAP_TMP_FILES =  $(SIM_DIR)/README.txt
 
 ifeq ($(PLATFORM),x86_64)
 
-.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image synth place route cloud_enable cloud_base cloud_action ocse software app model xsim irun nosim sim clean oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image
+.PHONY: all snap_config check_snap_settings check_simulator prepare_project snap_preprocess_start snap_preprocess_execute snap_preprocess patch_version action_hw create_hls_ip create_project hw_project_start hw_project .hw_project_done sim_project .sim_project_done config image synth place route cloud_enable cloud_base cloud_action ocse software app model xsim irun nosim sim clean clean_cloud oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image
 
 all: model image
 
@@ -644,6 +644,6 @@ clean:
 		fi                                          \
 	fi
 	@if [ "$(USE_PRFLOW)" == "TRUE" ]; then	    \
-	  echo -e "            INFO: by default ~$(BASE_DCP_REL_DIR) is not cleaned (use 'make clean_cloud' to clean it)"; \
+	  echo -e "            INFO: by default '`basename $(BASE_DCP_DIR)`' directory is not cleaned (use 'make clean_cloud' to clean it)"; \
 	fi
 	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`" 1>/dev/null 2>/dev/null
