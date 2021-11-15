@@ -21,17 +21,21 @@ set root_dir        $::env(SNAP_HARDWARE_ROOT)
 set logs_dir        $::env(LOGS_DIR)
 set hbm_used        $::env(HBM_USED)
 
-if { [info exists ::env(DCP_ROOT)] == 1 } {
-    set dcp_dir $::env(DCP_ROOT)
+set action_dcp_dir $root_dir/build/Checkpoints
+set ::env(ACTION_DCP_DIR) $action_dcp_dir
+
+if { [info exists ::env(BASE_DCP_DIR)] == 1 } {
+    set base_dcp_dir $::env(BASE_DCP_DIR)
 } else {
-    puts "                        Error: For cloud builds the environment variable DCP_ROOT needs to point to a path for input and output design checkpoints."
+    puts "                        Error: For cloud builds the environment variable BASE_DCP_DIR needs to point to a path for input and output design checkpoints."
     exit 42
 }
-set ::env(DCP_DIR) $dcp_dir
+set ::env(BASE_DCP_DIR) $base_dcp_dir
 #create the DCP dir if it doesn't exist
-if {[catch {file mkdir $dcp_dir} err opts] != 0} {
+if {[catch {file mkdir $base_dcp_dir} err opts] != 0} {
     puts $err
 }
+
 
 if { [info exists ::env(RPT_DIR)] == 1 } {
     set rpt_dir     $::env(RPT_DIR)
@@ -78,18 +82,18 @@ set oc_fpga_static_synth      "oc_${fpgacard}_static_synth"
 set oc_fpga_static_synth_dcp  "${oc_fpga_static_synth}.dcp"
 set oc_action_name_synth_dcp  "oc_${fpgacard}_${action_name}_synth.dcp"
 
-set pr_file_name [exec basename [ exec find $dcp_dir/ -name $oc_fpga_static_synth_dcp ]]
+set pr_file_name [exec basename [ exec find $action_dcp_dir/ -name $oc_fpga_static_synth_dcp ]]
 if { $pr_file_name == "" } {
    puts "-------------------------------------------------------------------------------------"
-   puts "ERROR: File $oc_fpga_static_synth_dcp not found in $dcp_dir!"
+   puts "ERROR: File $oc_fpga_static_synth_dcp not found in $action_dcp_dir!"
    puts "  Please generate 'make oc_pr_synth_static' before running 'make oc_pr_route_static'."
    puts "-------------------------------------------------------------------------------------"
    exit 42
 }
-set pr_file_name [exec basename [ exec find $dcp_dir/ -name $oc_action_name_synth_dcp ]]
+set pr_file_name [exec basename [ exec find $action_dcp_dir/ -name $oc_action_name_synth_dcp ]]
 if { $pr_file_name == "" } {
    puts "-------------------------------------------------------------------------------------"
-   puts "ERROR: File $oc_action_name_synth_dcp not found in $dcp_dir!"
+   puts "ERROR: File $oc_action_name_synth_dcp not found in $action_dcp_dir!"
    puts "  Please generate 'make oc_pr_synth_action' before running 'make oc_pr_route_static'."
    puts "-------------------------------------------------------------------------------------"
    exit 42
@@ -105,7 +109,8 @@ set step      ${prefix}open_checkpoint
 set logfile   $logs_dir/${step}.log
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start routing static" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_fpga_static_synth_dcp}"]
-open_checkpoint  $dcp_dir/$oc_fpga_static_synth_dcp  >> $logfile
+puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "          PR code used for base image is PR${PRC}"]
+open_checkpoint  $action_dcp_dir/$oc_fpga_static_synth_dcp  >> $logfile
 
 
 # Disable EMCCLK for startup primitive
@@ -117,7 +122,7 @@ if { $fpgacard == "AD9V3" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
 
    puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_action_name_synth_dcp}"]
-   read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp} >> $logfile
+   read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $action_dcp_dir/${oc_action_name_synth_dcp} >> $logfile
 
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
@@ -131,7 +136,7 @@ if { $fpgacard == "AD9V3" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func/fw_afu/action_core_i] >> $logfile
 
    puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_action_name_synth_dcp}"]
-   read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp} >> $logfile
+   read_checkpoint -cell [get_cells oc_func/fw_afu/action_core_i] $action_dcp_dir/${oc_action_name_synth_dcp} >> $logfile
 
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func/fw_afu/action_core_i]] >> $logfile
@@ -197,7 +202,7 @@ if { $fpgacard == "AD9V3" } {
    set_property HD.RECONFIGURABLE true [get_cells oc_func0/fw_afu/action_core_i] >> $logfile
 
    puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening ${oc_action_name_synth_dcp}"]
-   read_checkpoint -cell [get_cells oc_func0/fw_afu/action_core_i] $dcp_dir/${oc_action_name_synth_dcp} >> $logfile
+   read_checkpoint -cell [get_cells oc_func0/fw_afu/action_core_i] $action_dcp_dir/${oc_action_name_synth_dcp} >> $logfile
 
    create_pblock pblock_dynamic_PR >> $logfile
    add_cells_to_pblock [get_pblocks pblock_dynamic_PR] [get_cells [list oc_func0/fw_afu/action_core_i]] >> $logfile
@@ -230,11 +235,11 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
-      write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+      write_checkpoint -force $action_dcp_dir/${step}_error.dcp    >> $logfile
   }
   exit 42
 #} else {
-#  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
+#  write_checkpoint   -force $action_dcp_dir/${step}.dcp          >> $logfile
 #  report_utilization -file  ${rpt_dir}_${step}_utilization.rpt -quiet
 }
 
@@ -251,11 +256,11 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    write_checkpoint -force $action_dcp_dir/${step}_error.dcp    >> $logfile
   }
   exit 42
 #} else {
-#  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
+#  write_checkpoint   -force $action_dcp_dir/${step}.dcp          >> $logfile
 }
 
 #----------------
@@ -271,11 +276,11 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    write_checkpoint -force $action_dcp_dir/${step}_error.dcp    >> $logfile
   }
   exit 42
 #} else {
-#  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
+#  write_checkpoint   -force $action_dcp_dir/${step}.dcp          >> $logfile
 }
 #-- intermediate WNS display
 report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
@@ -296,11 +301,11 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    write_checkpoint -force $action_dcp_dir/${step}_error.dcp    >> $logfile
   }
   exit 42
 #} else {
-#  write_checkpoint   -force $dcp_dir/${step}.dcp          >> $logfile
+#  write_checkpoint   -force $action_dcp_dir/${step}.dcp          >> $logfile
 }
 #-- intermediate WNS display
 report_timing_summary -quiet -max_paths 100 -file ${rpt_dir}/timing_summary.rpt
@@ -322,12 +327,12 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    write_checkpoint -force $action_dcp_dir/${step}_error.dcp    >> $logfile
   }
   exit 42
 } else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     generating ${oc_action_name_routed_dcp}"]
-  write_checkpoint -force $dcp_dir/${oc_action_name_routed_dcp} >> $logfile
+  write_checkpoint -force $action_dcp_dir/${oc_action_name_routed_dcp} >> $logfile
 }
 
 ##----------------
@@ -347,12 +352,12 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
-    write_checkpoint -force $dcp_dir/${step}_error.dcp    >> $logfile
+    write_checkpoint -force $action_dcp_dir/${step}_error.dcp    >> $logfile
   }
   exit 42
 } else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     generating ${oc_fpga_static_routed_dcp}"]
-  write_checkpoint -force $dcp_dir/${oc_fpga_static_routed_dcp}  >> $logfile
+  write_checkpoint -force $base_dcp_dir/${oc_fpga_static_routed_dcp}  >> $logfile
 }
 
 #close_project  >> $logfile

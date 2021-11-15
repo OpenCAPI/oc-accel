@@ -21,7 +21,8 @@
 set root_dir      $::env(SNAP_HARDWARE_ROOT)
 set logs_dir      $::env(LOGS_DIR)
 set img_dir       $::env(IMG_DIR)
-set dcp_dir       $::env(DCP_DIR)
+set action_dcp_dir $::env(ACTION_DCP_DIR)
+set base_dcp_dir  $::env(BASE_DCP_DIR)
 set rpt_dir       $::env(RPT_DIR)
 
 set action_root   $::env(ACTION_ROOT)
@@ -38,7 +39,7 @@ set flash_size      $::env(FLASH_SIZE)
 #Looking for PRxxxx occurrence in static_routed.dcp filename
 #WARNING - dealing with only 1 filename per card
 set prefix  "oc_${fpgacard}_PR"
-set pr_file_name [exec basename [ exec find $dcp_dir/ -name ${prefix}*_static_routed.dcp ]]
+set pr_file_name [exec basename [ exec find $base_dcp_dir/ -name ${prefix}*_static_routed.dcp ]]
 if { $pr_file_name != "" } {
    #looking for 3 digits after PR
    set pattern {PR([0-9a-f]{3})}
@@ -46,7 +47,7 @@ if { $pr_file_name != "" } {
    #puts $PRC
 } else {
    puts "-------------------------------------------------------------------------------------"
-   puts "ERROR: File $${prefix}*_static_routed.dcp not found in $dcp_dir!"
+   puts "ERROR: File $${prefix}*_static_routed.dcp not found in $base_dcp_dir!"
    puts "  Please generate 'make oc_pr_route_action' or 'make oc_pr_route_static' before running 'make oc_pr_image'."
    puts "-------------------------------------------------------------------------------------"
    exit 42
@@ -97,7 +98,7 @@ if { [info exists ::env(TIMING_WNS)] == 1 } {
 ## open oc-accel project
 puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start generating images files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     opening $oc_action_name_routed_dcp"]
-open_checkpoint  $dcp_dir/$oc_action_name_routed_dcp  >> $logfile
+open_checkpoint  $action_dcp_dir/$oc_action_name_routed_dcp  >> $logfile
 
 ## writing bitstream
 set step     write_bitstream

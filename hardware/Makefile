@@ -50,9 +50,6 @@ FPGACARD_LOWER = $(shell echo $(FPGACARD) | tr A-Z a-z)
 #OPENCAPI_BSP_IP_DONE=$(SNAP_HARDWAR_ROOT)/oc-bip/build/.create_ip_done
 #OPENCAPI_BSP_IP_UNIT_SIM_DONE=$(SNAP_HARDWAR_ROOT)/oc-bip/build/.create_ip_unit_sim_done
 
-export DCP_ROOT_REL ?= /hardware/DCP
-export DCP_ROOT ?= $(SNAP_ROOT)$(DCP_ROOT_REL)
-
 # luyong says: Remove it again when PRFLOW enabled again.
 # It should come from Kconfig
 #USE_PRFLOW ?= FALSE
@@ -82,10 +79,6 @@ endif
 #SNAP_PP_FILES_VHD += $(SNAP_HARDWARE_ROOT)/oc-bip/sim/src/$(sim_top).sv
 
 SNAP_TMP_FILES =  $(SIM_DIR)/README.txt
-
-SNAP_ACTION_DCP=$(DCP_ROOT)/user_action_synth.dcp
-SNAP_BASE_DCP=$(DCP_ROOT)/snap_static_region_bb.dcp
-
 
 #
 # FIXME Targets in this Makefile are to be build in the correct order.
@@ -164,7 +157,7 @@ check_snap_settings:
 	@echo "                        SIMULATOR       = $(SIMULATOR)"
 	@echo "                        USE_PRFLOW      = $(USE_PRFLOW)"
 	@if [ `echo "$(USE_PRFLOW)" | tr a-z A-Z` == "TRUE" ]; then \
-		echo "                        DCP_ROOT        = ~$(DCP_ROOT_REL)"; \
+		echo "                        BASE_DCP_DIR    = $(BASE_DCP_DIR)"; \
 	fi
 	@echo "                        =============================="
 
@@ -218,11 +211,7 @@ snap_preprocess: snap_preprocess_start
 	@$(MAKE) -s snap_preprocess_execute
 
 patch_version:
-	@if [ "$(USE_PRFLOW)" != "TRUE" ]; then \
-	       echo -e "                        patching OC-Accel version, build date registers"; \
-	else \
-	       echo -e "                        patching OC-Accel version, build date registers and PR code"; \
-	fi
+	@echo -e "                        patching Action version, build date registers"
 	$(SNAP_HARDWARE_ROOT)/setup/patch_version.sh $(SNAP_HDL_CORE) snap_global_vars.v
 
 
@@ -432,14 +421,6 @@ cloud_base: cloudcmd_allow_cloud_base .hw_project_done
 	@echo -e "------------------------------------------------------------------"
 	@echo -e ""
 
-$(SNAP_ACTION_DCP):
-	@echo -e "                        Need to run cloud_action first"
-	@exit -1
-
-$(SNAP_BASE_DCP):
-	@echo -e "                        Need to run cloud_base first"
-	@exit -1
-
 cloud_action: cloudcmd_allow_cloud_action .hw_project_done
 	@echo -e "[BUILD CLOUD ACTION..] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/cloud_action.log -journal $(LOGS_DIR)/cloud_action.jou
@@ -468,7 +449,10 @@ oc_pr_synth_action: cloudcmd_allow_oc_pr_synth_action .hw_project_done
 	@echo -e "[PR SYNTH ACTION ....] start `date +"%T %a %b %d %Y"`"
 	@cd $(BUILD_DIR) && env CLOUD_RUN=SYNTH_ACTION vivado -quiet -mode batch -source $(SETUP_DIR)/snap_cloud_build.tcl -notrace -log $(LOGS_DIR)/snap_cloud_build.log -journal $(LOGS_DIR)/snap_cloud_build.jou
 	@echo -e "[PR SYNTH ACTION ....] done  `date +"%T %a %b %d %Y"`"
-	@echo "  Suggested next step: To synthesize  top design : make oc_pr_synth_static"
+	@echo "  Suggested next step for an action image:"
+	@echo "                       To route the action design : make oc_pr_route_action (need the top routed)"
+	@echo "  Suggested next step for a base image:"
+	@echo "                       To synthesize  top design : make oc_pr_synth_static"
 	@echo "                       To route the   top design : make oc_pr_route_static (need the top synthesized)"
 	@echo "                       To route the action design : make oc_pr_route_action (need the top routed)"
 
@@ -660,6 +644,6 @@ clean:
 		fi                                          \
 	fi
 	@if [ "$(USE_PRFLOW)" == "TRUE" ]; then	    \
-	  echo -e "            INFO: by default ~$(DCP_ROOT_REL) is not cleaned (use 'make clean_cloud' to clean it)"; \
+	  echo -e "            INFO: by default ~$(BASE_DCP_REL_DIR) is not cleaned (use 'make clean_cloud' to clean it)"; \
 	fi
 	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`" 1>/dev/null 2>/dev/null

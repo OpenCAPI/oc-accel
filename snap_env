@@ -28,7 +28,7 @@ unset ACTION_ROOT
 unset OCSE_ROOT
 unset TIMING_LABLIMIT
 unset ILA_SETUP_FILE
-unset DCP_ROOT
+unset BASE_DCP_DIR
 unset config_script
 unset snap_env_info
 
@@ -218,14 +218,14 @@ fi
   # Note: USE_PRFLOW is defined via snap_config
   if [ "$USE_PRFLOW" == "TRUE" ]; then
     echo  "=====PR flow setup====================================="
-    RESP=`grep DCP_ROOT $snap_env_sh`
+    RESP=`grep BASE_DCP_DIR $snap_env_sh`
     if [ -z "$RESP" ]; then
-      echo  "export DCP_ROOT=${SNAP_ROOT}/hardware/DCP" >> $snap_env_sh
-      DCP_ROOT=${SNAP_ROOT}/hardware/DCP
+      echo  "export BASE_DCP_DIR=${SNAP_ROOT}/hardware/BASE_DCP" >> $snap_env_sh
+      BASE_DCP_DIR=${SNAP_ROOT}/hardware/BASE_DCP
     fi
-    echo  "DCP_ROOT                is set to: \"$DCP_ROOT\""
-    if [ -z "$DCP_ROOT" ]; then
-      SETUP_EMPTY="$SETUP_EMPTY\n  DCP_ROOT"
+    echo  "BASE_DCP_DIR                is set to: \"$BASE_DCP_DIR\""
+    if [ -z "$BASE_DCP_DIR" ]; then
+      SETUP_EMPTY="$SETUP_EMPTY\n  BASE_DCP_DIR"
     fi
   fi
 

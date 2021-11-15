@@ -21,9 +21,9 @@
 package require fileutil
 
 set root_dir          $::env(SNAP_HARDWARE_ROOT)
-set logs_dir      $::env(LOGS_DIR)
-set dcp_dir       $::env(DCP_DIR)
-set rpt_dir       $::env(RPT_DIR)
+set logs_dir          $::env(LOGS_DIR)
+set action_dcp_dir    $::env(ACTION_DCP_DIR)
+set rpt_dir           $::env(RPT_DIR)
 
 set fpgacard          $::env(FPGACARD)
 set fpga_part         $::env(FPGACHIP)
@@ -79,12 +79,12 @@ if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
 
   if { ![catch {current_instance}] } {
-      write_checkpoint -force $dcp_dir/${oc_action_synth_dcp}_error.dcp    >> $logfile
+      write_checkpoint -force $action_dcp_dir/${oc_action_synth_dcp}_error.dcp    >> $logfile
   }
   exit 42
 } else {
   puts [format "%-*s%-*s"  $widthCol1 "" $widthCol2 "     generating ${oc_action_synth_dcp}"]
-  #write_checkpoint -force $dcp_dir/${step}.dcp          >> $logfile
-  write_checkpoint   -force $dcp_dir/${oc_action_synth_dcp} >> $logfile
+  #write_checkpoint -force $action_dcp_dir/${step}.dcp          >> $logfile
+  write_checkpoint   -force $action_dcp_dir/${oc_action_synth_dcp} >> $logfile
   report_utilization -file  $rpt_dir/${step}_utilization.rpt -quiet
 }

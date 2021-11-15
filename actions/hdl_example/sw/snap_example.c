@@ -285,11 +285,11 @@ static int do_action (struct snap_card* h,
     struct snap_action* act = NULL;
     uint64_t td;
 
-    act = snap_attach_action (h, ACTION_TYPE_EXAMPLE,
+    act = snap_attach_action (h, ACTION_TYPE,
                               flags, 5 * timeout);
 
     if (NULL == act) {
-        VERBOSE0 ("Error: Can not attach Action: %x\n", ACTION_TYPE_EXAMPLE);
+        VERBOSE0 ("Error: Can not attach Action: %x\n", ACTION_TYPE);
         VERBOSE0 ("       Try to run snap_main tool\n");
         return 0x100;
     }
@@ -300,7 +300,7 @@ static int do_action (struct snap_card* h,
     print_time (td, memsize);
 
     if (0 != snap_detach_action (act)) {
-        VERBOSE0 ("Error: Can not detach Action: %x\n", ACTION_TYPE_EXAMPLE);
+        VERBOSE0 ("Error: Can not detach Action: %x\n", ACTION_TYPE);
         rc |= 0x100;
     }
 
@@ -774,7 +774,7 @@ int main (int argc, char* argv[])
     switch (action) {
     case 1:
 
-        act = snap_attach_action (dn, ACTION_TYPE_EXAMPLE,
+        act = snap_attach_action (dn, ACTION_TYPE,
                                   attach_flags, 5 * timeout + delay / 1000);
 
         if ((attach_flags & SNAP_ACTION_DONE_IRQ) != 0) {
@@ -785,7 +785,7 @@ int main (int argc, char* argv[])
              delay += step_delay) {
             if (NULL == act) {
                 VERBOSE0 ("Error: Can not attach Action: %x\n",
-                          ACTION_TYPE_EXAMPLE);
+                          ACTION_TYPE);
                 rc = 0x100;
                 goto __exit1;
             }
@@ -800,7 +800,7 @@ int main (int argc, char* argv[])
         /* Detach Action and exit if rc is set */
         if (0 != snap_detach_action (act)) {
             VERBOSE0 ("Error: Can not detach Action: %x\n",
-                      ACTION_TYPE_EXAMPLE);
+                      ACTION_TYPE);
             rc |= 0x100;
         }
 

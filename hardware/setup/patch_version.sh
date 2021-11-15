@@ -90,11 +90,7 @@ sed -i "s/$SRC/$DST/" $1/$2
 if [ "$HLS_SUPPORT" == "TRUE" ]; then
    HLS_ACTION_TYPE=`find $ACTION_ROOT -name *.[hH] | xargs grep "#define\s\+ACTION_TYPE" | awk -F"0x" '{print $2}'`
    HLS_RELEASE_LEVEL=`find $ACTION_ROOT -name *.[hH] | xargs grep "#define\s\+RELEASE_LEVEL" | awk -F"0x" '{print $2}'`
-   if [ "$USE_PRFLOW" == "TRUE" ]; then
-      echo "                        ACTION_TYPE is $HLS_ACTION_TYPE, RELEASE_LEVEL is $HLS_RELEASE_LEVEL, PR code is $prcode"
-   else
-      echo "                        ACTION_TYPE is $HLS_ACTION_TYPE, RELEASE_LEVEL is $HLS_RELEASE_LEVEL"
-   fi
+   echo "                        ACTION_TYPE is $HLS_ACTION_TYPE, RELEASE_LEVEL is $HLS_RELEASE_LEVEL"
 
    SRC="define HLS_ACTION_TYPE 32'h.*"
    DST="define HLS_ACTION_TYPE 32'h${HLS_ACTION_TYPE}"

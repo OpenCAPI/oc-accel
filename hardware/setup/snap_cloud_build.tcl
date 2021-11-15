@@ -31,15 +31,18 @@ set cloud_run     $::env(CLOUD_RUN)
 set vivadoVer     [version -short]
 
 #Checkpoint directory
-if { [info exists ::env(DCP_ROOT)] == 1 } {
-    set dcp_dir $::env(DCP_ROOT)
+set action_dcp_dir $root_dir/build/Checkpoints
+set ::env(ACTION_DCP_DIR) $action_dcp_dir
+
+if { [info exists ::env(BASE_DCP_DIR)] == 1 } {
+    set base_dcp_dir $::env(BASE_DCP_DIR)
 } else {
-    puts "                        Error: For cloud builds the environment variable DCP_ROOT needs to point to a path for input and output design checkpoints."
+    puts "                        Error: For cloud builds the environment variable BASE_DCP_DIR needs to point to a path for cloud base reference checkpoint."
     exit 42
 }
-set ::env(DCP_DIR) $dcp_dir
-#create the DCP dir if it doesn't exist
-if {[catch {file mkdir $dcp_dir} err opts] != 0} {
+set ::env(BASE_DCP_DIR) $base_dcp_dir
+#create the BASE_DCP_DIR dir if it doesn't exist
+if {[catch {file mkdir $base_dcp_dir} err opts] != 0} {
     puts $err
 }
 
@@ -55,12 +58,6 @@ set ::env(RPT_DIR) $rpt_dir
 set img_dir $root_dir/build/Images
 set ::env(IMG_DIR) $img_dir
 
-#Remove temp files if not in "step by step" flow
-if { ($cloud_run == "SYNTH_ACTION") || ($cloud_run == "SYNTH_STATIC") || ($cloud_run == "ROUTE_ACTION") || ($cloud_run == "ROUTE_STATIC") || ($cloud_run == "GEN_IMAGE") } {
-  set ::env(REMOVE_TMP_FILES) FALSE
-} else {
-  set ::env(REMOVE_TMP_FILES) TRUE
-}
 
 if { [info exists ::env(ERASE_BASE_BIN_FILE)] == 1 } {
   set erase_base_bin_file [string toupper $::env(ERASE_BASE_BIN_FILE)]
@@ -121,11 +118,13 @@ if { $ila_debug == "TRUE" } {
 
 ##
 ## removing temporary checkpoint files
-if { $::env(REMOVE_TMP_FILES) == "TRUE" } {
+#Remove temp files if not in "step by step" flow
+if { ($cloud_run == "BASE") || ($cloud_run == "ACTION") } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "removing synth dcp files" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
-  exec rm -rf $dcp_dir/$oc_fpga_static_synth_dcp
-  exec rm -rf $dcp_dir/$oc_action_name_synth_dcp
-  exec rm -rf $logs_dir/*.backup*
+  exec rm -rf $action_dcp_dir/$oc_fpga_static_synth_dcp
+  exec rm -rf $action_dcp_dir/$oc_action_name_synth_dcp
+  exec rm -f $logs_dir/*.backup.*
+
 }
 
 if { (($cloud_run == "ACTION") || ($cloud_run == "ROUTE_ACTION") ) && ($erase_base_bin_file == "TRUE") } {

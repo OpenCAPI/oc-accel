@@ -19,9 +19,6 @@ PLATFORM ?= $(shell uname -m)
 
 export SNAP_ROOT=$(abspath .)
 
-export DCP_ROOT_REL ?= /hardware/DCP
-export DCP_ROOT ?= $(SNAP_ROOT)$(DCP_ROOT_REL)
-
 config_subdirs += $(SNAP_ROOT)/scripts
 software_subdirs += $(SNAP_ROOT)/software
 hardware_subdirs += $(SNAP_ROOT)/hardware
@@ -32,7 +29,9 @@ snap_config_bak = .snap_config_test.bak
 snap_config_new = .snap_config_test.new
 snap_config_sh = .snap_config.sh
 snap_config_cflags = .snap_config.cflags
-snap_env_sh = snap_env.sh
+
+snap_env_sh        = $(SNAP_ROOT)/snap_env.sh
+-include $(snap_env_sh)
 
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
@@ -61,7 +60,7 @@ help:
 	@echo "* cloud_action   Partial Reconfiguration: synthesize the action (dynamic zone)";
 	@echo "*                 (can be splitted into 3 steps: (after a 'make cloud_base' run)";
 	@echo "*                   'make oc_pr_synth_action' and then";
-	@echo "*                   'make oc_pr_route_static' + 'make oc_pr_image'";
+	@echo "*                   'make oc_pr_route_action' + 'make oc_pr_image'";
 	@echo "*                   Partial binary image will be generated for FPGA";
 	@echo "*";
 	@echo "* software       Build software libraries and tools for SNAP";
@@ -201,8 +200,8 @@ clean:
 	@$(RM) *.log *.mif vivado*.jou vivado*.log
 
 clean_cloud: clean
-	@echo -e "[CLEAN DCP DIRECTORY.] removing directory ~$(DCP_ROOT_REL)";
-	@$(RM) -r $(DCP_ROOT);
+	@echo -e "[CLEAN DCP DIRECTORY.] removing directory $(BASE_DCP_DIR)";
+	@$(RM) -r $(BASE_DCP_DIR);
 
 
 clean_config: clean
