@@ -616,7 +616,7 @@ wrong_platform:
 all model sim image: wrong_platform
 endif
 
-.PHONY: clean
+.PHONY: clean clean_cloud
 clean:
 	@echo -e "[CLEAN ENVIRONMENT...] start `date +"%T %a %b %d %Y"`"
 	@$(RM)    .hw_project_done .sim_project_done .create_snap_ip_done .create_ethernet_done .create_hbm_done
@@ -647,3 +647,10 @@ clean:
 	  echo -e "            INFO: by default '`basename $(BASE_DCP_DIR)`' directory is not cleaned (use 'make clean_cloud' to clean it)"; \
 	fi
 	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`" 1>/dev/null 2>/dev/null
+
+
+clean_cloud:
+	@if [ -d $(BASE_DCP_DIR) ]; then \
+		echo -e "[CLEAN DCP DIRECTORY.] removing directory $(BASE_DCP_DIR)"; \
+		$(RM) -r $(BASE_DCP_DIR); \
+	fi

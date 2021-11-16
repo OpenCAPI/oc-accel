@@ -203,9 +203,8 @@ clean:
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
 	@$(RM) *.log *.mif vivado*.jou vivado*.log
 
-clean_cloud:
-	@echo -e "[CLEAN DCP DIRECTORY.] removing directory $(BASE_DCP_DIR)"
-#	@$(RM) -r $(BASE_DCP_DIR)
+clean_cloud: clean
+	@$(MAKE) -s -C  $(hardware_subdirs) $@ || exit 1;
 
 
 clean_config: clean
