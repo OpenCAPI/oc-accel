@@ -37,11 +37,11 @@ clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(act
 .PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_cloud clean_config clean_env gitclean
 
 help:
-	@echo "        ____  ______            ___                  __";
-	@echo "       / __ \/ ____/           /   | _____________  / /";
-	@echo "      / / / / /      ______   / /| |/ ___/ ___/ _ \/ / ";
-	@echo "     / /_/ / /___   /_____/  / ___ / /__/ /__/  __/ /  ";
-	@echo "     \____/\____/           /_/  |_\___/\___/\___/_/   ";
+	@echo "   ___  ____  ______       ___  ___             ___  __";
+	@echo "  ___  / __ \/ ____/      ___  /   | _____________  / /";
+	@echo " ___  / / / / /      ______   / /| |/ ___/ ___/ _ \/ / ";
+	@echo "___  / /_/ / /___   /_____/  / ___ / /__/ /__/  __/ /  ";
+	@echo " ___ \____/\____/      ___  /_/  |_\___/\___/\___/_/   ";
 	@echo "";
 	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";

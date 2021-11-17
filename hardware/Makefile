@@ -644,7 +644,7 @@ clean:
 		fi                                          \
 	fi
 	@if [ "$(USE_PRFLOW)" == "TRUE" ]; then	    \
-	  echo -e "            INFO: by default '`basename $(BASE_DCP_DIR)`' directory is not cleaned (use 'make clean_cloud' to clean it)"; \
+	  echo -e "   INFO: by default '`basename $(BASE_DCP_DIR)`' directory is not cleaned (use 'make clean_cloud' if needed)"; \
 	fi
 	@echo -e "[CLEAN ENVIRONMENT...] done  `date +"%T %a %b %d %Y"`" 1>/dev/null 2>/dev/null
 
