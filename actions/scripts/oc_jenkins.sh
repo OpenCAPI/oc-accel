@@ -164,6 +164,7 @@ function test_hard()
                      sudo ./oc-flash-script.sh -C $card $IMAGE $IMAGE2
 	        fi
 		RC=$?
+		echo "DEBUG : RC of sudo ./oc-flash-script.sh = $RC"
 		if [ $RC -eq 0 ]; then
 			break
 		fi
