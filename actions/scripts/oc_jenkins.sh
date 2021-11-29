@@ -168,6 +168,13 @@ function test_hard()
 		if [ $RC -eq 0 ]; then
 			break
 		fi
+
+		if [ $RC -eq 10 ]; then
+			 echo "`date` WARNING: /oc-flash-script.sh reported a previous locked situation"
+			 return $RC
+		fi
+
+		
 		if [ $RC -eq 99 ]; then
 			# I do get Busy from oc_flash tool if the flash lock is in use
 			# Wait again or exit for Flashing
