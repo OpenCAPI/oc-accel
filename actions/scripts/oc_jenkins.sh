@@ -363,6 +363,11 @@ if [[ $accel != "ALL" ]]; then
 					else
 						test_hard $accel $card $BINFILE $BINFILE2
 					fi
+
+					if [ $? -eq 10 ]
+						exit 10
+					fi
+
 					if [ $? -ne 0 ]; then
 						exit 1
 					fi
