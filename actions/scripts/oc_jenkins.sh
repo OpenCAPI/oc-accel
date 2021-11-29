@@ -364,7 +364,7 @@ if [[ $accel != "ALL" ]]; then
 						test_hard $accel $card $BINFILE $BINFILE2
 					fi
 
-					if [ $? -eq 10 ]
+					if [ $? -eq 10 ]; then
 						exit 10
 					fi
 
