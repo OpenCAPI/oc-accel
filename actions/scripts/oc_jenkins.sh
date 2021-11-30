@@ -160,13 +160,21 @@ function test_hard()
 		     echo "executing non SPI case : sudo ./oc-flash-script.sh -C $card -f $IMAGE"
 		sudo ./oc-flash-script.sh -C $card -f $IMAGE
 		else 
-                     echo "executing SPI case : sudo ./oc-flash-script.sh -C $card $IMAGE $IMAGE2"
-                     sudo ./oc-flash-script.sh -C $card $IMAGE $IMAGE2
+                     echo "executing SPI case : sudo ./oc-flash-script.sh -C $card -f $IMAGE $IMAGE2"
+                     sudo ./oc-flash-script.sh -C $card -f $IMAGE $IMAGE2
 	        fi
 		RC=$?
+		echo "DEBUG : RC of sudo ./oc-flash-script.sh = $RC"
 		if [ $RC -eq 0 ]; then
 			break
 		fi
+
+		if [ $RC -eq 10 ]; then
+			 echo "`date` WARNING: /oc-flash-script.sh reported a previous locked situation"
+			 return $RC
+		fi
+
+		
 		if [ $RC -eq 99 ]; then
 			# I do get Busy from oc_flash tool if the flash lock is in use
 			# Wait again or exit for Flashing
@@ -355,6 +363,11 @@ if [[ $accel != "ALL" ]]; then
 					else
 						test_hard $accel $card $BINFILE $BINFILE2
 					fi
+
+					if [ $? -eq 10 ]; then
+						exit 10
+					fi
+
 					if [ $? -ne 0 ]; then
 						exit 1
 					fi
