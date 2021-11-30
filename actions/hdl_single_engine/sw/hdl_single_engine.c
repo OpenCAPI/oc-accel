@@ -503,8 +503,8 @@ static void usage (const char* prog)
             "                            Pattern: [20:16] id_range. for example, 3 means [0,1,2,3]\n"
             "                                     [15:8]  Burst length - 1,        =AXI A*LEN\n"
             "                                     [2:0]   Data width in each beat, =AXI A*SIZE\n"
-            " Read  example : hdl_single_engine -c50 -w 0x00000600 -n1000 -N0 -p 0x00001F07  -t 10000 -v\n"
-            " Write example : hdl_single_engine -c50 -w 0x00000600 -n0 -N1000 -p 0x00001F07  -t 10000 -v\n"
+            " Read  example : hdl_single_engine -c50 -w 0x00000601 -n1000 -N0 -p 0x00001F07  -t 10000 -v\n"
+            " Write example : hdl_single_engine -c50 -w 0x00000601 -n0 -N1000 -p 0x00001F07  -t 10000 -v\n"
             " Latency test: file_rd_cycle and file_wr_cycle files will contain values measured for the latency (refer to documentation)\n"
             , prog);
 }
