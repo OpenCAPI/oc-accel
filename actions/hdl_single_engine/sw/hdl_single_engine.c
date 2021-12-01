@@ -479,7 +479,7 @@ static double get_variance (double *bandwidth_array, uint32_t test_count, double
 
 static void usage (const char* prog)
 {
-    VERBOSE0 ("SNAP String Match (Regular Expression Match) Tool.\n");
+    VERBOSE0 ("OC-Accel single engine test (latency and BW measurements tool)\n");
     VERBOSE0 ("Usage: %s\n"
             "    -h, --help              | Prints usage information\n"
             "    -v, --verbose           | Verbose mode\n"
