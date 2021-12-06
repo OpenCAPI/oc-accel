@@ -76,7 +76,7 @@ function test_helloworld_1024 {
     echo "cmd: ${cmd}"
     eval ${cmd}
     echo -n "Doing snap_helloworld_1024 "
-    cmd="snap_helloworld_1024 -C${snap_card} -i tin -o tout >> snap_helloworld_512.log 2>&1"
+    cmd="snap_helloworld_1024 -C${snap_card} -i tin -o tout >> snap_helloworld_1024.log 2>&1"
     eval ${cmd}
     if [ $? -ne 0 ]; then
 	cat snap_helloworld_1024.log
