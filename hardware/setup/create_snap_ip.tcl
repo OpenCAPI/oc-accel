@@ -805,14 +805,14 @@ if { $ila_debug == "TRUE" } {
 }
 
 # create VIO
-  puts "                        generating IP vio_soft_reset"
-  create_ip -name vio -vendor xilinx.com -library ip -version 3.0 -module_name vio_soft_reset -dir $ip_dir  >> $log_file
-  set_property -dict [list CONFIG.C_NUM_PROBE_OUT {2} CONFIG.C_EN_PROBE_IN_ACTIVITY {0} CONFIG.C_NUM_PROBE_IN {0}] [get_ips vio_soft_reset]
-  set_property generate_synth_checkpoint false [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci]
-  generate_target {instantiation_template}     [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] >> $log_file
-  generate_target all                          [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] >> $log_file
-  export_ip_user_files -of_objects             [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] -no_script -force >> $log_file
-  export_simulation    -of_objects             [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+#  puts "                        generating IP vio_soft_reset"
+#  create_ip -name vio -vendor xilinx.com -library ip -version 3.0 -module_name vio_soft_reset -dir $ip_dir  >> $log_file
+#  set_property -dict [list CONFIG.C_NUM_PROBE_OUT {2} CONFIG.C_EN_PROBE_IN_ACTIVITY {0} CONFIG.C_NUM_PROBE_IN {0}] [get_ips vio_soft_reset]
+#  set_property generate_synth_checkpoint false [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci]
+#  generate_target {instantiation_template}     [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] >> $log_file
+#  generate_target all                          [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] >> $log_file
+#  export_ip_user_files -of_objects             [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] -no_script -force >> $log_file
+#  export_simulation    -of_objects             [get_files $ip_dir/vio_soft_reset/vio_soft_reset.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 
 #create axi_interconnect
 if { $create_interconnect == "TRUE" } {
@@ -879,7 +879,7 @@ if { $create_clkconv_lite == "TRUE" } {
 }
 
 if { $user_clock == "TRUE" } {
-  puts "                        generating clk_wiz ......"
+  puts "                        generating specific $user_clk_freq MHz clock for action ......"
   create_ip -name clk_wiz -vendor xilinx.com -library ip -version 6.0 -module_name user_clock_gen -dir $ip_dir  >> $log_file
   if { $user_clk_freq == "50" } {
     set_property -dict [ list       CONFIG.PRIM_IN_FREQ {201.420}               \
@@ -1043,7 +1043,13 @@ if { $create_ddr4_bw250soc == "TRUE" } {
 }
 
 #HBM controller(AD9H3/AD9H7)
-#if { ($create_hbm_ad9h3 == "TRUE") || ($create_hbm_ad9h7 == "TRUE") } {
+##if { ($create_hbm_ad9h3 == "TRUE") || ($create_hbm_ad9h7 == "TRUE") } {
+#  puts "                        generating apb clock for hbm"
+#  create_ip -name util_ds_buf -vendor xilinx.com -library ip -version 2.1 -module_name bufg_apb_clk -dir $ip_dir  >> $log_file
+#  set_property -dict [list CONFIG.C_BUF_TYPE {BUFGCE_DIV}    \
+#                           CONFIG.C_BUFGCE_DIV {2} \
+#                           ] [get_ips bufg_apb_clk]
+
 #  puts "                        generating axi_hbm_dwidth_converter ......"
 #  create_ip -name axi_dwidth_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_hbm_dwidth_converter -dir $ip_dir  >> $log_file
 #  set_property -dict [list CONFIG.PROTOCOL {AXI4}              \
@@ -1057,44 +1063,113 @@ if { $create_ddr4_bw250soc == "TRUE" } {
 #  generate_target all                          [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] >> $log_file
 #  export_ip_user_files -of_objects             [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] -no_script -sync -force  >> $log_file
 #  export_simulation    -of_objects             [get_files $ip_dir/axi_hbm_dwidth_converter/axi_hbm_dwidth_converter.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
-#
-#  puts "	                generating IP hbm_ctrl for $fpga_card"
-#  create_ip -name hbm -vendor xilinx.com -library ip -version 1.0 -module_name hbm_ctrl -dir $ip_dir >> $log_file
-#  set_property -dict [list                                                  \
-#                      CONFIG.USER_HBM_REF_CLK_0 {200}                       \
-#                      CONFIG.USER_HBM_REF_CLK_PS_0 {2500.00}                \
-#                      CONFIG.USER_HBM_REF_CLK_XDC_0 {5.00}                  \
-#                      CONFIG.USER_HBM_FBDIV_0 {18}                          \
-#                      CONFIG.USER_HBM_RES_0 {9}                             \
-#                      CONFIG.USER_HBM_LOCK_REF_DLY_0 {20}                   \
-#                      CONFIG.USER_HBM_LOCK_FB_DLY_0 {20}                    \
-#                      CONFIG.USER_HBM_HEX_CP_RES_0 {0x00009600}             \
-#                      CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001414}    \
-#                      CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000482}    \
-#                      CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}               \
-#                      CONFIG.USER_SAXI_01 {false}                           \
-#                      CONFIG.USER_SAXI_02 {false}                           \
-#                      CONFIG.USER_SAXI_03 {false}                           \
-#                      CONFIG.USER_SAXI_04 {false}                           \
-#                      CONFIG.USER_SAXI_05 {false}                           \
-#                      CONFIG.USER_SAXI_06 {false}                           \
-#                      CONFIG.USER_SAXI_07 {false}                           \
-#                      CONFIG.USER_SAXI_08 {false}                           \
-#                      CONFIG.USER_SAXI_09 {false}                           \
-#                      CONFIG.USER_SAXI_10 {false}                           \
-#                      CONFIG.USER_SAXI_11 {false}                           \
-#                      CONFIG.USER_SAXI_12 {false}                           \
-#                      CONFIG.USER_SAXI_13 {false}                           \
-#                      CONFIG.USER_SAXI_14 {false}                           \
-#                      CONFIG.USER_SAXI_15 {false}                           \
-#                     ] [get_ips hbm_ctrl] >> $log_file
-#
-#  set_property generate_synth_checkpoint false [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
-#  generate_target {instantiation_template}     [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
-#  generate_target all                          [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
-#  export_ip_user_files -of_objects             [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -no_script -force  >> $log_file
-#  export_simulation -of_objects [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
-#}
+
+##  puts "	                generating IP hbm_ctrl for $fpga_card"
+##  create_ip -name hbm -vendor xilinx.com -library ip -version 1.0 -module_name hbm_ctrl -dir $ip_dir >> $log_file
+  #set_property -dict [list                                                  \
+    #CONFIG.USER_AUTO_POPULATE {yes}                      \
+    #CONFIG.USER_SWITCH_ENABLE_00 {FALSE}                 \
+    #CONFIG.USER_XSDB_INTF_EN {FALSE}                     \
+    #CONFIG.USER_HBM_DENSITY {4GB}                        \
+    #CONFIG.USER_HBM_STACK {1}                            \
+    #CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}  \
+    #CONFIG.USER_SINGLE_STACK_SELECTION {LEFT}          \
+    #CONFIG.USER_HBM_REF_CLK_0 {200}                      \
+    #CONFIG.USER_HBM_REF_CLK_PS_0 {2500.00}               \
+    #CONFIG.USER_HBM_REF_CLK_XDC_0 {5.00}                 \
+    #CONFIG.USER_HBM_FBDIV_0 {18}                         \
+    #CONFIG.USER_HBM_CP_0 {6}                             \
+    #CONFIG.USER_HBM_RES_0 {9}                            \
+    #CONFIG.USER_HBM_LOCK_REF_DLY_0 {20}                  \
+    #CONFIG.USER_HBM_LOCK_FB_DLY_0 {20}                   \
+    #CONFIG.USER_HBM_HEX_CP_RES_0 {0x00009600}            \
+    #CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001414}   \
+    #CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000482}   \
+    #CONFIG.USER_HBM_TCK_0 {900}                          \
+    #CONFIG.USER_HBM_TCK_0_PERIOD {1.1111111111111112}    \
+    #CONFIG.USER_tRC_0 {0x2B}                             \
+    #CONFIG.USER_tRAS_0 {0x1E}                            \
+    #CONFIG.USER_tRCDRD_0 {0xD}                           \
+    #CONFIG.USER_tRCDWR_0 {0x9}                           \
+    #CONFIG.USER_tRRDL_0 {0x4}                            \
+    #CONFIG.USER_tRRDS_0 {0x4}                            \
+    #CONFIG.USER_tFAW_0 {0xF}                             \
+    #CONFIG.USER_tRP_0 {0xD}                              \
+    #CONFIG.USER_tWR_0 {0xF}                              \
+    #CONFIG.USER_tXP_0 {0x7}                              \
+    #CONFIG.USER_tRFC_0 {0xEA}                            \
+    #CONFIG.USER_tRFCSB_0 {0x90}                          \
+    #CONFIG.USER_tRREFD_0 {0x8}                           \
+    #CONFIG.USER_APB_PCLK_0 {100}                         \
+    #CONFIG.USER_APB_PCLK_PERIOD_0 {10.0}                 \
+    #CONFIG.USER_TEMP_POLL_CNT_0 {100000}                 \
+    #CONFIG.USER_HBM_REF_OUT_CLK_0 {1800}                 \
+    #CONFIG.USER_MC0_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_MC1_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_MC2_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_MC3_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_MC4_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_MC5_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_MC6_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_MC7_REF_CMD_PERIOD {0x0DB6}              \
+    #CONFIG.USER_DFI_CLK0_FREQ {450.000}                  \
+    #CONFIG.USER_MC_ENABLE_00 {TRUE}   \
+    #CONFIG.USER_PHY_ENABLE_00 {TRUE}  \
+    #CONFIG.USER_MC_ENABLE_01 {FALSE}   \
+    #CONFIG.USER_PHY_ENABLE_01 {TRUE}  \
+    #CONFIG.USER_SAXI_01 {false}                           \
+    #CONFIG.USER_SAXI_02 {false}                           \
+    #CONFIG.USER_SAXI_03 {false}                           \
+    #CONFIG.USER_SAXI_04 {false}                           \
+    #CONFIG.USER_SAXI_05 {false}                           \
+    #CONFIG.USER_SAXI_06 {false}                           \
+    #CONFIG.USER_SAXI_07 {false}                           \
+    #CONFIG.USER_SAXI_08 {false}                           \
+    #CONFIG.USER_SAXI_09 {false}                           \
+    #CONFIG.USER_SAXI_10 {false}                           \
+    #CONFIG.USER_SAXI_11 {false}                           \
+    #CONFIG.USER_SAXI_12 {false}                           \
+    #CONFIG.USER_SAXI_13 {false}                           \
+    #CONFIG.USER_SAXI_14 {false}                           \
+    #CONFIG.USER_SAXI_15 {false}                           \
+    #] [get_ips hbm_ctrl] >> $log_file
+
+##  set_property -dict [list                                                  \
+##                      CONFIG.USER_HBM_REF_CLK_0 {200}                       \
+##                      CONFIG.USER_HBM_REF_CLK_PS_0 {2500.00}                \
+##                      CONFIG.USER_HBM_REF_CLK_XDC_0 {5.00}                  \
+##                      CONFIG.USER_HBM_FBDIV_0 {18}                          \
+##                      CONFIG.USER_HBM_RES_0 {9}                             \
+##                      CONFIG.USER_HBM_LOCK_REF_DLY_0 {20}                   \
+##                      CONFIG.USER_HBM_LOCK_FB_DLY_0 {20}                    \
+##                      CONFIG.USER_HBM_HEX_CP_RES_0 {0x00009600}             \
+##                      CONFIG.USER_HBM_HEX_LOCK_FB_REF_DLY_0 {0x00001414}    \
+##                      CONFIG.USER_HBM_HEX_FBDIV_CLKOUTDIV_0 {0x00000482}    \
+##                      CONFIG.USER_CLK_SEL_LIST0 {AXI_00_ACLK}               \
+##                      CONFIG.USER_SAXI_01 {false}                           \
+##                      CONFIG.USER_SAXI_02 {false}                           \
+##                      CONFIG.USER_SAXI_03 {false}                           \
+##                      CONFIG.USER_SAXI_04 {false}                           \
+##                      CONFIG.USER_SAXI_05 {false}                           \
+##                      CONFIG.USER_SAXI_06 {false}                           \
+##                      CONFIG.USER_SAXI_07 {false}                           \
+##                      CONFIG.USER_SAXI_08 {false}                           \
+##                      CONFIG.USER_SAXI_09 {false}                           \
+##                      CONFIG.USER_SAXI_10 {false}                           \
+##                      CONFIG.USER_SAXI_11 {false}                           \
+##                      CONFIG.USER_SAXI_12 {false}                           \
+##                      CONFIG.USER_SAXI_13 {false}                           \
+##                      CONFIG.USER_SAXI_14 {false}                           \
+##                      CONFIG.USER_SAXI_15 {false}                           \
+##                      CONFIG.USER_XSDB_INTF_EN {FALSE}                      \
+##                     ] [get_ips hbm_ctrl] >> $log_file
+
+##  set_property generate_synth_checkpoint false [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
+##  generate_target {instantiation_template}     [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
+##  generate_target all                          [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci]                    >> $log_file
+ ## export_ip_user_files -of_objects             [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -no_script -force  >> $log_file
+ ## export_simulation -of_objects [get_files $ip_dir/hbm_ctrl/hbm_ctrl.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+##}
 #
 #if { $create_hbm_ad9h7 == "TRUE" } {
 #  puts "                        generating axi_hbm_register_slice ......"

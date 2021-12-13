@@ -23,7 +23,6 @@ set fpga_card_lcase     [string tolower $::env(FPGACARD)]
 set root_dir            $::env(SNAP_HARDWARE_ROOT)
 set ip_dir              $root_dir/ip
 set hls_ip_dir          $ip_dir/hls_ip_project/hls_ip_project.srcs/sources_1/ip
-set hbm_ip_dir          $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/ip
 set action_dir          $::env(ACTION_ROOT)
 set action_hw_dir       $action_dir/hw
 set action_ip_dir       $action_dir/ip/action_ip_prj/action_ip_prj.srcs/sources_1/ip
@@ -58,7 +57,15 @@ set unit_sim_used       $::env(UNIT_SIM_USED)
 set odma_used           $::env(ODMA_USED)
 set log_dir             $::env(LOGS_DIR)
 set log_file            $log_dir/create_framework.log
+set use_prflow		$::env(USE_PRFLOW)
 set vivadoVer           [version -short]
+
+set hbm_top_dir          $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top
+if { ($vivadoVer >= "2020.2")} {
+  set hbm_top_subdir          $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top
+} else {
+  set hbm_top_subdir          $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top
+}
 
 if { $unit_sim_used == "TRUE" } {
     puts "!!ATTENTION: UNIT SIM enabled, no OCSE and software, only UVM based testbench and TLX-AXI bridge."
@@ -277,32 +284,32 @@ if { $eth_used == TRUE } {
 
 # Add HBM
 if { $hbm_used == TRUE } {
-  #add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
-  add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
+  add_files -norecurse $hbm_top_subdir/hdl/hbm_top_wrapper.vhd >> $log_file
+  #add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/hdl/hbm_top_wrapper.vhd >> $log_file
   if { $bram_used == TRUE } {
     puts "                        adding HBM-like block design (BRAM)"
   } else {
     # if BRAM model used replacing HBM do not add specific hbm init files
     puts "                        adding HBM block design"
     puts "                        adding HBM initialization files "
-    #add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
-    #add_files -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
-    add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
-    add_files -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
+    add_files -norecurse $hbm_top_subdir/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_1.mem
+    add_files -norecurse $hbm_top_subdir/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_0.mem
     update_ip_catalog  >> $log_file
   }
 
 
-  add_files -norecurse $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd  >> $log_file
-  export_ip_user_files -of_objects  [get_files  $ip_dir/hbm/hbm.srcs/sources_1/bd/hbm_top/hbm_top.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
+  add_files -norecurse $hbm_top_dir/hbm_top.bd  >> $log_file
+  if { $bram_used != TRUE } {
+    #SR#10523711 - disable the hbm_ip.xdc to remove an automatically inserted clock constraint
+    set_property IS_ENABLED false [get_files $hbm_top_subdir/ip/hbm_top_hbm_0/hdl/par/hbm_ip.xdc]
+  }
+  export_ip_user_files -of_objects  [get_files  $hbm_top_dir/hbm_top.bd] -lib_map_path [list {{ies=$root_dir/viv_project/framework.cache/compile_simlib/ies}}] -no_script -sync -force -quiet
 
   #puts "                        adding HBM initialization files "
   # if BRAM model used to replace HBM then do not add specific hbm init files
   if { $bram_used != TRUE } {
-    #import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
-    #import_files -fileset sim_1 -norecurse $hbm_ip_dir/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
-    import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
-    import_files -fileset sim_1 -norecurse $ip_dir/hbm/hbm.gen/sources_1/bd/hbm_top/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
+    import_files -fileset sim_1 -norecurse $hbm_top_subdir/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_1.mem
+    import_files -fileset sim_1 -norecurse $hbm_top_subdir/ip/hbm_top_hbm_0/hdl/rtl/xpm_internal_config_file_sim_0.mem
   }
   update_compile_order -fileset sim_1 >> $log_file
 }
@@ -342,6 +349,13 @@ if {$fpga_card == "BW250SOC"} {
 
 # XDC
 puts "                        importing other XDCs"
+
+set static_pblock_xdc  $top_xdc_dir/pr_static_pblock.xdc
+if { ($use_prflow == "TRUE") && [file exists $static_pblock_xdc] == 1 } {
+    puts "                        importing PR XDC"
+    add_files -fileset constrs_1 -norecurse $static_pblock_xdc
+    set_property used_in_implementation true [get_files $static_pblock_xdc]
+}
 
 # Bitstream XDC
 #  add_files -fileset constrs_1 -norecurse $top_xdc_dir/config_bitstream.xdc

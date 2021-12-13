@@ -24,12 +24,11 @@ PATH=$snapdir:$PATH
 
 snap_env_sh=$snapdir/snap_env.sh
 
-unset PSL_DCP
 unset ACTION_ROOT
 unset OCSE_ROOT
 unset TIMING_LABLIMIT
 unset ILA_SETUP_FILE
-unset DCP_ROOT
+unset BASE_DCP_DIR
 unset config_script
 unset snap_env_info
 
@@ -67,6 +66,13 @@ while [ -z "$SETUP_DONE" ]; do
   SETUP_WARNING=""
   SETUP_INFO=""
   SETUP_EMPTY=""
+
+  echo  "   ___  ____  ______       ___  ___             ___  __";
+  echo  "  ___  / __ \/ ____/      ___  /   | _____________  / /";
+  echo  " ___  / / / / /      ______   / /| |/ ___/ ___/ _ \/ / ";
+  echo  "___  / /_/ / /___   /_____/  / ___ / /__/ /__/  __/ /  ";
+  echo  " ___ \____/\____/      ___  /_/  |_\___/\___/\___/_/   ";
+  echo  "";
   echo  "======================================================="
   echo  "== OC-ACCEL ENVIRONMENT SETUP                        =="
   echo  "======================================================="
@@ -109,15 +115,6 @@ fi
   ####### checking path to OCSE (only if simulation is enabled)
   # Note: SIMULATOR is defined via snap_config
   if [ "$SIMULATOR" != "nosim" ]; then
-    echo "=====Simulation setup: Setting up OCSE version=========="
-#    if [ "$CAPI10" == "y" ]; then
-#      PSLVER="8"
-#    else
-#      PSLVER="9"
-#    fi
-#    echo "Setting PSLVER                 to: \"$PSLVER\""
-#    sed -i '/export[ ^]*PSLVER[ ^]*=/ d' $snap_env_sh
-#    sed -i '1s/^/export PSLVER='$PSLVER'\n/' $snap_env_sh
     echo "=====Simulation setup: Checking path to OCSE=========="
     echo "OCSE_ROOT              is set to: \"$OCSE_ROOT\""
     RESP=`grep OCSE_ROOT $snap_env_sh`
@@ -184,7 +181,7 @@ fi
   fi
   if [ -z "$AR" ] && [ -n "$ACTION_ROOT" ]; then
     AR=$ACTION_ROOT
-    echo  "ACTION_ROOT             is set to: \"$ACTION_ROOT\""
+    echo  "ACTION_ROOT    is kept and set to: \"$ACTION_ROOT\""
     SETUP_INFO="$SETUP_INFO\n### INFO ### Kept ACTION_ROOT from previous configuration."
   else
     echo  "Setting ACTION_ROOT            to: \"$AR\""
@@ -228,13 +225,14 @@ fi
   # Note: USE_PRFLOW is defined via snap_config
   if [ "$USE_PRFLOW" == "TRUE" ]; then
     echo  "=====PR flow setup====================================="
-    RESP=`grep DCP_ROOT $snap_env_sh`
+    RESP=`grep BASE_DCP_DIR $snap_env_sh`
     if [ -z "$RESP" ]; then
-      echo  "export DCP_ROOT=" >> $snap_env_sh
+      echo  "export BASE_DCP_DIR=${SNAP_ROOT}/hardware/BASE_DCP" >> $snap_env_sh
+      BASE_DCP_DIR=${SNAP_ROOT}/hardware/BASE_DCP
     fi
-    echo  "DCP_ROOT                is set to: \"$DCP_ROOT\""
-    if [ -z "$DCP_ROOT" ]; then
-      SETUP_EMPTY="$SETUP_EMPTY\n  DCP_ROOT"
+    echo  "BASE_DCP_DIR                is set to: \"$BASE_DCP_DIR\""
+    if [ -z "$BASE_DCP_DIR" ]; then
+      SETUP_EMPTY="$SETUP_EMPTY\n  BASE_DCP_DIR"
     fi
   fi
 
@@ -303,10 +301,6 @@ fi
       SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with xsim is not supported by Xilinx, but you can build an image!"
       SETUP_INFO="$SETUP_INFO\n To simulate a design with HBM, it is recommended to use xcelium simulator (license needed) or use BRAM / URAM option."
   fi
-  if [ "$SIM_IRUN" == "y" ] && [ "$HBM_USED" == "TRUE" ] && [ "$BRAM_USED" == "FALSE" ]; then
-      SETUP_INFO="$SETUP_INFO\n### WARNING ### Simulating HBM with irun still faces issues."
-      SETUP_INFO="$SETUP_INFO\n To simulate a design with HBM, it is recommended to use xcelium simulator (license needed) or use BRAM / URAM option."
-  fi
 
 
   # Note: ETHERNET_USED is defined via snap_config
@@ -322,7 +316,7 @@ fi
 
   # Note: USERCODE requested
   if [ "$ENABLE_USERCODE" == "y" ]; then
-      echo "USERCODE          has been set to : $USERCODE";
+      echo "USERCODE          has been set to : ${USERCODE:0:8}";
   fi
 
 
@@ -353,8 +347,13 @@ fi
 
   #if no warning then display message
   if [ -z "$SETUP_WARNING" ]; then
-    echo "  Suggested next step: to run a simulation,      execute: make sim"
-    echo "                    or to build the FPGA binary, execute: make image"
+    if [ "$USE_PRFLOW" == "TRUE" ]; then
+      echo "  Suggested next step: to run a simulation,      execute: make sim"
+      echo "                    or to build the FPGA binary, execute: make cloud_base or make cloud_action"
+    else
+      echo "  Suggested next step: to run a simulation,      execute: make sim"
+      echo "                    or to build the FPGA binary, execute: make image"
+    fi
   fi
   SETUP_DONE="1"
 done

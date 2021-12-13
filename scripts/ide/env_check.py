@@ -24,6 +24,8 @@ from os.path import isfile as isfile
 from ocaccel_utils import which
 from ocaccel_utils import SystemCMD
 from ocaccel_utils import msg
+from os import environ as env
+from ocaccel_utils import source
 
 def env_check(options):
     assert sys.version_info >= (2, 6)
@@ -68,5 +70,25 @@ def env_check(options):
         msg.ok_msg_blue("SNAP ROOT %s is valid" % options.ocaccel_root)
     else:
         msg.fail_msg("SNAP ROOT %s is not valid! Exiting ... " % options.ocaccel_root)
+
+
+    if 'SNAP_ROOT' not in env:
+          env['SNAP_ROOT'] = options.ocaccel_root
+    source(pathjoin(env['SNAP_ROOT'], '.snap_config.sh'))
+    prflow_mode = env['USE_PRFLOW']
+
+    if prflow_mode == "TRUE":
+       if options.interactive == True:
+          options.image_mode = "cloud_action"
+
+       if options.image_mode == "normal":
+          msg.fail_msg("%s mode selected for image build while in PR flow! Exiting ... " % options.image_mode)
+       else:
+          msg.ok_msg("Partial reconfiguration mode detected")
+    else:
+       if options.image_mode != "normal":
+          msg.fail_msg("%s mode selected for image build while in Normal flow! Exiting ... " % options.image_mode)
+       else:
+          options.image_mode = "normal"
 
     msg.ok_msg("Environment check PASSED")

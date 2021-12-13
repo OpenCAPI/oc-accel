@@ -39,7 +39,11 @@ static const char *version = GIT_VERSION;
 static const char *mem_tab[] = { "HOST_DRAM", "CARD_DRAM", "TYPE_NVME", "FPGA_BRAM", 
           "", "", "", "", "", "", "", "", "", "", "", "",
           "HBM_P0", "HBM_P1", "HBM_P2", "HBM_P3", "HBM_P4", "HBM_P5", "HBM_P6",
-          "HBM_P7", "HBM_P8", "HBM_P9", "HBM_P10", "HBM_P11"};
+          "HBM_P7", "HBM_P8", "HBM_P9", "HBM_P10", "HBM_P11",
+          "HBM_P12", "HBM_P13", "HBM_P14", "HBM_P15", "HBM_P16",
+          "HBM_P17", "HBM_P18", "HBM_P19", "HBM_P20", "HBM_P21",
+          "HBM_P22", "HBM_P23", "HBM_P24", "HBM_P25", "HBM_P26",
+          "HBM_P27", "HBM_P28", "HBM_P29", "HBM_P30", "HBM_P31"};
 
 /*
  * @brief	prints valid command line options
@@ -241,6 +245,46 @@ int main(int argc, char *argv[])
                                 type_in = SNAP_ADDRTYPE_HBM_P10;
                         else if (strcmp(space, "HBM_P11") == 0)
                                 type_in = SNAP_ADDRTYPE_HBM_P11;
+                        else if (strcmp(space, "HBM_P12") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P12;
+                        else if (strcmp(space, "HBM_P13") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P13;
+                        else if (strcmp(space, "HBM_P14") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P14;
+                        else if (strcmp(space, "HBM_P15") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P15;
+                        else if (strcmp(space, "HBM_P16") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P16;
+                        else if (strcmp(space, "HBM_P17") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P17;
+                        else if (strcmp(space, "HBM_P18") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P18;
+                        else if (strcmp(space, "HBM_P19") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P19;
+                        else if (strcmp(space, "HBM_P20") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P20;
+                        else if (strcmp(space, "HBM_P21") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P21;
+                        else if (strcmp(space, "HBM_P22") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P22;
+                        else if (strcmp(space, "HBM_P23") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P23;
+                        else if (strcmp(space, "HBM_P24") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P24;
+                        else if (strcmp(space, "HBM_P25") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P25;
+                        else if (strcmp(space, "HBM_P26") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P26;
+                        else if (strcmp(space, "HBM_P27") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P27;
+                        else if (strcmp(space, "HBM_P28") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P28;
+                        else if (strcmp(space, "HBM_P29") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P29;
+                        else if (strcmp(space, "HBM_P30") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P30;
+                        else if (strcmp(space, "HBM_P31") == 0)
+                                type_in = SNAP_ADDRTYPE_HBM_P31;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -280,6 +324,46 @@ int main(int argc, char *argv[])
                                 type_out = SNAP_ADDRTYPE_HBM_P10;
                         else if (strcmp(space, "HBM_P11") == 0)
                                 type_out = SNAP_ADDRTYPE_HBM_P11;
+                        else if (strcmp(space, "HBM_P12") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P12;
+                        else if (strcmp(space, "HBM_P13") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P13;
+                        else if (strcmp(space, "HBM_P14") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P14;
+                        else if (strcmp(space, "HBM_P15") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P15;
+                        else if (strcmp(space, "HBM_P16") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P16;
+                        else if (strcmp(space, "HBM_P17") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P17;
+                        else if (strcmp(space, "HBM_P18") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P18;
+                        else if (strcmp(space, "HBM_P19") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P19;
+                        else if (strcmp(space, "HBM_P20") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P20;
+                        else if (strcmp(space, "HBM_P21") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P21;
+                        else if (strcmp(space, "HBM_P22") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P22;
+                        else if (strcmp(space, "HBM_P23") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P23;
+                        else if (strcmp(space, "HBM_P24") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P24;
+                        else if (strcmp(space, "HBM_P25") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P25;
+                        else if (strcmp(space, "HBM_P26") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P26;
+                        else if (strcmp(space, "HBM_P27") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P27;
+                        else if (strcmp(space, "HBM_P28") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P28;
+                        else if (strcmp(space, "HBM_P29") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P29;
+                        else if (strcmp(space, "HBM_P30") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P30;
+                        else if (strcmp(space, "HBM_P31") == 0)
+                                type_out = SNAP_ADDRTYPE_HBM_P31;
 			else {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -368,9 +452,9 @@ int main(int argc, char *argv[])
 
 	char type_in_txt[20], type_out_txt[20];
         if (type_in == SNAP_ADDRTYPE_UNUSED)  strcpy(type_in_txt,  "FPGA_BRAM");
-        else                                    strcpy(type_in_txt,  mem_tab[type_in%28]);
+        else                                    strcpy(type_in_txt,  mem_tab[type_in%48]);
         if (type_out == SNAP_ADDRTYPE_UNUSED) strcpy(type_out_txt, "FPGA_BRAM");
-        else                                    strcpy(type_out_txt,  mem_tab[type_out%28]);
+        else                                    strcpy(type_out_txt,  mem_tab[type_out%48]);
 
 	printf("PARAMETERS:\n"
 	       "  input:       %s\n"

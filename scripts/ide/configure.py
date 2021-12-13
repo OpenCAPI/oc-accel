@@ -111,7 +111,13 @@ class Configuration:
             msg.header_msg("\t%s\t%s" % ("SIMULATOR", search_file_group_1(self.snap_cfg_file, 'SIMULATOR\s*=\s*"(.*)"')))
             msg.header_msg("\t%s\t%s" % ("CAPI_VER",  search_file_group_1(self.snap_cfg_file, 'CAPI_VER\s*=\s*"(.*)"')))
             msg.header_msg("\t%s\t%s" % ("OCSE_ROOT", search_file_group_1(self.snap_cfg_file, 'OCSE_PATH\s*=\s*"(.*)"')))
-    
+            if ((search_file_group_1(self.snap_cfg_file, 'USE_PRFLOW\s*=\s*"(.*)"')) == "TRUE"):
+               msg.header_msg("\t%s\t%s" % ("BUILD mode", "Partial Reconfiguration flow" ))
+            else:
+               msg.header_msg("\t%s\t%s" % ("BUILD mode", "Normal flow" ))
+
+            return self.options
+
     def configure(self):
         msg.ok_msg_blue("--------> Configuration") 
         os.environ['SNAP_ROOT'] = self.ocaccel_root

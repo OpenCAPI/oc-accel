@@ -24,9 +24,11 @@ import sys
 from ocaccel_utils import msg
 
 choice_str = "Yes(Y/y) No(N/n): "
+image_mode_choice_str = "Action(A/a) Base(B/b): "
 ask_clean_str = "Do you want to clean the environment before start?"
 ask_configure_str = "Do you want to configure the environment?"
 ask_make_model_str = "Do you want to make simulation model?"
+ask_image_mode_str = "Which cloud image do you want to build?"
 ask_run_sim_str = "Do you want to run simulation?"
 ask_testcase_str = '''What is the testcase you'd like to run?
 Hints:
@@ -82,11 +84,11 @@ class QuestionAndAnswer():
                                      choice_str)))
 
             if a.upper() == "Y":
-                msg.header_msg("Got Yes! Proceed to configure SNAP.")
+                msg.header_msg("Got Yes! Proceed to configure OC-ACCEL.")
                 self.options.no_configure = False
                 return self.options
 
-        msg.header_msg("Got No! Skip configuring SNAP.")
+        msg.header_msg("Got No! Skip configuring OC-ACCEL.")
         self.options.no_configure = True
         return self.options
 
@@ -130,12 +132,18 @@ class QuestionAndAnswer():
         a = raw_input(" ".join((question,\
                          choice_str)))
         if a.upper() == "Y":
-            msg.header_msg("Got Yes! Proceed to make FPGA image.")
-            self.options.make_image = True
-            return self.options
+           if self.options.image_mode != "normal":
+              a = raw_input(" ".join((ask_image_mode_str,image_mode_choice_str)))
+              if a.upper() == "A":
+                 msg.header_msg("Got A! Proceed to make cloud action FPGA image.")
+                 self.options.image_mode = "cloud_action"
+              else:
+                 msg.header_msg("Got B! Proceed to make cloud base FPGA image.")
+                 self.options.image_mode = "cloud_base"
+           self.options.make_image = True
+           return self.options
         else:
             msg.header_msg("Got No! Skip making FPGA image.")
             self.options.make_image = False
             return self.options
-
 

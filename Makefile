@@ -29,36 +29,57 @@ snap_config_bak = .snap_config_test.bak
 snap_config_new = .snap_config_test.new
 snap_config_sh = .snap_config.sh
 snap_config_cflags = .snap_config.cflags
-snap_env_sh = snap_env.sh
+snap_env_sh        = snap_env.sh
 
 clean_subdirs += $(config_subdirs) $(software_subdirs) $(hardware_subdirs) $(action_subdirs)
 
 # Only build if the subdirectory is really existent
-.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action cloud_merge snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_config clean_env gitclean
+.PHONY: help $(software_subdirs) software $(action_subdirs) apps actions $(hardware_subdirs) hardware test install uninstall snap_env hw_project model sim image synth place route cloud_enable cloud_base cloud_action snap_config config menuconfig xconfig gconfig oldconfig silentoldconfig clean clean_cloud clean_config clean_env gitclean
 
 help:
+	@echo "   ___  ____  ______       ___  ___             ___  __";
+	@echo "  ___  / __ \/ ____/      ___  /   | _____________  / /";
+	@echo " ___  / / / / /      ______   / /| |/ ___/ ___/ _ \/ / ";
+	@echo "___  / /_/ / /___   /_____/  / ___ / /__/ /__/  __/ /  ";
+	@echo " ___ \____/\____/      ___  /_/  |_\___/\___/\___/_/   ";
+	@echo "";
 	@echo "Main targets for the OC-Accel Framework make process:";
 	@echo "=================================================";
+	@echo "* ./ocaccel_workflow.py -i  Drives you through the whole simulation process flow";
+	@echo "*";
 	@echo "* snap_config    Configure OC-Accel framework";
 	@echo "* model          Build simulation model for simulator specified via target snap_config";
 	@echo "* sim            Start a simulation (it will build the model before)";
 	@echo "* sim_tmux       Start a simulation in tmux (no xterm window popped up)";
-	@echo "* hw_project     Create Vivado project with oc-bip";
+	@echo "*";
 	@echo "* image          Build a complete FPGA bitstream (takes more than one hour)";
-	@echo "*                 (This command can be splitted into 'make synth' + 'make place' + 'make route')";
+	@echo "*                 (can be splitted into 'make synth' + 'make place' + 'make route')";
 	@echo "* hardware       One step to build FPGA bitstream (Combines targets 'model' and 'image')";
+	@echo "*";
+	@echo "* cloud_base     Partial Reconfiguration: synthesize the top (static zone)";
+	@echo "*                 This command can be splitted into 4 steps:";
+	@echo "*                   'make oc_pr_synth_action' + 'make oc_pr_synth_static' and then"; 
+	@echo "*                   'make oc_pr_route_static' + 'make oc_pr_image'";
+	@echo "*                   Full binary images will be generated for Flash + partial for FPGA";
+	@echo "* cloud_action   Partial Reconfiguration: synthesize the action (dynamic zone)";
+	@echo "*                 (can be splitted into 3 steps: (after a 'make cloud_base' run)";
+	@echo "*                   'make oc_pr_synth_action' and then";
+	@echo "*                   'make oc_pr_route_action' + 'make oc_pr_image'";
+	@echo "*                   Partial binary image will be generated for FPGA";
+	@echo "*";
 	@echo "* software       Build software libraries and tools for SNAP";
 	@echo "* apps           Build the applications for all actions";
+	@echo "* hw_project     Create Vivado project with oc-bip (included in make image)";
 	@echo "* clean          Remove all files generated in make process";
+	@echo "* clean_cloud    Remove all files generated in DCP dir with make process (PR mode)";
 	@echo "* clean_config   As target 'clean' plus reset of the configuration";
 	@echo "* help           Print this message";
 	@echo;
-	@echo "The hardware related targets 'model', 'image', 'hardware', 'hw_project' and 'sim'";
-	@echo "do only exist on an x86 platform";
+	@echo "The hardware related targets 'model', 'sim', 'image', 'cloud_base', 'cloud_action',";
+	@echo "'hardware', and 'hw_project' do only exist on an x86 platform";
 	@echo;
 	@echo "Few tools to help debug";
 	@echo "-----------------------";
-	@echo "* ./ocaccel_workflow.py  Drives you through the whole simulation process flow";
 	@echo "* ./display_traces       Display traces to debug action code";
 	@echo "* ./debug_timing         Display timing failing paths when image generation fails";
 	@echo "* vivado hardware/build/Checkpoints/opt_routed_design.dcp to see logic placement.";
@@ -110,18 +131,10 @@ $(hardware_subdirs): $(snap_env_sh)
 hardware: $(hardware_subdirs)
 
 # Model build and config
-hw_project model sim image synth place route cloud_enable cloud_base cloud_action sim_tmux: $(snap_env_sh)
+hw_project model sim image synth place route cloud_enable cloud_base cloud_action oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image sim_tmux: $(snap_env_sh)
 	@for dir in $(hardware_subdirs); do                \
 	    if [ -d $$dir ]; then                          \
 	        $(MAKE) -s -C $$dir $@ || exit 1;          \
-	    fi                                             \
-	done
-
-cloud_merge:
-	@ignore_action_root=ignore_action_root $(MAKE) $(snap_env_sh)
-	@for dir in $(hardware_subdirs); do                \
-	    if [ -d $$dir ]; then                          \
-	        ignore_action_root=ignore_action_root $(MAKE) -s -C $$dir $@ || exit 1;          \
 	    fi                                             \
 	done
 
@@ -129,9 +142,10 @@ else #noteq ($(PLATFORM),x86_64)
 .PHONY: wrong_platform
 
 wrong_platform:
-	@echo; echo "\nSNAP hardware builds and simulation are possible on x86 platform only\n"; echo;
+	@echo; echo "ERROR: SNAP hardware builds and simulation are possible on x86 platform only"; echo;
 
-$(hardware_subdirs) hardware hw_project model sim image synth place route cloud_base cloud_action cloud_merge: wrong_platform
+$(hardware_subdirs) hardware hw_project model sim image cloud_base cloud_action oc_pr_synth_static oc_pr_synth_action oc_pr_route_static oc_pr_route_action oc_pr_image : wrong_platform
+
 endif
 
 # SNAP Config
@@ -187,7 +201,11 @@ clean:
 	done
 	@find . -depth -name '*~'  -exec rm -rf '{}' \; -print
 	@find . -depth -name '.#*' -exec rm -rf '{}' \; -print
-	@$(RM) *.mif vivado*.jou vivado*.log
+	@$(RM) *.log *.mif vivado*.jou vivado*.log
+
+clean_cloud: clean
+	@$(MAKE) -s -C  $(hardware_subdirs) $@ || exit 1;
+
 
 clean_config: clean
 	@$(RM) snap_workflow*.log

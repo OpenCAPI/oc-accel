@@ -72,10 +72,10 @@ if { $bram_used == "TRUE" } {
 append IMAGE_NAME [format {_%s_OC-%s_%s} $RAM_TYPE $fpgacard $::env(TIMING_WNS)]
 
 ##
-## writing bitstream
+## writing bitstream (bit and bin files)
 set step     write_bitstream
 set logfile  $logs_dir/${step}.log
-set command  "write_bitstream -force -file $img_dir/$IMAGE_NAME"
+set command  "write_bitstream -force -bin_file $img_dir/$IMAGE_NAME"
 
 # source the common bitstream settings before creating a bit and bin file
 # This is move to oc-bip/AD9V3/top/xdc
@@ -84,7 +84,7 @@ set command  "write_bitstream -force -file $img_dir/$IMAGE_NAME"
 #}
 ##
 
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: user image" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: user image" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 if { [catch "$command > $logfile" errMsg] } {
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: write_bitstream failed" $widthCol4 "" ]
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "       please check $logfile" $widthCol4 "" ]
@@ -97,7 +97,7 @@ if { $fpgacard != "BW250SOC" } {
 
 # Also write the factory bitstream if it was selected
 if { $factory_image == "TRUE" } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: factory image" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating bitstreams" $widthCol3 "type: factory image" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   # The factory bitstream has the properties from snap_bitstream_pre.tcl plus:
   #xapp1246/xapp1296: These settings are not needed for SNAP.
   #FIXME remove when testing was successful
@@ -120,17 +120,17 @@ if { $factory_image == "TRUE" } {
  }
 
 if { $fpgacard == "BW250SOC" } {
-set elfpath $root_dir/oc-bip/board_support_packages/bw250soc/ip/250_soc_fsbl.elf
-set bitpath $img_dir/$IMAGE_NAME.bit
-#exec cat $root_dir/oc-bip/board_support_packages/bw250soc/ip/output.bif | sed 's/250_soc_fsbl/$elfpath/g' | sed 's/oc_fpga_top/$bitpath/g' > $img_dir/output.bif
-exec echo "//arch = zynqmp; split = false; format = BIN" > $img_dir/output.bif
-exec echo "the_ROM_image:" >> $img_dir/output.bif
-exec echo "{" >> $img_dir/output.bif
-exec echo "	\[fsbl_config\]a53_x64" >> $img_dir/output.bif
-exec echo "	\[bootloader\]$elfpath" >> $img_dir/output.bif
-exec echo "	\[destination_device = pl\]$bitpath" >> $img_dir/output.bif
-exec echo "}" >> $img_dir/output.bif
-exec bootgen -arch zynqmp -image $img_dir/output.bif -o $img_dir/${IMAGE_NAME}.bin
-#copy the elf file in Image directory so that user can pick it up with the bin file
-file copy -force $elfpath $img_dir/250_soc_fsbl.elf 
+  set elfpath $root_dir/oc-bip/board_support_packages/bw250soc/ip/250_soc_fsbl.elf
+  set bitpath $img_dir/$IMAGE_NAME.bit
+  #exec cat $root_dir/oc-bip/board_support_packages/bw250soc/ip/output.bif | sed 's/250_soc_fsbl/$elfpath/g' | sed 's/oc_fpga_top/$bitpath/g' > $img_dir/output.bif
+  exec echo "//arch = zynqmp; split = false; format = BIN" > $img_dir/output.bif
+  exec echo "the_ROM_image:" >> $img_dir/output.bif
+  exec echo "{" >> $img_dir/output.bif
+  exec echo "	\[fsbl_config\]a53_x64" >> $img_dir/output.bif
+  exec echo "	\[bootloader\]$elfpath" >> $img_dir/output.bif
+  exec echo "	\[destination_device = pl\]$bitpath" >> $img_dir/output.bif
+  exec echo "}" >> $img_dir/output.bif
+  exec bootgen -w -arch zynqmp -image $img_dir/output.bif -o $img_dir/${IMAGE_NAME}.bin
+  #copy the elf file in Image directory so that user can pick it up with the bin file
+  file copy -force $elfpath $img_dir/250_soc_fsbl.elf 
 }

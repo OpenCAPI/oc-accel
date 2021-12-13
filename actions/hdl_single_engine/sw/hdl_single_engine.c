@@ -340,6 +340,8 @@ static int run_single_engine (struct snap_card* h,
     file_rtt = fopen("file_rd_cycle", "w");
     file_wtt = fopen("file_wr_cycle", "w");
 
+    fprintf(file_rtt, " -- Counter values for different read related signals --\n");
+    fprintf(file_rtt, "    arid,           rd_cmd,      rid,          rd_resp\n");
     for (cnt = 0; cnt < ((rnum > 4096)? 4096: rnum); cnt++) {
         tt_arid[cnt]   = action_read(h, REG_TT_ARID);
         tt_rd_cmd[cnt] = action_read(h, REG_TT_RD_CMD);
@@ -348,6 +350,8 @@ static int run_single_engine (struct snap_card* h,
         fprintf(file_rtt, "%8d, %16d, %8d, %16d\n", tt_arid[cnt], tt_rd_cmd[cnt], tt_rid[cnt], tt_rd_rsp[cnt]);
     }
 
+    fprintf(file_wtt, " -- Counter values for different write related signals --\n");
+    fprintf(file_wtt, "    awid,           wr_cmd,      bid,          wr_resp\n");
     for (cnt = 0; cnt < ((wnum > 4096)? 4096: wnum); cnt++) {
         tt_awid[cnt]   = action_read(h, REG_TT_AWID);
         tt_wr_cmd[cnt] = action_read(h, REG_TT_WR_CMD);
@@ -380,11 +384,11 @@ static struct snap_action* get_action (struct snap_card* handle,
 {
     struct snap_action* act;
 
-    act = snap_attach_action (handle, ACTION_TYPE_HDL_SINGLE_ENGINE,
+    act = snap_attach_action (handle, ACTION_TYPE,
             flags, timeout);
 
     if (NULL == act) {
-        VERBOSE0 ("Error: Can not attach Action: %x\n", ACTION_TYPE_HDL_SINGLE_ENGINE);
+        VERBOSE0 ("Error: Can not attach Action: %x\n", ACTION_TYPE);
         VERBOSE0 ("       Try to run snap_main tool\n");
     }
 
@@ -475,7 +479,7 @@ static double get_variance (double *bandwidth_array, uint32_t test_count, double
 
 static void usage (const char* prog)
 {
-    VERBOSE0 ("SNAP String Match (Regular Expression Match) Tool.\n");
+    VERBOSE0 ("OC-Accel single engine test (latency and BW measurements tool)\n");
     VERBOSE0 ("Usage: %s\n"
             "    -h, --help              | Prints usage information\n"
             "    -v, --verbose           | Verbose mode\n"
@@ -499,6 +503,9 @@ static void usage (const char* prog)
             "                            Pattern: [20:16] id_range. for example, 3 means [0,1,2,3]\n"
             "                                     [15:8]  Burst length - 1,        =AXI A*LEN\n"
             "                                     [2:0]   Data width in each beat, =AXI A*SIZE\n"
+            " Read  example : hdl_single_engine -c50 -w 0x00000601 -n1000 -N0 -p 0x00001F07  -t 10000 -v\n"
+            " Write example : hdl_single_engine -c50 -w 0x00000601 -n0 -N1000 -p 0x00001F07  -t 10000 -v\n"
+            " Latency test: file_rd_cycle and file_wr_cycle files will contain values measured for the latency (refer to documentation)\n"
             , prog);
 }
 

@@ -407,14 +407,14 @@ config HBM_USED
 config ENABLE_BRAM
 	bool
 	prompt ">> Replace DDR by 512KB BRAM"
-	depends on AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
+	depends on (AD9V3 || BW250SOC) && ! DISABLE_SDRAM_AND_BRAM
 	help
 	  This is a development option. The AXI attached on-card SDRAM will be replaced by 512KB BRAM.
 
 config ENABLE_BRAM
 	bool
 	prompt ">> Replace HBM by 32KB URAM (recommended for simulating HBM)"
-	depends on !AD9V3 && ! (DISABLE_SDRAM_AND_BRAM || ENABLE_PRFLOW)
+	depends on !(AD9V3 || BW250SOC) && ! DISABLE_SDRAM_AND_BRAM
 	help
 	  This is a development option. The AXI attached on-card SDRAM will be replaced by 32KB URAM.
 	  As of today, there are still some issues to simulate the HBM even with some other simulators.
@@ -523,7 +523,7 @@ config ACTION_USER_CLOCK
 
 config HBM_AXI_IF_NUM
         prompt "Number of HBM AXI interfaces, range 1-32 (default 12)"
-	depends on ENABLE_HBM
+	depends on (ENABLE_HBM && !ENABLE_PRFLOW)
 	int
 	default 12 
 	range 1 32
@@ -531,6 +531,18 @@ config HBM_AXI_IF_NUM
 	  HBM AXI interfaces generated in the chip
 	  This need to be coherent with what is implemented in the HLS action code
           Please select one of them.
+
+config HBM_AXI_IF_NUM
+        prompt "Number of HBM AXI interfaces, range 1-16 (default 12)"
+	depends on (ENABLE_HBM && ENABLE_PRFLOW)
+	int
+	default 12 
+	range 1 16
+	help
+	  HBM AXI interfaces generated in the chip
+	  This need to be coherent with what is implemented in the HLS action code
+          Please select one of them.
+          In Partial reconfiguration mode, dynamic zone cannot handle more than 16 AXI I/F
 
 choice
 	bool "Simulator"
@@ -608,6 +620,8 @@ config OCSE_PATH
 	string "OCSE_ROOT: Path to OpenCAPI Simulation Engine Root"
 	default "../ocse"
 
+comment "================= Advanced Options: ================="
+
 config ENABLE_9H3_LED
 	bool "User LEDs on the board"
 	depends on ( (AD9H3 || AD9H335) && (HDL_ACTION || HDL_EXAMPLE) )
@@ -638,8 +652,6 @@ config AD9H3_AVR_USED
         string
         default "TRUE"  if ENABLE_9H3_AVR
         default "FALSE" if ! ENABLE_9H3_AVR
-
-comment "================= Advanced Options: ================="
 
 choice
 	bool "PHY Speed"
@@ -763,19 +775,27 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
 	  The HLS clock period constraint in "ns" used when C code is compiled to rtl, 
 	  By constraining differently HLS tool, packing logic may be different and give you better results.
 
-#config ENABLE_PRFLOW
-#	bool "Cloud build (enabling Partial Reconfiguration)"
-#	help
-#	  Used for Cloud environment using specific PSL images
-#
-#config USE_PRFLOW
-#	string
-#	default "TRUE" if ENABLE_PRFLOW
-#	default "FALSE" if ! ENABLE_PRFLOW
+config ENABLE_PRFLOW
+	bool "Enabling Partial Reconfiguration Flow"
+	depends on (AD9H3 || AD9H335 || AD9H7)
+        default n
+	help
+	  Used for Cloud environment using dynamic reconfiguration of the images.
+	  All the code except the action will be be placed in a static area that will
+	  not be reprogrammed meaning that the OC link will not be stopped/retrained.
+	  Loading a dynamic code will be temporary (FPGA) and a oc_reload command will
+	  reload the permanent code from Flash.
+	  HBM resource is part of the dynamic code. Limitation to 16HBM is due to the
+	  actual placement of the static area.
+
+config USE_PRFLOW
+	string
+	default "TRUE" if ENABLE_PRFLOW
+	default "FALSE" if ! ENABLE_PRFLOW
 
 config ENABLE_ILA
 	bool "Enable ILA Debug"
-	depends on ! ENABLE_PRFLOW
+	#depends on ! ENABLE_PRFLOW
 	help
 	  Used for debugging the design by inserting probes into the FPGA
 	  Enable the usage of Vivado's integrated logic analyzer. There are
@@ -806,28 +826,11 @@ config ILA_DEBUG
 #	default "TRUE"  if ENABLE_FACTORY
 #	default "FALSE" if ! ENABLE_FACTORY
 
-#FIXME Cloud flow will be revised
-config ENABLE_CLOUD_USER_FLOW
-	bool "Cloud user flow"
-	default y
-	depends on ENABLE_PRFLOW
 
-config CLOUD_USER_FLOW
+config ERASE_BASE_BIN_FILES
 	string
-	default "TRUE" if ENABLE_CLOUD_USER_FLOW
-	default "FALSE" if ! ENABLE_CLOUD_USER_FLOW
-
-config ENABLE_CLOUD_BUILD_BITFILE
-	bool "Build bitstream file"
-	help
-	  Enables the generation of the image for the FPGA
-	default y
 	depends on ENABLE_PRFLOW
-
-config CLOUD_BUILD_BITFILE
-	string
-	default "TRUE" if ENABLE_CLOUD_BUILD_BITFILE
-	default "FALSE" if ! ENABLE_CLOUD_BUILD_BITFILE
+	default "TRUE" 
 
 
 config ENABLE_UNIT_VERIF
@@ -891,13 +894,13 @@ config FLASH_USED
 	default "FALSE" if ! ENABLE_FLASH
 
 config ENABLE_USERCODE
-        bool "Enable USER CODE (code will be requested to user later on)"
+        bool "Enable USER CODE (select the line below to fill the USERCODE value)"
         default n 
         help
           This allows user to define a user code associated to the FPGA content
           For ex user want to create 2 configuration with 2 different VIVADO versions
 
 config USERCODE
-        string "USERCODE(max64bits)"
+        string "<= value of the USERCODE(8 letters only)"
+        default "usercode"
         depends on ENABLE_USERCODE
-        default "0000000000000000"

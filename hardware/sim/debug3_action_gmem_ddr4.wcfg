@@ -28,7 +28,7 @@
       <obj_property name="ElementShortName">desc_cfg_data[31:0]</obj_property>
       <obj_property name="ObjectShortName">desc_cfg_data[31:0]</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/top/oc_function/fw_afu/lite_conv2act_awaddr">
+   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_core_i/lite_conv2act_awaddr">
       <obj_property name="ElementShortName">lite_conv2act_awaddr[31:0]</obj_property>
       <obj_property name="ObjectShortName">lite_conv2act_awaddr[31:0]</obj_property>
    </wvobject>
@@ -48,7 +48,7 @@
       <obj_property name="label">ACTION SIGNALS</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_w/hls_action_0/ap_start">
+   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/hls_action_0/ap_start">
       <obj_property name="ElementShortName">ap_start</obj_property>
       <obj_property name="ObjectShortName">ap_start</obj_property>
    </wvobject>
@@ -104,23 +104,23 @@
       <obj_property name="label">DDR4 READ INTERFACE</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_arvalid">
+   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_arvalid">
       <obj_property name="ElementShortName">m_axi_card_mem0_arvalid</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_arvalid</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_araddr">
+   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_araddr">
       <obj_property name="ElementShortName">m_axi_card_mem0_araddr[32:0]</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_araddr[32:0]</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_rvalid">
+   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_rvalid">
       <obj_property name="ElementShortName">m_axi_card_mem0_rvalid</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_rvalid</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_rdata">
+   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_rdata">
       <obj_property name="ElementShortName">m_axi_card_mem0_rdata[511:0]</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_rdata[511:0]</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_rlast">
+   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_rlast">
       <obj_property name="ElementShortName">m_axi_card_mem0_rlast</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_rlast</obj_property>
    </wvobject>
@@ -128,23 +128,23 @@
       <obj_property name="label">DDR4 WRITE INTERFACE</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_awvalid">
+   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_awvalid">
       <obj_property name="ElementShortName">m_axi_card_mem0_awvalid</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_awvalid</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_awaddr">
+   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_awaddr">
       <obj_property name="ElementShortName">m_axi_card_mem0_awaddr[32:0]</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_awaddr[32:0]</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_wvalid">
+   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_wvalid">
       <obj_property name="ElementShortName">m_axi_card_mem0_wvalid</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_wvalid</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_wdata">
+   <wvobject type="array" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_wdata">
       <obj_property name="ElementShortName">m_axi_card_mem0_wdata[511:0]</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_wdata[511:0]</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_w/m_axi_card_mem0_wlast">
+   <wvobject type="logic" fp_name="/top/oc_function/fw_afu/action_core_i/action_w/m_axi_card_mem0_wlast">
       <obj_property name="ElementShortName">m_axi_card_mem0_wlast</obj_property>
       <obj_property name="ObjectShortName">m_axi_card_mem0_wlast</obj_property>
    </wvobject>

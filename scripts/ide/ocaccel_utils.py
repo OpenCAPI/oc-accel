@@ -148,7 +148,7 @@ def run_and_poll(cmd, work_dir, log, timeout = 2592000):
                                 cwd=work_dir,\
                                 shell=False,\
                                 stdout=f, stderr=f)
-        print "Runnig ...\\",
+        print "Running ...\\",
         for _ in range(timeout):
             poll = proc.poll()
             if poll is None:
@@ -167,7 +167,7 @@ def run_and_poll_with_progress(cmd, work_dir, log, max_log_len, timeout = 259200
                                 cwd=work_dir,\
                                 shell=False,\
                                 stdout=f, stderr=f)
-        print "Runnig ... check %s for details of full progress" % log
+        print "Running ... check %s for details of full progress" % log
         current_text = "JUST STARTED!"
         for _ in range(timeout):
             poll = proc.poll()

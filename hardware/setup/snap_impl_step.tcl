@@ -62,7 +62,7 @@ if { $impl_flow == "CLOUD_BASE" } {
 ## Adding elf file to project and loading on microblaze BRAM for 250SOC only
 
 if { $fpgacard == "BW250SOC" } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Adding elf file" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Adding elf file" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   import_files -fileset sim_1 -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
   import_files -norecurse $root_dir/oc-bip/board_support_packages/bw250soc/ip/qspi_mb_golden.elf -force
   set_property SCOPED_TO_REF design_1 [get_files -all -of_objects [get_fileset sources_1] [get_files $root_dir/viv_project/framework.srcs/sources_1/imports/ip/qspi_mb_golden.elf]]
@@ -85,7 +85,7 @@ if { $cloud_flow == "TRUE" } {
 if { ($impl_step == "SYNTH") || ($impl_step == "ALL") } {
   set logfile   $logs_dir/${step}.log
   set command   "opt_design -directive $directive"
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 
 if { [catch "$command > $logfile" errMsg] } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_design failed" $widthCol4 "" ]
@@ -104,14 +104,14 @@ if { [catch "$command > $logfile" errMsg] } {
 ##
 ## Vivado 2017.4 has problems to place the SNAP core logic, if they can place inside the PSL
 #if { ($vivadoVer >= "2017.4") && ($cloud_flow == "FALSE") } {
-#  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+#  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 #  close_project                         >> $logfile
 #  open_checkpoint $dcp_dir/${step}.dcp  >> $logfile
 #}
 
 ## if impl_step == "PLACE" then last dcp needs to be loaded
 if { ($impl_step == "PLACE") } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   open_checkpoint $dcp_dir/${step}.dcp  >> $logfile
 }
 
@@ -128,12 +128,12 @@ if { $cloud_flow == "TRUE" } {
 if { ($impl_step == "PLACE") || ($impl_step == "ALL") } {
   set logfile   $logs_dir/${step}.log
   set command   "place_design -directive $directive"
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start place_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   
   ##
   ## prevent placing inside PSL
   if { $capi_ver == "capi10" } {
-    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Prevent placing inside PSL" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+    puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "Prevent placing inside PSL" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
     set_property EXCLUDE_PLACEMENT 1 [get_pblocks b_nestedpsl]
   }
   
@@ -163,7 +163,7 @@ if { $cloud_flow == "TRUE" } {
 if { ($impl_step == "PLACE") || ($impl_step == "ALL") } {
   set logfile   $logs_dir/${step}.log
   set command   "phys_opt_design  -directive $directive"
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start phys_opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start phys_opt_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   
   if { [catch "$command > $logfile" errMsg] } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: phys_opt_design failed" $widthCol4 "" ]
@@ -180,7 +180,7 @@ if { ($impl_step == "PLACE") || ($impl_step == "ALL") } {
 
 ## if impl_step == "ROUTE" then last dcp needs to be loaded
 if { ($impl_step == "ROUTE") } {
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload phys_opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "reload phys_opt_design DCP" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   open_checkpoint $dcp_dir/${step}.dcp  >> $logfile
 }
 ##
@@ -196,7 +196,7 @@ if { $cloud_flow == "TRUE" } {
 if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
   set logfile   $logs_dir/${step}.log
   set command   "route_design -directive $directive"
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start route_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   
   if { [catch "$command > $logfile" errMsg] } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: route_design failed" $widthCol4 "" ]
@@ -224,7 +224,7 @@ if { $cloud_flow == "TRUE" } {
 if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
   set logfile   $logs_dir/${step}.log
   set command   "phys_opt_design  -directive $directive"
-  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_routed_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+  puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "start opt_routed_design" $widthCol3 "with directive: $directive" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   
   if { [catch "$command > $logfile" errMsg] } {
     puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "" $widthCol3 "ERROR: opt_routed_design failed" $widthCol4 "" ]
@@ -241,7 +241,7 @@ if { ($impl_step == "ROUTE") || ($impl_step == "ALL") } {
 
 ##
 ## generating reports
-puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T %a %b %d %Y}]"]
+puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "generating reports" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
 report_utilization    -quiet -file  ${rpt_dir_prefix}utilization_route_design.rpt
 report_route_status   -quiet -file  ${rpt_dir_prefix}route_status.rpt
 report_timing_summary -quiet -max_paths 100 -file ${rpt_dir_prefix}timing_summary.rpt

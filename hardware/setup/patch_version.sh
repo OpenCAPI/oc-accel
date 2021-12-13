@@ -37,12 +37,27 @@ DST="define BUILD_DATE_DAT 64'h0000_${SNAP_BUILD_DATE}"
 sed -i "s/$SRC/$DST/" $1/$2
 
 # Manually Patching with USERCODE if required
-if [ -z $FPGACARD ]; then
+if [ "$ENABLE_USERCODE" == "y" ]; then
   SRC="define USERCODE 64'h.*"
   # usercode should be less than 64 bit long
   #usercode=`echo 0123456789ABCDEF`
-  DST="define USERCODE 64'h${USERCODE}"
+  #usercode=`echo 0000000000000000`
+  usercode_hex=$(xxd -p -u <<< "${USERCODE:0:8}") 
+  DST="define USERCODE 64'h${usercode_hex:0:16}"
   sed -i "s/$SRC/$DST/" $1/$2
+  echo "                        USERCODE is ${USERCODE:0:8} coded as 0x${usercode_hex:0:16}"
+fi
+
+if [ "$USE_PRFLOW" == "TRUE" ]; then
+# Automatically Patching with a random PRCODE
+ SRC="define PRCODE 64'h.*"
+ # prcode should be less than 64 bit long
+ # It is calculated as a random number between 1 and 4095 => 1 to FFF
+ # prcode is left at 0 for non Partial Reconfiguration configurations
+ prcode=`printf "%03x" $[RANDOM%4094+1]`
+ DST="define PRCODE 64'h${prcode}"
+ sed -i "s/$SRC/$DST/" $1/$2
+ #echo "prcode is $prcode"
 fi
 
 #Patch card info and sdram_size
@@ -85,32 +100,39 @@ if [ "$HLS_SUPPORT" == "TRUE" ]; then
    DST="define HLS_RELEASE_LEVEL 32'h${HLS_RELEASE_LEVEL}"
    sed -i "s/$SRC/$DST/" $1/$2
 
+   SRC="define SDRAM_SIZE 16'h.*"
+   DST="define SDRAM_SIZE 16'h${SDRAM_SIZE}"
+   sed -i "s/$SRC/$DST/" $1/$2
+
+   HLS_HBM_IF_NUM_REG="0"
    if [ "$HBM_USED" == "TRUE" ]; then
-      #Here we use for the HBM the SDRAM_SIZE as the number of AXI interfaces
-      SDRAM_SIZE_DEC=`find $ACTION_ROOT -name *.[cC]* | xargs grep "#define\s\+HBM_AXI_IF_NB" | awk '{print $NF}'`
-      printf -v SDRAM_SIZE "%x" "$SDRAM_SIZE_DEC"
+      #Fill an Action register to inform about the number of HBM AXI interfaces
+      HLS_HBM_IF_NUM_REG_DEC=`find $ACTION_ROOT -name *.[cC]* | xargs grep "#define\s\+HBM_AXI_IF_NB" | awk '{print $NF}'`
+      printf -v HLS_HBM_IF_NUM_REG "%x" "$HLS_HBM_IF_NUM_REG_DEC"
       ACTION_NAME=`find $ACTION_ROOT -name *.[cC]* | xargs grep "#define\s\+HBM_AXI_IF_NB" | cut -d':' -f1 |awk -F"actions" '{print $2}'`
-      if [ -z $SDRAM_SIZE_DEC ]; then
+      if [ -z $HLS_HBM_IF_NUM_REG_DEC ]; then
          echo "   -------------------------------------------------------------------------------------------------"
          echo "   -- WARNING : Impossible to check coherency of HBM AXI interfaces numbers between action and chip.           "
          echo "   --           Please define the variable HBM_AXI_IF_NB in oc-accel/actions/hls_youraction/hw/xxx.cpp file "
          echo "   -------------------------------------------------------------------------------------------------"
-      elif [ $SDRAM_SIZE_DEC != $HBM_AXI_IF_NUM ]; then
+      elif [ $HLS_HBM_IF_NUM_REG_DEC != $HBM_AXI_IF_NUM ]; then
          echo "   ---------------------------------------------------------------------------------------------"
-         echo "   -- ERROR : HBM AXI interfaces defined in $ACTION_NAME (=$SDRAM_SIZE_DEC)"
+         echo "   -- ERROR : HBM AXI interfaces defined in ~/actions$ACTION_NAME (=$HLS_HBM_IF_NUM_REG_DEC)"
          echo "   --         is different than the one specified in the Kconfig menu (=$HBM_AXI_IF_NUM)!!"
          echo "   --         Please correct one or the other to keep coherency."
          echo "   ---------------------------------------------------------------------------------------------"
          exit 1
       else
-         echo "                        HBM AXI interfaces defined in HLS action is $SDRAM_SIZE_DEC (as in chip wrapper)"
+         echo "                        HBM AXI interfaces defined in HLS action is $HLS_HBM_IF_NUM_REG_DEC (as in chip wrapper)"
       fi
    fi
       
-   SRC="define SDRAM_SIZE 16'h.*"
-   DST="define SDRAM_SIZE 16'h${SDRAM_SIZE}"
+   # in PR code, number of HBM IF need to be in dynamic code
+   SRC="define HLS_HBM_IF_NUM 32'h.*"
+   DST="define HLS_HBM_IF_NUM 32'h${HLS_HBM_IF_NUM_REG}"
    sed -i "s/$SRC/$DST/" $1/$2
 
 fi
 #Calculate 
-echo "oc_$SNAP_RELEASE_$SNAP_BUILD_DATE" >.bitstream_name.txt
+#echo "oc_$SNAP_RELEASE_$SNAP_BUILD_DATE" >.bitstream_name.txt
+echo "oc_${SNAP_BUILD_DATE}" >.bitstream_name.txt

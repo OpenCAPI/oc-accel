@@ -209,11 +209,11 @@ static struct snap_action* get_action (FILE* log, struct snap_card* handle,
 {
     struct snap_action* act;
 
-    act = snap_attach_action (handle, ACTION_TYPE_HDL_MULTI_PROCESS,
+    act = snap_attach_action (handle, ACTION_TYPE,
                               flags, timeout);
 
     if (NULL == act) {
-        VERBOSE0 (log, "Error: Can not attach Action: %x\n", ACTION_TYPE_HDL_MULTI_PROCESS);
+        VERBOSE0 (log, "Error: Can not attach Action: %x\n", ACTION_TYPE);
         VERBOSE0 (log, "       Try to run snap_main tool\n");
     }
 

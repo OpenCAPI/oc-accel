@@ -25,6 +25,8 @@ from configure import Configuration
 from make_model import make_model
 from run_sim import SimSession
 from make_image import make_image
+from make_cloud_base import make_cloud_base
+from make_cloud_action import make_cloud_action
 from optparse import OptionParser
 from ocaccel_utils import msg
 
@@ -62,6 +64,8 @@ parser.add_option("--no_run_sim",
 parser.add_option("-m", "--make_image",
                   action="store_true", dest="make_image", default=False,
                   help="Generate the FPGA image, default: %default")
+parser.add_option("--image_mode", dest="image_mode", default=None,
+                  help="Mode in which the FPGA Image will be built, default: %default. Partial reconfiguration mode is the cloud mode. 'base' is the static code in Flash while 'action' is the dynamic code in FPGA.", metavar="<normal, cloud_base, cloud_action>")
 parser.add_option("-c", "--clean",
                   action="store_true", dest="clean", default=False,
                   help="Clean the environment before running, default: %default")
@@ -110,11 +114,18 @@ parser.add_option("--no_wave",
 ocaccel_workflow_log = "./ocaccel_workflow.log"
 ocaccel_workflow_make_model_log = "./ocaccel_workflow.make_model.log"
 ocaccel_workflow_make_image_log = "./ocaccel_workflow.make_image.log"
+ocaccel_workflow_make_cloud_base_image_log = "./ocaccel_workflow.make_cloud_base_image.log"
+ocaccel_workflow_make_cloud_action_image_log = "./ocaccel_workflow.make_cloud_action_image.log"
 if options.ocse_root is not None:
     options.ocse_root = os.path.abspath(options.ocse_root)
 options.ocaccel_root = os.path.abspath(options.ocaccel_root)
 if options.action_root is not None:
     options.action_root = os.path.abspath(options.action_root)
+if options.image_mode is not None:
+    options.image_mode = options.image_mode.lower()
+    options.make_image = True 
+if options.make_image is not None and options.image_mode is None:
+    options.image_mode = "normal" 
 if options.simulator is not None:
     options.simulator = options.simulator.lower()
 if options.odma_mode is not None:
@@ -197,5 +208,9 @@ if __name__ == '__main__':
         sim.run()
 
     question_and_answer.ask(qa.ask_make_image_str)
-    if options.make_image:
+    if options.make_image and options.image_mode.lower() == "normal":
         make_image(ocaccel_workflow_make_image_log, options)
+    elif options.make_image and options.image_mode.lower() == "cloud_base":
+        make_cloud_base(ocaccel_workflow_make_cloud_base_image_log, options)
+    elif options.make_image and options.image_mode.lower() == "cloud_action":
+        make_cloud_action(ocaccel_workflow_make_cloud_action_image_log, options)

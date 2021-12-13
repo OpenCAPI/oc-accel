@@ -70,6 +70,8 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 set port [create_bd_port -dir I ARESETN]
 #CRESETN is used for converters reset
 set port [create_bd_port -dir I CRESETN]
+#REF_CLK is used for HBM refclk
+set port [create_bd_port -dir I REF_CLK]
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 constant_1_one
 set_property -dict [list CONFIG.CONST_WIDTH {1} CONFIG.CONST_VAL {1}] [get_bd_cells constant_1_one]

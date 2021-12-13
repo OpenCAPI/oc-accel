@@ -117,6 +117,7 @@ module mmio (
  reg [63:00] REG_capability            ;
  reg [63:00] REG_freeruntime           ;
  reg [63:00] REG_usercode              ;
+ reg [63:00] REG_prcode                ;
 
 //------------ REG_DEBUG_BASE_ADDR --------------
  reg [63:00] REG_debug_clear            ; // clear out all debug registers
@@ -150,6 +151,7 @@ module mmio (
                 REG_SNAP_OFFSET_ADDR_CAP            = 8'h30, //RO
                 REG_SNAP_OFFSET_ADDR_FRT            = 8'h40, //RO
                 REG_SNAP_OFFSET_ADDR_USR            = 8'h50, //RO
+                REG_SNAP_OFFSET_ADDR_PRC            = 8'h60, //RO
 
            REG_DEBUG_BASE_ADDR  = 13'h01A0,
                 REG_DEBUG_OFFSET_ADDR_DBG_CLR       = 8'h00, //WO, self-clear
@@ -248,6 +250,7 @@ module mmio (
        REG_capability              <= 64'd0;
        REG_freeruntime             <= 64'd0;
        REG_usercode                <= 64'd0;
+       REG_prcode                  <= 64'd0;
 
        // REG_DEBUG_BASE_ADDR
        REG_debug_tlx_cnt_cmd       <= 64'd0; 
@@ -279,6 +282,7 @@ module mmio (
        REG_capability [7:0]        <= `CARD_TYPE;
        REG_freeruntime             <= REG_freeruntime+1;
        REG_usercode                <= `USERCODE;
+       REG_prcode                  <= `PRCODE;
 
 
 
@@ -367,11 +371,13 @@ module mmio (
        REG_SNAP_BASE_ADDR :
           case(snap_offset_addr)
             REG_SNAP_OFFSET_ADDR_IVR             : mmio_dout <= REG_implementation_vertion;
+            REG_SNAP_OFFSET_ADDR_SCR             : mmio_dout <= REG_command;
             REG_SNAP_OFFSET_ADDR_BDR             : mmio_dout <= REG_build_date            ;
             REG_SNAP_OFFSET_ADDR_SSR             : mmio_dout <= REG_status                ;
             REG_SNAP_OFFSET_ADDR_CAP             : mmio_dout <= REG_capability            ;
             REG_SNAP_OFFSET_ADDR_FRT             : mmio_dout <= REG_freeruntime           ;
             REG_SNAP_OFFSET_ADDR_USR             : mmio_dout <= REG_usercode              ;
+            REG_SNAP_OFFSET_ADDR_PRC             : mmio_dout <= REG_prcode                ;
             default                              : raddr_decode_error <= 1'b1;
           endcase
 
