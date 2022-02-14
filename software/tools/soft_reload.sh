@@ -90,6 +90,8 @@ echo
 echo "##---------------------------------------------------------------------------------------------##"
 echo "## Checking that ICAP is ready for programming                                                 ##"
 echo "## (Expected read value is 0x00000005)                                                         ##"
+echo
+echo "--> snap_peek -C $CardID -w32 0x0F10 -e 0x00000005"
 
 if $FullPathDir/snap_peek -C $CardID -w32 0x0F10 -e 0x00000005; then
   echo
@@ -106,6 +108,8 @@ echo
 echo "##---------------------------------------------------------------------------------------------##"
 echo "## checking that WR fifo is empty (0x3f empty lines)                                           ##"
 echo "## (Expected read value is 0x0000003f)                                                         ##"
+echo
+echo "--> snap_peek -C $CardID -w32 0x0F14 -e 0x0000003f"
 
 if $FullPathDir/snap_peek -C $CardID -w32 0x0F14 -e 0x0000003f; then
   echo
@@ -121,7 +125,8 @@ fi
 echo
 echo "##---------------------------------------------------------------------------------------------##"
 echo "## Pushing the reload sequence in WR fifo                                                      ##"
-
+echo
+echo "--> snap_poke -C $CardID -w32 0x0F00 ..."
 $FullPathDir/snap_poke -C $CardID -w32 0x0F00 0xFFFFFFFF
 $FullPathDir/snap_poke -C $CardID -w32 0x0F00 0xAA995566
 $FullPathDir/snap_poke -C $CardID -w32 0x0F00 0x20000000
@@ -135,6 +140,8 @@ echo
 echo "##---------------------------------------------------------------------------------------------##"
 echo "## checking that WR fifo is NOT empty (0x37 empty lines)                                       ##"
 echo "## (Expected read value is 0x00000037)                                                         ##"
+echo
+echo "--> snap_peek -C $CardID -w32 0x0F14 -e 0x00000037"
 
 if $FullPathDir/snap_peek -C $CardID -w32 0x0F14 -e 0x00000037; then
   echo
@@ -150,12 +157,16 @@ fi
 echo
 echo "##---------------------------------------------------------------------------------------------##"
 echo "## Flushing the FIFO to set the reload bit to 1                                                ##"
+echo
+echo "--> snap_poke -C $CardID -w32 0x0F0C 0x00000001"
 $FullPathDir/snap_poke -C $CardID -w32 0x0F0C 0x00000001
 
 echo
 echo "##---------------------------------------------------------------------------------------------##"
 echo "## Registers should not be readable anymore                                                    ##"
 echo "## (Expected read value is 0xffffffff)                                                         ##" 
+echo
+echo "--> snap_peek -C $CardID -w32 0x0F14 -e 0xffffffff"
 
 if $FullPathDir/snap_peek -C $CardID -w32 0x0F14 -e 0xffffffff; then
   echo
