@@ -48,7 +48,6 @@ int main(int argc, char *argv[])
   // Variables
 
   static int verbose_flag = 0;
-  static int dualspi_mode_flag = 1; //default to assume x8 spi programming/loading
 
   // Structure containing the program parameters names (without the "--") and their corresponding small option names
   // (needed by the getopt_long tool below)
@@ -56,17 +55,13 @@ int main(int argc, char *argv[])
   {
     {"verbose", no_argument,       &verbose_flag, 1},
     {"brief",   no_argument,       &verbose_flag, 0},
-    {"singlespi",    no_argument,  &dualspi_mode_flag, 0},
-    {"dualspi",      no_argument,  &dualspi_mode_flag, 1}, // FAB: UNUSED
     {"image_file1",  required_argument, 0, 'a'},
-    {"image_file2",  required_argument, 0, 'b'}, // FAB: UNUSED
     {"devicebdf",    required_argument, 0, 'c'},
     {"startaddr",    required_argument, 0, 'd'}, // FAB: UNUSED
-          {0, 0, 0, 0}
+          {0, 0, 0}
   };
 
   char binfile[1024];
-  char binfile2[1024];
   char cfgbdf[1024];
   char cfg_file[1024];
   int CFG;
@@ -109,12 +104,6 @@ int main(int argc, char *argv[])
         if(verbose_flag)
           printf(" Primary Bitstream: %s\n", optarg);
         strcpy(binfile,optarg);
-        break;
-
-      case 'b': // FAB: UNUSED
-        if(verbose_flag)
-          printf(" Secondary Bitstream: %s\n", optarg);
-        strcpy(binfile2,optarg);
         break;
 
       case 'c':
@@ -223,8 +212,6 @@ TRC_CONFIG = TRC_OFF;
     printf("Exiting...\n");
     exit(-1);
   }
-
-  dualspi_mode_flag = 0;
 
   if(verbose_flag) {
     printf ("Using Partial reconfiguration mode\n"); 
