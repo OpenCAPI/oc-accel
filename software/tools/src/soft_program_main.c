@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
   // FAB: it should be better to use a global var contaning the valid Subsystems IDs
   temp = config_read(CFG_SUBSYS,"Read subsys id of card");
   subsys = (temp >> 16) & 0xFFFF;
-  if ( (subsys != 667) && (subsys != 666)) {
+  if ( (subsys != 0x667) && (subsys != 0x666)) {
     printf("ERROR: Only AD9H3 or AD9H7 are supported with Partial Reconfiguration\n");
     printf("SubSystem ID = %x\n", subsys);
     printf("Exiting...\n");
