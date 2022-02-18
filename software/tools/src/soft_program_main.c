@@ -79,7 +79,6 @@ int main(int argc, char *argv[])
   int i, j;
 
   char *bin_file_extension = "_partial.bin";
-  int PR_mode = 0;
 
   //================================================================================================================
   // Getting the parameters provided to the program
@@ -225,7 +224,6 @@ TRC_CONFIG = TRC_OFF;
   }
 
   dualspi_mode_flag = 0;
-  PR_mode = 1;
 
   if(verbose_flag) {
     printf ("Using Partial reconfiguration mode\n"); 
@@ -242,9 +240,8 @@ TRC_CONFIG = TRC_OFF;
   off_t fsize;
   struct stat tempstat;
   int num_package_icap, icap_burst_size, num_burst, num_package_lastburst, dif;
-  u32 wdata, wdatatmp, rdata, burst_size;
+  u32 wdata, wdatatmp, rdata;
   u32 CR_Write_clear = 0, CR_Write_cmd = 1, SR_ICAPEn_EOS=5;
-  u32 SZ_Read_One_Word = 1, CR_Read_cmd = 2, RFO_wait_rd_done=1;
   int percentage = 0;
   int prev_percentage = 1;
   time_t spt, ept;
