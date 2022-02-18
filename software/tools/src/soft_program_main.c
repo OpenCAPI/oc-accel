@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
     {"verbose", no_argument,       &verbose_flag, 1},
     {"brief",   no_argument,       &verbose_flag, 0},
     {"singlespi",    no_argument,  &dualspi_mode_flag, 0},
-    {"dualspi",      no_argument,  &dualspi_mode_flag, 1},
+    {"dualspi",      no_argument,  &dualspi_mode_flag, 1}, // FAB: UNUSED
     {"image_file1",  required_argument, 0, 'a'},
-    {"image_file2",  required_argument, 0, 'b'},
+    {"image_file2",  required_argument, 0, 'b'}, // FAB: UNUSED
     {"devicebdf",    required_argument, 0, 'c'},
-    {"startaddr",    required_argument, 0, 'd'},
+    {"startaddr",    required_argument, 0, 'd'}, // FAB: UNUSED
           {0, 0, 0, 0}
   };
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
         strcpy(binfile,optarg);
         break;
 
-      case 'b':
+      case 'b': // FAB: UNUSED
         if(verbose_flag)
           printf(" Secondary Bitstream: %s\n", optarg);
         strcpy(binfile2,optarg);
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
           printf(" Target Device: %s\n", cfgbdf);
         break;
 
-      case 'd':
+      case 'd': // FAB: UNUSED
         memcpy(temp_addr,&optarg[2],8);
         start_addr = (int)strtol(temp_addr,NULL,16);
         if(verbose_flag)
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 
   //================================================================================================================
   // Opening the card config file and getting Vendor, Device & Subsystem IDs of the card
-  // FAB: is it possible with lambda user ??
+  // FAB: not possible with lambda user -> "Can not open /sys/bus/pci/devices/0005:00:00.0/config"
   
   // Building the config file full name
   strcpy(cfg_file,"/sys/bus/pci/devices/");
@@ -199,6 +199,7 @@ int main(int argc, char *argv[])
   subsys = (temp >> 16) & 0xFFFF;
   if ( (subsys != 0x0667) || (subsys != 0x0666)) {
     printf("ERROR: Only AD9H3 or AD9H7 are supported with Partial Reconfiguration\n");
+    printf("SubSystem ID = %x\n", subsys);
     printf("Exiting...\n");
     exit(-1);
   }
