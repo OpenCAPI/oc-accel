@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
   
   // FAB: ??
   //TODO/FIXME: passing this on to global cfg descriptor
-  if ((CFG_FD = open(cfg_file, O_RDONLY)) < 0) {
+  if ((CFG_FD = open(cfg_file, O_RDWR)) < 0) {
     printf("Can not open %s\n",cfg_file);
     printf("Exiting...\n");
     exit(-1);
