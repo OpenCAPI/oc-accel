@@ -61,7 +61,9 @@ int main(int argc, char *argv[])
   };
 
   char binfile[1024];
+  binfile[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
   char cfgbdf[1024];
+  cfgbdf[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
   char cfg_file[1024];
   int CFG;
   int start_addr=0;
@@ -98,13 +100,13 @@ int main(int argc, char *argv[])
         printf ("\n");
         break;
 
-      case 'a':
-        if(verbose_flag)
-          printf(" Primary Bitstream: %s\n", optarg);
+      case 'a': // --image_file
         strcpy(binfile,optarg);
+        if(verbose_flag)
+          printf(" Primary Bitstream: %s\n", binfile);
         break;
 
-      case 'b':
+      case 'b': // --devicebdf
         strcpy(cfgbdf,optarg);
         if(verbose_flag)
           printf(" Target Device: %s\n", cfgbdf);
@@ -127,12 +129,13 @@ int main(int argc, char *argv[])
   //================================================================================================================
   // Checking we have provided a binary file and a target device
   if(binfile[0] == '\0') {
-    printf("ERROR: Must supply primary bitstream\n");
+    printf("ERROR: Must supply primary bitstream (with option --image_file)\n");
     printf("Exiting...\n");
     exit(-1);
   }  
+
   if(cfgbdf[0] == '\0') {
-    printf("ERROR: Must supply target device\n");
+    printf("ERROR: Must supply target device (with option --devicebdf)\n");
     printf("Exiting...\n");
     exit(-1);
   } 
