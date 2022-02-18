@@ -55,10 +55,9 @@ int main(int argc, char *argv[])
   {
     {"verbose", no_argument,       &verbose_flag, 1},
     {"brief",   no_argument,       &verbose_flag, 0},
-    {"image_file1",  required_argument, 0, 'a'},
-    {"devicebdf",    required_argument, 0, 'c'},
-    {"startaddr",    required_argument, 0, 'd'}, // FAB: UNUSED
-          {0, 0, 0}
+    {"image_file",  required_argument, 0, 'a'},
+    {"devicebdf",    required_argument, 0, 'b'},
+          {0, 0}
   };
 
   char binfile[1024];
@@ -66,7 +65,6 @@ int main(int argc, char *argv[])
   char cfg_file[1024];
   int CFG;
   int start_addr=0;
-  char temp_addr[256];
 
   u32 temp;
   int vendor, device, subsys;
@@ -106,17 +104,10 @@ int main(int argc, char *argv[])
         strcpy(binfile,optarg);
         break;
 
-      case 'c':
+      case 'b':
         strcpy(cfgbdf,optarg);
         if(verbose_flag)
           printf(" Target Device: %s\n", cfgbdf);
-        break;
-
-      case 'd': // FAB: UNUSED
-        memcpy(temp_addr,&optarg[2],8);
-        start_addr = (int)strtol(temp_addr,NULL,16);
-        if(verbose_flag)
-          printf(" Start Address (same address for SPIx8 on both parts): %d\n", start_addr);
         break;
 
       case '?':
