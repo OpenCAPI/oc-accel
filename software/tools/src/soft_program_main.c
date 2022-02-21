@@ -114,9 +114,9 @@ int main(int argc, char *argv[])
         break;
       
       case 'h': // -h or --help
-        printf("soft_program Usage: \n);
-        printf("------------------- \n);
-        printf("\n")
+        printf("soft_program Usage: \n");
+        printf("------------------- \n");
+        printf("\n");
         printf("  + The goal of this tool is to program the OPENCapi card's FPGA chip with a partial binary file\n");
         printf("    (The partial bin file must be compatible with the base image already flash and loaded into the card i.e. same PR numnber)\n");
         printf("\n");
