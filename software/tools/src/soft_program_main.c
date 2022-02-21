@@ -53,12 +53,12 @@ int main(int argc, char *argv[])
   // (needed by the getopt_long tool below)
   static struct option long_options[] =
   {
-    {"verbose", no_argument,       &verbose_flag, 1},
-    {"brief",   no_argument,       &verbose_flag, 0},
-    {"image_file",  required_argument, 0, 'i'},
-    {"devicebdf",    required_argument, 0, 'c'},
-    {"help",    no_argument, 0, 'h'},
-          {0, 0, 0}
+    {"verbose", no_argument, &verbose_flag, 1},
+    {"brief", no_argument, &verbose_flag, 0},
+    {"help", no_argument, 0, 'h'},
+    {"image_file", required_argument, 0, 'i'},
+    {"devicebdf",  required_argument, 0, 'c'},
+          {0, 0}
   };
 
   char binfile[1024];
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
   while(1) {
     int option_index = 0;
     int c;
-    c = getopt_long (argc, argv, "a:b:c:d:",
+    c = getopt_long (argc, argv, "hi:c:",
     long_options, &option_index);
 
     /* Detect the end of the options. */
@@ -114,23 +114,24 @@ int main(int argc, char *argv[])
         break;
       
       case 'h': // -h or --help
+        printf("\n");
         printf("soft_program Usage: \n");
         printf("------------------- \n");
         printf("\n");
         printf("  + The goal of this tool is to program the OPENCapi card's FPGA chip with a partial binary file\n");
-        printf("    (The partial bin file must be compatible with the base image already flash and loaded into the card i.e. same PR numnber)\n");
+        printf("    (The partial bin file must be compatible with the base image already flashed and loaded into the card, i.e. same PR number)\n");
         printf("\n");
         printf("  + The script must be used when the ICAP IP is loaded into the User Space (and not the Configuration Space)\n");
         printf("    This is the case when addressing the OpenCAPI card from a container (pod) in a cloud (Partial Reconfiguration)\n");
         printf("\n");
         printf("-c|--devicebdf <Card PCIe location>   : (mandatory) The card location (ex:0005:00:00.0). Use 'oc_find-card -v -AALL' to get the card location\n");
-        printf("                                          (the card location must end by '.0'\n");
+        printf("                                          (the card location must end by '.0')\n");
         printf("-i|--image_file <Partial Binary File> : (mandatory) The partial binary file to use in order to program the FPGA\n");
         printf("                                          (Take care of the PR# of the file compare to the PR# in /var/ocxl/cardxx log file)\n");
         printf("\n");
         printf("-h|--help                             : (optional) shows this usage info\n");
         printf("\n");
-        break;
+        exit(0);
 
       case '?':
         /* getopt_long already printed an error message. */
