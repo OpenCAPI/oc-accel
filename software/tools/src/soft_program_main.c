@@ -55,9 +55,10 @@ int main(int argc, char *argv[])
   {
     {"verbose", no_argument,       &verbose_flag, 1},
     {"brief",   no_argument,       &verbose_flag, 0},
-    {"image_file",  required_argument, 0, 'a'},
-    {"devicebdf",    required_argument, 0, 'b'},
-          {0, 0}
+    {"image_file",  required_argument, 0, 'i'},
+    {"devicebdf",    required_argument, 0, 'c'},
+    {"help",    no_argument, 0, 'h'},
+          {0, 0, 0}
   };
 
   char binfile[1024];
@@ -100,16 +101,35 @@ int main(int argc, char *argv[])
         printf ("\n");
         break;
 
-      case 'a': // --image_file
+      case 'i': // -i or --image_file
         strcpy(binfile,optarg);
         if(verbose_flag)
           printf(" Primary Bitstream: %s\n", binfile);
         break;
 
-      case 'b': // --devicebdf
+      case 'c': // -c or --devicebdf
         strcpy(cfgbdf,optarg);
         if(verbose_flag)
           printf(" Target Device: %s\n", cfgbdf);
+        break;
+      
+      case 'h': // -h or --help
+        printf("soft_program Usage: \n);
+        printf("------------------- \n);
+        printf("\n")
+        printf("  + The goal of this tool is to program the OPENCapi card's FPGA chip with a partial binary file\n");
+        printf("    (The partial bin file must be compatible with the base image already flash and loaded into the card i.e. same PR numnber)\n");
+        printf("\n");
+        printf("  + The script must be used when the ICAP IP is loaded into the User Space (and not the Configuration Space)\n");
+        printf("    This is the case when addressing the OpenCAPI card from a container (pod) in a cloud (Partial Reconfiguration)\n");
+        printf("\n");
+        printf("-c|--devicebdf <Card PCIe location>   : (mandatory) The card location (ex:0005:00:00.0). Use 'oc_find-card -v -AALL' to get the card location\n");
+        printf("                                          (the card location must end by '.0'\n");
+        printf("-i|--image_file <Partial Binary File> : (mandatory) The partial binary file to use in order to program the FPGA\n");
+        printf("                                          (Take care of the PR# of the file compare to the PR# in /var/ocxl/cardxx log file)\n");
+        printf("\n");
+        printf("-h|--help                             : (optional) shows this usage info\n");
+        printf("\n");
         break;
 
       case '?':
@@ -156,7 +176,8 @@ int main(int argc, char *argv[])
   //  exit(-1);
   //}
   
-  // FAB: ??
+  // FAB: Ouvrir en RDONLY permet de récupérer Vendor, device, subsys mais bloque ensuite axi_read(FA_ICAP, FA_ICAP_SR,...
+  // FAB: A ressayer quand on utilisirera snap_peek, snap_poke avec user lambda
   //TODO/FIXME: passing this on to global cfg descriptor
   if ((CFG_FD = open(cfg_file, O_RDWR)) < 0) {
     printf("Can not open %s\n",cfg_file);
