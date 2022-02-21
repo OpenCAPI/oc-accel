@@ -66,7 +66,6 @@ int main(int argc, char *argv[])
   char cfgbdf[1024];
   cfgbdf[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
   char cfg_file[1024];
-  int CFG;
   int start_addr=0;
 
   u32 temp;
@@ -75,6 +74,8 @@ int main(int argc, char *argv[])
   int i, j;
 
   char *bin_file_extension = "_partial.bin";
+  char my_path[1024] = "";
+  char * full_me = argv[0];
 
   //================================================================================================================
   // Getting the parameters provided to the program
@@ -125,11 +126,11 @@ int main(int argc, char *argv[])
         printf("    This is the case when addressing the OpenCAPI card from a container (pod) in a cloud (Partial Reconfiguration)\n");
         printf("\n");
         printf("-c|--devicebdf <Card PCIe location>   : (mandatory) The card location (ex:0005:00:00.0). Use 'oc_find-card -v -AALL' to get the card location\n");
-        printf("                                          (the card location must end by '.0')\n");
+        printf("                                                    (the card location must end by '.0')\n");
         printf("-i|--image_file <Partial Binary File> : (mandatory) The partial binary file to use in order to program the FPGA\n");
-        printf("                                          (Take care of the PR# of the file compare to the PR# in /var/ocxl/cardxx log file)\n");
+        printf("                                                    (Take care of the PR# of the file compare to the PR# in /var/ocxl/cardxx log file)\n");
         printf("\n");
-        printf("-h|--help                             : (optional) shows this usage info\n");
+        printf("-h|--help                             : (optional)  Shows this usage info\n");
         printf("\n");
         exit(0);
 
@@ -142,8 +143,25 @@ int main(int argc, char *argv[])
     }
   }
 
+  //================================================================================================================
+  // Getting the path of this executable program (to be able to find other executables from the same path)
+
+  char * strToken = strtok (full_me, "/"); // Important not to use directly argv[0] as strtok function changes the provided char string (full_me)
+
+    while ( strcmp(strToken, "soft_program") != 0 ) {
+      if( strcmp(strToken, ".") != 0 ) {
+        strcat(my_path, "/");
+      }
+      strcat(my_path, strToken);
+      strToken = strtok (NULL,"/"); // next token requested
+    }
+
+  //================================================================================================================
+  // some infos if Verbose
+
   if(verbose_flag) {
     printf("Verbose in use\n");
+    printf( "This executable path : %s\n", my_path );
     printf("Registers value: TRC_CONFIG = %d, TRC_AXI = %d, TRC_FLASH = %d, TRC_FLASH_CMD = %d\n", TRC_CONFIG, TRC_AXI, TRC_FLASH, TRC_FLASH_CMD);
   }
 
@@ -171,15 +189,8 @@ int main(int argc, char *argv[])
   strcat(cfg_file,"/config");
 
   // Opening the card config file
-  //if ((CFG = open(cfg_file, O_RDONLY)) < 0) {
-  //  printf("Can not open %s\n",cfg_file);
-  //  printf("Exiting...\n");
-  //  exit(-1);
-  //}
-  
   // FAB: Ouvrir en RDONLY permet de récupérer Vendor, device, subsys mais bloque ensuite axi_read(FA_ICAP, FA_ICAP_SR,...
   // FAB: A ressayer quand on utilisirera snap_peek, snap_poke avec user lambda
-  //TODO/FIXME: passing this on to global cfg descriptor
   if ((CFG_FD = open(cfg_file, O_RDWR)) < 0) {
     printf("Can not open %s\n",cfg_file);
     printf("Exiting...\n");
@@ -289,7 +300,7 @@ TRC_CONFIG = TRC_OFF;
   }
   if(verbose_flag) {
       printf("ICAP EOS done.\n");
-      //Fab:??
+      //Fab:?? Pas sur que cela marche en mode User lambda
       read_QSPI_regs();
       read_ICAP_regs();
       read_FPGA_IDCODE();
