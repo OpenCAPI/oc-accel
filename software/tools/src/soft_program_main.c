@@ -65,6 +65,9 @@ int main(int argc, char *argv[])
   binfile[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
   char cfgbdf[1024];
   cfgbdf[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
+  char card[8];
+  card[0]=0;
+  u32 cardu=0;
   char cfg_file[1024];
   int start_addr=0;
 
@@ -76,6 +79,16 @@ int main(int argc, char *argv[])
   char *bin_file_extension = "_partial.bin";
   char my_path[1024] = "";
   char * full_me = argv[0];
+
+  off_t fsize;
+  struct stat tempstat;
+  int num_package_icap, icap_burst_size, num_burst, num_package_lastburst, dif;
+  u32 wdata, wdatatmp, rdata;
+  u32 CR_Write_clear = 0, CR_Write_cmd = 1, SR_ICAPEn_EOS=5;
+  int percentage = 0;
+  int prev_percentage = 1;
+  time_t spt, ept;
+
 
   //================================================================================================================
   // Getting the parameters provided to the program
@@ -109,9 +122,12 @@ int main(int argc, char *argv[])
         break;
 
       case 'c': // -c or --devicebdf
-        strcpy(cfgbdf,optarg);
-        if(verbose_flag)
-          printf(" Target Device: %s\n", cfgbdf);
+        cardu = strtol(optarg, NULL, 0); // converts string to integer; NULL means nothing else in the string than the number; 0 means it will find the base (0x-> hexa, etc)
+        //strcpy(card,optarg);
+        snprintf(cfgbdf, sizeof(cfgbdf), "%.4u:00:00.0", cardu);
+        if(verbose_flag) {
+          printf(" Target Device : %u, Target Location : %s\n", cardu, cfgbdf);
+        }
         break;
       
       case 'h': // -h or --help
@@ -190,8 +206,8 @@ int main(int argc, char *argv[])
 
   // Opening the card config file
   // FAB: Ouvrir en RDONLY permet de récupérer Vendor, device, subsys mais bloque ensuite axi_read(FA_ICAP, FA_ICAP_SR,...
-  // FAB: A ressayer quand on utilisirera snap_peek, snap_poke avec user lambda
-  if ((CFG_FD = open(cfg_file, O_RDWR)) < 0) {
+  // FAB: A ressayer quand on utilisera snap_peek, snap_poke avec user lambda
+  if ((CFG_FD = open(cfg_file, O_RDONLY)) < 0) {
     printf("Can not open %s\n",cfg_file);
     printf("Exiting...\n");
     exit(-1);
@@ -250,17 +266,7 @@ TRC_CONFIG = TRC_OFF;
   // IMPORTANT:
   // The first access to FA_ICAP will enable the decoupling  mode in the FPGA to isolate the dynamic code
   // After the last PR programming instruction, a read to FA_QSPI will disable the decoupling mode
-
-  // FAB: Variables to move to the right place
-  off_t fsize;
-  struct stat tempstat;
-  int num_package_icap, icap_burst_size, num_burst, num_package_lastburst, dif;
-  u32 wdata, wdatatmp, rdata;
-  u32 CR_Write_clear = 0, CR_Write_cmd = 1, SR_ICAPEn_EOS=5;
-  int percentage = 0;
-  int prev_percentage = 1;
-  time_t spt, ept;
-
+exit(0); // FAB: for debugging
   //----------------------------------------------------------------------------------------------------------------
   // Opening the partial bin file
   printf("Opening PR bin file: %s\n", binfile);
@@ -294,6 +300,7 @@ TRC_CONFIG = TRC_OFF;
   rdata = 0;
   while (rdata != SR_ICAPEn_EOS) {
     rdata = axi_read(FA_ICAP, FA_ICAP_SR, FA_EXP_OFF, FA_EXP_0123, "ICAP: read SR (monitor ICAPEn)");
+    //my_path/snap_peek -C $CardID -w32 0x0F10 -e 0x00000005
     if(verbose_flag) {
       printf("Waiting for ICAP EOS set \e[1A\n");
     }
