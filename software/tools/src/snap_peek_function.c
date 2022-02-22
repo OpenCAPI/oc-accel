@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 International Business Machines
+ * Copyright 2022 International Business Machines
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,16 +27,17 @@
 #include <libosnap.h>
 #include "force_cpu.h"
 
-int verbose_flag = 0;
+// int verbose_flag = 0;
 
-static const char* version = GIT_VERSION;
+// static const char* version = GIT_VERSION;
 
 /**
  * @brief        prints valid command line options
  *
  * @param prog        current program's name
  */
-static void usage (const char* prog)
+
+/*static void usage (const char* prog)
 {
     printf ("Usage: %s [-h] [-v,--verbose]\n"
             "  -C,--card <cardno>        use 'oc_find-card -v -AALL' to get the card number\n"
@@ -60,22 +61,29 @@ static void usage (const char* prog)
             "  [00000010] 10143009\n\n",
             prog);
 }
+*/
 
-/**
- * Read accelerator specific registers. Must be called as root!
- */
-int main (int argc, char* argv[])
+//##################################################################################################################
+int snap_peek (
+    int card_no,
+    int width,
+    uint32_t offs,
+    uint64_t equal_val,
+    uint64_t not_equal_val
+    )
+
+    //int argc, char* argv[])
 {
     int ch, rc = 0;
-    int card_no = 0;
+    //int card_no = 0;
     struct snap_card* card;
     int cpu = -1;
-    int width = 64;
-    uint32_t offs;
+    //int width = 64;
+    //uint32_t offs;
     uint64_t val = 0xffffffffffffffffull;
     uint64_t and_mask = 0xffffffffffffffffull;
-    uint64_t equal_val = val;
-    uint64_t not_equal_val = val;
+    //uint64_t equal_val = val;
+    //uint64_t not_equal_val = val;
     int equal = 0, not_equal = 0;
     int quiet = 0;
     unsigned long i, count = 1;
@@ -83,10 +91,10 @@ int main (int argc, char* argv[])
     char device[128];
     int dump = 1;
 
-    while (1) {
+/*    while (1) {
         int option_index = 0;
         static struct option long_options[] = {
-            /* options */
+            // options
             { "card",         required_argument, NULL, 'C' },
             { "cpu",         required_argument, NULL, 'X' },
 
@@ -97,7 +105,7 @@ int main (int argc, char* argv[])
             { "must-not-be", required_argument, NULL, 'n' },
             { "and-mask",    required_argument, NULL, 'a' },
 
-            /* misc/support */
+            // misc/support 
             { "version",         no_argument,            NULL, 'V' },
             { "quiet",         no_argument,            NULL, 'q' },
             { "verbose",         no_argument,            NULL, 'v' },
@@ -110,12 +118,12 @@ int main (int argc, char* argv[])
                           "C:X:w:i:c:e:n:a:d:Vqvh",
                           long_options, &option_index);
 
-        if (ch == -1) {      /* all params processed ? */
+        if (ch == -1) {      // all params processed ?
             break;
         }
 
         switch (ch) {
-        /* which card to use */
+        // which card to use
         case 'C':
             card_no = strtol (optarg, (char**)NULL, 0);
             break;
@@ -128,11 +136,11 @@ int main (int argc, char* argv[])
             width = strtoul (optarg, NULL, 0);
             break;
 
-        case 'i':                /* interval */
+        case 'i':                // interval
             interval = strtol (optarg, (char**)NULL, 0);
             break;
 
-        case 'c':                /* loop count */
+        case 'c':                // loop count
             count = strtol (optarg, (char**)NULL, 0);
             break;
 
@@ -167,7 +175,7 @@ int main (int argc, char* argv[])
             exit (EXIT_SUCCESS);
             break;
 
-        case 'd':                /* dump */
+        case 'd':                // dump
             dump = strtol (optarg, (char**)NULL, 0);
             break;
 
@@ -189,6 +197,25 @@ int main (int argc, char* argv[])
         exit (EXIT_FAILURE);
     }
 
+*/
+
+    if (equal_val == 0) { // Not using the equal_to parameter
+        equal_val=val;
+    } else {  // Using the equal_to parameter
+        equal = 1;
+    }
+
+    if (not_equal_val == 0) { // Not using the not_equal_to parameter
+        not_equal_val=val;
+    } else {  // Using the not_equal_to parameter
+        not_equal = 1;
+    }
+
+    if (equal && not_equal) {
+        return EXIT_FAILURE;
+    }
+
+
     switch_cpu (cpu, verbose_flag);
 
     if (card_no == 0) {
@@ -207,7 +234,8 @@ int main (int argc, char* argv[])
     if (card == NULL) {
         fprintf (stderr, "err: failed to open card %u: %s\n", card_no,
                  strerror (errno));
-        exit (EXIT_FAILURE);
+        //exit (EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     if (verbose_flag) {
@@ -242,7 +270,8 @@ dump_more:
             fprintf (stderr, "err: could not read [%08x] rc=%d\n",
                      offs, rc);
             snap_card_free (card);
-            exit (EXIT_FAILURE);
+            //exit (EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         if ((equal) &&
@@ -250,7 +279,8 @@ dump_more:
             fprintf (stderr, "err: [%08x] %016llx != %016llx\n",
                      offs, (long long)val, (long long)equal_val);
             snap_card_free (card);
-            exit (EX_ERR_DATA);
+            //exit (EX_ERR_DATA);
+            return EX_ERR_DATA;
         }
 
         if ((not_equal) &&
@@ -259,7 +289,8 @@ dump_more:
                      offs, (long long)val,
                      (long long)not_equal_val);
             snap_card_free (card);
-            exit (EX_ERR_DATA);
+            //exit (EX_ERR_DATA);
+            return EX_ERR_DATA;
         }
 
         if (interval) {
@@ -299,5 +330,6 @@ dump_more:
         printf ("[%s] Exit rc %d\n", argv[0], rc);
     }
 
-    exit (EXIT_SUCCESS);
+    //exit (EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
