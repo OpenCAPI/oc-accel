@@ -27,7 +27,6 @@
 #include <libosnap.h>
 #include "force_cpu.h"
 
-// int verbose_flag = 0;
 
 // static const char* version = GIT_VERSION;
 
@@ -216,7 +215,7 @@ int snap_peek (
     }
 
 
-    switch_cpu (cpu, verbose_flag);
+    //switch_cpu (cpu, verbose_flag);
 
     if (card_no == 0) {
         snprintf (device, sizeof (device) - 1, "IBM,oc-snap");
@@ -224,9 +223,6 @@ int snap_peek (
         snprintf (device, sizeof (device) - 1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card_no);
     }
 
-    if (verbose_flag) {
-        printf ("[%s] Open CAPI Card: %s\n", argv[0], device);
-    }
 
     card = snap_card_alloc_dev (device, SNAP_VENDOR_ID_ANY,
                                 SNAP_DEVICE_ID_ANY);
@@ -238,19 +234,12 @@ int snap_peek (
         return EXIT_FAILURE;
     }
 
-    if (verbose_flag) {
-        printf ("[%s] Open CAPI Card Got handle: %p\n", argv[0], card);
-    }
 
     for (i = 0; i < count; i++) {
 dump_more:
 
         switch (width) {
         case 32: {
-            if (verbose_flag > 1)
-                printf ("[%s] snap_action_read32(%p, %x)\n",
-                        argv[0], card, offs);
-
             rc = snap_action_read32 (card, offs, (uint32_t*)&val);
             val &= 0xffffffff; /* mask off obsolete bits ... */
             break;
@@ -258,10 +247,6 @@ dump_more:
 
         default:
         case 64:
-            if (verbose_flag > 1)
-                printf ("[%s] snap_global_read64(%p, %x)\n",
-                        argv[0], card, offs);
-
             rc = snap_global_read64 (card, offs, &val);
             break;
         }
@@ -312,9 +297,6 @@ dump_more:
         }
     }
 
-    if (verbose_flag) {
-        printf ("[%s] Close CAPI Card: %p\n", argv[0], card);
-    }
 
     snap_card_free (card);
 
@@ -326,9 +308,6 @@ dump_more:
         }
     }
 
-    if (verbose_flag) {
-        printf ("[%s] Exit rc %d\n", argv[0], rc);
-    }
 
     //exit (EXIT_SUCCESS);
     return EXIT_SUCCESS;

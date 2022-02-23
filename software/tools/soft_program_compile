@@ -3,5 +3,6 @@
 #gcc -Wall -Wno-unused-but-set-variable -Wno-unused-result -Wno-unused-variable -W -g -O2 -fno-stack-protector -I./include -DGIT_VERSION=0.0.99-no-git -o soft_program  src/program_global_vars.c src/program_common_funcs.c src/soft_program_main.c
 #gcc -Wall -Wno-unused-but-set-variable -Wno-unused-result -Wno-unused-variable -fno-stack-protector -I./include -o soft_program  src/program_global_vars.c src/program_common_funcs.c src/soft_program_main.c
 
-gcc -Wall -Wno-unused-but-set-variable -Wno-unused-result -Wno-unused-variable -fno-stack-protector -I./include -o soft_program  src/program_global_vars.c src/program_common_funcs.c src/snap_peek_function.c src/soft_program_main.c
+# gcc -Wall -Wno-unused-but-set-variable -Wno-unused-result -Wno-unused-variable -fno-stack-protector -I./include -o soft_program  src/program_global_vars.c src/program_common_funcs.c snap_peek_function.c src/soft_program_main.c
+gcc -Wall -Wno-unused-but-set-variable -Wno-unused-result -Wno-unused-variable -fno-stack-protector -I./include -I ../include -o soft_program  src/program_global_vars.c src/program_common_funcs.c snap_peek_function.c src/soft_program_main.c
 

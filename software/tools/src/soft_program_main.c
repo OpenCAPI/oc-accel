@@ -27,6 +27,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include "program_common_defs.h"
 #include "program_common_funcs.h"
 #include "program_global_vars.h"
@@ -299,7 +300,7 @@ TRC_CONFIG = TRC_OFF;
   //rdata = 0;
   //while (rdata != SR_ICAPEn_EOS) {
     //rdata = axi_read(FA_ICAP, FA_ICAP_SR, FA_EXP_OFF, FA_EXP_0123, "ICAP: read SR (monitor ICAPEn)");
-  while snap_peek (cardID, 32, USER_ICAP_SR, 0, SR_ICAPEn_EOS ) {  // while USER_ICAP_SR != SR_ICAPEn_EOS
+  while (snap_peek (cardID, 32, USER_ICAP_SR, 0, SR_ICAPEn_EOS )) {  // while USER_ICAP_SR != SR_ICAPEn_EOS
     if(verbose_flag) {
       printf("Waiting for ICAP EOS set \e[1A\n");
     }

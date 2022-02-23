@@ -1,6 +1,8 @@
 #ifndef FLSH_COMMON_FUNCS_H_
 #define FLSH_COMMON_FUNCS_H_
 
+#include <stdint.h>
+
 /*
  * Copyright 2019 International Business Machines
  *
