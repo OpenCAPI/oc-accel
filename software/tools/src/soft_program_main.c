@@ -27,7 +27,6 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <stdint.h>
 #include "program_common_defs.h"
 #include "program_common_funcs.h"
 #include "program_global_vars.h"
@@ -68,7 +67,7 @@ int main(int argc, char *argv[])
   cfgbdf[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
   char card[8];
   card[0]=0;
-  u32 cardID=0;
+  u32 cardu=0;
   char cfg_file[1024];
   int start_addr=0;
 
@@ -123,10 +122,11 @@ int main(int argc, char *argv[])
         break;
 
       case 'c': // -c or --devicebdf
-        cardID = strtol(optarg, NULL, 0); // converts string to integer; NULL means nothing else in the string than the number; 0 means it will find the base (0x-> hexa, etc)
-        snprintf(cfgbdf, sizeof(cfgbdf), "%.4u:00:00.0", cardID);
+        cardu = strtol(optarg, NULL, 0); // converts string to integer; NULL means nothing else in the string than the number; 0 means it will find the base (0x-> hexa, etc)
+        //strcpy(card,optarg);
+        snprintf(cfgbdf, sizeof(cfgbdf), "%.4u:00:00.0", cardu);
         if(verbose_flag) {
-          printf(" Target Device : %u, Target Location : %s\n", cardID, cfgbdf);
+          printf(" Target Device : %u, Target Location : %s\n", cardu, cfgbdf);
         }
         break;
       
@@ -266,7 +266,7 @@ TRC_CONFIG = TRC_OFF;
   // IMPORTANT:
   // The first access to FA_ICAP will enable the decoupling  mode in the FPGA to isolate the dynamic code
   // After the last PR programming instruction, a read to FA_QSPI will disable the decoupling mode
-
+exit(0); // FAB: for debugging
   //----------------------------------------------------------------------------------------------------------------
   // Opening the partial bin file
   printf("Opening PR bin file: %s\n", binfile);
@@ -297,10 +297,10 @@ TRC_CONFIG = TRC_OFF;
 
   //----------------------------------------------------------------------------------------------------------------
   // Waiting for the ICAP to be ready and listening (by reading at the FA_ICAP_SR address and waiting for SR_ICAPEn_EOS answer)
-  //rdata = 0;
-  //while (rdata != SR_ICAPEn_EOS) {
-    //rdata = axi_read(FA_ICAP, FA_ICAP_SR, FA_EXP_OFF, FA_EXP_0123, "ICAP: read SR (monitor ICAPEn)");
-  while (snap_peek (cardID, 32, USER_ICAP_SR, 0, SR_ICAPEn_EOS )) {  // while USER_ICAP_SR != SR_ICAPEn_EOS
+  rdata = 0;
+  while (rdata != SR_ICAPEn_EOS) {
+    rdata = axi_read(FA_ICAP, FA_ICAP_SR, FA_EXP_OFF, FA_EXP_0123, "ICAP: read SR (monitor ICAPEn)");
+    //my_path/snap_peek -C $CardID -w32 0x0F10 -e 0x00000005
     if(verbose_flag) {
       printf("Waiting for ICAP EOS set \e[1A\n");
     }
@@ -312,8 +312,6 @@ TRC_CONFIG = TRC_OFF;
       read_ICAP_regs();
       read_FPGA_IDCODE();
   }
-
-exit(0); // FAB: for debugging
 
   //----------------------------------------------------------------------------------------------------------------
   // icap_burst_size = the free size of the WR Fifo (it should be 0x3F) (by reading at FA_ICAP_WFV address)

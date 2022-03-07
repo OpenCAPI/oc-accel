@@ -1,8 +1,6 @@
 #ifndef FLSH_COMMON_FUNCS_H_
 #define FLSH_COMMON_FUNCS_H_
 
-#include <stdint.h>
-
 /*
  * Copyright 2019 International Business Machines
  *
@@ -101,15 +99,6 @@ u32  axi_read_zynq(                      // Initiate a read operation on the AXI
               , u32 exp_dir         //   Determine expander direction
               , char *s             //   Comment to be printed in trace message
               );
-
-// snap_peek/poke functions
-int snap_peek (
-    int card_no,
-    int width,
-    uint32_t offs,
-    uint64_t equal_val,
-    uint64_t not_equal_val
-    );
 
 void read_ICAP_regs();              // Read and display all AXI readable registers in HWICAP core
 

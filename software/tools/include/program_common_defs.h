@@ -113,12 +113,6 @@ typedef unsigned char byte;
 #define FA_ICAP_WFV   0x00000114
 #define FA_ICAP_RFO   0x00000118
 #define FA_ICAP_ASR   0x0000011C
-
-// 
-//              With ICAP in USER AREA
-//              SR   = Status Register
-#define USER_ICAP_SR  0x00000F10
-
 //   wr_response [23:22] Response to AXI Write operation
 #define FA_WR_RESP_FIELD  0x00C00000
 #define FA_WR_RESP_OK     0x00000000
