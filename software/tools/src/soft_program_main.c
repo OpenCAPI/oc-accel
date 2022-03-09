@@ -27,6 +27,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include "program_common_defs.h"
 #include "program_common_funcs.h"
 #include "program_global_vars.h"
@@ -37,6 +38,31 @@
 //  extern void CFG_NOP( const char*);
 //  extern void CFG_NOP2(const char*, int, int, int*);
 #endif
+
+
+//##################################################################################################################
+// FUNCTIONS
+
+int binary_exec(const char *bin, char *const newargv[]) {
+  int pid, status, err, null_fd;
+  // first we fork the process
+  if (pid = fork()) {
+    // pid != 0: this is the parent process (i.e. our process)
+    waitpid(pid, &status, 0); // wait for the child to exit
+  } else {
+    // pid == 0: this is the child process.
+    
+    null_fd = open("/dev/null", O_WRONLY);
+    dup2(null_fd, 1);    // make stdout a copy of fd (> /dev/null) 
+    dup2(null_fd, 2);    // ...and same with stderr 
+    close(null_fd);      // close fd 
+
+    err = execve(bin, newargv, NULL);
+    // exec does not return unless the program couldn't be started.
+    printf("ERREUR %d => BEBE reprend la main\n", err);
+  }
+  return status; // this is the parent process again.
+}
 
 
 //##################################################################################################################
@@ -65,8 +91,8 @@ int main(int argc, char *argv[])
   binfile[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
   char cfgbdf[1024];
   cfgbdf[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
-  char card[8];
-  card[0]=0;
+  char cardstr[8];
+  cardstr[0]=0;
   u32 cardu=0;
   char cfg_file[1024];
   int start_addr=0;
@@ -79,6 +105,8 @@ int main(int argc, char *argv[])
   char *bin_file_extension = "_partial.bin";
   char my_path[1024] = "";
   char * full_me = argv[0];
+  char full_snap_peek[1024] = "";
+  char full_snap_poke[1024] = "";
 
   off_t fsize;
   struct stat tempstat;
@@ -88,6 +116,13 @@ int main(int argc, char *argv[])
   int percentage = 0;
   int prev_percentage = 1;
   time_t spt, ept;
+
+  char *binary_exec_params[8];
+  int binary_exec_exit_code;
+  char register_address[11];
+  register_address[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
+  char register_value[11];
+  register_value[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
 
 
   //================================================================================================================
@@ -123,7 +158,7 @@ int main(int argc, char *argv[])
 
       case 'c': // -c or --devicebdf
         cardu = strtol(optarg, NULL, 0); // converts string to integer; NULL means nothing else in the string than the number; 0 means it will find the base (0x-> hexa, etc)
-        //strcpy(card,optarg);
+        strcpy(cardstr,optarg);
         snprintf(cfgbdf, sizeof(cfgbdf), "%.4u:00:00.0", cardu);
         if(verbose_flag) {
           printf(" Target Device : %u, Target Location : %s\n", cardu, cfgbdf);
@@ -164,19 +199,28 @@ int main(int argc, char *argv[])
 
   char * strToken = strtok (full_me, "/"); // Important not to use directly argv[0] as strtok function changes the provided char string (full_me)
 
-    while ( strcmp(strToken, "soft_program") != 0 ) {
-      if( strcmp(strToken, ".") != 0 ) {
-        strcat(my_path, "/");
-      }
-      strcat(my_path, strToken);
-      strToken = strtok (NULL,"/"); // next token requested
+  while ( strcmp(strToken, "soft_program") != 0 ) {
+    if( strcmp(strToken, ".") != 0 ) {
+      strcat(my_path, "/");
     }
+    strcat(my_path, strToken);
+    strToken = strtok (NULL,"/"); // next token requested
+  }
+
+  //================================================================================================================
+  // Building full name with path for snap_peek and snap_poke binairies
+
+  strcpy(full_snap_peek, my_path);
+  strcat(full_snap_peek, "/snap_peek");
+
+  strcpy(full_snap_poke, my_path);
+  strcat(full_snap_poke, "/snap_poke");
 
   //================================================================================================================
   // some infos if Verbose
 
   if(verbose_flag) {
-    printf("Verbose in use\n");
+    printf("\nVerbose in use\n");
     printf( "This executable path : %s\n", my_path );
     printf("Registers value: TRC_CONFIG = %d, TRC_AXI = %d, TRC_FLASH = %d, TRC_FLASH_CMD = %d\n", TRC_CONFIG, TRC_AXI, TRC_FLASH, TRC_FLASH_CMD);
   }
@@ -194,6 +238,19 @@ int main(int argc, char *argv[])
     printf("Exiting...\n");
     exit(-1);
   } 
+
+  //================================================================================================================
+  // Building the unchanging parameters for snap_peek/snap_poke binaries
+  
+  //binary_exec_params[0] = full_snap_peek;    // full name (with the path) for snap_peek or snap_pook binary
+  binary_exec_params[1] = "-C";              // -C option 
+  binary_exec_params[2] = cardstr;           // card ID (such as "5")
+  binary_exec_params[3] = "-w32";            // 32-bits words
+  //binary_exec_params[4] = "0x0F14";          // register address
+  binary_exec_params[5] = "-e";              // -e option in order to compare the register content with the provided value
+  //binary_exec_params[6] = "0x003F";        // Value for the -e option
+  binary_exec_params[7] = NULL;              // always NULL (execve syntax)
+
 
   //================================================================================================================
   // Opening the card config file and getting Vendor, Device & Subsystem IDs of the card
@@ -237,7 +294,7 @@ int main(int argc, char *argv[])
   }
 
   if(verbose_flag) {
-    printf("Card Infos: Vendor ID = %x, Device ID = %x, SubSystem ID = %x\n", vendor, device, subsys);
+    printf("\nCard Infos: Vendor ID = %x, Device ID = %x, SubSystem ID = %x\n", vendor, device, subsys);
   }
 
 // FAB: ??
@@ -257,7 +314,7 @@ TRC_CONFIG = TRC_OFF;
   }
 
   if(verbose_flag) {
-    printf ("Using Partial reconfiguration mode\n"); 
+    printf ("\nUsing Partial reconfiguration mode\n"); 
   }
 
   //================================================================================================================
@@ -266,7 +323,7 @@ TRC_CONFIG = TRC_OFF;
   // IMPORTANT:
   // The first access to FA_ICAP will enable the decoupling  mode in the FPGA to isolate the dynamic code
   // After the last PR programming instruction, a read to FA_QSPI will disable the decoupling mode
-exit(0); // FAB: for debugging
+  
   //----------------------------------------------------------------------------------------------------------------
   // Opening the partial bin file
   printf("Opening PR bin file: %s\n", binfile);
@@ -297,21 +354,40 @@ exit(0); // FAB: for debugging
 
   //----------------------------------------------------------------------------------------------------------------
   // Waiting for the ICAP to be ready and listening (by reading at the FA_ICAP_SR address and waiting for SR_ICAPEn_EOS answer)
-  rdata = 0;
-  while (rdata != SR_ICAPEn_EOS) {
-    rdata = axi_read(FA_ICAP, FA_ICAP_SR, FA_EXP_OFF, FA_EXP_0123, "ICAP: read SR (monitor ICAPEn)");
-    //my_path/snap_peek -C $CardID -w32 0x0F10 -e 0x00000005
+
+  // Full name (with the path) for snap_peek
+  binary_exec_params[0] = full_snap_peek;
+
+  // Rgister address we want to read
+  snprintf(register_address, sizeof(register_address), "0x%.8X", USER_ICAP_SR);
+  binary_exec_params[4] = register_address;
+
+  // Value we want to compare with the value we're gonna read from the register
+  snprintf(register_value, sizeof(register_value), "0x%.8X", SR_ICAPEn_EOS);
+  binary_exec_params[6] = register_value;
+
+  if(verbose_flag) {
+    printf("\nRegister address: %s (ref: %X)\n", register_address, USER_ICAP_SR);
+    printf("Register value we want to compare with: %s (ref: %X)\n", register_value, SR_ICAPEn_EOS);
+    printf("\nRunning: %s %s %s %s %s %s %s\n", binary_exec_params[0], binary_exec_params[1], binary_exec_params[2], binary_exec_params[3], binary_exec_params[4], binary_exec_params[5], binary_exec_params[6]);
+  }
+
+  // Running the snap_peek waiting for the card ICAP to be ready
+  while ( (binary_exec_exit_code=binary_exec(full_snap_peek, binary_exec_params)) != 0) {
     if(verbose_flag) {
-      printf("Waiting for ICAP EOS set \e[1A\n");
+      printf("Exit code %d  --> Waiting for ICAP EOS set \e[1A\n", binary_exec_exit_code);
     }
   }
+
   if(verbose_flag) {
-      printf("ICAP EOS done.\n");
+      printf("\nICAP EOS done.\n");
       //Fab:?? Pas sur que cela marche en mode User lambda
-      read_QSPI_regs();
+      /*read_QSPI_regs();
       read_ICAP_regs();
-      read_FPGA_IDCODE();
+      read_FPGA_IDCODE();*/
   }
+
+exit(0); // FAB: for debugging
 
   //----------------------------------------------------------------------------------------------------------------
   // icap_burst_size = the free size of the WR Fifo (it should be 0x3F) (by reading at FA_ICAP_WFV address)
