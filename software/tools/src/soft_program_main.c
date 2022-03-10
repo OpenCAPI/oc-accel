@@ -43,24 +43,51 @@
 //##################################################################################################################
 // FUNCTIONS
 
-int binary_exec(const char *bin, char *const newargv[]) {
+int binary_exec(const char *bin, char *const newargv[], int *output_int) {
   int pid, status, err, null_fd;
-  // first we fork the process
+  char output_string[128] = "";
+  char tempo[128] = "";
+  int link[2];
+
+  //================================================================================================================
+  // first we create the pipe
+  pipe(link);
+  
+  //================================================================================================================
+  // second we fork the process and test if we're the parent or the child
   if (pid = fork()) {
+
+  //----------------------------------------------------------------------------------------------------------------
     // pid != 0: this is the parent process (i.e. our process)
+    close(link[1]);
+    read(link[0], output_string, sizeof(output_string));
+
+    char * strToken = strtok (output_string, " ");
+    strToken = strtok (NULL, " ");
+    strcat(tempo, strToken);
+
+    *output_int = strtol (tempo, NULL, 16);
+
     waitpid(pid, &status, 0); // wait for the child to exit
+
+  //----------------------------------------------------------------------------------------------------------------
   } else {
     // pid == 0: this is the child process.
-    
     null_fd = open("/dev/null", O_WRONLY);
-    dup2(null_fd, 1);    // make stdout a copy of fd (> /dev/null) 
-    dup2(null_fd, 2);    // ...and same with stderr 
+    // dup2(null_fd, STDOUT_FILENO);    // make stdout a copy of fd (> /dev/null) 
+    dup2(null_fd, STDERR_FILENO);    // ...and same with stderr 
     close(null_fd);      // close fd 
 
+    dup2 (link[1], STDOUT_FILENO);
+    close(link[0]);
+    close(link[1]);
+
     err = execve(bin, newargv, NULL);
+
     // exec does not return unless the program couldn't be started.
-    printf("ERREUR %d => BEBE reprend la main\n", err);
+    printf("ERREUR %d\n", err);
   }
+
   return status; // this is the parent process again.
 }
 
@@ -119,6 +146,7 @@ int main(int argc, char *argv[])
 
   char *binary_exec_params[8];
   int binary_exec_exit_code;
+  int binary_exec_output;
   char register_address[11];
   register_address[0]=0; // To ensure that a C string is initialized to the empty string, set the first byte to 0.
   char register_value[11];
@@ -249,7 +277,7 @@ int main(int argc, char *argv[])
   //binary_exec_params[4] = "0x0F14";          // register address
   binary_exec_params[5] = "-e";              // -e option in order to compare the register content with the provided value
   //binary_exec_params[6] = "0x003F";        // Value for the -e option
-  binary_exec_params[7] = NULL;              // always NULL (execve syntax)
+  binary_exec_params[7] = NULL;              // The params array should always be NULL (to tell execve to stop here)
 
 
   //================================================================================================================
@@ -354,6 +382,8 @@ TRC_CONFIG = TRC_OFF;
 
   //----------------------------------------------------------------------------------------------------------------
   // Waiting for the ICAP to be ready and listening (by reading at the FA_ICAP_SR address and waiting for SR_ICAPEn_EOS answer)
+  printf("\n------------------------------------------------------------------------------------------------------------------------\n");
+  printf("Waiting for the ICAP to be ready and listening (by reading at the FA_ICAP_SR address and waiting for SR_ICAPEn_EOS answer)\n");
 
   // Full name (with the path) for snap_peek
   binary_exec_params[0] = full_snap_peek;
@@ -369,17 +399,20 @@ TRC_CONFIG = TRC_OFF;
   if(verbose_flag) {
     printf("\nRegister address: %s (ref: %X)\n", register_address, USER_ICAP_SR);
     printf("Register value we want to compare with: %s (ref: %X)\n", register_value, SR_ICAPEn_EOS);
-    printf("\nRunning: %s %s %s %s %s %s %s\n", binary_exec_params[0], binary_exec_params[1], binary_exec_params[2], binary_exec_params[3], binary_exec_params[4], binary_exec_params[5], binary_exec_params[6]);
   }
 
+    printf("\nRunning: %s %s %s %s %s %s %s\n", binary_exec_params[0], binary_exec_params[1], binary_exec_params[2], binary_exec_params[3], binary_exec_params[4], binary_exec_params[5], binary_exec_params[6]);
+
   // Running the snap_peek waiting for the card ICAP to be ready
-  while ( (binary_exec_exit_code=binary_exec(full_snap_peek, binary_exec_params)) != 0) {
+  while ( (binary_exec_exit_code=binary_exec(full_snap_peek, binary_exec_params, &binary_exec_output)) != 0) {
     if(verbose_flag) {
       printf("Exit code %d  --> Waiting for ICAP EOS set \e[1A\n", binary_exec_exit_code);
     }
   }
 
   if(verbose_flag) {
+      printf("snap_peek exit code %d\n", binary_exec_exit_code);
+      printf("snap_peek Output: %X\n", binary_exec_output);
       printf("\nICAP EOS done.\n");
       //Fab:?? Pas sur que cela marche en mode User lambda
       /*read_QSPI_regs();
@@ -387,11 +420,31 @@ TRC_CONFIG = TRC_OFF;
       read_FPGA_IDCODE();*/
   }
 
-exit(0); // FAB: for debugging
-
   //----------------------------------------------------------------------------------------------------------------
   // icap_burst_size = the free size of the WR Fifo (it should be 0x3F) (by reading at FA_ICAP_WFV address)
-  icap_burst_size = axi_read(FA_ICAP, FA_ICAP_WFV, FA_EXP_OFF, FA_EXP_0123, "read_ICAP_regs");
+  printf("\n------------------------------------------------------------------------------------------------------------------------\n");
+  printf("icap_burst_size = the free size of the WR Fifo (it should be 0x3F) (by reading at FA_ICAP_WFV address)\n");
+  
+   //binary_exec_params[0] = full_snap_peek;    // full name (with the path) for snap_peek or snap_pook binary
+   //binary_exec_params[1] = "-C";              // -C option
+   //binary_exec_params[2] = cardstr;           // card ID (such as "5")
+   //binary_exec_params[3] = "-w32";            // 32-bits words
+   binary_exec_params[4] = "0x0F14";            // register address
+   binary_exec_params[5] = NULL;                // We stop here (no -e options)
+   //binary_exec_params[6] = "";                // Value for the -e option
+   //binary_exec_params[7] = NULL;              // The params array should always be NULL (to tell execve to stop here)
+   
+   printf("\nRunning: %s %s %s %s %s\n", binary_exec_params[0], binary_exec_params[1], binary_exec_params[2], binary_exec_params[3], binary_exec_params[4]);
+   binary_exec_exit_code=binary_exec(full_snap_peek, binary_exec_params, &binary_exec_output);
+
+   if(verbose_flag) {
+     printf("snap_peek exit code %d\n", binary_exec_exit_code);
+     printf("snap_peek Output %X\n", binary_exec_output);
+   }
+
+  icap_burst_size = binary_exec_output;
+  
+  //icap_burst_size = axi_read(FA_ICAP, FA_ICAP_WFV, FA_EXP_OFF, FA_EXP_0123, "read_ICAP_regs");
 
   //----------------------------------------------------------------------------------------------------------------
   // num_burst = number of writes (bursts) to do in order to write num_package_icap 32-bits packets into the WR Fifo
@@ -407,6 +460,8 @@ exit(0); // FAB: for debugging
       printf(" Total burst to transfer: %d with burst size of %d. Number of package is last burst: %d.\n", 
             num_burst, icap_burst_size, num_package_lastburst);
   }
+
+  exit(0); // FAB: for debugging
 
   //----------------------------------------------------------------------------------------------------------------
   // Getting the current time (for reporting the time spent to do all bursts at the end)
