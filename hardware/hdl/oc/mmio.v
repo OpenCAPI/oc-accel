@@ -44,6 +44,7 @@ module mmio (
              //---- local control output -------------------
              output reg           soft_reset_brdg_odma       , // soft reset SNAP logic
              output reg           soft_reset_action          , // soft reset action logic
+             output reg           soft_decouple_action       , // soft reset action logic
 
              //---- MMIO side interface --------------------
              input                mmio_wr                    ,
@@ -453,6 +454,14 @@ module mmio (
      action_reset_cnt <= 4'd0;
    else if(soft_reset_action)
      action_reset_cnt <= action_reset_cnt + 4'd1;
+
+ always@(posedge clk or negedge rst_n)
+   if(~rst_n)
+     soft_decouple_action <= 1'b0;
+   else if(REG_command[0])
+     soft_decouple_action <= 1'b0;  //unset writing 1 in SCR
+   else if(REG_command[1])
+     soft_decouple_action <= 1'b1;  //set writing 2 in SCR
 
  assign debug_cnt_clear    = REG_debug_clear[0];
  assign debug_tlx_idle_lim = REG_debug_tlx_idle_lim;

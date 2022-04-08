@@ -47,6 +47,12 @@ set odma_st_mode_used [string toupper $::env(ODMA_ST_MODE_USED)]
 set user_clk_freq $::env(USER_CLOCK_FREQ)
 set axi_id_width  $::env(AXI_ID_WIDTH)
 
+if { [info exists ::env(ENABLE_PRFLOW)] == 1 } {
+  set enable_prflow "TRUE"
+} else {
+  set enable_prflow "FALSE"
+}
+
 ## Create a new Vivado IP Project
 puts "\[CREATE_SNAP_IPs.....\] start [clock format [clock seconds] -format {%T %a %b %d %Y}]"
 create_project managed_ip_project $ip_dir/managed_ip_project -force -part $fpga_part -ip >> $log_file
@@ -54,7 +60,7 @@ create_project managed_ip_project $ip_dir/managed_ip_project -force -part $fpga_
 # Project IP Settings
 # General
 set_property target_language VHDL [current_project]
-set_property target_simulator IES [current_project]
+#set_property target_simulator IES [current_project]
 
 #choose type of RAM that will be connected to the DDR AXI Interface
 # BRAM_USED=TRUE  500KB BRAM
@@ -62,6 +68,7 @@ set_property target_simulator IES [current_project]
 # SDRAM_USED=TRUE   8GB AlphaData 9V3     DDR4 RAM CUSTOM_DBI_K4A8G085WB-RC (8Gb, x8)
 set create_clkconv_snap FALSE
 set create_clkconv_mem  FALSE
+set create_clkconv_icapusr  FALSE
 set create_clkconv_lite FALSE
 set create_dwidth_conv  FALSE
 set create_interconnect FALSE
@@ -111,6 +118,9 @@ if { $user_clock == "TRUE" } {
   set create_clkconv_lite   TRUE
 }
 
+if { $enable_prflow == "TRUE" } {
+     set create_clkconv_icapusr   TRUE
+}
 
 # Create ODMA FIFOs
 # Create channel_fifo for dsc_manager
@@ -779,6 +789,28 @@ if { $create_clkconv_snap == "TRUE" } {
   generate_target all                          [get_files $ip_dir/axi_clock_converter_act2snap/axi_clock_converter_act2snap.xci] >> $log_file
   export_ip_user_files -of_objects             [get_files $ip_dir/axi_clock_converter_act2snap/axi_clock_converter_act2snap.xci] -no_script -force >> $log_file
   export_simulation    -of_objects             [get_files $ip_dir/axi_clock_converter_act2snap/axi_clock_converter_act2snap.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
+}
+
+#create axi_clock_converter_icapusr
+if { $create_clkconv_icapusr == "TRUE" } {
+  puts "                        generating IP axi_clock_converter_icapusr"
+  create_ip -name axi_clock_converter -vendor xilinx.com -library ip -version 2.1 -module_name axi_clock_converter_icapusr -dir $ip_dir  >> $log_file
+  set_property -dict [list CONFIG.PROTOCOL {AXI4LITE}    \
+                           CONFIG.DATA_WIDTH {32}        \
+                           CONFIG.ID_WIDTH {0}           \
+                           CONFIG.AWUSER_WIDTH {0}       \
+                           CONFIG.ARUSER_WIDTH {0}       \
+                           CONFIG.RUSER_WIDTH {0}        \
+                           CONFIG.WUSER_WIDTH {0}        \
+                           CONFIG.BUSER_WIDTH {0}        \
+                           CONFIG.ACLK_ASYNC {1}         \
+                           ] [get_ips axi_clock_converter_icapusr]
+
+  set_property generate_synth_checkpoint false [get_files $ip_dir/axi_clock_converter_icapusr/axi_clock_converter_icapusr.xci]
+  generate_target {instantiation_template}     [get_files $ip_dir/axi_clock_converter_icapusr/axi_clock_converter_icapusr.xci] >> $log_file
+  generate_target all                          [get_files $ip_dir/axi_clock_converter_icapusr/axi_clock_converter_icapusr.xci] >> $log_file
+  export_ip_user_files -of_objects             [get_files $ip_dir/axi_clock_converter_icapusr/axi_clock_converter_icapusr.xci] -no_script -force >> $log_file
+  export_simulation    -of_objects             [get_files $ip_dir/axi_clock_converter_icapusr/axi_clock_converter_icapusr.xci] -directory $ip_dir/ip_user_files/sim_scripts -force >> $log_file
 }
 
 if { $ila_debug == "TRUE" } {

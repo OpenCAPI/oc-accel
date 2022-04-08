@@ -108,11 +108,13 @@ if { ($cloud_run == "GEN_IMAGE") ||  !( ($cloud_run == "SYNTH_ACTION") || ($clou
 
 ##
 ## writing debug probes
+if { ($cloud_run == "GEN_IMAGE") ||  !( ($cloud_run == "SYNTH_ACTION") || ($cloud_run == "SYNTH_STATIC") )  } {
 if { $ila_debug == "TRUE" } {
   set step     write_debug_probes
   set logfile  $logs_dir/${step}.log
   puts [format "%-*s%-*s%-*s%-*s"  $widthCol1 "" $widthCol2 "writing debug probes" $widthCol3 "" $widthCol4 "[clock format [clock seconds] -format {%T}]"]
   write_debug_probes $img_dir/$IMAGE_NAME.ltx >> $logfile
+}
 }
 
 

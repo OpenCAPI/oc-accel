@@ -734,7 +734,7 @@ module brdg_rd_order_mng_array
 
     always@(posedge clk or negedge rst_n)
     begin
-        if(rst_n)
+        if(~rst_n)
             ret_idle_counter <= 32'b0;
         `ifdef ENABLE_ODMA
         else if(ret_valid && ret_ready[ret_axi_id])

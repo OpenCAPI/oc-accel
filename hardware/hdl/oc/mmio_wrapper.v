@@ -49,6 +49,7 @@ module mmio_wrapper (
                      //---- local control output -----------------------------
                      output                soft_reset_brdg_odma             ,
                      output                soft_reset_action                ,
+                     output                soft_decouple_action             ,                     
 
                      //---- TL CAPP command ----------------------------------
                      input                 tlx_afu_cmd_valid                ,
@@ -205,6 +206,7 @@ module mmio_wrapper (
              .fir_tlx_interface          (fir_tlx_interface          ),
              .soft_reset_brdg_odma       (soft_reset_brdg_odma       ),
              .soft_reset_action          (soft_reset_action          ),
+             .soft_decouple_action       (soft_decouple_action       ),
              .mmio_wr                    (mmio_wr                    ),
              .mmio_rd                    (mmio_rd                    ),
              .mmio_dw                    (mmio_dw                    ),

@@ -264,6 +264,31 @@ module framework_afu (
     , output                 gt_tx_gt_port_3_p
       `endif
    `endif
+// in Cloud mode / PRFLOW we need to give access to ICAP to the user (w/o sudo) 
+`ifndef ENABLE_ODMA
+`ifdef ENABLE_PRFLOW
+    , output [`AXI_LITE_AW-1:0]   lite_snap2icap_awaddr
+    , output [2:0]                lite_snap2icap_awprot
+    , output                      lite_snap2icap_awvalid
+    , output [`AXI_LITE_DW-1:0]   lite_snap2icap_wdata
+    , output [3:0]                lite_snap2icap_wstrb
+    , output                      lite_snap2icap_wvalid
+    , output                      lite_snap2icap_bready
+    , output [`AXI_LITE_AW-1:0]   lite_snap2icap_araddr
+    , output [2:0]                lite_snap2icap_arprot
+    , output                      lite_snap2icap_arvalid
+    , output                      lite_snap2icap_rready
+
+    , input                       lite_icap2snap_awready
+    , input                       lite_icap2snap_wready
+    , input [1:0]                 lite_icap2snap_bresp
+    , input                       lite_icap2snap_bvalid
+    , input                       lite_icap2snap_arready
+    , input [`AXI_LITE_DW-1:0]    lite_icap2snap_rdata
+    , input [1:0]                 lite_icap2snap_rresp
+    , input                       lite_icap2snap_rvalid
+`endif
+`endif
 
 `ifdef ENABLE_9H3_LED
      , output                 user_led_a0
@@ -289,39 +314,28 @@ module framework_afu (
 
   // // Interface between snap_core to (clock/dwidth) converter
 `ifndef ENABLE_ODMA
-  wire [`AXI_LITE_AW-1:0]     lite_snap2conv_awaddr  ;
+  wire [`AXI_LITE_AW-1:0]    lite_snap2conv_awaddr  ;
   wire [2:0]                 lite_snap2conv_awprot  ;
   wire                       lite_snap2conv_awvalid ;
-  wire [`AXI_LITE_DW-1:0]     lite_snap2conv_wdata   ;
+  wire [`AXI_LITE_DW-1:0]    lite_snap2conv_wdata   ;
   wire [3:0]                 lite_snap2conv_wstrb   ;
   wire                       lite_snap2conv_wvalid  ;
   wire                       lite_snap2conv_bready  ;
-  wire [`AXI_LITE_AW-1:0]     lite_snap2conv_araddr  ;
+  wire [`AXI_LITE_AW-1:0]    lite_snap2conv_araddr  ;
   wire [2:0]                 lite_snap2conv_arprot  ;
   wire                       lite_snap2conv_arvalid ;
   wire                       lite_snap2conv_rready  ;
 
-  wire                       reset_action_d_i         ; // decoupling
-  wire                       lite_snap2conv_bready_i  ; // decoupling
-  wire                       lite_snap2conv_rready_i  ; // decoupling
-  wire                       lite_snap2conv_awvalid_i ; // decoupling
-  wire                       lite_snap2conv_wvalid_i  ; // decoupling
-  wire                       lite_snap2conv_arvalid_i ; // decoupling
+  wire                       reset_action_d_dcpl         ; // decoupling
 
   wire                       lite_conv2snap_awready ;
   wire                       lite_conv2snap_wready  ;
   wire [1:0]                 lite_conv2snap_bresp   ;
   wire                       lite_conv2snap_bvalid  ;
   wire                       lite_conv2snap_arready ;
-  wire [`AXI_LITE_DW-1:0]     lite_conv2snap_rdata   ;
+  wire [`AXI_LITE_DW-1:0]    lite_conv2snap_rdata   ;
   wire [1:0]                 lite_conv2snap_rresp   ;
   wire                       lite_conv2snap_rvalid  ;
-
-  wire                       lite_conv2snap_awready_i ; // decoupling
-  wire                       lite_conv2snap_wready_i  ; // decoupling
-  wire                       lite_conv2snap_arready_i ; // decoupling
-  wire                       lite_conv2snap_bvalid_i  ; // decoupling
-  wire                       lite_conv2snap_rvalid_i  ; // decoupling
 
   wire                       mm_snap2conv_awready   ;
   wire                       mm_snap2conv_wready    ;
@@ -384,13 +398,13 @@ module framework_afu (
   // // Interface for interrupts
   wire                       int_req_ack     ;
   wire                       int_req         ;
-  wire [`INT_BITS-1:0]        int_src         ;
-  wire [`CTXW-1:0]            int_ctx         ;
-  wire                       int_req_ack_i     ; // decoupling
-  wire                       int_req_i         ; // decoupling
-  wire [`INT_BITS-1:0]        int_src_i         ; // decoupling
-  wire [`CTXW-1:0]            int_ctx_i         ; // decoupling
-  wire                        ocde_to_bsp       ; // decoupling
+  wire [`INT_BITS-1:0]       int_src         ;
+  wire [`CTXW-1:0]           int_ctx         ;
+  wire                       int_req_ack_dcpl  ; // decoupling
+  wire                       int_req_dcpl      ; // decoupling
+  wire [`INT_BITS-1:0]       int_src_dcpl      ; // decoupling
+  wire [`CTXW-1:0]           int_ctx_dcpl      ; // decoupling
+  wire                       ocde_to_bsp       ; // decoupling
 
 `ifdef ENABLE_ODMA
     `ifndef ENABLE_ODMA_ST_MODE
@@ -604,6 +618,7 @@ module framework_afu (
 
   // Source 3: from MMIO_register
   wire soft_reset_action;
+  wire soft_decouple_action;
 
 
   //----------------------------------
@@ -799,6 +814,7 @@ module framework_afu (
       //
       // misc
       .soft_reset_action                ( soft_reset_action               ) ,//output
+      .soft_decouple_action             ( soft_decouple_action            ) ,//output      
 
 
 `ifndef ENABLE_ODMA
@@ -823,8 +839,6 @@ module framework_afu (
       .lite_conv2snap_rdata             (lite_conv2snap_rdata             ),
       .lite_conv2snap_rresp             (lite_conv2snap_rresp             ),
       .lite_conv2snap_rvalid            (lite_conv2snap_rvalid            ),
-
-
 
       .mm_snap2conv_awready             (mm_snap2conv_awready             ), // output
       .mm_snap2conv_wready              (mm_snap2conv_wready              ),
@@ -980,18 +994,250 @@ module framework_afu (
     );  // snap_core_i: snap_core
 
 
+`ifndef ENABLE_ODMA
+// ---------------------------------------------------------------------------------
+// Match one master to two slaves
+// ---------------------------------------------------------------------------------
+// MMIO is master and allows to access ACTION or ICAP
+// ACTION is accessed from 0x000 to 0x1FF - to access ACTION @104 => access MMIO @104
+// ICAP   is accessed from 0xE00 to 0xFFF - to access   ICAP @104 => access MMIO @F04
+
+reg                    reg_lite_conv2snap_awready;
+reg                    reg_lite_conv2snap_wready;
+reg  [1:0]             reg_lite_conv2snap_bresp;
+reg                    reg_lite_conv2snap_bvalid;
+reg                    reg_lite_conv2snap_arready;
+reg  [1:0]             reg_lite_conv2snap_rresp;
+reg                    reg_lite_conv2snap_rvalid;
+reg [`AXI_LITE_AW-1:0] reg_lite_conv2snap_rdata;
+
+wire                    lite_action2snap_awready;
+wire                    lite_action2snap_wready;
+wire [0:1]              lite_action2snap_bresp;
+wire                    lite_action2snap_bvalid;
+wire                    lite_action2snap_arready;
+wire [1:0]              lite_action2snap_rresp;
+wire [`AXI_LITE_AW-1:0] lite_action2snap_rdata;
+wire                    lite_action2snap_rvalid;
+wire [`AXI_LITE_AW-1:0] ZERO_VEC = `AXI_LITE_AW'd0;
+
+wire [`AXI_LITE_AW-1:0] lite_snap2action_awaddr;
+wire [2:0]              lite_snap2action_awprot;
+wire                    lite_snap2action_awvalid;
+wire [`AXI_LITE_DW-1:0] lite_snap2action_wdata;
+wire [3:0]              lite_snap2action_wstrb;
+wire                    lite_snap2action_wvalid;
+wire                    lite_snap2action_bready;
+wire [`AXI_LITE_AW-1:0] lite_snap2action_araddr;
+wire [2:0]              lite_snap2action_arprot;
+wire                    lite_snap2action_arvalid;
+wire                    lite_snap2action_rready;
+
+(* mark_debug = "TRUE" *) reg decouple_action;
+
+ always @(posedge(clock_tlx)) 
+   if (soft_decouple_action == 1'b1)
+      decouple_action <= 1'b1;
+   else
+      decouple_action <= decouple;
+      
+      
+`ifdef ENABLE_PRFLOW
+wire [`AXI_LITE_AW-1:0]   reg_lite_snap2icap_awaddr;
+wire [2:0]                reg_lite_snap2icap_awprot;
+wire                      reg_lite_snap2icap_awvalid;
+wire [`AXI_LITE_DW-1:0]   reg_lite_snap2icap_wdata;
+wire [3:0]                reg_lite_snap2icap_wstrb;
+wire                      reg_lite_snap2icap_wvalid;
+wire                      reg_lite_snap2icap_bready;
+wire [`AXI_LITE_AW-1:0]   reg_lite_snap2icap_araddr;
+wire [2:0]                reg_lite_snap2icap_arprot;
+wire                      reg_lite_snap2icap_arvalid;
+wire                      reg_lite_snap2icap_rready;
+
+wire                      reg_lite_icap2snap_awready;
+wire                      reg_lite_icap2snap_wready;
+wire [1:0]                reg_lite_icap2snap_bresp;
+wire                      reg_lite_icap2snap_bvalid;
+wire                      reg_lite_icap2snap_arready;
+wire [`AXI_LITE_DW-1:0]   reg_lite_icap2snap_rdata;
+wire [1:0]                reg_lite_icap2snap_rresp;
+wire                      reg_lite_icap2snap_rvalid;
+
+
+(* mark_debug = "TRUE" *) wire select_icap;
+
+ // user registers from 0x0 to 0x1F - use ICAP above (from 0x20 to 0xEF) => 3MSB set to "111"
+ assign select_icap = soft_decouple_action;
+            
+//To ICAP
+assign reg_lite_snap2icap_awaddr[`AXI_LITE_AW-1:0]  = (select_icap == 1'b1) ? {20'b00000000000000000000, lite_snap2conv_awaddr[11:0]}  :  ZERO_VEC;
+assign reg_lite_snap2icap_awprot[2:0]               = lite_snap2conv_awprot[2:0]  ;
+assign reg_lite_snap2icap_awvalid                   = (select_icap == 1'b1) ? lite_snap2conv_awvalid : 1'b0;
+assign reg_lite_snap2icap_wdata[`AXI_LITE_DW-1:0]   = lite_snap2conv_wdata[`AXI_LITE_DW-1:0]        ;
+assign reg_lite_snap2icap_wstrb[3:0]                = lite_snap2conv_wstrb[3:0]             ;
+assign reg_lite_snap2icap_wvalid                    = (select_icap == 1'b1) ? lite_snap2conv_wvalid  : 1'b0;
+assign reg_lite_snap2icap_bready                    = lite_snap2conv_bready         ;
+assign reg_lite_snap2icap_araddr[`AXI_LITE_AW-1:0]  = (select_icap == 1'b1) ? {20'b00000000000000000000, lite_snap2conv_araddr[11:0]} :  ZERO_VEC;
+assign reg_lite_snap2icap_arprot[2:0]               = lite_snap2conv_arprot[2:0]         ;
+assign reg_lite_snap2icap_arvalid                   = (select_icap == 1'b1) ? lite_snap2conv_arvalid : 1'b0;
+assign reg_lite_snap2icap_rready                    = lite_snap2conv_rready           ;
+
+// Signals from ICAP or ACTION to SNAP logic 
+always @(*)  // conv2snap means signals from Action to snap logic
+  case (select_icap)
+    1'b0: begin  //ACTION
+             reg_lite_conv2snap_awready = (~decouple_action) & lite_action2snap_awready;
+             reg_lite_conv2snap_wready  = (~decouple_action) & lite_action2snap_wready;
+             reg_lite_conv2snap_bresp   = {2{lite_action2snap_bresp}};
+             reg_lite_conv2snap_bvalid  = (~decouple_action) & lite_action2snap_bvalid;
+             reg_lite_conv2snap_arready = (~decouple_action) & lite_action2snap_arready;
+             reg_lite_conv2snap_rdata   = lite_action2snap_rdata;
+             reg_lite_conv2snap_rresp   = {2{lite_action2snap_rresp}};
+             reg_lite_conv2snap_rvalid  = (~decouple_action) & lite_action2snap_rvalid;
+            end
+    1'b1: begin //ICAP
+             reg_lite_conv2snap_awready = reg_lite_icap2snap_awready;
+             reg_lite_conv2snap_wready  = reg_lite_icap2snap_wready;
+             reg_lite_conv2snap_bresp   = {2{reg_lite_icap2snap_bresp}};
+             reg_lite_conv2snap_bvalid  = reg_lite_icap2snap_bvalid;
+             reg_lite_conv2snap_arready = reg_lite_icap2snap_arready;
+             reg_lite_conv2snap_rdata   = reg_lite_icap2snap_rdata;
+             reg_lite_conv2snap_rresp   = {2{reg_lite_icap2snap_rresp}};
+             reg_lite_conv2snap_rvalid  = reg_lite_icap2snap_rvalid;
+           end
+    default: begin
+             reg_lite_conv2snap_awready = 1'b1;
+             reg_lite_conv2snap_wready  = 1'b1;
+             reg_lite_conv2snap_bresp   = 2'b11;   // DECode ERRor
+             reg_lite_conv2snap_bvalid  = 1'b0;
+             reg_lite_conv2snap_arready = 1'b1;
+             reg_lite_conv2snap_rdata   = 32'h0000_0000;
+             reg_lite_conv2snap_rresp   = 2'b00;
+             reg_lite_conv2snap_rvalid  = 1'b0;
+           end
+  endcase
+  
+
+// Clock conversion for signals going from here to ICAP which is in TLX clock domain
+axi_clock_converter_icapusr clkconverter_icapusr (
+  .s_axi_aclk     (clock_afu                       ),        // input wire s_axi_aclk
+  .s_axi_aresetn  (~input_reset_q              ),  // input wire s_axi_aresetn
+  
+  .s_axi_awaddr   (reg_lite_snap2icap_awaddr  ),    // input wire [31 : 0] s_axi_awaddr
+  .s_axi_awprot   (reg_lite_snap2icap_awprot  ),    // input wire [2 : 0] s_axi_awprot
+  .s_axi_awvalid  (reg_lite_snap2icap_awvalid ),  // input wire s_axi_awvalid
+  .s_axi_awready  (reg_lite_icap2snap_awready ),  // output wire s_axi_awready
+  .s_axi_wdata    (reg_lite_snap2icap_wdata   ),      // input wire [31 : 0] s_axi_wdata
+  .s_axi_wstrb    (reg_lite_snap2icap_wstrb   ),      // input wire [3 : 0] s_axi_wstrb
+  .s_axi_wvalid   (reg_lite_snap2icap_wvalid  ),    // input wire s_axi_wvalid
+  .s_axi_wready   (reg_lite_icap2snap_wready  ),    // output wire s_axi_wready
+  .s_axi_bresp    (reg_lite_icap2snap_bresp   ),      // output wire [1 : 0] s_axi_bresp
+  .s_axi_bvalid   (reg_lite_icap2snap_bvalid  ),    // output wire s_axi_bvalid
+  .s_axi_bready   (reg_lite_snap2icap_bready  ),    // input wire s_axi_bready
+  .s_axi_araddr   (reg_lite_snap2icap_araddr  ),    // input wire [31 : 0] s_axi_araddr
+  .s_axi_arprot   (reg_lite_snap2icap_arprot  ),    // input wire [2 : 0] s_axi_arprot
+  .s_axi_arvalid  (reg_lite_snap2icap_arvalid ),  // input wire s_axi_arvalid
+  .s_axi_arready  (reg_lite_icap2snap_arready ),  // output wire s_axi_arready
+  .s_axi_rdata    (reg_lite_icap2snap_rdata   ),      // output wire [31 : 0] s_axi_rdata
+  .s_axi_rresp    (reg_lite_icap2snap_rresp   ),      // output wire [1 : 0] s_axi_rresp
+  .s_axi_rvalid   (reg_lite_icap2snap_rvalid  ),    // output wire s_axi_rvalid
+  .s_axi_rready   (reg_lite_snap2icap_rready  ),    // input wire s_axi_rready
+  
+  .m_axi_aclk     (clock_tlx                  ),        // input wire m_axi_aclk
+  .m_axi_aresetn  (~input_reset_d            ),  // input wire m_axi_aresetn
+  .m_axi_awaddr   (lite_snap2icap_awaddr      ),    // output wire [31 : 0] m_axi_awaddr
+  .m_axi_awprot   (lite_snap2icap_awprot      ),    // output wire [2 : 0] m_axi_awprot
+  .m_axi_awvalid  (lite_snap2icap_awvalid     ),  // output wire m_axi_awvalid
+  .m_axi_awready  (lite_icap2snap_awready     ),  // input wire m_axi_awready
+  .m_axi_wdata    (lite_snap2icap_wdata       ),      // output wire [31 : 0] m_axi_wdata
+  .m_axi_wstrb    (lite_snap2icap_wstrb       ),      // output wire [3 : 0] m_axi_wstrb
+  .m_axi_wvalid   (lite_snap2icap_wvalid      ),    // output wire m_axi_wvalid
+  .m_axi_wready   (lite_icap2snap_wready      ),    // input wire m_axi_wready
+  .m_axi_bresp    (lite_icap2snap_bresp       ),      // input wire [1 : 0] m_axi_bresp
+  .m_axi_bvalid   (lite_icap2snap_bvalid      ),    // input wire m_axi_bvalid
+  .m_axi_bready   (lite_snap2icap_bready      ),    // output wire m_axi_bready
+  .m_axi_araddr   (lite_snap2icap_araddr      ),    // output wire [31 : 0] m_axi_araddr
+  .m_axi_arprot   (lite_snap2icap_arprot      ),    // output wire [2 : 0] m_axi_arprot
+  .m_axi_arvalid  (lite_snap2icap_arvalid     ),  // output wire m_axi_arvalid
+  .m_axi_arready  (lite_icap2snap_arready     ),  // input wire m_axi_arready
+  .m_axi_rdata    (lite_icap2snap_rdata       ),      // input wire [31 : 0] m_axi_rdata
+  .m_axi_rresp    (lite_icap2snap_rresp       ),      // input wire [1 : 0] m_axi_rresp
+  .m_axi_rvalid   (lite_icap2snap_rvalid      ),    // input wire m_axi_rvalid
+  .m_axi_rready   (lite_snap2icap_rready      )    // output wire m_axi_rready
+);
+
+`else   // else of ENABLE_PRFLOW
+
+// Signals from ACTION to SNAP logic 
+always @(*)  // conv2snap means signals from Action to snap logic
+    begin
+      reg_lite_conv2snap_awready               <= (~decouple_action) & lite_action2snap_awready;
+      reg_lite_conv2snap_wready                <= (~decouple_action) & lite_action2snap_wready;
+      reg_lite_conv2snap_bresp                 <= {2{lite_action2snap_bresp}};
+      reg_lite_conv2snap_bvalid                <= (~decouple_action) & lite_action2snap_bvalid;
+      reg_lite_conv2snap_arready               <= (~decouple_action) & lite_action2snap_arready;
+      reg_lite_conv2snap_rdata                 <= lite_action2snap_rdata;
+      reg_lite_conv2snap_rresp                 <= {2{lite_action2snap_rresp}};
+      reg_lite_conv2snap_rvalid                <= (~decouple_action) & lite_action2snap_rvalid;
+    end
+
+`endif // end of ENABLE_PRFLOW
+
+//TO ACTION
+assign lite_snap2action_awaddr[`AXI_LITE_AW-1:0]    = {23'b00000000000000000000000, lite_snap2conv_awaddr[8:0]};
+assign lite_snap2action_awprot[2:0]                 = lite_snap2conv_awprot[2:0]           ;
+assign lite_snap2action_awvalid                     = (~decouple_action) & lite_snap2conv_awvalid;
+assign lite_snap2action_wdata[`AXI_LITE_DW-1:0]     = lite_snap2conv_wdata[`AXI_LITE_DW-1:0]            ;
+assign lite_snap2action_wstrb[3:0]                  = lite_snap2conv_wstrb[3:0]             ;
+assign lite_snap2action_wvalid                      = (~decouple_action) & lite_snap2conv_wvalid;
+assign lite_snap2action_bready                      = (~decouple_action) & lite_snap2conv_bready            ;
+assign lite_snap2action_araddr[`AXI_LITE_DW-1:0]    = {23'b00000000000000000000000, lite_snap2conv_araddr[8:0]};
+assign lite_snap2action_arprot[2:0]                 = lite_snap2conv_arprot[2:0]         ;
+assign lite_snap2action_arvalid                     = (~decouple_action) & lite_snap2conv_arvalid;
+assign lite_snap2action_rready                      = (~decouple_action) & lite_snap2conv_rready          ;
+
+// Signals from action or ICAP back to the snap logic 
+assign lite_conv2snap_awready                       = reg_lite_conv2snap_awready;
+assign lite_conv2snap_wready                        = reg_lite_conv2snap_wready;
+assign lite_conv2snap_bresp                         = reg_lite_conv2snap_bresp;
+assign lite_conv2snap_bvalid                        = reg_lite_conv2snap_bvalid;
+assign lite_conv2snap_arready                       = reg_lite_conv2snap_arready;
+assign lite_conv2snap_rresp                         = reg_lite_conv2snap_rresp;
+assign lite_conv2snap_rvalid                        = reg_lite_conv2snap_rvalid;
+assign lite_conv2snap_rdata                         = reg_lite_conv2snap_rdata;
+
+
+`endif // end of ENABLE_ODMA
+
+  // // ******************************************************************************
+  // // IO AXI-Lite Decoupling Logic
+  // // ******************************************************************************
+  
+  // Decoupling ocde signal coming from dynamic logic to ensure stability of the signal during PR
+  // ocde IO is by card design in dynamic zone and needs to stay at '1' when decouple is active
+  assign ocde_to_bsp_dcpl                   =  decouple_action | ocde_to_bsp        ;
+  
+  assign int_req                            =  (~decouple_action) & int_req_dcpl                  ;
+  assign int_src                            =  decouple_action ? `INT_BITS'b0 : int_src_dcpl      ;
+  assign int_ctx                            =  decouple_action ? `CTXW'b0     : int_ctx_dcpl      ;
+  assign int_req_ack_dcpl                   =  (~decouple_action) & int_req_ack                   ;
+
+  assign reset_action_d_dcpl                =  decouple_action  | reset_action_d                  ; // reset is active when decouple
+
+
   // // ******************************************************************************
   // // Action core logic 
   // // ******************************************************************************
   oc_action_core action_core_i ( 
       .clock_afu       ( clock_afu                ) ,
-      .reset_action_d  ( reset_action_d_i         ) ,
+      .reset_action_d  ( reset_action_d_dcpl      ) ,
       .ocde            ( ocde                     ) ,  //connected from top-level port
       .ocde_to_bsp     ( ocde_to_bsp              ) ,
-      .int_req_ack     ( int_req_ack_i            ) , // input
-      .int_req         ( int_req_i                ) , // output
-      .int_src         ( int_src_i                ) , // output
-      .int_ctx         ( int_ctx_i                ) ,  // output
+      .int_req_ack     ( int_req_ack_dcpl         ) , // input
+      .int_req         ( int_req_dcpl             ) , // output
+      .int_src         ( int_src_dcpl             ) , // output
+      .int_ctx         ( int_ctx_dcpl             ) ,  // output
       
   `ifdef ENABLE_DDR 
     `ifdef AD9V3
@@ -1078,25 +1324,25 @@ module framework_afu (
    `endif
     
   // // Convertors for AXI Lite Path
-      .s_axil_awaddr   ( lite_snap2conv_awaddr  ) ,
-      .s_axil_awprot   ( lite_snap2conv_awprot  ) ,
-      .s_axil_awvalid  ( lite_snap2conv_awvalid_i ) ,
-      .s_axil_awready  ( lite_conv2snap_awready_i ) ,
-      .s_axil_wdata    ( lite_snap2conv_wdata   ) ,
-      .s_axil_wstrb    ( lite_snap2conv_wstrb   ) ,
-      .s_axil_wvalid   ( lite_snap2conv_wvalid_i  ) ,
-      .s_axil_wready   ( lite_conv2snap_wready_i  ) ,
-      .s_axil_bresp    ( lite_conv2snap_bresp   ) ,
-      .s_axil_bvalid   ( lite_conv2snap_bvalid_i  ) ,
-      .s_axil_bready   ( lite_snap2conv_bready_i  ) ,
-      .s_axil_araddr   ( lite_snap2conv_araddr  ) ,
-      .s_axil_arprot   ( lite_snap2conv_arprot  ) ,
-      .s_axil_arvalid  ( lite_snap2conv_arvalid_i ) ,
-      .s_axil_arready  ( lite_conv2snap_arready_i ) ,
-      .s_axil_rdata    ( lite_conv2snap_rdata   ) ,
-      .s_axil_rresp    ( lite_conv2snap_rresp   ) ,
-      .s_axil_rvalid   ( lite_conv2snap_rvalid_i  ) ,
-      .s_axil_rready   ( lite_snap2conv_rready_i  ) ,
+      .s_axil_awaddr   ( lite_snap2action_awaddr  ) ,
+      .s_axil_awprot   ( lite_snap2action_awprot  ) ,
+      .s_axil_awvalid  ( lite_snap2action_awvalid ) ,
+      .s_axil_awready  ( lite_action2snap_awready ) ,
+      .s_axil_wdata    ( lite_snap2action_wdata   ) ,
+      .s_axil_wstrb    ( lite_snap2action_wstrb   ) ,
+      .s_axil_wvalid   ( lite_snap2action_wvalid  ) ,
+      .s_axil_wready   ( lite_action2snap_wready  ) ,
+      .s_axil_bresp    ( lite_action2snap_bresp   ) ,
+      .s_axil_rdata    ( lite_action2snap_rdata   ) ,
+      .s_axil_rresp    ( lite_action2snap_rresp   ) ,
+      .s_axil_bvalid   ( lite_action2snap_bvalid  ) ,
+      .s_axil_bready   ( lite_snap2action_bready  ) ,
+      .s_axil_araddr   ( lite_snap2action_araddr  ) ,
+      .s_axil_arprot   ( lite_snap2action_arprot  ) ,
+      .s_axil_arvalid  ( lite_snap2action_arvalid ) ,
+      .s_axil_arready  ( lite_action2snap_arready ) ,
+      .s_axil_rvalid   ( lite_action2snap_rvalid  ) ,
+      .s_axil_rready   ( lite_snap2action_rready  ) ,
   // // Convertors for AXI MM Data Path
       // TO SNAP
       .m_aximm_araddr                       ( mm_conv2snap_araddr   ) ,
@@ -1148,47 +1394,21 @@ module framework_afu (
       .act_axi_card_mem0_apb_pclk           (act_axi_card_mem0_apb_pclk)
  ) ;
 
-  // // ******************************************************************************
-  // // IO AXI-Lite Decoupling Logic
-  // // ******************************************************************************
-  
-  // Decoupling ocde signal coming from dynamic logic to ensure stability of the signal during PR
-  assign ocde_to_bsp_dcpl                   =  decouple | ocde_to_bsp                      ;
-  
-  assign int_req                            =  (~decouple) & int_req_i                     ;
-  assign int_src                            =  decouple ? `INT_BITS'b0 : int_src_i         ;
-  assign int_ctx                            =  decouple ? `CTXW'b0     : int_ctx_i         ;
-  assign int_req_ack_i                      =  (~decouple) & int_req_ack                   ;
-  
-  assign reset_action_d_i                   =  decouple  | reset_action_d                  ; // reset is active when decouple
-  assign lite_snap2conv_awvalid_i           = (~decouple) & lite_snap2conv_awvalid         ; //def 0
-  assign lite_snap2conv_wvalid_i            = (~decouple) & lite_snap2conv_wvalid          ; //def 0
-  assign lite_snap2conv_arvalid_i           = (~decouple) & lite_snap2conv_arvalid         ; //def 0
-  assign lite_snap2conv_bready_i            = (~decouple) & lite_snap2conv_bready          ; //def 1
-  assign lite_snap2conv_rready_i            = (~decouple) & lite_snap2conv_rready          ; //def 0<<<<
-
-  assign lite_conv2snap_bvalid          = (~decouple) & lite_conv2snap_bvalid_i            ; //def 0
-  assign lite_conv2snap_rvalid          = (~decouple) & lite_conv2snap_rvalid_i            ; //def 0
-  assign lite_conv2snap_awready         = (~decouple) & lite_conv2snap_awready_i           ; //def 1
-  assign lite_conv2snap_wready          = (~decouple) & lite_conv2snap_wready_i            ; //def 0<<<<
-  assign lite_conv2snap_arready         = (~decouple) & lite_conv2snap_arready_i           ; //def 1
-
-
   
   // // ******************************************************************************
   // // IO AXI-MM Decoupling Logic
   // // ******************************************************************************
-  assign mm_snap2conv_awready_i                = (~decouple) & mm_snap2conv_awready            ; //def 1
-  assign mm_snap2conv_wready_i                 = (~decouple) & mm_snap2conv_wready             ; //def 1
-  assign mm_snap2conv_arready_i                = (~decouple) & mm_snap2conv_arready            ; //def 1
-  assign mm_snap2conv_bvalid_i                 = (~decouple) & mm_snap2conv_bvalid             ; //def 0
-  assign mm_snap2conv_rvalid_i                 = (~decouple) & mm_snap2conv_rvalid             ; //def 0
+  assign mm_snap2conv_awready_i                = (~decouple_action) & mm_snap2conv_awready            ; //def 1
+  assign mm_snap2conv_wready_i                 = (~decouple_action) & mm_snap2conv_wready             ; //def 1
+  assign mm_snap2conv_arready_i                = (~decouple_action) & mm_snap2conv_arready            ; //def 1
+  assign mm_snap2conv_bvalid_i                 = (~decouple_action) & mm_snap2conv_bvalid             ; //def 0
+  assign mm_snap2conv_rvalid_i                 = (~decouple_action) & mm_snap2conv_rvalid             ; //def 0
 
-  assign mm_conv2snap_bready               = (~decouple) & mm_conv2snap_bready_i               ; //def 1
-  assign mm_conv2snap_rready               = (~decouple) & mm_conv2snap_rready_i               ; //def 1
-  assign mm_conv2snap_awvalid              = (~decouple) & mm_conv2snap_awvalid_i              ; //def 0
-  assign mm_conv2snap_wvalid               = (~decouple) & mm_conv2snap_wvalid_i               ; //def 0
-  assign mm_conv2snap_arvalid              = (~decouple) & mm_conv2snap_arvalid_i              ; //def 0
+  assign mm_conv2snap_bready               = (~decouple_action) & mm_conv2snap_bready_i               ; //def 1
+  assign mm_conv2snap_rready               = (~decouple_action) & mm_conv2snap_rready_i               ; //def 1
+  assign mm_conv2snap_awvalid              = (~decouple_action) & mm_conv2snap_awvalid_i              ; //def 0
+  assign mm_conv2snap_wvalid               = (~decouple_action) & mm_conv2snap_wvalid_i               ; //def 0
+  assign mm_conv2snap_arvalid              = (~decouple_action) & mm_conv2snap_arvalid_i              ; //def 0
 
 
 

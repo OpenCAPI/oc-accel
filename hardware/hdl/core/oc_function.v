@@ -265,6 +265,32 @@ module oc_function (
 `endif
 `endif
 
+// in Cloud mode / PRFLOW we need to give access to ICAP to the user (w/o sudo) 
+`ifndef ENABLE_ODMA
+`ifdef ENABLE_PRFLOW
+  , output [`AXI_LITE_AW-1:0]   mmio2icap_awaddr
+  , output [2:0]                mmio2icap_awprot
+  , output                      mmio2icap_awvalid
+  , output [`AXI_LITE_DW-1:0]   mmio2icap_wdata
+  , output [3:0]                mmio2icap_wstrb
+  , output                      mmio2icap_wvalid
+  , output                      mmio2icap_bready
+  , output [`AXI_LITE_AW-1:0]   mmio2icap_araddr
+  , output [2:0]                mmio2icap_arprot
+  , output                      mmio2icap_arvalid
+  , output                      mmio2icap_rready
+
+  , input                       icap2mmio_awready
+  , input                       icap2mmio_wready
+  , input [1:0]                 icap2mmio_bresp
+  , input                       icap2mmio_bvalid
+  , input                       icap2mmio_arready
+  , input [`AXI_LITE_DW-1:0]    icap2mmio_rdata
+  , input [1:0]                 icap2mmio_rresp
+  , input                       icap2mmio_rvalid
+`endif
+`endif
+
 `ifdef ENABLE_9H3_LED
      , output                 user_led_a0
      , output                 user_led_a1
@@ -574,7 +600,32 @@ framework_afu  fw_afu
       .gt_tx_gt_port_3_p ( gt_tx_gt_port_3_p  ),
    `endif
    `endif
+   // in Cloud mode / PRFLOW we need to give access to ICAP to the user (w/o sudo) 
+   `ifndef ENABLE_ODMA
+   `ifdef ENABLE_PRFLOW
+      .lite_snap2icap_awaddr            (mmio2icap_awaddr            ), // output
+      .lite_snap2icap_awprot            (mmio2icap_awprot            ),
+      .lite_snap2icap_awvalid           (mmio2icap_awvalid           ),
+      .lite_snap2icap_wdata             (mmio2icap_wdata             ),
+      .lite_snap2icap_wstrb             (mmio2icap_wstrb             ),
+      .lite_snap2icap_wvalid            (mmio2icap_wvalid            ),
+      .lite_snap2icap_bready            (mmio2icap_bready            ),
+      .lite_snap2icap_araddr            (mmio2icap_araddr            ),
+      .lite_snap2icap_arprot            (mmio2icap_arprot            ),
+      .lite_snap2icap_arvalid           (mmio2icap_arvalid           ),
+      .lite_snap2icap_rready            (mmio2icap_rready            ),
 
+
+      .lite_icap2snap_awready           (icap2mmio_awready           ), // input
+      .lite_icap2snap_wready            (icap2mmio_wready            ),
+      .lite_icap2snap_bresp             (icap2mmio_bresp             ),
+      .lite_icap2snap_bvalid            (icap2mmio_bvalid            ),
+      .lite_icap2snap_arready           (icap2mmio_arready           ),
+      .lite_icap2snap_rdata             (icap2mmio_rdata             ),
+      .lite_icap2snap_rresp             (icap2mmio_rresp             ),
+      .lite_icap2snap_rvalid            (icap2mmio_rvalid            ),
+   `endif
+   `endif
    `ifdef ENABLE_9H3_LED
       .user_led_a0     ( user_led_a0        ),
       .user_led_a1     ( user_led_a1        ),

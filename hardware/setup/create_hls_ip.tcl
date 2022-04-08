@@ -39,7 +39,7 @@ if { [file exists $hls_action_src] == 1 } {
   # Project IP Settings
   # General
   set_property target_language VHDL [current_project]
-  set_property target_simulator IES [current_project]
+  #set_property target_simulator IES [current_project]
 
   # HLS IPs
   set tcl_exists [exec find $hls_action_src/ -name *.tcl]

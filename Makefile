@@ -59,7 +59,7 @@ help:
 	@echo "* cloud_base     Partial Reconfiguration: synthesize the top (static zone)";
 	@echo "*                 This command can be splitted into 4 steps:";
 	@echo "*                   'make oc_pr_synth_action' + 'make oc_pr_synth_static' and then"; 
-	@echo "*                   'make oc_pr_route_static' + 'make oc_pr_image'";
+	@echo "*                   'make oc_pr_route_static' (calling 'make oc_pr_image')";
 	@echo "*                   Full binary images will be generated for Flash + partial for FPGA";
 	@echo "* cloud_action   Partial Reconfiguration: synthesize the action (dynamic zone)";
 	@echo "*                 (can be splitted into 3 steps: (after a 'make cloud_base' run)";

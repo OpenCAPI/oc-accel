@@ -746,7 +746,7 @@ module brdg_wr_order_mng_array
 
     always@(posedge clk or negedge rst_n)
     begin
-        if(rst_n)
+        if(~rst_n)
             ret_idle_counter <= 32'b0;
         else if(ret_valid && ret_ready)
             ret_idle_counter <= 32'b0;
