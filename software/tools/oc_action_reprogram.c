@@ -487,21 +487,21 @@ int main (int argc, char* argv[])
     char answer;
     // read PR code in the FPGA code
     read_value = snap_read64 (mctx->handle, GLB_REG_PRC);
-    sprintf(str, "_PR%3lx", read_value);
+    sprintf(str, "_PR%.3lx", read_value);
  
     // compare with PR code in file name
     ret = strstr(binfile, str);
     if(ret) {
-        printf(" PR code match (PR%3lx). Programming continues safely\n", read_value);
+        printf(" PR code match (PR%.3lx). Programming continues safely\n", read_value);
 	printf("\e[1m Do you want to continue (y/n): \033[0m");
 	scanf (" %c", &answer);
 	if (answer == 'y' || answer == 'Y')
         	rc = dynamic_reprogramming(mctx->handle, binfile);
 
     } else {
-        printf("\e[31mERROR: \033[0m The given file doesn't contain a code compatible with this FPGA (PR%3lx code based)!\n", read_value );
+        printf("\e[31mERROR: \033[0m The given file doesn't contain a code compatible with this FPGA (PR%.3lx code based)!\n", read_value );
         printf("       Option 1: Check that you are targeting the card in the right slot. Didn't you forget the '-C' argument?!\n");
-        printf("       Option 2: Use a partial.bin file containing PR%3lx or regenerate the code!\n", read_value );
+        printf("       Option 2: Use a partial.bin file containing PR%.3lx or regenerate the code!\n", read_value );
         printf("       Option 3: Reflash the FPGA base code with a code compatible with your action code\n");
     }
 
