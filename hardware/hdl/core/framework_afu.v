@@ -1208,7 +1208,6 @@ assign lite_conv2snap_rvalid                        = reg_lite_conv2snap_rvalid;
 assign lite_conv2snap_rdata                         = reg_lite_conv2snap_rdata;
 
 
-`endif // end of ENABLE_ODMA
 
   // // ******************************************************************************
   // // IO AXI-Lite Decoupling Logic
@@ -1224,6 +1223,8 @@ assign lite_conv2snap_rdata                         = reg_lite_conv2snap_rdata;
   assign int_req_ack_dcpl                   =  (~decouple_action) & int_req_ack                   ;
 
   assign reset_action_d_dcpl                =  decouple_action  | reset_action_d                  ; // reset is active when decouple
+
+`endif  // end of ENABLE_ODMA
 
 
   // // ******************************************************************************

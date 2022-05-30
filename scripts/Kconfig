@@ -829,7 +829,7 @@ config ILA_DEBUG
 
 config ERASE_BASE_BIN_FILES
 	string
-	depends on ENABLE_PRFLOW
+	depends on ENABLE_PRFLOW && !ENABLE_ILA
 	default "TRUE" 
 
 
