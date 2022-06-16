@@ -84,13 +84,6 @@ struct mdev_ctx {
 
 static struct mdev_ctx        master_ctx;
 
-#define MODE_SHOW_ACTION  0x0001
-#define MODE_SHOW_NVME    0x0002
-#define MODE_SHOW_CARD    0x0004
-#define MODE_SHOW_SDRAM   0x0008
-#define MODE_SHOW_DMA_ALIGN 0x00010
-#define MODE_SHOW_DMA_MIN   0x00020
-
 /*
  * Open AFU Master Device
  */
@@ -219,7 +212,7 @@ static void snap_write32 (void* handle, uint32_t addr, uint32_t data)
 #define GLB_REG_SCR   0x00000010       /* */
 #define GLB_REG_PRC   0x00000060       /* */
 
-static int dynamic_reprogramming (void* handle, char *binfile)
+static int dynamic_reprogramming (void* handle, char *binfile, bool quiet)
 {
     int rc = 0;
 
@@ -243,12 +236,12 @@ static int dynamic_reprogramming (void* handle, char *binfile)
   // Working on the partial bin file
   //printf("Opening PR bin file: %s\n", binfile);
   if ((BIN = open(binfile, O_RDONLY)) < 0) {
-    printf("\e[31mERROR:\033[0m Can not open %s\n",binfile);
+    if (!quiet) printf("\e[31mERROR:\033[0m Can not open %s\n",binfile);
     exit(-1);
   }
 
   if (stat(binfile, &tempstat) != 0) {
-    fprintf(stderr, "Cannot determine size of %s: %s\n", binfile, strerror(errno));
+     if (!quiet) fprintf(stderr, "Cannot determine size of %s: %s\n", binfile, strerror(errno));
     exit(-1);
   } else {
     fsize = tempstat.st_size;
@@ -282,11 +275,11 @@ static int dynamic_reprogramming (void* handle, char *binfile)
   //      num_burst, icap_burst_size, num_package_lastburst);
 
   spt = time(NULL);
-  printf("___________________________________________________________________________\n");
+  if (!quiet) printf("___________________________________________________________________________\n");
   for(i=0;i<num_burst;i++) {
     percentage = (int)(i*100/num_burst);
     if( ((percentage %5) == 0) && (prev_percentage != percentage)) {
-       printf("\e[1m  Writing\e[0m partial image code : \e[1m%d\e[0m %% of %d pages                        \r", percentage, num_burst);
+       if (!quiet) printf("\e[1m  Writing\e[0m partial image code : \e[1m%d\e[0m %% of %d pages                        \r", percentage, num_burst);
        fflush(stdout);
     }
     for (j=0;j<icap_burst_size;j++) {
@@ -349,8 +342,10 @@ static int dynamic_reprogramming (void* handle, char *binfile)
   
   ept = time(NULL);
   ept = ept - spt;
-  printf("\e[1m Partial reprogramming  \033[1mcompleted\033[0m ok in   %d seconds\e[0m           \n", (int)ept);
-  printf("___________________________________________________________________________\n");
+  if (!quiet) {
+    printf("\e[1m Partial reprogramming  \033[1mcompleted\033[0m ok in   %d seconds\e[0m           \n", (int)ept);
+    printf("___________________________________________________________________________\n");
+  }
 
 //-----------------------
     rc = 0;
@@ -360,15 +355,15 @@ static int dynamic_reprogramming (void* handle, char *binfile)
 
 static void help (char* prog)
 {
-    printf ("Print Information. Usage: %s [-CvhVd] [-f file] [-i delay]\n"
+    printf ("Print Information. Usage: %s [-CvhVfi] [-C <card_port_num>] [-i input file]\n"
             "\t-C, --card <num>       Card to use (default 0)\n"
             "\t-V, --version          Print Version number\n"
             "\t-h, --help             This help message\n"
             "\t-q, --quiet            No output at all\n"
-            "\t-v, --verbose          verbose mode, up to -vvv\n"
-            "\t-a, --partial binary file\n"
+            "\t-f, --force            Force no question\n"
+            "\t-i, --partial binary file\n"
             "\n"
-            "Example: ./oc_action_reprogram -C5 -a oc_2022_0310_xxx_partial.bin\n"
+            "Example: ./oc_action_reprogram -C5 -i oc_2022_0310_xxx_partial.bin\n"
             "\n", prog);
 }
 
@@ -384,6 +379,7 @@ int main (int argc, char* argv[])
     char *binfile = NULL;
     uint64_t read_value;
     char *ret;
+    char force = 'n';
 
     fd_out = stdout;        /* Default */
 
@@ -402,9 +398,6 @@ int main (int argc, char* argv[])
 
     rc = EXIT_SUCCESS;
 
-    printf("\e[1m _____________________________________________\033[0m\n");
-    printf("\e[1m OC-Accel FPGA code dynamic reprogramming tool \033[0m\n");
-
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
@@ -412,11 +405,11 @@ int main (int argc, char* argv[])
             { "version",   no_argument,           NULL, 'V' },
             { "quiet",     no_argument,           NULL, 'q' },
             { "help",      no_argument,           NULL, 'h' },
-            { "verbose",   no_argument,           NULL, 'v' },
-            { "mode",      required_argument,     NULL, 'a' },
+            { "force",     no_argument,           NULL, 'f' },
+            { "file",      required_argument,     NULL, 'i' },
             { 0,           0,                     NULL,  0  }
         };
-        ch = getopt_long (argc, argv, "C:a:Vqhv",
+        ch = getopt_long (argc, argv, "C:i:Vqhf",
                           long_options, &option_index);
 
         if (-1 == ch) {
@@ -429,12 +422,13 @@ int main (int argc, char* argv[])
             break;
 
         case 'V':        /* --version */
-            printf ("%s\n", version);
+            printf ("GIT version is: %s\n", version);
             exit (EXIT_SUCCESS);
             break;
 
         case 'q':        /* --quiet */
             mctx->quiet = true;
+            force = 'y';
             break;
 
         case 'h':        /* --help */
@@ -442,14 +436,13 @@ int main (int argc, char* argv[])
             exit (EXIT_SUCCESS);
             break;
 
-        case 'v':        /* --verbose */
-            verbose++;
+        case 'f':        /* --force */
+            force = 'y';
             break;
 
-        case 'a':	/* --input file */
+        case 'i':	/* --input file */
             //strcpy(binfile,optarg);
             binfile = optarg;
-            printf("File given is: %s\n", binfile);
             break;
 
         default:
@@ -458,21 +451,29 @@ int main (int argc, char* argv[])
         }
     }
 
+    if (!mctx->quiet) {
+      printf("\e[1m _____________________________________________\033[0m\n");
+      printf("\e[1m OC-Accel FPGA code dynamic reprogramming tool \033[0m\n");
+    }
+
     VERBOSE2 ("[%s] Enter\n", __func__);
 
     //adding specific code for Partial reconfiguration (partial bit file provided)
     char bit_file_extension[20] = "_partial.bin";
     if (binfile == NULL) {
-      printf("no file to open\n");
-      printf("Example: ./oc_action_reprogram -C5 -a oc_2022_0310_xxx_partial.bin\n");
+      if (!mctx->quiet) {
+        printf("no file to open\n");
+        printf("Example: ./oc_action_reprogram -C5 -i oc_2022_0310_xxx_partial.bin\n");
+      }
       goto __main_exit;
-    }
+    } else
+      if (!mctx->quiet) printf("File given is: %s\n", binfile);
 
     if (strstr(binfile, bit_file_extension)){
-        printf(" File given is a partial bin file.\n");
+      if (!mctx->quiet) printf(" File given is a partial bin file.\n");
     }
     else {
-        printf("\e[31mERROR:\033[0m File given is NOT a partial bin file\n");
+        if (!mctx->quiet) printf("\e[31mERROR:\033[0m File given is NOT a partial bin file\n");
         goto __main_exit;
     }
 
@@ -492,24 +493,29 @@ int main (int argc, char* argv[])
     // compare with PR code in file name
     ret = strstr(binfile, str);
     if(ret) {
-        printf(" PR code match (PR%.3lx). Programming continues safely\n", read_value);
-	printf("\e[1m Do you want to continue (y/n): \033[0m");
-	scanf (" %c", &answer);
-	if (answer == 'y' || answer == 'Y')
-        	rc = dynamic_reprogramming(mctx->handle, binfile);
+        if (!mctx->quiet) printf(" PR code match (PR%.3lx). Programming continues safely\n", read_value);
+        if (force == 'n') {
+	  printf("\e[1m Do you want to continue (y/n): \033[0m");
+	  scanf (" %c", &answer);
+        }
+	if (force == 'y' || answer == 'y' || answer == 'Y')
+        	rc = dynamic_reprogramming(mctx->handle, binfile, mctx->quiet);
 
     } else {
+       if (!mctx->quiet) {
         printf("\e[31mERROR: \033[0m The given file doesn't contain a code compatible with this FPGA (PR%.3lx code based)!\n", read_value );
         printf("       Option 1: Check that you are targeting the card in the right slot. Didn't you forget the '-C' argument?!\n");
         printf("       Option 2: Use a partial.bin file containing PR%.3lx or regenerate the code!\n", read_value );
         printf("       Option 3: Reflash the FPGA base code with a code compatible with your action code\n");
+      }
+      exit (EXIT_FAILURE);
     }
 
 
-
+    exit (EXIT_SUCCESS);
     //if (0 != rc)
     //printf("Exit\n");
-    goto __main_exit;        /* Exit here.... for now */
+    //goto __main_exit;        /* Exit here.... for now */
 
 
 __main_exit:
@@ -519,5 +525,5 @@ __main_exit:
     fclose (fd_out);
 
     //exit (rc);
-    exit(-1);
+    exit(EXIT_FAILURE);
 }
