@@ -349,7 +349,8 @@ fi
   if [ -z "$SETUP_WARNING" ]; then
     if [ "$USE_PRFLOW" == "TRUE" ]; then
       echo "  Suggested next step: to run a simulation,      execute: make sim"
-      echo "                    or to build the FPGA binary, execute: make cloud_base or make cloud_action"
+#OSU"    echo "                    or to build the FPGA binary, execute: make cloud_base or make cloud_action"
+      echo "                    or to build the FPGA binary, execute: make cloud_action"
     else
       echo "  Suggested next step: to run a simulation,      execute: make sim"
       echo "                    or to build the FPGA binary, execute: make image"

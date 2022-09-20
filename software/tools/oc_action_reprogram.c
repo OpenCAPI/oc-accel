@@ -364,6 +364,9 @@ static void help (char* prog)
             "\t-i, --partial binary file\n"
             "\n"
             "Example: ./oc_action_reprogram -C5 -i oc_2022_0310_xxx_partial.bin\n"
+            " where C is the slot number of the card you want to reprogram\n"
+            " -> suggested command: oc_find_card -v -A ALL      (if you want all cards)\n"
+            " -> suggested command: oc_find_card -v -A OC-AD9H3 (if you know the card type)\n"
             "\n", prog);
 }
 
@@ -464,6 +467,9 @@ int main (int argc, char* argv[])
       if (!mctx->quiet) {
         printf("no file to open\n");
         printf("Example: ./oc_action_reprogram -C5 -i oc_2022_0310_xxx_partial.bin\n");
+        printf(" where C is the slot number of the card you want to reprogram\n");
+        printf(" -> suggested command: oc_find_card -v -A ALL      (if you want all cards)\n");
+        printf(" -> suggested command: oc_find_card -v -A OC-AD9H3 (if you know the card type)\n");
       }
       goto __main_exit;
     } else

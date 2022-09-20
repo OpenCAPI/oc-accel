@@ -7,7 +7,7 @@
 
 choice
 	bool "Card Type  "
-	default AD9V3
+	default AD9H3
 	help
 	  Card Type
 	  There are multiple cards the framework supports. Please select
@@ -21,7 +21,8 @@ choice
 		  AlphaData 9V3 has ethernet and 16GB DDR4 SDRAM. Uses Xilinx FPGA VU3P.
 
 	config AD9H3
-		bool "OpenCAPI3.0: AlphaData 9H3 (incl. VU33P with HBM)"
+#		bool "OpenCAPI3.0: AlphaData 9H3 (incl. VU33P with HBM)"
+		bool "OpenCAPI3.0: OSU AlphaData 9H3 (incl. VU33P with HBM)"
 		select OPENCAPI30
 		select DISABLE_NVME
 		help
@@ -114,7 +115,7 @@ choice
 	  - HDL for VHDL or Verilog coded examples
 	  - HLS for C coded examples compiled with HLS
 
-	default HDL_EXAMPLE
+	default HLS_HELLOWORLD_1024
 
 	config HDL_ACTION
 		bool "HDL Action - manually set ACTION_ROOT in snap_env.sh!"
@@ -778,7 +779,8 @@ config HLS_CLOCK_PERIOD_CONSTRAINT
 config ENABLE_PRFLOW
 	bool "Enabling Partial Reconfiguration Flow"
 	depends on (AD9H3 || AD9H335 || AD9H7)
-        default n
+#OSU        default n
+        default y
 	help
 	  Used for Cloud environment using dynamic reconfiguration of the images.
 	  All the code except the action will be be placed in a static area that will
